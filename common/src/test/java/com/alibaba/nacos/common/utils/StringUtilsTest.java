@@ -143,6 +143,18 @@ public class StringUtilsTest {
     }
     
     @Test
+    public void testContains() {
+        Assert.assertFalse(StringUtils.contains(null, "1"));
+        Assert.assertFalse(StringUtils.contains("abc", null));
+        Assert.assertTrue(StringUtils.contains(StringUtils.EMPTY, StringUtils.EMPTY));
+        Assert.assertTrue(StringUtils.contains("abc", StringUtils.EMPTY));
+        Assert.assertTrue(StringUtils.contains("abc", "a"));
+        Assert.assertFalse(StringUtils.contains("abc", "z"));
+        Assert.assertFalse(StringUtils.contains("abc", "A"));
+        Assert.assertFalse(StringUtils.contains("abc", "Z"));
+    }
+    
+    @Test
     public void testIsNoneBlank() {
         Assert.assertFalse(StringUtils.isNoneBlank(null));
         Assert.assertFalse(StringUtils.isNoneBlank(null, "foo"));
@@ -199,5 +211,14 @@ public class StringUtilsTest {
         Assert.assertFalse(StringUtils.equalsIgnoreCase("abc", null));
         Assert.assertTrue(StringUtils.equalsIgnoreCase("abc", "abc"));
         Assert.assertTrue(StringUtils.equalsIgnoreCase("abc", "ABC"));
+    }
+    
+    @Test
+    public void testSplit() {
+        Assert.assertNull(StringUtils.split(null, ","));
+        Assert.assertArrayEquals(new String[0], StringUtils.split("", ","));
+        Assert.assertArrayEquals(new String[]{"ab", "cd", "ef"}, StringUtils.split("ab cd ef", null));
+        Assert.assertArrayEquals(new String[]{"ab", "cd", "ef"}, StringUtils.split("ab   cd ef", null));
+        Assert.assertArrayEquals(new String[]{"ab", "cd", "ef"}, StringUtils.split("ab:cd:ef", ":"));
     }
 }
