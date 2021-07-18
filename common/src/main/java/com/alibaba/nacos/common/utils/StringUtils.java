@@ -313,6 +313,20 @@ public class StringUtils {
     }
     
     /**
+     * Checks if CharSequence contains a search CharSequence.
+     *
+     * @param str       the CharSequence to check, may be null
+     * @param searchStr the CharSequence to find, may be null
+     * @return true if the CharSequence contains the search CharSequence
+     */
+    public static boolean contains(final CharSequence str, final CharSequence searchStr) {
+        if (str == null || searchStr == null) {
+            return false;
+        }
+        return str.toString().contains(searchStr);
+    }
+    
+    /**
      * <p>Checks if none of the CharSequences are blank ("") or null and whitespace only..</p>
      *
      * @param css the CharSequences to check, may be null or empty
@@ -430,5 +444,26 @@ public class StringUtils {
      */
     public static boolean equalsIgnoreCase(String str1, String str2) {
         return str1 == null ? str2 == null : str1.equalsIgnoreCase(str2);
+    }
+    
+    /**
+     * Splits the provided text into an array with a maximum length,
+     * separators specified.
+     * If separatorChars is empty, divide by blank.
+     * @param str  the String to parse, may be null
+     * @return an array of parsed Strings
+     */
+    @SuppressWarnings("checkstyle:WhitespaceAround")
+    public static String[] split(final String str, String separatorChars) {
+        if (str == null) {
+            return null;
+        }
+        if (str.length() == 0) {
+            return new String[0];
+        }
+        if (separatorChars == null){
+            separatorChars = " +";
+        }
+        return str.split(separatorChars);
     }
 }
