@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright 1999-2018 Alibaba Group Holding Ltd.
+  ~ Copyright 1999-2021 Alibaba Group Holding Ltd.
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -633,7 +633,6 @@
             <scope>test</scope>
         </dependency>
 
-
     </dependencies>
 
     <!-- 管理依赖版本号,子项目不会默认依赖 -->
@@ -754,12 +753,6 @@
             </dependency>
 
             <!-- Apache commons -->
-            <dependency>
-                <groupId>org.apache.commons</groupId>
-                <artifactId>commons-lang3</artifactId>
-                <version>${commons-lang3.version}</version>
-            </dependency>
-
             <dependency>
                 <groupId>commons-io</groupId>
                 <artifactId>commons-io</artifactId>
