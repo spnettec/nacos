@@ -18,15 +18,19 @@ package com.alibaba.nacos.common.utils;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.mockito.internal.util.collections.Sets;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Enumeration;
 import java.util.Iterator;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.Vector;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -145,7 +149,7 @@ public class CollectionUtilsTest {
     @Test
     public void testGetCollection3() {
         Assert.assertEquals("1", CollectionUtils.get(Collections.singleton("1"), 0));
-        Assert.assertEquals("2", CollectionUtils.get(Sets.newSet("1", "2"), 1));
+        Assert.assertEquals("2", CollectionUtils.get(CollectionUtils.set("1", "2"), 1));
     }
     
     @Test(expected = IndexOutOfBoundsException.class)
@@ -318,5 +322,38 @@ public class CollectionUtilsTest {
                 return iterator.next();
             }
         };
+    }
+    
+    @Test
+    public void testSet() {
+        Set<Object> set = new HashSet<>();
+        set.add(null);
+        Assert.assertEquals(set, CollectionUtils.set(null, null, null));
+        Assert.assertEquals(new LinkedHashSet(Arrays.asList("", "a", "b")), CollectionUtils.set("", "a", "b"));
+        Assert.assertEquals(new HashSet(), CollectionUtils.set());
+    }
+    
+    @Test(expected = IllegalArgumentException.class)
+    public void testSetNullPointerException() {
+        CollectionUtils.set(null);
+    }
+    
+    @Test(expected = IllegalArgumentException.class)
+    public void testGetOnlyElementIllegalArgumentException() {
+        List<Integer> list = Arrays.asList(1, 2, 3);
+        CollectionUtils.getOnlyElement(list);
+    }
+    
+    @Test(expected = NoSuchElementException.class)
+    public void testGetOnlyElementNoSuchElementException() {
+        List<Object> list = new ArrayList<>();
+        CollectionUtils.getOnlyElement(list);
+    }
+    
+    @Test
+    public void testGetOnly() {
+        List<Integer> list = Arrays.asList(1);
+        int element = CollectionUtils.getOnlyElement(list);
+        Assert.assertEquals(1, element);
     }
 }
