@@ -88,9 +88,12 @@ public class Instance implements Serializable {
     /**
      * user extended attributes.
      */
-    private Map<String, String> metadata = new HashMap<String, String>();
+    private Map<String, String> metadata = new HashMap<>();
     
     public String getInstanceId() {
+        if (this.instanceId == null) {
+            this.instanceId = this.generateInstanceId();
+        }
         return this.instanceId;
     }
     
@@ -141,6 +144,10 @@ public class Instance implements Serializable {
     public String getServiceName() {
         return this.serviceName;
     }
+
+    public String generateInstanceId() {
+        return getIp() + "#" + getPort() + "#" + getClusterName() + "#" + getServiceName();
+    }
     
     public void setServiceName(final String serviceName) {
         this.serviceName = serviceName;
@@ -162,7 +169,7 @@ public class Instance implements Serializable {
      */
     public void addMetadata(final String key, final String value) {
         if (metadata == null) {
-            metadata = new HashMap<String, String>(4);
+            metadata = new HashMap<>(4);
         }
         metadata.put(key, value);
     }
@@ -185,7 +192,7 @@ public class Instance implements Serializable {
     
     @Override
     public String toString() {
-        return "Instance{" + "instanceId='" + instanceId + '\'' + ", ip='" + ip + '\'' + ", port=" + port + ", weight="
+        return "Instance{" + "instanceId='" + getInstanceId() + '\'' + ", ip='" + ip + '\'' + ", port=" + port + ", weight="
                 + weight + ", healthy=" + healthy + ", enabled=" + enabled + ", ephemeral=" + ephemeral
                 + ", clusterName='" + clusterName + '\'' + ", serviceName='" + serviceName + '\'' + ", metadata="
                 + metadata + '}';
