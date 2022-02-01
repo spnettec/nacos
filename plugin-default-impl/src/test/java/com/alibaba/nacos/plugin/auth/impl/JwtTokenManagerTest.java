@@ -18,7 +18,7 @@ package com.alibaba.nacos.plugin.auth.impl;
 
 import com.alibaba.nacos.auth.config.AuthConfigs;
 import com.alibaba.nacos.core.code.ControllerMethodsCache;
-import com.alibaba.nacos.plugin.auth.impl.constant.AuthConstants;
+import com.alibaba.nacos.plugin.auth.constant.AuthConstants;
 import io.jsonwebtoken.lang.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;

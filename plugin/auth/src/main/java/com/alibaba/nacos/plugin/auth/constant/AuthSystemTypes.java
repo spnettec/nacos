@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.alibaba.nacos.plugin.auth.impl.constant;
+package com.alibaba.nacos.plugin.auth.constant;
 
 /**
  * Types of all auth implementations.

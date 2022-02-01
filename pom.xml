@@ -128,7 +128,7 @@
         <p3c-pmd.version>2.1.1</p3c-pmd.version>
 
         <!-- dependency version -->
-        <spring-boot-dependencies.version>2.6.2</spring-boot-dependencies.version>
+        <spring-boot-dependencies.version>2.6.3</spring-boot-dependencies.version>
         <servlet-api.version>3.0</servlet-api.version>
         <commons-io.version>2.7</commons-io.version>
         <commons-collections.version>3.2.2</commons-collections.version>
@@ -149,7 +149,7 @@
         <jackson.annotations.version>2.12.2</jackson.annotations.version>
         <jackson-core-asl.version>1.9.13</jackson-core-asl.version>
         <jjwt.version>0.11.2</jjwt.version>
-        <netty-all.version>4.1.72.Final</netty-all.version>
+        <netty-all.version>4.1.73.Final</netty-all.version>
         <mina-core.version>2.0.0-RC1</mina-core.version>
         <guava.version>30.1-jre</guava.version>
         <javatuples.version>1.2</javatuples.version>

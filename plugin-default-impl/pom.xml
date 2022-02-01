@@ -51,7 +51,7 @@
             <artifactId>nacos-config</artifactId>
             <scope>provided</scope>
         </dependency>
-    
+
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>

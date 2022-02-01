@@ -17,10 +17,10 @@
 package com.alibaba.nacos.plugin.auth.impl.controller;
 
 import com.alibaba.nacos.auth.config.AuthConfigs;
+import com.alibaba.nacos.plugin.auth.constant.AuthSystemTypes;
 import com.alibaba.nacos.plugin.auth.exception.AccessException;
 import com.alibaba.nacos.plugin.auth.impl.NacosAuthConfig;
 import com.alibaba.nacos.plugin.auth.impl.NacosAuthManager;
-import com.alibaba.nacos.plugin.auth.impl.constant.AuthSystemTypes;
 import com.alibaba.nacos.plugin.auth.impl.users.NacosUser;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.Before;
@@ -76,7 +76,7 @@ public class UserControllerTest {
     public void testLoginWithAuthedUser() throws AccessException {
         when(authManager.login(request)).thenReturn(user);
         when(authConfigs.getNacosAuthSystemType()).thenReturn(AuthSystemTypes.NACOS.name());
-        when(nacosAuthConfig.getTokenValidityInSeconds()).thenReturn(18000L);
+        when(authConfigs.getTokenValidityInSeconds()).thenReturn(18000L);
         Object actual = userController.login("nacos", "nacos", response, request);
         assertThat(actual, instanceOf(JsonNode.class));
         String actualString = actual.toString();
