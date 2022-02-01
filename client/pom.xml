@@ -15,56 +15,61 @@
   ~ limitations under the License.
   -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <groupId>com.alibaba.nacos</groupId>
         <artifactId>nacos-all</artifactId>
         <version>${revision}</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
-
+    
     <modelVersion>4.0.0</modelVersion>
-
+    
     <artifactId>nacos-client</artifactId>
     <packaging>jar</packaging>
-
+    
     <name>nacos-client ${project.version}</name>
     <url>http://nacos.io</url>
-
+    
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
-
+    
     <dependencies>
-
+        
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <optional>true</optional>
         </dependency>
-
+        
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
             <optional>true</optional>
         </dependency>
-
+        
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
             <optional>true</optional>
         </dependency>
-
+        
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-slf4j-impl</artifactId>
             <optional>true</optional>
         </dependency>
-
+        
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>nacos-common</artifactId>
             <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>nacos-auth-plugin</artifactId>
         </dependency>
 
         <dependency>
@@ -77,28 +82,28 @@
             <artifactId>logback-classic</artifactId>
             <optional>true</optional>
         </dependency>
-
+        
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-core</artifactId>
             <optional>true</optional>
         </dependency>
-
+        
         <dependency>
             <artifactId>commons-codec</artifactId>
             <groupId>commons-codec</groupId>
         </dependency>
-
+        
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
         </dependency>
-
+        
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
         </dependency>
-
+        
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpasyncclient</artifactId>
@@ -112,7 +117,7 @@
             <artifactId>jcip-annotations</artifactId>
             <optional>true</optional>
         </dependency>
-
+        
         <dependency>
             <groupId>io.prometheus</groupId>
             <artifactId>simpleclient</artifactId>
@@ -121,12 +126,8 @@
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-        </dependency>
     </dependencies>
-
+    
     <build>
         <plugins>
             <plugin>
@@ -139,7 +140,7 @@
             </plugin>
         </plugins>
     </build>
-
+    
     <profiles>
         <profile>
             <id>release-sign-artifacts</id>
@@ -165,7 +166,7 @@
                                     <minimizeJar>false</minimizeJar>
                                     <createSourcesJar>true</createSourcesJar>
                                     <shadeSourcesContent>true</shadeSourcesContent>
-
+                    
                                     <artifactSet>
                                         <includes>
                                             <include>io.grpc:*</include>
@@ -182,9 +183,9 @@
                                             <include>org.checkerframework:checker-qual</include>
                                         </includes>
                                     </artifactSet>
-
+                    
                                     <relocations>
-
+                        
                                         <relocation>
                                             <pattern>io.grpc</pattern>
                                             <shadedPattern>com.alibaba.nacos.shaded.io.grpc</shadedPattern>
@@ -200,7 +201,7 @@
                                                 <include>io.grpc.netty.shaded.io.grpc.netty.*</include>
                                             </includes>
                                         </relocation>
-
+                        
                                         <relocation>
                                             <pattern>com.google</pattern>
                                             <shadedPattern>com.alibaba.nacos.shaded.com.google</shadedPattern>
@@ -229,15 +230,15 @@
                                             <pattern>org.example</pattern>
                                             <shadedPattern>com.alibaba.nacos.shaded.org.example</shadedPattern>
                                         </relocation>
-
-
+                    
+                    
                                     </relocations>
                                     <transformers>
                                         <transformer
-                                                implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer"/>
+                                            implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer"/>
                                         <transformer
-                                                implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
-
+                                            implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                    
                                     </transformers>
                                 </configuration>
                             </execution>
@@ -270,7 +271,7 @@
                                     <minimizeJar>false</minimizeJar>
                                     <createSourcesJar>true</createSourcesJar>
                                     <shadeSourcesContent>true</shadeSourcesContent>
-
+                                
                                     <artifactSet>
                                         <includes>
                                             <include>io.grpc:*</include>
@@ -287,9 +288,9 @@
                                             <include>org.checkerframework:checker-qual</include>
                                         </includes>
                                     </artifactSet>
-
+                                
                                     <relocations>
-
+                                    
                                         <relocation>
                                             <pattern>io.grpc</pattern>
                                             <shadedPattern>com.alibaba.nacos.shaded.io.grpc</shadedPattern>
@@ -305,7 +306,7 @@
                                                 <include>io.grpc.netty.shaded.io.grpc.netty.*</include>
                                             </includes>
                                         </relocation>
-
+                                    
                                         <relocation>
                                             <pattern>com.google</pattern>
                                             <shadedPattern>com.alibaba.nacos.shaded.com.google</shadedPattern>
@@ -334,15 +335,15 @@
                                             <pattern>org.example</pattern>
                                             <shadedPattern>com.alibaba.nacos.shaded.org.example</shadedPattern>
                                         </relocation>
-
-
+                                
+                                
                                     </relocations>
                                     <transformers>
                                         <transformer
-                                                implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer"/>
+                                            implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer"/>
                                         <transformer
-                                                implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
-
+                                            implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                                
                                     </transformers>
                                 </configuration>
                             </execution>
