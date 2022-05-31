@@ -19,10 +19,10 @@ package com.alibaba.nacos.plugin.auth.impl;
 import com.alibaba.nacos.auth.config.AuthConfigs;
 import com.alibaba.nacos.common.utils.StringUtils;
 import com.alibaba.nacos.core.code.ControllerMethodsCache;
-import com.alibaba.nacos.plugin.auth.constant.AuthSystemTypes;
+import com.alibaba.nacos.plugin.auth.impl.constant.AuthSystemTypes;
 import com.alibaba.nacos.plugin.auth.impl.filter.JwtAuthenticationTokenFilter;
 import com.alibaba.nacos.plugin.auth.impl.users.NacosUserDetailsServiceImpl;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -58,25 +58,31 @@ public class NacosAuthConfig extends WebSecurityConfigurerAdapter {
     
     private static final String PROPERTY_IGNORE_URLS = "nacos.security.ignore.urls";
     
-    @Autowired
-    private Environment env;
+    private final Environment env;
     
-    @Autowired
-    private JwtTokenManager tokenProvider;
+    private final JwtTokenManager tokenProvider;
     
-    @Autowired
-    private AuthConfigs authConfigs;
+    private final AuthConfigs authConfigs;
     
-    @Autowired
-    private NacosUserDetailsServiceImpl userDetailsService;
+    private final NacosUserDetailsServiceImpl userDetailsService;
     
-    @Autowired
-    private LdapAuthenticationProvider ldapAuthenticationProvider;
+    private final LdapAuthenticationProvider ldapAuthenticationProvider;
     
-    @Autowired
-    private ControllerMethodsCache methodsCache;
+    private final ControllerMethodsCache methodsCache;
     
+    public NacosAuthConfig(Environment env, JwtTokenManager tokenProvider, AuthConfigs authConfigs,
+            NacosUserDetailsServiceImpl userDetailsService,
+            ObjectProvider<LdapAuthenticationProvider> ldapAuthenticationProvider,
+            ControllerMethodsCache methodsCache) {
 
+        this.env = env;
+        this.tokenProvider = tokenProvider;
+        this.authConfigs = authConfigs;
+        this.userDetailsService = userDetailsService;
+        this.ldapAuthenticationProvider = ldapAuthenticationProvider.getIfAvailable();
+        this.methodsCache = methodsCache;
+
+    }
     
     /**
      * Init.

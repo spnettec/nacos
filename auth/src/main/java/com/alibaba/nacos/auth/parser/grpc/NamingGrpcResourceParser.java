@@ -20,11 +20,8 @@ import com.alibaba.nacos.api.PropertyKeyConst;
 import com.alibaba.nacos.api.naming.CommonParams;
 import com.alibaba.nacos.api.naming.remote.request.AbstractNamingRequest;
 import com.alibaba.nacos.api.remote.request.Request;
-import com.alibaba.nacos.plugin.auth.constant.Constants;
 import com.alibaba.nacos.common.utils.ReflectUtils;
 import com.alibaba.nacos.common.utils.StringUtils;
-
-import java.util.Properties;
 
 /**
  * Naming Grpc resource parser.
@@ -38,7 +35,7 @@ public class NamingGrpcResourceParser extends AbstractGrpcResourceParser {
         if (request instanceof AbstractNamingRequest) {
             return ((AbstractNamingRequest) request).getNamespace();
         }
-        return (String) ReflectUtils.getFieldValue(request, PropertyKeyConst.NAMESPACE, "");
+        return (String) ReflectUtils.getFieldValue(request, PropertyKeyConst.NAMESPACE, StringUtils.EMPTY);
     }
     
     @Override
@@ -47,9 +44,9 @@ public class NamingGrpcResourceParser extends AbstractGrpcResourceParser {
         if (request instanceof AbstractNamingRequest) {
             groupName = ((AbstractNamingRequest) request).getGroupName();
         } else {
-            groupName = (String) ReflectUtils.getFieldValue(request, CommonParams.GROUP_NAME, "");
+            groupName = (String) ReflectUtils.getFieldValue(request, CommonParams.GROUP_NAME, StringUtils.EMPTY);
         }
-        return StringUtils.isBlank(groupName) ? Constants.Resource.ANY : groupName;
+        return StringUtils.isBlank(groupName) ? StringUtils.EMPTY : groupName;
     }
     
     @Override
@@ -60,11 +57,6 @@ public class NamingGrpcResourceParser extends AbstractGrpcResourceParser {
         } else {
             serviceName = (String) ReflectUtils.getFieldValue(request, CommonParams.SERVICE_NAME, "");
         }
-        return StringUtils.isBlank(serviceName) ? Constants.Resource.ANY : serviceName;
-    }
-    
-    @Override
-    protected Properties getProperties(Request request) {
-        return new Properties();
+        return StringUtils.isBlank(serviceName) ? StringUtils.EMPTY : serviceName;
     }
 }
