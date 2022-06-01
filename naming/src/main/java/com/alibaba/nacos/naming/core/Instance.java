@@ -313,6 +313,10 @@ public class Instance extends com.alibaba.nacos.api.naming.pojo.Instance impleme
         this.tenant = tenant;
     }
     
+    public String generateInstanceId() {
+        return getIp() + "#" + getPort() + "#" + getClusterName() + "#" + getServiceName();
+    }
+
     /**
      * Generate instance id.
      *
