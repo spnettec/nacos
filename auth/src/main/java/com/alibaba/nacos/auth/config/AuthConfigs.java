@@ -22,18 +22,14 @@ import com.alibaba.nacos.common.notify.Event;
 import com.alibaba.nacos.common.notify.NotifyCenter;
 import com.alibaba.nacos.common.notify.listener.Subscriber;
 import com.alibaba.nacos.common.utils.ConvertUtils;
-import com.alibaba.nacos.plugin.auth.constant.AuthConstants;
 import com.alibaba.nacos.plugin.auth.constant.Constants;
 import com.alibaba.nacos.sys.env.EnvUtil;
 import com.alibaba.nacos.sys.utils.PropertiesUtil;
-import io.jsonwebtoken.io.Decoders;
-import io.jsonwebtoken.io.DecodingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -55,21 +51,6 @@ public class AuthConfigs extends Subscriber<ServerConfigChangeEvent> {
     
     @JustForTest
     private static Boolean cachingEnabled = null;
-    /**
-     * secret key.
-     */
-
-    private String secretKey;
-
-    /**
-     * secret key byte array.
-     */
-    private byte[] secretKeyBytes;
-
-    /**
-     * Token validity time(seconds).
-     */
-    private long tokenValidityInSeconds;
 
     /**
      * Whether auth enabled.
@@ -97,15 +78,6 @@ public class AuthConfigs extends Subscriber<ServerConfigChangeEvent> {
     public AuthConfigs() {
         NotifyCenter.registerSubscriber(this);
         refreshPluginProperties();
-        initProperties();
-    }
-
-    private void initProperties() {
-        Properties properties = getAuthPluginProperties(AuthConstants.AUTH_PLUGIN_TYPE);
-        String validitySeconds = properties
-                .getProperty(AuthConstants.TOKEN_EXPIRE_SECONDS, AuthConstants.DEFAULT_TOKEN_EXPIRE_SECONDS);
-        tokenValidityInSeconds = Long.parseLong(validitySeconds);
-        secretKey = properties.getProperty(AuthConstants.TOKEN_SECRET_KEY, AuthConstants.DEFAULT_TOKEN_SECRET_KEY);
     }
 
     private void refreshPluginProperties() {
@@ -194,21 +166,5 @@ public class AuthConfigs extends Subscriber<ServerConfigChangeEvent> {
     @Override
     public Class<? extends Event> subscribeType() {
         return ServerConfigChangeEvent.class;
-    }
-
-    public byte[] getSecretKeyBytes() {
-        if (secretKeyBytes == null) {
-            try {
-                secretKeyBytes = Decoders.BASE64.decode(secretKey);
-            } catch (DecodingException e) {
-                secretKeyBytes = secretKey.getBytes(StandardCharsets.UTF_8);
-            }
-
-        }
-        return secretKeyBytes;
-    }
-
-    public long getTokenValidityInSeconds() {
-        return tokenValidityInSeconds;
     }
 }

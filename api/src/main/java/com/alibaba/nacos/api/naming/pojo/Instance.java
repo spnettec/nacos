@@ -93,9 +93,6 @@ public class Instance implements Serializable {
     private Map<String, String> metadata = new HashMap<>();
     
     public String getInstanceId() {
-        if (this.instanceId == null) {
-            this.instanceId = this.generateInstanceId();
-        }
         return this.instanceId;
     }
     
