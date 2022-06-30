@@ -19,6 +19,7 @@ package com.alibaba.nacos.plugin.auth.impl;
 import com.alibaba.nacos.auth.config.AuthConfigs;
 import com.alibaba.nacos.plugin.auth.impl.constant.AuthConstants;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
@@ -49,26 +50,28 @@ public class JwtTokenManager {
     private static final String AUTHORITIES_KEY = "auth";
     
     private final AuthConfigs authConfigs;
-
+    
     /**
      * secret key.
      */
     private String secretKey;
-
+    
     /**
      * secret key byte array.
      */
     private byte[] secretKeyBytes;
-
+    
     /**
      * Token validity time(seconds).
      */
     private long tokenValidityInSeconds;
 
+    private JwtParser jwtParser;
+
     public JwtTokenManager(AuthConfigs authConfigs) {
         this.authConfigs = authConfigs;
     }
-
+    
     /**
      * init tokenValidityInSeconds and secretKey properties.
      */
@@ -117,8 +120,10 @@ public class JwtTokenManager {
      * @return auth info
      */
     public Authentication getAuthentication(String token) {
-        Claims claims = Jwts.parserBuilder().setSigningKey(this.getSecretKeyBytes()).build()
-                .parseClaimsJws(token).getBody();
+        if (jwtParser == null) {
+            jwtParser = Jwts.parserBuilder().setSigningKey(this.getSecretKeyBytes()).build();
+        }
+        Claims claims = jwtParser.parseClaimsJws(token).getBody();
         
         List<GrantedAuthority> authorities = AuthorityUtils
                 .commaSeparatedStringToAuthorityList((String) claims.get(AUTHORITIES_KEY));
@@ -133,9 +138,12 @@ public class JwtTokenManager {
      * @param token token
      */
     public void validateToken(String token) {
-        Jwts.parserBuilder().setSigningKey(this.getSecretKeyBytes()).build().parseClaimsJws(token);
+        if (jwtParser == null) {
+            jwtParser = Jwts.parserBuilder().setSigningKey(this.getSecretKeyBytes()).build();
+        }
+        jwtParser.parseClaimsJws(token);
     }
-
+    
     public byte[] getSecretKeyBytes() {
         if (secretKeyBytes == null) {
             try {
@@ -143,7 +151,7 @@ public class JwtTokenManager {
             } catch (DecodingException e) {
                 secretKeyBytes = secretKey.getBytes(StandardCharsets.UTF_8);
             }
-
+            
         }
         return secretKeyBytes;
     }

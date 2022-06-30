@@ -137,7 +137,7 @@
         <log4j.version>2.17.1</log4j.version>
         
         <httpasyncclient.version>4.1.3</httpasyncclient.version>
-        <mysql-connector-java.version>8.0.21</mysql-connector-java.version>
+        <mysql-connector-java.version>8.0.28</mysql-connector-java.version>
         <derby.version>10.14.2.0</derby.version>
         <cglib-nodep.version>2.1</cglib-nodep.version>
         <jcip-annotations.version>1.0</jcip-annotations.version>
@@ -152,7 +152,7 @@
         <grpc-java.version>1.44.1</grpc-java.version>
         <proto-google-common-protos.version>2.8.3</proto-google-common-protos.version>
         <protobuf-java.version>3.21.1</protobuf-java.version>
-        <protoc-gen-grpc-java.version>1.46.0</protoc-gen-grpc-java.version>
+        <protoc-gen-grpc-java.version>${grpc-java.version}</protoc-gen-grpc-java.version>
         <google.gson.version>2.9.0</google.gson.version>
         <protobuf-maven-plugin.version>0.6.1</protobuf-maven-plugin.version>
         <hessian.version>4.0.63</hessian.version>
@@ -910,7 +910,7 @@
                 <artifactId>javax.annotation-api</artifactId>
                 <version>1.3.2</version>
             </dependency>
-
+            
             <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
