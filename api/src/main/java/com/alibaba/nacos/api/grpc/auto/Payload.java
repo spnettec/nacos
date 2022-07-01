@@ -19,7 +19,7 @@ package com.alibaba.nacos.api.grpc.auto;
 /**
  * Protobuf type {@code Payload}
  */
-public  final class Payload extends
+public final class Payload extends
     com.google.protobuf.GeneratedMessageV3 implements
     // @@protoc_insertion_point(message_implements:Payload)
     PayloadOrBuilder {
@@ -98,6 +98,8 @@ private static final long serialVersionUID = 0L;
       }
     } catch (com.google.protobuf.InvalidProtocolBufferException e) {
       throw e.setUnfinishedMessage(this);
+    } catch (com.google.protobuf.UninitializedMessageException e) {
+      throw e.asInvalidProtocolBufferException().setUnfinishedMessage(this);
     } catch (java.io.IOException e) {
       throw new com.google.protobuf.InvalidProtocolBufferException(
           e).setUnfinishedMessage(this);
@@ -123,19 +125,24 @@ private static final long serialVersionUID = 0L;
   private Metadata metadata_;
   /**
    * <code>.Metadata metadata = 2;</code>
+   * @return Whether the metadata field is set.
    */
+  @Override
   public boolean hasMetadata() {
     return metadata_ != null;
   }
   /**
    * <code>.Metadata metadata = 2;</code>
+   * @return The metadata.
    */
+  @Override
   public Metadata getMetadata() {
     return metadata_ == null ? Metadata.getDefaultInstance() : metadata_;
   }
   /**
    * <code>.Metadata metadata = 2;</code>
    */
+  @Override
   public MetadataOrBuilder getMetadataOrBuilder() {
     return getMetadata();
   }
@@ -144,19 +151,24 @@ private static final long serialVersionUID = 0L;
   private com.google.protobuf.Any body_;
   /**
    * <code>.google.protobuf.Any body = 3;</code>
+   * @return Whether the body field is set.
    */
+  @Override
   public boolean hasBody() {
     return body_ != null;
   }
   /**
    * <code>.google.protobuf.Any body = 3;</code>
+   * @return The body.
    */
+  @Override
   public com.google.protobuf.Any getBody() {
     return body_ == null ? com.google.protobuf.Any.getDefaultInstance() : body_;
   }
   /**
    * <code>.google.protobuf.Any body = 3;</code>
    */
+  @Override
   public com.google.protobuf.AnyOrBuilder getBodyOrBuilder() {
     return getBody();
   }
@@ -511,12 +523,14 @@ private static final long serialVersionUID = 0L;
         Metadata, Metadata.Builder, MetadataOrBuilder> metadataBuilder_;
     /**
      * <code>.Metadata metadata = 2;</code>
+     * @return Whether the metadata field is set.
      */
     public boolean hasMetadata() {
       return metadataBuilder_ != null || metadata_ != null;
     }
     /**
      * <code>.Metadata metadata = 2;</code>
+     * @return The metadata.
      */
     public Metadata getMetadata() {
       if (metadataBuilder_ == null) {
@@ -613,7 +627,8 @@ private static final long serialVersionUID = 0L;
         Metadata, Metadata.Builder, MetadataOrBuilder>
         getMetadataFieldBuilder() {
       if (metadataBuilder_ == null) {
-        metadataBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<>(
+        metadataBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+            Metadata, Metadata.Builder, MetadataOrBuilder>(
                 getMetadata(),
                 getParentForChildren(),
                 isClean());
@@ -627,12 +642,14 @@ private static final long serialVersionUID = 0L;
         com.google.protobuf.Any, com.google.protobuf.Any.Builder, com.google.protobuf.AnyOrBuilder> bodyBuilder_;
     /**
      * <code>.google.protobuf.Any body = 3;</code>
+     * @return Whether the body field is set.
      */
     public boolean hasBody() {
       return bodyBuilder_ != null || body_ != null;
     }
     /**
      * <code>.google.protobuf.Any body = 3;</code>
+     * @return The body.
      */
     public com.google.protobuf.Any getBody() {
       if (bodyBuilder_ == null) {
@@ -729,7 +746,8 @@ private static final long serialVersionUID = 0L;
         com.google.protobuf.Any, com.google.protobuf.Any.Builder, com.google.protobuf.AnyOrBuilder> 
         getBodyFieldBuilder() {
       if (bodyBuilder_ == null) {
-        bodyBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<>(
+        bodyBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+            com.google.protobuf.Any, com.google.protobuf.Any.Builder, com.google.protobuf.AnyOrBuilder>(
                 getBody(),
                 getParentForChildren(),
                 isClean());

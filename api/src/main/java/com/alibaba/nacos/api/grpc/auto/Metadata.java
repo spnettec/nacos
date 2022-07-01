@@ -19,7 +19,7 @@ package com.alibaba.nacos.api.grpc.auto;
 /**
  * Protobuf type {@code Metadata}
  */
-public  final class Metadata extends
+public final class Metadata extends
     com.google.protobuf.GeneratedMessageV3 implements
     // @@protoc_insertion_point(message_implements:Metadata)
     MetadataOrBuilder {
@@ -100,6 +100,8 @@ private static final long serialVersionUID = 0L;
       }
     } catch (com.google.protobuf.InvalidProtocolBufferException e) {
       throw e.setUnfinishedMessage(this);
+    } catch (com.google.protobuf.UninitializedMessageException e) {
+      throw e.asInvalidProtocolBufferException().setUnfinishedMessage(this);
     } catch (java.io.IOException e) {
       throw new com.google.protobuf.InvalidProtocolBufferException(
           e).setUnfinishedMessage(this);
@@ -137,7 +139,9 @@ private static final long serialVersionUID = 0L;
   private volatile Object type_;
   /**
    * <code>string type = 3;</code>
+   * @return The type.
    */
+  @Override
   public String getType() {
     Object ref = type_;
     if (ref instanceof String) {
@@ -152,7 +156,9 @@ private static final long serialVersionUID = 0L;
   }
   /**
    * <code>string type = 3;</code>
+   * @return The bytes for type.
    */
+  @Override
   public com.google.protobuf.ByteString
       getTypeBytes() {
     Object ref = type_;
@@ -171,7 +177,9 @@ private static final long serialVersionUID = 0L;
   private volatile Object clientIp_;
   /**
    * <code>string clientIp = 8;</code>
+   * @return The clientIp.
    */
+  @Override
   public String getClientIp() {
     Object ref = clientIp_;
     if (ref instanceof String) {
@@ -186,7 +194,9 @@ private static final long serialVersionUID = 0L;
   }
   /**
    * <code>string clientIp = 8;</code>
+   * @return The bytes for clientIp.
    */
+  @Override
   public com.google.protobuf.ByteString
       getClientIpBytes() {
     Object ref = clientIp_;
@@ -231,14 +241,16 @@ private static final long serialVersionUID = 0L;
    * <code>map&lt;string, string&gt; headers = 7;</code>
    */
 
+  @Override
   public boolean containsHeaders(
       String key) {
-    if (key == null) { throw new NullPointerException(); }
+    if (key == null) { throw new NullPointerException("map key"); }
     return internalGetHeaders().getMap().containsKey(key);
   }
   /**
    * Use {@link #getHeadersMap()} instead.
    */
+  @Override
   @Deprecated
   public java.util.Map<String, String> getHeaders() {
     return getHeadersMap();
@@ -246,6 +258,7 @@ private static final long serialVersionUID = 0L;
   /**
    * <code>map&lt;string, string&gt; headers = 7;</code>
    */
+  @Override
 
   public java.util.Map<String, String> getHeadersMap() {
     return internalGetHeaders().getMap();
@@ -253,11 +266,12 @@ private static final long serialVersionUID = 0L;
   /**
    * <code>map&lt;string, string&gt; headers = 7;</code>
    */
+  @Override
 
   public String getHeadersOrDefault(
       String key,
       String defaultValue) {
-    if (key == null) { throw new NullPointerException(); }
+    if (key == null) { throw new NullPointerException("map key"); }
     java.util.Map<String, String> map =
         internalGetHeaders().getMap();
     return map.containsKey(key) ? map.get(key) : defaultValue;
@@ -265,10 +279,11 @@ private static final long serialVersionUID = 0L;
   /**
    * <code>map&lt;string, string&gt; headers = 7;</code>
    */
+  @Override
 
   public String getHeadersOrThrow(
       String key) {
-    if (key == null) { throw new NullPointerException(); }
+    if (key == null) { throw new NullPointerException("map key"); }
     java.util.Map<String, String> map =
         internalGetHeaders().getMap();
     if (!map.containsKey(key)) {
@@ -291,7 +306,7 @@ private static final long serialVersionUID = 0L;
   @Override
   public void writeTo(com.google.protobuf.CodedOutputStream output)
                       throws java.io.IOException {
-    if (!getTypeBytes().isEmpty()) {
+    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(type_)) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 3, type_);
     }
     com.google.protobuf.GeneratedMessageV3
@@ -300,7 +315,7 @@ private static final long serialVersionUID = 0L;
         internalGetHeaders(),
         HeadersDefaultEntryHolder.defaultEntry,
         7);
-    if (!getClientIpBytes().isEmpty()) {
+    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(clientIp_)) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 8, clientIp_);
     }
     unknownFields.writeTo(output);
@@ -312,7 +327,7 @@ private static final long serialVersionUID = 0L;
     if (size != -1) return size;
 
     size = 0;
-    if (!getTypeBytes().isEmpty()) {
+    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(type_)) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, type_);
     }
     for (java.util.Map.Entry<String, String> entry
@@ -325,7 +340,7 @@ private static final long serialVersionUID = 0L;
       size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(7, headers__);
     }
-    if (!getClientIpBytes().isEmpty()) {
+    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(clientIp_)) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(8, clientIp_);
     }
     size += unknownFields.getSerializedSize();
@@ -650,6 +665,7 @@ private static final long serialVersionUID = 0L;
     private Object type_ = "";
     /**
      * <code>string type = 3;</code>
+     * @return The type.
      */
     public String getType() {
       Object ref = type_;
@@ -665,6 +681,7 @@ private static final long serialVersionUID = 0L;
     }
     /**
      * <code>string type = 3;</code>
+     * @return The bytes for type.
      */
     public com.google.protobuf.ByteString
         getTypeBytes() {
@@ -681,6 +698,8 @@ private static final long serialVersionUID = 0L;
     }
     /**
      * <code>string type = 3;</code>
+     * @param value The type to set.
+     * @return This builder for chaining.
      */
     public Builder setType(
         String value) {
@@ -694,6 +713,7 @@ private static final long serialVersionUID = 0L;
     }
     /**
      * <code>string type = 3;</code>
+     * @return This builder for chaining.
      */
     public Builder clearType() {
       
@@ -703,6 +723,8 @@ private static final long serialVersionUID = 0L;
     }
     /**
      * <code>string type = 3;</code>
+     * @param value The bytes for type to set.
+     * @return This builder for chaining.
      */
     public Builder setTypeBytes(
         com.google.protobuf.ByteString value) {
@@ -719,6 +741,7 @@ private static final long serialVersionUID = 0L;
     private Object clientIp_ = "";
     /**
      * <code>string clientIp = 8;</code>
+     * @return The clientIp.
      */
     public String getClientIp() {
       Object ref = clientIp_;
@@ -734,6 +757,7 @@ private static final long serialVersionUID = 0L;
     }
     /**
      * <code>string clientIp = 8;</code>
+     * @return The bytes for clientIp.
      */
     public com.google.protobuf.ByteString
         getClientIpBytes() {
@@ -750,6 +774,8 @@ private static final long serialVersionUID = 0L;
     }
     /**
      * <code>string clientIp = 8;</code>
+     * @param value The clientIp to set.
+     * @return This builder for chaining.
      */
     public Builder setClientIp(
         String value) {
@@ -763,6 +789,7 @@ private static final long serialVersionUID = 0L;
     }
     /**
      * <code>string clientIp = 8;</code>
+     * @return This builder for chaining.
      */
     public Builder clearClientIp() {
       
@@ -772,6 +799,8 @@ private static final long serialVersionUID = 0L;
     }
     /**
      * <code>string clientIp = 8;</code>
+     * @param value The bytes for clientIp to set.
+     * @return This builder for chaining.
      */
     public Builder setClientIpBytes(
         com.google.protobuf.ByteString value) {
@@ -815,14 +844,16 @@ private static final long serialVersionUID = 0L;
      * <code>map&lt;string, string&gt; headers = 7;</code>
      */
 
+    @Override
     public boolean containsHeaders(
         String key) {
-      if (key == null) { throw new NullPointerException(); }
+      if (key == null) { throw new NullPointerException("map key"); }
       return internalGetHeaders().getMap().containsKey(key);
     }
     /**
      * Use {@link #getHeadersMap()} instead.
      */
+    @Override
     @Deprecated
     public java.util.Map<String, String> getHeaders() {
       return getHeadersMap();
@@ -830,6 +861,7 @@ private static final long serialVersionUID = 0L;
     /**
      * <code>map&lt;string, string&gt; headers = 7;</code>
      */
+    @Override
 
     public java.util.Map<String, String> getHeadersMap() {
       return internalGetHeaders().getMap();
@@ -837,11 +869,12 @@ private static final long serialVersionUID = 0L;
     /**
      * <code>map&lt;string, string&gt; headers = 7;</code>
      */
+    @Override
 
     public String getHeadersOrDefault(
         String key,
         String defaultValue) {
-      if (key == null) { throw new NullPointerException(); }
+      if (key == null) { throw new NullPointerException("map key"); }
       java.util.Map<String, String> map =
           internalGetHeaders().getMap();
       return map.containsKey(key) ? map.get(key) : defaultValue;
@@ -849,10 +882,11 @@ private static final long serialVersionUID = 0L;
     /**
      * <code>map&lt;string, string&gt; headers = 7;</code>
      */
+    @Override
 
     public String getHeadersOrThrow(
         String key) {
-      if (key == null) { throw new NullPointerException(); }
+      if (key == null) { throw new NullPointerException("map key"); }
       java.util.Map<String, String> map =
           internalGetHeaders().getMap();
       if (!map.containsKey(key)) {
@@ -872,7 +906,7 @@ private static final long serialVersionUID = 0L;
 
     public Builder removeHeaders(
         String key) {
-      if (key == null) { throw new NullPointerException(); }
+      if (key == null) { throw new NullPointerException("map key"); }
       internalGetMutableHeaders().getMutableMap()
           .remove(key);
       return this;
@@ -891,8 +925,11 @@ private static final long serialVersionUID = 0L;
     public Builder putHeaders(
         String key,
         String value) {
-      if (key == null) { throw new NullPointerException(); }
-      if (value == null) { throw new NullPointerException(); }
+      if (key == null) { throw new NullPointerException("map key"); }
+      if (value == null) {
+  throw new NullPointerException("map value");
+}
+
       internalGetMutableHeaders().getMutableMap()
           .put(key, value);
       return this;

@@ -22,20 +22,24 @@ public interface MetadataOrBuilder extends
 
   /**
    * <code>string type = 3;</code>
+   * @return The type.
    */
   String getType();
   /**
    * <code>string type = 3;</code>
+   * @return The bytes for type.
    */
   com.google.protobuf.ByteString
       getTypeBytes();
 
   /**
    * <code>string clientIp = 8;</code>
+   * @return The clientIp.
    */
   String getClientIp();
   /**
    * <code>string clientIp = 8;</code>
+   * @return The bytes for clientIp.
    */
   com.google.protobuf.ByteString
       getClientIpBytes();
@@ -64,9 +68,11 @@ public interface MetadataOrBuilder extends
    * <code>map&lt;string, string&gt; headers = 7;</code>
    */
 
-  String getHeadersOrDefault(
+  /* nullable */
+String getHeadersOrDefault(
       String key,
-      String defaultValue);
+      /* nullable */
+String defaultValue);
   /**
    * <code>map&lt;string, string&gt; headers = 7;</code>
    */

@@ -144,10 +144,6 @@ public class Instance implements Serializable {
     public String getServiceName() {
         return this.serviceName;
     }
-
-    public String generateInstanceId() {
-        return getIp() + "#" + getPort() + "#" + getClusterName() + "#" + getServiceName();
-    }
     
     public void setServiceName(final String serviceName) {
         this.serviceName = serviceName;
@@ -192,7 +188,7 @@ public class Instance implements Serializable {
     
     @Override
     public String toString() {
-        return "Instance{" + "instanceId='" + getInstanceId() + '\'' + ", ip='" + ip + '\'' + ", port=" + port + ", weight="
+        return "Instance{" + "instanceId='" + instanceId + '\'' + ", ip='" + ip + '\'' + ", port=" + port + ", weight="
                 + weight + ", healthy=" + healthy + ", enabled=" + enabled + ", ephemeral=" + ephemeral
                 + ", clusterName='" + clusterName + '\'' + ", serviceName='" + serviceName + '\'' + ", metadata="
                 + metadata + '}';

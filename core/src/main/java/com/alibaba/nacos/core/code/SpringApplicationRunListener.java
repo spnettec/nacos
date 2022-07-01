@@ -25,6 +25,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.Ordered;
 import org.springframework.core.env.ConfigurableEnvironment;
 
+import java.time.Duration;
 import java.util.Collection;
 
 /**
@@ -34,9 +35,9 @@ import java.util.Collection;
  * @since 0.2.2
  */
 public class SpringApplicationRunListener implements org.springframework.boot.SpringApplicationRunListener, Ordered {
-    
+
     private final SpringApplication application;
-    
+
     private final String[] args;
 
     Collection<NacosApplicationListener> nacosApplicationListeners = NacosServiceLoader.load(NacosApplicationListener.class);
@@ -55,7 +56,7 @@ public class SpringApplicationRunListener implements org.springframework.boot.Sp
     
     @Override
     public void environmentPrepared(ConfigurableBootstrapContext bootstrapContext,
-                                    ConfigurableEnvironment environment) {
+            ConfigurableEnvironment environment) {
         for (NacosApplicationListener nacosApplicationListener : nacosApplicationListeners) {
             nacosApplicationListener.environmentPrepared(environment);
         }

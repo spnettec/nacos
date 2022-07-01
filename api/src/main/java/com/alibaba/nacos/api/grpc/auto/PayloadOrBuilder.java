@@ -22,10 +22,12 @@ public interface PayloadOrBuilder extends
 
   /**
    * <code>.Metadata metadata = 2;</code>
+   * @return Whether the metadata field is set.
    */
   boolean hasMetadata();
   /**
    * <code>.Metadata metadata = 2;</code>
+   * @return The metadata.
    */
   Metadata getMetadata();
   /**
@@ -35,10 +37,12 @@ public interface PayloadOrBuilder extends
 
   /**
    * <code>.google.protobuf.Any body = 3;</code>
+   * @return Whether the body field is set.
    */
   boolean hasBody();
   /**
    * <code>.google.protobuf.Any body = 3;</code>
+   * @return The body.
    */
   com.google.protobuf.Any getBody();
   /**
