@@ -200,7 +200,7 @@ public class InternetAddressUtil {
      * remove brackets "[]".
      *
      * @param str is ipv6 address
-     * @return
+     * @return String
      */
     public static String removeBrackets(String str) {
         if (StringUtils.isBlank(str)) {

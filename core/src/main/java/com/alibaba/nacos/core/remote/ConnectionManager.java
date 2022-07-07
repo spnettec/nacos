@@ -106,7 +106,7 @@ public class ConnectionManager extends Subscriber<ConnectionLimitRuleChangeEvent
      * if monitor detail.
      *
      * @param clientIp clientIp.
-     * @return
+     * @return boolean
      */
     public boolean traced(String clientIp) {
         return connectionLimitRule != null && connectionLimitRule.getMonitorIpList() != null && connectionLimitRule

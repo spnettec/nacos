@@ -466,7 +466,7 @@ public class CapacityService {
      * @param maxSize      maxSize int value.
      * @param maxAggrCount maxAggrCount int value.
      * @param maxAggrSize  maxAggrSize int value.
-     * @return
+     * @return boolean
      */
     public boolean initTenantCapacity(String tenant, Integer quota, Integer maxSize, Integer maxAggrCount,
             Integer maxAggrSize) {

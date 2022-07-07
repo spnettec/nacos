@@ -190,7 +190,7 @@ public class InetAddressValidator {
     /**
      * get to ipv4 pattern.
      *
-     * @return
+     * @return Pattern
      */
     public static Pattern getIpv4Pattern() {
         return IPV4_PATTERN;

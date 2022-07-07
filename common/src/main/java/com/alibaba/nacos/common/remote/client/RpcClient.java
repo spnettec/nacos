@@ -906,7 +906,7 @@ public abstract class RpcClient implements Closeable {
      * resolve server info.
      *
      * @param serverAddress address.
-     * @return
+     * @return ServerInfo
      */
     @SuppressWarnings("PMD.UndefineMagicConstantRule")
     private ServerInfo resolveServerInfo(String serverAddress) {

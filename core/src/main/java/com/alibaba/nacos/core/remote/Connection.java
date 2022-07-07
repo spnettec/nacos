@@ -55,7 +55,7 @@ public abstract class Connection implements Requester {
     /**
      * get abilities.
      *
-     * @return
+     * @return ClientAbilities
      */
     public ClientAbilities getAbilities() {
         return abilities;
