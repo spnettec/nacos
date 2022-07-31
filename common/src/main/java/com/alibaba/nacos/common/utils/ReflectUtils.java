@@ -33,7 +33,7 @@ public class ReflectUtils {
      * get filed value of  obj.
      *
      * @param obj       obj.
-     * @param fieldName file name to get value.
+     * @param fieldName field name to get value.
      * @return field value.
      */
     public static Object getFieldValue(Object obj, String fieldName) {
@@ -62,7 +62,24 @@ public class ReflectUtils {
             return defaultValue;
         }
     }
-    
+
+    /**
+     * get filed value of obj super class.
+     *
+     * @param obj       obj.
+     * @param fieldName field name to get value.
+     * @return field value.
+     */
+    public static Object getSuperFieldValue(Object obj, String fieldName) {
+        try {
+            Field field = obj.getClass().getSuperclass().getDeclaredField(fieldName);
+            field.setAccessible(true);
+            return field.get(obj);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     /**
      * Get the field represented by the supplied {@link Field field object} on the specified {@link Object target
      * object}. In accordance with {@link Field#get(Object)} semantics, the returned value is automatically wrapped if
