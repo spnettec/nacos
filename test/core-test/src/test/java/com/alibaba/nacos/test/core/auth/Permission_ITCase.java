@@ -20,6 +20,7 @@ import com.alibaba.nacos.Nacos;
 import com.alibaba.nacos.common.utils.JacksonUtils;
 import com.alibaba.nacos.config.server.model.Page;
 import com.alibaba.nacos.plugin.auth.api.Permission;
+import com.alibaba.nacos.plugin.auth.impl.persistence.PermissionInfo;
 import com.alibaba.nacos.test.base.HttpClient4Test;
 import com.alibaba.nacos.test.base.Params;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -149,14 +150,14 @@ public class Permission_ITCase extends HttpClient4Test {
         System.out.println(response);
         Assert.assertTrue(response.getStatusCode().is2xxSuccessful());
         
-        Page<Permission> permissionPage = JacksonUtils.toObj(response.getBody(), new TypeReference<Page<Permission>>() {
+        Page<PermissionInfo> permissionPage = JacksonUtils.toObj(response.getBody(), new TypeReference<Page<PermissionInfo>>() {
         });
         
         Assert.assertNotNull(permissionPage);
         Assert.assertNotNull(permissionPage.getPageItems());
         
         boolean found1 = false, found2 = false;
-        for (Permission permission : permissionPage.getPageItems()) {
+        for (PermissionInfo permission : permissionPage.getPageItems()) {
             if (permission.getResource().equals("public:*:*") && permission.getAction().equals("rw")) {
                 found1 = true;
             }
@@ -185,7 +186,7 @@ public class Permission_ITCase extends HttpClient4Test {
         
         Assert.assertTrue(response.getStatusCode().is2xxSuccessful());
         
-        permissionPage = JacksonUtils.toObj(response.getBody(), new TypeReference<Page<Permission>>() {
+        permissionPage = JacksonUtils.toObj(response.getBody(), new TypeReference<Page<PermissionInfo>>() {
         });
         
         Assert.assertNotNull(permissionPage);
@@ -194,7 +195,7 @@ public class Permission_ITCase extends HttpClient4Test {
         found1 = false;
         found2 = false;
         
-        for (Permission permission : permissionPage.getPageItems()) {
+        for (PermissionInfo permission : permissionPage.getPageItems()) {
             if (permission.getResource().equals("public:*:*") && permission.getAction().equals("rw")) {
                 found1 = true;
             }
@@ -220,7 +221,7 @@ public class Permission_ITCase extends HttpClient4Test {
         
         Assert.assertTrue(response.getStatusCode().is2xxSuccessful());
         
-        permissionPage = JacksonUtils.toObj(response.getBody(), new TypeReference<Page<Permission>>() {
+        permissionPage = JacksonUtils.toObj(response.getBody(), new TypeReference<Page<PermissionInfo>>() {
         });
         
         Assert.assertNotNull(permissionPage);
@@ -229,7 +230,7 @@ public class Permission_ITCase extends HttpClient4Test {
         found1 = false;
         found2 = false;
         
-        for (Permission permission : permissionPage.getPageItems()) {
+        for (PermissionInfo permission : permissionPage.getPageItems()) {
             if (permission.getResource().equals("public:*:*") && permission.getAction().equals("rw")) {
                 found1 = true;
             }

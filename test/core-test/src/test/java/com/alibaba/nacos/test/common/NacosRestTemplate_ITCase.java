@@ -28,14 +28,15 @@ import com.alibaba.nacos.config.server.model.ConfigInfo4Beta;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.After;
 import org.junit.FixMethodOrder;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.HashMap;
@@ -48,11 +49,12 @@ import java.util.Map;
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = Nacos.class, properties = {
-        "server.servlet.context-path=/nacos"}, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+        "server.servlet.context-path=/nacos","nacos.core.auth.enabled=false"},
+        webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @FixMethodOrder(MethodSorters.JVM)
 public class NacosRestTemplate_ITCase {
-    
-    @LocalServerPort
+
+    @Value("${local.server.port}")
     private int port;
     
     private NacosRestTemplate nacosRestTemplate = HttpClientBeanHolder
@@ -68,7 +70,14 @@ public class NacosRestTemplate_ITCase {
     public void init() throws NacosException {
         IP = String.format("http://localhost:%d", port);
     }
-    
+    @After
+    public void destroy(){
+        try {
+            nacosRestTemplate.close();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
     @Test
     public void test_url_post_config() throws Exception {
         String url = IP + CONFIG_PATH + "/configs";
