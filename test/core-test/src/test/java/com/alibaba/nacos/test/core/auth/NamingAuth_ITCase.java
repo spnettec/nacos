@@ -72,16 +72,16 @@ public class NamingAuth_ITCase extends AuthBase {
             namingService.registerInstance("test.1", "1.2.3.4", 80);
             fail();
         } catch (NacosException ne) {
-            NacosException cause = (NacosException) ne.getCause();
-            Assert.assertEquals(HttpStatus.SC_FORBIDDEN, cause.getErrCode());
+            //NacosException cause = (NacosException) ne.getCause();
+            Assert.assertEquals(HttpStatus.SC_FORBIDDEN, ne.getErrCode());
         }
 
         try {
             namingService.deregisterInstance("test.1", "1.2.3.4", 80);
             fail();
         } catch (NacosException ne) {
-            NacosException cause = (NacosException) ne.getCause();
-            Assert.assertEquals(HttpStatus.SC_FORBIDDEN, cause.getErrCode());
+            //NacosException cause = (NacosException) ne.getCause();
+            Assert.assertEquals(HttpStatus.SC_FORBIDDEN, ne.getErrCode());
         }
         namingService.shutDown();
     }
@@ -133,8 +133,8 @@ public class NamingAuth_ITCase extends AuthBase {
             namingService.getAllInstances("test.1");
             fail();
         } catch (NacosException ne) {
-            NacosException cause = (NacosException) ne.getCause();
-            Assert.assertEquals(HttpStatus.SC_FORBIDDEN, cause.getErrCode());
+            //NacosException cause = (NacosException) ne.getCause();
+            Assert.assertEquals(HttpStatus.SC_FORBIDDEN, ne.getErrCode());
         }
 
         namingService.shutDown();

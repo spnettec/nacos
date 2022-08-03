@@ -23,7 +23,7 @@ import com.alibaba.nacos.core.remote.control.TpsControlRule;
 import com.alibaba.nacos.core.remote.control.TpsMonitorManager;
 import com.alibaba.nacos.core.remote.control.TpsMonitorPoint;
 import com.alibaba.nacos.core.remote.control.TpsRecorder;
-import org.apache.commons.collections.map.HashedMap;
+import org.apache.commons.collections4.map.HashedMap;
 import org.junit.Ignore;
 import org.junit.Test;
 

@@ -38,8 +38,8 @@ import com.alibaba.nacos.naming.core.v2.upgrade.doublewrite.execute.AsyncService
 import com.alibaba.nacos.naming.misc.Loggers;
 import com.alibaba.nacos.naming.misc.NamingExecuteTaskDispatcher;
 import com.alibaba.nacos.sys.env.EnvUtil;
-import org.codehaus.jackson.Version;
-import org.codehaus.jackson.util.VersionUtil;
+import com.fasterxml.jackson.core.Version;
+import com.fasterxml.jackson.core.util.VersionUtil;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PreDestroy;
@@ -54,43 +54,43 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 @Component
 public class UpgradeJudgement extends Subscriber<MembersChangeEvent> {
-    
+
     /**
      * Only when all cluster upgrade upper 2.0.0, this features is true.
      */
     private final AtomicBoolean useGrpcFeatures = new AtomicBoolean(false);
-    
+
     /**
      * Only when all cluster upgrade upper 1.4.0, this features is true.
      */
     private final AtomicBoolean useJraftFeatures = new AtomicBoolean(false);
-    
+
     private final AtomicBoolean all20XVersion = new AtomicBoolean(false);
-    
+
     private final RaftPeerSet raftPeerSet;
-    
+
     private final RaftCore raftCore;
-    
+
     private final ClusterVersionJudgement versionJudgement;
-    
+
     private final ServerMemberManager memberManager;
-    
+
     private final ServiceManager serviceManager;
-    
+
     private final DoubleWriteDelayTaskEngine doubleWriteDelayTaskEngine;
-    
+
     private ScheduledExecutorService upgradeChecker;
-    
+
     private SelfUpgradeChecker selfUpgradeChecker;
-    
+
     private static final int MAJOR_VERSION = 2;
-    
+
     private static final int MINOR_VERSION = 4;
-    
+
     public UpgradeJudgement(RaftPeerSet raftPeerSet, RaftCore raftCore, ClusterVersionJudgement versionJudgement,
-            ServerMemberManager memberManager, ServiceManager serviceManager,
-            UpgradeStates upgradeStates,
-            DoubleWriteDelayTaskEngine doubleWriteDelayTaskEngine) {
+                            ServerMemberManager memberManager, ServiceManager serviceManager,
+                            UpgradeStates upgradeStates,
+                            DoubleWriteDelayTaskEngine doubleWriteDelayTaskEngine) {
         this.raftPeerSet = raftPeerSet;
         this.raftCore = raftCore;
         this.versionJudgement = versionJudgement;
@@ -111,7 +111,7 @@ public class UpgradeJudgement extends Subscriber<MembersChangeEvent> {
             NotifyCenter.registerSubscriber(this);
         }
     }
-    
+
     private void initUpgradeChecker() {
         selfUpgradeChecker = SelfUpgradeCheckerSpiHolder.findSelfChecker(EnvUtil.getProperty("upgrading.checker.type", "default"));
         upgradeChecker = ExecutorFactory.newSingleScheduledExecutorService(new NameThreadFactory("upgrading.checker"));
@@ -126,29 +126,29 @@ public class UpgradeJudgement extends Subscriber<MembersChangeEvent> {
             }
         }, 100L, 5000L, TimeUnit.MILLISECONDS);
     }
-    
+
     @JustForTest
     void setUseGrpcFeatures(boolean value) {
         useGrpcFeatures.set(value);
     }
-    
+
     @JustForTest
     void setUseJraftFeatures(boolean value) {
         useJraftFeatures.set(value);
     }
-    
+
     public boolean isUseGrpcFeatures() {
         return useGrpcFeatures.get();
     }
-    
+
     public boolean isUseJraftFeatures() {
         return useJraftFeatures.get();
     }
-    
+
     public boolean isAll20XVersion() {
         return all20XVersion.get();
     }
-    
+
     @Override
     public void onEvent(MembersChangeEvent event) {
         if (!event.hasTriggers()) {
@@ -166,7 +166,7 @@ public class UpgradeJudgement extends Subscriber<MembersChangeEvent> {
                 all20XVersion.set(false);
                 return;
             }
-            Version version = VersionUtil.parseVersion(versionStr.toString());
+            Version version = VersionUtil.parseVersion(versionStr.toString(), null, null);
             if (version.getMajorVersion() < MAJOR_VERSION) {
                 checkAndDowngrade(version.getMinorVersion() >= MINOR_VERSION);
                 all20XVersion.set(false);
@@ -175,7 +175,7 @@ public class UpgradeJudgement extends Subscriber<MembersChangeEvent> {
         }
         all20XVersion.set(true);
     }
-    
+
     private void checkAndDowngrade(boolean jraftFeature) {
         boolean isDowngradeGrpc = useGrpcFeatures.compareAndSet(true, false);
         boolean isDowngradeJraft = useJraftFeatures.getAndSet(jraftFeature);
@@ -191,7 +191,7 @@ public class UpgradeJudgement extends Subscriber<MembersChangeEvent> {
             }
         }
     }
-    
+
     private boolean checkForUpgrade() {
         if (!useGrpcFeatures.get()) {
             boolean selfCheckResult = selfUpgradeChecker.isReadyToUpgrade(serviceManager, doubleWriteDelayTaskEngine);
@@ -210,7 +210,7 @@ public class UpgradeJudgement extends Subscriber<MembersChangeEvent> {
         }
         return result;
     }
-    
+
     private void doUpgrade() {
         Loggers.SRV_LOG.info("Upgrade to 2.0.X");
         useGrpcFeatures.compareAndSet(false, true);
@@ -218,7 +218,7 @@ public class UpgradeJudgement extends Subscriber<MembersChangeEvent> {
         useJraftFeatures.set(true);
         refreshPersistentServices();
     }
-    
+
     private void refreshPersistentServices() {
         for (String each : com.alibaba.nacos.naming.core.v2.ServiceManager.getInstance().getAllNamespaces()) {
             for (Service service : com.alibaba.nacos.naming.core.v2.ServiceManager.getInstance().getSingletons(each)) {
@@ -227,12 +227,12 @@ public class UpgradeJudgement extends Subscriber<MembersChangeEvent> {
             }
         }
     }
-    
+
     @Override
     public Class<? extends Event> subscribeType() {
         return MembersChangeEvent.class;
     }
-    
+
     /**
      * Shut down.
      */
@@ -243,7 +243,7 @@ public class UpgradeJudgement extends Subscriber<MembersChangeEvent> {
         }
         NotifyCenter.deregisterSubscriber(this);
     }
-    
+
     /**
      * Stop judgement and clear all cache.
      */
