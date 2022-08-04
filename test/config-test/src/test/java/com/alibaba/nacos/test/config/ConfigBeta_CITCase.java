@@ -22,16 +22,12 @@ import com.alibaba.nacos.common.utils.JacksonUtils;
 import com.alibaba.nacos.common.utils.ThreadUtils;
 import com.alibaba.nacos.test.base.ConfigCleanUtils;
 import com.alibaba.nacos.test.base.Params;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -49,7 +45,7 @@ import org.springframework.web.util.UriComponentsBuilder;
         webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 public class ConfigBeta_CITCase {
 
-    @LocalServerPort
+    @Value("${local.server.port}")
     private int port;
 
     private String url;

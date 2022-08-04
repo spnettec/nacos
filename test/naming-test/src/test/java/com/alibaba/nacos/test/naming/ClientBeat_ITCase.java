@@ -21,14 +21,14 @@ import com.alibaba.nacos.Nacos;
 import com.alibaba.nacos.api.naming.NamingFactory;
 import com.alibaba.nacos.api.naming.NamingService;
 import com.alibaba.nacos.api.naming.pojo.Instance;
-import com.alibaba.nacos.test.base.Params;
 import com.alibaba.nacos.common.utils.StringUtils;
+import com.alibaba.nacos.test.base.Params;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -43,7 +43,7 @@ import java.util.concurrent.TimeUnit;
 public class ClientBeat_ITCase extends NamingBase {
 
     private NamingService naming;
-    @LocalServerPort
+    @Value("${local.server.port}")
     private int port;
 
     @Before

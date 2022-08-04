@@ -32,8 +32,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.ByteArrayInputStream;
@@ -55,7 +55,7 @@ import java.util.Map;
 @FixMethodOrder(MethodSorters.JVM)
 public class NacosRestTemplate_Interceptors_ITCase {
     
-    @LocalServerPort
+    @Value("${local.server.port}")
     private int port;
     
     private NacosRestTemplate nacosRestTemplate = HttpClientBeanHolder

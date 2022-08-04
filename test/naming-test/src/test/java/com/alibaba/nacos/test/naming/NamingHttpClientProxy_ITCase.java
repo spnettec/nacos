@@ -34,8 +34,8 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.ArrayList;
@@ -49,7 +49,7 @@ import java.util.concurrent.TimeUnit;
     webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @Ignore("Http sync will stop for 2.0 server, and will be removed")
 public class NamingHttpClientProxy_ITCase {
-    @LocalServerPort
+    @Value("${local.server.port}")
     private int port;
     @Autowired
     private Serializer serializer;

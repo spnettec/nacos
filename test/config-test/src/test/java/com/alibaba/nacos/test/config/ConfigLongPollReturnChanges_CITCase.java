@@ -25,15 +25,10 @@ import com.alibaba.nacos.api.config.PropertyChangeType;
 import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.client.config.listener.impl.AbstractConfigChangeListener;
 import com.alibaba.nacos.test.base.ConfigCleanUtils;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.Properties;
@@ -45,7 +40,7 @@ import java.util.concurrent.TimeUnit;
         webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 public class ConfigLongPollReturnChanges_CITCase {
 
-    @LocalServerPort
+    @Value("${local.server.port}")
     private int port;
 
     private ConfigService configService;

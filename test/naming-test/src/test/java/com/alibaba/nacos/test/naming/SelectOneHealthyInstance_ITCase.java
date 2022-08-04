@@ -25,8 +25,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.Arrays;
@@ -51,7 +51,7 @@ public class SelectOneHealthyInstance_ITCase {
     private static NamingService naming2;
     private static NamingService naming3;
     private static NamingService naming4;
-    @LocalServerPort
+    @Value("${local.server.port}")
     private int port;
     @Before
     public void init() throws Exception{

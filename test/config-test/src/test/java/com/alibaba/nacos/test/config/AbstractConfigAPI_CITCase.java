@@ -62,7 +62,7 @@ public abstract class AbstractConfigAPI_CITCase {
     @Value("${server.servlet.context-path}")
     private String contextPath;
     
-    @LocalServerPort
+    @Value("${local.server.port}")
     private int port;
     
     @Before

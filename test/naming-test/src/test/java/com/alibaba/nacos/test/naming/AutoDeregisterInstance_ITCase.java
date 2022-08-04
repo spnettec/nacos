@@ -23,17 +23,12 @@ import com.alibaba.nacos.api.naming.NamingService;
 import com.alibaba.nacos.api.naming.pojo.Instance;
 import com.alibaba.nacos.client.naming.NacosNamingService;
 import com.alibaba.nacos.client.naming.beat.BeatInfo;
-import com.alibaba.nacos.sys.utils.ApplicationUtils;
-import com.alibaba.nacos.test.utils.NamingTestUtils;
 import com.alibaba.nacos.sys.env.EnvUtil;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import com.alibaba.nacos.test.utils.NamingTestUtils;
+import org.junit.*;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.Arrays;
@@ -58,7 +53,7 @@ public class AutoDeregisterInstance_ITCase {
     
     private NamingService naming2;
     
-    @LocalServerPort
+    @Value("${local.server.port}")
     private int port;
     
     @Before

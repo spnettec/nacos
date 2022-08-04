@@ -50,7 +50,7 @@ public abstract class AbstractInstanceOperate_ITCase {
     
     private NamingService naming;
     
-    @LocalServerPort
+    @Value("${local.server.port}")
     private int port;
     
     @Value("${server.servlet.context-path}")

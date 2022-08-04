@@ -32,8 +32,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.HashMap;
@@ -57,7 +57,7 @@ public class NamingMaintainService_ITCase {
     private Instance instance;
     private String serviceName;
 
-    @LocalServerPort
+    @Value("${local.server.port}")
     private int port;
 
     @Before

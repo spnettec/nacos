@@ -19,11 +19,10 @@ import com.alibaba.nacos.Nacos;
 import com.alibaba.nacos.common.utils.JacksonUtils;
 import com.alibaba.nacos.test.base.Params;
 import com.fasterxml.jackson.databind.JsonNode;
-
 import org.junit.*;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -38,7 +37,7 @@ import java.net.URL;
         webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 public class RestAPI_ITCase extends NamingBase {
 
-    @LocalServerPort
+    @Value("${local.server.port}")
     private int port;
 
     @Before
