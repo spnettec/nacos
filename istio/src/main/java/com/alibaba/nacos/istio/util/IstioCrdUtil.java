@@ -26,7 +26,7 @@ import istio.mcp.v1alpha1.MetadataOuterClass.Metadata;
 import istio.networking.v1alpha3.GatewayOuterClass;
 import istio.networking.v1alpha3.ServiceEntryOuterClass.ServiceEntry;
 import istio.networking.v1alpha3.WorkloadEntryOuterClass.WorkloadEntry;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.Date;
 import java.util.HashMap;
