@@ -28,10 +28,6 @@
     <name>Alibaba NACOS ${project.version}</name>
     <description>Top Nacos project pom.xml file</description>
     <url>http://nacos.io</url>
-    <prerequisites>
-        <maven>3.2.5</maven>
-    </prerequisites>
-    
     <scm>
         <url>git@github.com:alibaba/nacos.git</url>
         <connection>scm:git@github.com:alibaba/nacos.git</connection>
