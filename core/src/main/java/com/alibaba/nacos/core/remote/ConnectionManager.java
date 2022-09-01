@@ -90,7 +90,7 @@ public class ConnectionManager extends Subscriber<ConnectionLimitRuleChangeEvent
     
     String redirectAddress = null;
     
-    private Map<String, AtomicInteger> connectionForClientIp = new ConcurrentHashMap<>(16);
+    private final Map<String, AtomicInteger> connectionForClientIp = new ConcurrentHashMap<>(16);
     
     Map<String, Connection> connections = new ConcurrentHashMap<>();
     
@@ -578,7 +578,7 @@ public class ConnectionManager extends Subscriber<ConnectionLimitRuleChangeEvent
      * @return over limit or not.
      */
     private boolean isOverLimit() {
-        return connectionLimitRule.countLimit > 0 && currentSdkClientCount() >= connectionLimitRule.getCountLimit();
+        return connectionLimitRule.countLimit > 0 && connectionLimitRule.countLimit < currentSdkClientCount();
     }
     
     @Override
