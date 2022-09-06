@@ -794,14 +794,10 @@
             
             <!-- JRaft -->
             <dependency>
-                <groupId>com.alipay.sofa</groupId>
+                <groupId>com.github.heyoulin.sofa-jraft</groupId>
                 <artifactId>jraft-core</artifactId>
                 <version>${jraft-core.version}</version>
                 <exclusions>
-                    <exclusion>
-                        <groupId>com.alipay.sofa</groupId>
-                        <artifactId>bolt</artifactId>
-                    </exclusion>
                     <exclusion>
                         <groupId>org.apache.logging.log4j</groupId>
                         <artifactId>log4j-api</artifactId>
@@ -822,7 +818,7 @@
             </dependency>
 
             <dependency>
-                <groupId>com.alipay.sofa</groupId>
+                <groupId>com.github.heyoulin.sofa-jraft</groupId>
                 <artifactId>rpc-grpc-impl</artifactId>
                 <version>${rpc-grpc-impl.version}</version>
             </dependency>
@@ -944,6 +940,10 @@
         </dependencies>
     </dependencyManagement>
     <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
         <repository>
             <id>central-repos1</id>
             <name>Central Repository 2</name>
