@@ -24,7 +24,6 @@ import org.springframework.util.ObjectUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 import static com.alibaba.nacos.common.utils.CollectionUtils.getOrDefault;
 
@@ -92,8 +91,6 @@ public class ExternalDataSourceProperties {
             poolProperties.setPassword(getOrDefault(password, index, password.get(0)).trim());
             HikariDataSource ds = poolProperties.getDataSource();
             ds.setConnectionTestQuery(TEST_QUERY);
-            ds.setIdleTimeout(TimeUnit.MINUTES.toMillis(10L));
-            ds.setConnectionTimeout(TimeUnit.SECONDS.toMillis(3L));
             dataSources.add(ds);
             callback.accept(ds);
         }
