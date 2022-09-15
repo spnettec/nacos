@@ -33,7 +33,7 @@ public class ReflectUtils {
      * get filed value of  obj.
      *
      * @param obj       obj.
-     * @param fieldName field name to get value.
+     * @param fieldName file name to get value.
      * @return field value.
      */
     public static Object getFieldValue(Object obj, String fieldName) {
