@@ -139,7 +139,7 @@
         <javatuples.version>1.2</javatuples.version>
         <grpc-java.version>1.49.0</grpc-java.version>
         <proto-google-common-protos.version>2.9.1</proto-google-common-protos.version>
-        <protobuf-java.version>3.21.5</protobuf-java.version>
+        <protobuf-java.version>3.21.6</protobuf-java.version>
         <protoc-gen-grpc-java.version>${grpc-java.version}</protoc-gen-grpc-java.version>
         <hessian.version>4.0.66</hessian.version>
         <mockito-core.version>4.6.1</mockito-core.version>
