@@ -133,7 +133,7 @@
         <httpasyncclient.version>4.1.3</httpasyncclient.version>
         <mysql-connector-java.version>8.0.28</mysql-connector-java.version>
         <derby.version>10.14.2.0</derby.version>
-        <jackson-core.version>2.13.3</jackson-core.version>
+        <jackson-core.version>2.13.4</jackson-core.version>
         <jjwt.version>0.11.2</jjwt.version>
         <guava.version>30.1-jre</guava.version>
         <javatuples.version>1.2</javatuples.version>
