@@ -51,7 +51,7 @@ public class NacosUserDetailsServiceImpl implements UserDetailsService {
     private AuthConfigs authConfigs;
     
     @Scheduled(initialDelay = 5000, fixedDelay = 15000)
-    private void reload() {
+    protected void reload() {
         try {
             Page<User> users = getUsersFromDatabase(1, Integer.MAX_VALUE, StringUtils.EMPTY);
             if (users == null) {
