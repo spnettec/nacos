@@ -50,7 +50,7 @@ public interface CustomEnvironmentPluginService {
     /**
      * pluginName.
      *
-     * @return
+     * @return pluginName
      */
     String pluginName();
 }
