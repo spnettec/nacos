@@ -14,6 +14,7 @@
 package com.alibaba.nacos.config.server.service.datasource;
 
 import com.alibaba.nacos.common.utils.Preconditions;
+import com.alibaba.nacos.common.utils.StringUtils;
 import com.zaxxer.hikari.HikariDataSource;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.boot.context.properties.bind.Bindable;
@@ -90,7 +91,9 @@ public class ExternalDataSourceProperties {
             poolProperties.setUsername(getOrDefault(user, index, user.get(0)).trim());
             poolProperties.setPassword(getOrDefault(password, index, password.get(0)).trim());
             HikariDataSource ds = poolProperties.getDataSource();
-            ds.setConnectionTestQuery(TEST_QUERY);
+            if (StringUtils.isEmpty(ds.getConnectionTestQuery())) {
+                ds.setConnectionTestQuery(TEST_QUERY);
+            }
             dataSources.add(ds);
             callback.accept(ds);
         }
