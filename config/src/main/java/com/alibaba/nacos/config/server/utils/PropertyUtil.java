@@ -287,10 +287,7 @@ public class PropertyUtil implements ApplicationContextInitializer<ConfigurableA
             // This value is true in stand-alone mode and false in cluster mode
             // If this value is set to true in cluster mode, nacos's distributed storage engine is turned on
             // default value is depend on ${nacos.standalone}
-            if (!isUseExternalDB()) {
-                setUseExternalDB(PropertiesConstant.MYSQL
-                        .equalsIgnoreCase(getString(PropertiesConstant.SPRING_DATASOURCE_PLATFORM, "")));
-            }
+
             if (isUseExternalDB()) {
                 setEmbeddedStorage(false);
             } else {

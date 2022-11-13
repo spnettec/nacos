@@ -277,7 +277,7 @@ public class StartingApplicationListener implements NacosApplicationListener {
      * get datasource platform.
      *
      * @param env ConfigurableEnvironment.
-     * @return
+     * @return platform
      */
     private String getDatasourcePlatform(ConfigurableEnvironment env) {
         String platform = env.getProperty(DATASOURCE_PLATFORM_PROPERTY, DEFAULT_DATASOURCE_PLATFORM);

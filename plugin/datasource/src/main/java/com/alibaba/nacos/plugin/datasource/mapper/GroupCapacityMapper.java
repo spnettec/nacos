@@ -55,7 +55,7 @@ public interface GroupCapacityMapper extends Mapper {
      * AND
      * quota = 0;
      *
-     * @return
+     * @return String
      */
     String incrementUsageByWhereQuotaEqualZero();
     
@@ -68,7 +68,7 @@ public interface GroupCapacityMapper extends Mapper {
      * quota
      * AND quota != 0;
      *
-     * @return
+     * @return String
      */
     String incrementUsageByWhereQuotaNotEqualZero();
     
@@ -79,7 +79,7 @@ public interface GroupCapacityMapper extends Mapper {
      *
      * <p>Example: UPDATE group_capacity SET `usage` = `usage` + 1, gmt_modified = ? WHERE group_id = ?;
      *
-     * @return
+     * @return String
      */
     String incrementUsageByWhere();
     
@@ -91,7 +91,7 @@ public interface GroupCapacityMapper extends Mapper {
      * <p>Example: UPDATE group_capacity SET `usage` = `usage` - 1, gmt_modified = ? WHERE group_id = ? AND `usage` >
      * 0;
      *
-     * @return
+     * @return String
      */
     String decrementUsageByWhere();
     
@@ -101,7 +101,7 @@ public interface GroupCapacityMapper extends Mapper {
      * <p>Example: UPDATE group_capacity SET `usage` = (SELECT count(*) FROM config_info), gmt_modified = ? WHERE
      * group_id = ?;
      *
-     * @return
+     * @return String
      */
     String updateUsage();
     
@@ -114,7 +114,7 @@ public interface GroupCapacityMapper extends Mapper {
      * =
      * ''), gmt_modified = ? WHERE group_id= ?;
      *
-     * @return
+     * @return String
      */
     String updateUsageByWhere();
     
@@ -123,7 +123,7 @@ public interface GroupCapacityMapper extends Mapper {
      *
      * <p>Example: SELECT id, group_id FROM group_capacity WHERE id>? LIMIT ?;
      *
-     * @return
+     * @return String
      */
     String selectGroupInfoBySize();
     

@@ -80,7 +80,7 @@ public interface DataSourceService {
     /**
      * Get current db type.
      *
-     * @return
+     * @return String
      */
     String getDataSourceType();
     
