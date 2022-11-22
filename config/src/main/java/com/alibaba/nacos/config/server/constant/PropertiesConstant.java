@@ -22,50 +22,56 @@ package com.alibaba.nacos.config.server.constant;
  * @author lixiaoshuang
  */
 public class PropertiesConstant {
-    
+
     public static final String NOTIFY_CONNECT_TIMEOUT = "notifyConnectTimeout";
-    
+
     public static final String NOTIFY_SOCKET_TIMEOUT = "notifySocketTimeout";
-    
+
     public static final String IS_HEALTH_CHECK = "isHealthCheck";
-    
+
     public static final String MAX_HEALTH_CHECK_FAIL_COUNT = "maxHealthCheckFailCount";
-    
+
     public static final String MAX_CONTENT = "maxContent";
-    
+
     public static final String IS_MANAGE_CAPACITY = "isManageCapacity";
-    
+
     public static final String IS_CAPACITY_LIMIT_CHECK = "isCapacityLimitCheck";
-    
+
     public static final String DEFAULT_CLUSTER_QUOTA = "defaultClusterQuota";
-    
+
     public static final String DEFAULT_GROUP_QUOTA = "defaultGroupQuota";
-    
+
     public static final String DEFAULT_TENANT_QUOTA = "defaultTenantQuota";
-    
+
     public static final String DEFAULT_MAX_SIZE = "defaultMaxSize";
-    
+
     public static final String DEFAULT_MAX_AGGR_COUNT = "defaultMaxAggrCount";
-    
+
     public static final String DEFAULT_MAX_AGGR_SIZE = "defaultMaxAggrSize";
-    
+
     public static final String CORRECT_USAGE_DELAY = "correctUsageDelay";
-    
+
     public static final String INITIAL_EXPANSION_PERCENT = "initialExpansionPercent";
-    
+
     /**
      * May be removed with the upgrade of springboot version.
      */
     public static final String DATASOURCE_PLATFORM_PROPERTY_OLD = "spring.datasource.platform";
-    
+
     public static final String DATASOURCE_PLATFORM_PROPERTY = "spring.sql.init.platform";
-    
+
+    public static final String DATASOURCE_PLATFORM_PROPERTY_NEW = "db.platform";
+
     public static final String MYSQL = "mysql";
-    
+
     public static final String DERBY = "derby";
-    
+
+    public static final String POSTGRESQL = "postgresql";
+
+    public static final String ORACLE = "oracle";
+
     public static final String EMPTY_DATASOURCE_PLATFORM = "";
-    
+
     public static final String EMBEDDED_STORAGE = "embeddedStorage";
-    
+
 }

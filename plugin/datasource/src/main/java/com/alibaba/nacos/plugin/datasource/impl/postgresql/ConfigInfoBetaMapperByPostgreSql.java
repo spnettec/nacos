@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.alibaba.nacos.plugin.datasource.impl.mysql;
+package com.alibaba.nacos.plugin.datasource.impl.postgresql;
 
 import com.alibaba.nacos.plugin.datasource.constants.DataSourceConstant;
 import com.alibaba.nacos.plugin.datasource.impl.derby.ConfigInfoBetaMapperByDerby;
@@ -25,7 +25,7 @@ import com.alibaba.nacos.plugin.datasource.impl.derby.ConfigInfoBetaMapperByDerb
  * @author hyx
  **/
 
-public class ConfigInfoBetaMapperByMySql extends ConfigInfoBetaMapperByDerby {
+public class ConfigInfoBetaMapperByPostgreSql extends ConfigInfoBetaMapperByDerby {
 
     @Override
     public String findAllConfigInfoBetaForDumpAllFetchRows(int startRow, int pageSize) {
@@ -36,6 +36,6 @@ public class ConfigInfoBetaMapperByMySql extends ConfigInfoBetaMapperByDerby {
 
     @Override
     public String getDataSource() {
-        return DataSourceConstant.MYSQL;
+        return DataSourceConstant.POSTGRESQL;
     }
 }

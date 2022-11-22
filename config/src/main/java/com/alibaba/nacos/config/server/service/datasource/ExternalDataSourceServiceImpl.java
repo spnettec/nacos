@@ -19,6 +19,7 @@ package com.alibaba.nacos.config.server.service.datasource;
 import com.alibaba.nacos.common.utils.ConvertUtils;
 import com.alibaba.nacos.common.utils.InternetAddressUtil;
 import com.alibaba.nacos.common.utils.StringUtils;
+import com.alibaba.nacos.config.server.constant.PropertiesConstant;
 import com.alibaba.nacos.config.server.monitor.MetricsMonitor;
 import com.alibaba.nacos.config.server.utils.ConfigExecutor;
 import com.alibaba.nacos.config.server.utils.DatasourcePlatformUtil;
@@ -79,7 +80,7 @@ public class ExternalDataSourceServiceImpl implements DataSourceService {
     
     private String dataSourceType = "";
     
-    private String defaultDataSourceType = "";
+    private String defaultDataSourceType = PropertiesConstant.MYSQL;
     
     @Override
     public void init() {

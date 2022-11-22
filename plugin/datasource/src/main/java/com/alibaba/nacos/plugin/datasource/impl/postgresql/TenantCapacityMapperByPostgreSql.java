@@ -14,28 +14,27 @@
  * limitations under the License.
  */
 
-package com.alibaba.nacos.plugin.datasource.impl.mysql;
+package com.alibaba.nacos.plugin.datasource.impl.postgresql;
 
 import com.alibaba.nacos.plugin.datasource.constants.DataSourceConstant;
-import com.alibaba.nacos.plugin.datasource.impl.derby.ConfigInfoBetaMapperByDerby;
+import com.alibaba.nacos.plugin.datasource.impl.derby.TenantCapacityMapperByDerby;
 
 /**
- * The mysql implementation of ConfigInfoBetaMapper.
+ * The mysql implementation of TenantCapacityMapper.
  *
  * @author hyx
  **/
 
-public class ConfigInfoBetaMapperByMySql extends ConfigInfoBetaMapperByDerby {
-
-    @Override
-    public String findAllConfigInfoBetaForDumpAllFetchRows(int startRow, int pageSize) {
-        return " SELECT t.id,data_id,group_id,tenant_id,app_name,content,md5,gmt_modified,beta_ips,encrypted_data_key "
-                + " FROM ( SELECT id FROM config_info_beta  ORDER BY id LIMIT " + startRow + "," + pageSize + " )"
-                + "  g, config_info_beta t WHERE g.id = t.id ";
-    }
+public class TenantCapacityMapperByPostgreSql extends TenantCapacityMapperByDerby {
 
     @Override
     public String getDataSource() {
-        return DataSourceConstant.MYSQL;
+        return DataSourceConstant.POSTGRESQL;
     }
+
+    @Override
+    public String getCapacityList4CorrectUsage() {
+        return "SELECT id, tenant_id FROM tenant_capacity WHERE id>? LIMIT ?";
+    }
+
 }

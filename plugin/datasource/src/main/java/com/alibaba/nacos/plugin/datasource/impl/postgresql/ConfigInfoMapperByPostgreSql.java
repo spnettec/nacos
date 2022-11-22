@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.alibaba.nacos.plugin.datasource.impl.mysql;
+package com.alibaba.nacos.plugin.datasource.impl.postgresql;
 
 import com.alibaba.nacos.common.utils.StringUtils;
 import com.alibaba.nacos.plugin.datasource.constants.DataSourceConstant;
@@ -29,7 +29,7 @@ import java.util.Map;
  * @author hyx
  **/
 
-public class ConfigInfoMapperByMySql extends ConfigInfoMapperByDerby {
+public class ConfigInfoMapperByPostgreSql extends ConfigInfoMapperByDerby {
 
     private static final String DATA_ID = "dataId";
 
@@ -200,6 +200,6 @@ public class ConfigInfoMapperByMySql extends ConfigInfoMapperByDerby {
 
     @Override
     public String getDataSource() {
-        return DataSourceConstant.MYSQL;
+        return DataSourceConstant.POSTGRESQL;
     }
 }

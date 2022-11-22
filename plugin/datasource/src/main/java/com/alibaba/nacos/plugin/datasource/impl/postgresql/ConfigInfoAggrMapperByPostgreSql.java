@@ -14,28 +14,27 @@
  * limitations under the License.
  */
 
-package com.alibaba.nacos.plugin.datasource.impl.mysql;
+package com.alibaba.nacos.plugin.datasource.impl.postgresql;
 
 import com.alibaba.nacos.plugin.datasource.constants.DataSourceConstant;
-import com.alibaba.nacos.plugin.datasource.impl.derby.ConfigInfoBetaMapperByDerby;
+import com.alibaba.nacos.plugin.datasource.impl.derby.ConfigInfoAggrMapperByDerby;
 
 /**
- * The mysql implementation of ConfigInfoBetaMapper.
+ * The mysql implementation of ConfigInfoAggrMapper.
  *
  * @author hyx
  **/
 
-public class ConfigInfoBetaMapperByMySql extends ConfigInfoBetaMapperByDerby {
+public class ConfigInfoAggrMapperByPostgreSql extends ConfigInfoAggrMapperByDerby {
 
     @Override
-    public String findAllConfigInfoBetaForDumpAllFetchRows(int startRow, int pageSize) {
-        return " SELECT t.id,data_id,group_id,tenant_id,app_name,content,md5,gmt_modified,beta_ips,encrypted_data_key "
-                + " FROM ( SELECT id FROM config_info_beta  ORDER BY id LIMIT " + startRow + "," + pageSize + " )"
-                + "  g, config_info_beta t WHERE g.id = t.id ";
+    public String findConfigInfoAggrByPageFetchRows(int startRow, int pageSize) {
+        return "SELECT data_id,group_id,tenant_id,datum_id,app_name,content FROM config_info_aggr WHERE data_id= ? AND "
+                + "group_id= ? AND tenant_id= ? ORDER BY datum_id LIMIT " + startRow + "," + pageSize;
     }
 
     @Override
     public String getDataSource() {
-        return DataSourceConstant.MYSQL;
+        return DataSourceConstant.POSTGRESQL;
     }
 }

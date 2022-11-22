@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.alibaba.nacos.plugin.datasource.impl.mysql;
+package com.alibaba.nacos.plugin.datasource.impl.oracle;
 
 import com.alibaba.nacos.plugin.datasource.constants.DataSourceConstant;
 import com.alibaba.nacos.plugin.datasource.impl.derby.ConfigInfoBetaMapperByDerby;
@@ -25,17 +25,10 @@ import com.alibaba.nacos.plugin.datasource.impl.derby.ConfigInfoBetaMapperByDerb
  * @author hyx
  **/
 
-public class ConfigInfoBetaMapperByMySql extends ConfigInfoBetaMapperByDerby {
-
-    @Override
-    public String findAllConfigInfoBetaForDumpAllFetchRows(int startRow, int pageSize) {
-        return " SELECT t.id,data_id,group_id,tenant_id,app_name,content,md5,gmt_modified,beta_ips,encrypted_data_key "
-                + " FROM ( SELECT id FROM config_info_beta  ORDER BY id LIMIT " + startRow + "," + pageSize + " )"
-                + "  g, config_info_beta t WHERE g.id = t.id ";
-    }
+public class ConfigInfoBetaMapperByOracle extends ConfigInfoBetaMapperByDerby {
 
     @Override
     public String getDataSource() {
-        return DataSourceConstant.MYSQL;
+        return DataSourceConstant.ORACLE;
     }
 }

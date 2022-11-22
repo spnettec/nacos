@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.alibaba.nacos.plugin.datasource.impl.mysql;
+package com.alibaba.nacos.plugin.datasource.impl.postgresql;
 
 import com.alibaba.nacos.common.utils.StringUtils;
 import com.alibaba.nacos.plugin.datasource.constants.DataSourceConstant;
@@ -28,7 +28,7 @@ import java.util.Map;
  * @author hyx
  **/
 
-public class ConfigTagsRelationMapperByMySql extends ConfigInfoTagsRelationMapperByDerby {
+public class ConfigTagsRelationMapperByPostgreSql extends ConfigInfoTagsRelationMapperByDerby {
 
     @Override
     public String findConfigInfo4PageFetchRows(final Map<String, String> params, int tagSize, int startRow,
@@ -102,6 +102,6 @@ public class ConfigTagsRelationMapperByMySql extends ConfigInfoTagsRelationMappe
 
     @Override
     public String getDataSource() {
-        return DataSourceConstant.MYSQL;
+        return DataSourceConstant.POSTGRESQL;
     }
 }
