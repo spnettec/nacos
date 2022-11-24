@@ -32,4 +32,8 @@ public class GroupCapacityMapperByMysql extends GroupCapacityMapperByDerby {
         return DataSourceConstant.MYSQL;
     }
 
+    @Override
+    public String selectGroupInfoBySize() {
+        return "SELECT id, group_id FROM group_capacity WHERE id > ? LIMIT ?";
+    }
 }
