@@ -148,7 +148,10 @@ public class ConfigInfoMapperByMySql extends ConfigInfoMapperByDerby {
         final String group = params.get(GROUP);
         final String sql = "SELECT id,data_id,group_id,tenant_id,app_name,content,type,encrypted_data_key FROM config_info";
         StringBuilder where = new StringBuilder(" WHERE ");
-        where.append(" tenant_id=? ");
+        where.append(" 1=1 ");
+        if (StringUtils.isNotBlank(params.get(TENANT))) {
+            where.append(" AND tenant_id=? ");
+        }
         if (StringUtils.isNotBlank(dataId)) {
             where.append(" AND data_id=? ");
         }
@@ -169,13 +172,16 @@ public class ConfigInfoMapperByMySql extends ConfigInfoMapperByDerby {
 
     @Override
     public String findConfigInfoLike4PageFetchRows(Map<String, String> params, int startRow, int pageSize) {
-        String dataId = params.get(DATA_ID);
-        String group = params.get(GROUP);
+        final String dataId = params.get(DATA_ID);
+        final String group = params.get(GROUP);
         final String appName = params.get(APP_NAME);
         final String content = params.get(CONTENT);
         final String sqlFetchRows = "SELECT id,data_id,group_id,tenant_id,app_name,content,encrypted_data_key FROM config_info";
         StringBuilder where = new StringBuilder(" WHERE ");
-        where.append(" tenant_id LIKE ? ");
+        where.append(" 1=1 ");
+        if (StringUtils.isNotBlank(params.get(TENANT))) {
+            where.append(" AND tenant_id LIKE ? ");
+        }
         if (!StringUtils.isBlank(dataId)) {
             where.append(" AND data_id LIKE ? ");
         }

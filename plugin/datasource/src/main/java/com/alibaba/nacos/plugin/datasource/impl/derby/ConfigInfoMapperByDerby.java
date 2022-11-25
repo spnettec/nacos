@@ -79,7 +79,7 @@ public class ConfigInfoMapperByDerby extends AbstractMapper implements ConfigInf
 
     @Override
     public String getGroupIdList(int startRow, int pageSize) {
-        return "SELECT group_id FROM config_info WHERE tenant_id ='' GROUP BY group_id OFFSET " + startRow
+        return "SELECT group_id FROM config_info WHERE (tenant_id ='' or tenant_id is null) GROUP BY group_id OFFSET " + startRow
                 + " ROWS FETCH NEXT " + pageSize + " ROWS ONLY";
     }
 
@@ -197,7 +197,10 @@ public class ConfigInfoMapperByDerby extends AbstractMapper implements ConfigInf
             }
             where.append(") ");
         } else {
-            where.append(" tenant_id = ? ");
+            where.append(" 1=1 ");
+            if (StringUtils.isNotBlank(params.get(TENANT))) {
+                where.append(" AND tenant_id = ? ");
+            }
             if (!StringUtils.isEmpty(params.get(DATA_ID))) {
                 where.append(" AND data_id LIKE ? ");
             }
@@ -214,7 +217,7 @@ public class ConfigInfoMapperByDerby extends AbstractMapper implements ConfigInf
     @Override
     public String findConfigInfoBaseLikeCountRows(Map<String, String> params) {
         final String sqlCountRows = "SELECT count(*) FROM config_info WHERE ";
-        String where = " 1=1 AND tenant_id='' ";
+        String where = " (tenant_id='' or tenant_id is null) ";
         if (!StringUtils.isBlank(params.get(DATA_ID))) {
             where += " AND data_id LIKE ? ";
         }
@@ -230,7 +233,7 @@ public class ConfigInfoMapperByDerby extends AbstractMapper implements ConfigInf
     @Override
     public String findConfigInfoBaseLikeFetchRows(Map<String, String> params, int startRow, int pageSize) {
         final String sqlFetchRows = "SELECT id,data_id,group_id,tenant_id,content FROM config_info WHERE ";
-        String where = " 1=1 AND tenant_id='' ";
+        String where = " (tenant_id='' or tenant_id is null) ";
         if (!StringUtils.isBlank(params.get(DATA_ID))) {
             where += " AND data_id LIKE ? ";
         }
@@ -250,7 +253,10 @@ public class ConfigInfoMapperByDerby extends AbstractMapper implements ConfigInf
         final String group = params.get(GROUP);
         final String sqlCount = "SELECT count(*) FROM config_info";
         StringBuilder where = new StringBuilder(" WHERE ");
-        where.append(" tenant_id=? ");
+        where.append(" 1=1 ");
+        if (StringUtils.isNotBlank(params.get(TENANT))) {
+            where.append(" AND tenant_id=? ");
+        }
         if (StringUtils.isNotBlank(dataId)) {
             where.append(" AND data_id=? ");
         }
@@ -270,7 +276,10 @@ public class ConfigInfoMapperByDerby extends AbstractMapper implements ConfigInf
         final String group = params.get(GROUP);
         final String sql = "SELECT id,data_id,group_id,tenant_id,app_name,content,type FROM config_info";
         StringBuilder where = new StringBuilder(" WHERE ");
-        where.append(" tenant_id=? ");
+        where.append(" 1=1 ");
+        if (StringUtils.isNotBlank(params.get(TENANT))) {
+            where.append(" AND tenant_id=? ");
+        }
         if (StringUtils.isNotBlank(dataId)) {
             where.append(" AND data_id=? ");
         }
@@ -291,23 +300,26 @@ public class ConfigInfoMapperByDerby extends AbstractMapper implements ConfigInf
 
     @Override
     public String findConfigInfoLike4PageCountRows(Map<String, String> params) {
-        String dataId = params.get(DATA_ID);
-        String group = params.get(GROUP);
+        final String dataId = params.get(DATA_ID);
+        final String group = params.get(GROUP);
         final String appName = params.get(APP_NAME);
         final String content = params.get(CONTENT);
         final String sqlCountRows = "SELECT count(*) FROM config_info";
         StringBuilder where = new StringBuilder(" WHERE ");
-        where.append(" tenant_id LIKE ? ");
-        if (!StringUtils.isBlank(dataId)) {
+        where.append(" 1=1 ");
+        if (StringUtils.isNotBlank(params.get(TENANT))) {
+            where.append(" AND tenant_id LIKE ? ");
+        }
+        if (StringUtils.isNotBlank(dataId)) {
             where.append(" AND data_id LIKE ? ");
         }
-        if (!StringUtils.isBlank(group)) {
+        if (StringUtils.isNotBlank(group)) {
             where.append(" AND group_id LIKE ? ");
         }
-        if (!StringUtils.isBlank(appName)) {
+        if (StringUtils.isNotBlank(appName)) {
             where.append(" AND app_name = ? ");
         }
-        if (!StringUtils.isBlank(content)) {
+        if (StringUtils.isNotBlank(content)) {
             where.append(" AND content LIKE ? ");
         }
         return sqlCountRows + where;
@@ -315,23 +327,26 @@ public class ConfigInfoMapperByDerby extends AbstractMapper implements ConfigInf
 
     @Override
     public String findConfigInfoLike4PageFetchRows(Map<String, String> params, int startRow, int pageSize) {
-        String dataId = params.get(DATA_ID);
-        String group = params.get(GROUP);
+        final String dataId = params.get(DATA_ID);
+        final String group = params.get(GROUP);
         final String appName = params.get(APP_NAME);
         final String content = params.get(CONTENT);
         final String sqlFetchRows = "SELECT id,data_id,group_id,tenant_id,app_name,content,encrypted_data_key FROM config_info";
         StringBuilder where = new StringBuilder(" WHERE ");
-        where.append(" tenant_id LIKE ? ");
-        if (!StringUtils.isBlank(dataId)) {
+        where.append(" 1=1 ");
+        if (StringUtils.isNotBlank(params.get(TENANT))) {
+            where.append(" AND tenant_id LIKE ? ");
+        }
+        if (StringUtils.isNotBlank(dataId)) {
             where.append(" AND data_id LIKE ? ");
         }
-        if (!StringUtils.isBlank(group)) {
+        if (StringUtils.isNotBlank(group)) {
             where.append(" AND group_id LIKE ? ");
         }
-        if (!StringUtils.isBlank(appName)) {
+        if (StringUtils.isNotBlank(appName)) {
             where.append(" AND app_name = ? ");
         }
-        if (!StringUtils.isBlank(content)) {
+        if (StringUtils.isNotBlank(content)) {
             where.append(" AND content LIKE ? ");
         }
         return sqlFetchRows + where + " OFFSET " + startRow + " ROWS FETCH NEXT " + pageSize + " ROWS ONLY";

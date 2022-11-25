@@ -63,7 +63,7 @@ class ExternalStoragePaginationHelperImpl<E> implements PaginationHelper {
         }
         
         // Query the total number of current records.
-        Integer rowCountInt = jdbcTemplate.queryForObject(sqlCountRows, args, Integer.class);
+        Integer rowCountInt = jdbcTemplate.queryForObject(sqlCountRows, Integer.class, args);
         if (rowCountInt == null) {
             throw new IllegalArgumentException("fetchPageLimit error");
         }
@@ -84,7 +84,7 @@ class ExternalStoragePaginationHelperImpl<E> implements PaginationHelper {
             return page;
         }
         
-        List<E> result = jdbcTemplate.query(sqlFetchRows, args, rowMapper);
+        List<E> result = jdbcTemplate.query(sqlFetchRows, rowMapper, args);
         for (E item : result) {
             page.getPageItems().add(item);
         }
@@ -98,7 +98,7 @@ class ExternalStoragePaginationHelperImpl<E> implements PaginationHelper {
             throw new IllegalArgumentException("pageNo and pageSize must be greater than zero");
         }
         // Query the total number of current records
-        Integer rowCountInt = jdbcTemplate.queryForObject(sqlCountRows, Integer.class);
+        Integer rowCountInt = jdbcTemplate.queryForObject(sqlCountRows, Integer.class, args);
         if (rowCountInt == null) {
             throw new IllegalArgumentException("fetchPageLimit error");
         }
@@ -119,7 +119,7 @@ class ExternalStoragePaginationHelperImpl<E> implements PaginationHelper {
             return page;
         }
     
-        List<E> result = jdbcTemplate.query(sqlFetchRows, args, rowMapper);
+        List<E> result = jdbcTemplate.query(sqlFetchRows, rowMapper, args);
         for (E item : result) {
             page.getPageItems().add(item);
         }
@@ -133,7 +133,7 @@ class ExternalStoragePaginationHelperImpl<E> implements PaginationHelper {
             throw new IllegalArgumentException("pageNo and pageSize must be greater than zero");
         }
         // Query the total number of current records
-        Integer rowCountInt = jdbcTemplate.queryForObject(sqlCountRows, args1, Integer.class);
+        Integer rowCountInt = jdbcTemplate.queryForObject(sqlCountRows, Integer.class, args1);
         if (rowCountInt == null) {
             throw new IllegalArgumentException("fetchPageLimit error");
         }
@@ -153,7 +153,7 @@ class ExternalStoragePaginationHelperImpl<E> implements PaginationHelper {
         if (pageNo > pageCount) {
             return page;
         }
-        List<E> result = jdbcTemplate.query(sqlFetchRows, args2, rowMapper);
+        List<E> result = jdbcTemplate.query(sqlFetchRows, rowMapper, args2);
         for (E item : result) {
             page.getPageItems().add(item);
         }
@@ -168,7 +168,7 @@ class ExternalStoragePaginationHelperImpl<E> implements PaginationHelper {
         }
         // Create Page object
         final Page<E> page = new Page<>();
-        List<E> result = jdbcTemplate.query(sqlFetchRows, args, rowMapper);
+        List<E> result = jdbcTemplate.query(sqlFetchRows, rowMapper, args);
         for (E item : result) {
             page.getPageItems().add(item);
         }
