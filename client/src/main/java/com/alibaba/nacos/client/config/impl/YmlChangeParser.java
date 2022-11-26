@@ -66,7 +66,7 @@ public class YmlChangeParser extends AbstractConfigChangeParser {
     }
     
     private void handleYamlException(ConstructorException e) {
-        if (e.getMessage().startsWith(INVALID_CONSTRUCTOR_ERROR_INFO)) {
+        if (e.getMessage().startsWith(INVALID_CONSTRUCTOR_ERROR_INFO) || e.getMessage().startsWith("Can't construct")) {
             throw new NacosRuntimeException(NacosException.INVALID_PARAM,
                     "AbstractConfigChangeListener only support basic java data type for yaml. If you want to listen "
                             + "key changes for custom classes, please use `Listener` to listener whole yaml configuration and parse it by yourself.",
