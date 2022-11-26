@@ -38,7 +38,7 @@ public class ConfigInfoMapperByMySqlTest {
     @Test
     public void testFindConfigMaxId() {
         String sql = configInfoMapperByMySql.findConfigMaxId();
-        Assert.assertEquals(sql, "SELECT MAX(id) FROM config_info");
+        Assert.assertEquals(sql, "SELECT max(id) FROM config_info");
     }
     
     @Test
@@ -50,7 +50,7 @@ public class ConfigInfoMapperByMySqlTest {
     @Test
     public void testFindConfigInfoByAppCountRows() {
         String sql = configInfoMapperByMySql.findConfigInfoByAppCountRows();
-        Assert.assertEquals(sql, "SELECT count(*) FROM config_info WHERE tenant_id LIKE ? AND app_name= ?");
+        Assert.assertEquals(sql, "SELECT count(*) FROM config_info WHERE tenant_id LIKE ? AND app_name = ?");
     }
     
     @Test
@@ -142,7 +142,7 @@ public class ConfigInfoMapperByMySqlTest {
         String sql = configInfoMapperByMySql.findAllConfigInfo4Export(new ArrayList<>(), new HashMap<>());
         Assert.assertEquals(sql,
                 "SELECT id,data_id,group_id,tenant_id,app_name,content,type,md5,gmt_create,gmt_modified,src_user,"
-                        + "src_ip,c_desc,c_use,effect,c_schema,encrypted_data_key FROM config_info WHERE  tenant_id= ? ");
+                        + "src_ip,c_desc,c_use,effect,c_schema,encrypted_data_key FROM config_info WHERE  tenant_id = ? ");
     }
     
     @Test
@@ -205,7 +205,7 @@ public class ConfigInfoMapperByMySqlTest {
     public void testFindConfigInfosByIds() {
         String sql = configInfoMapperByMySql.findConfigInfosByIds(5);
         Assert.assertEquals(sql,
-                "SELECT ID,data_id,group_id,tenant_id,app_name,content,md5 FROM config_info WHERE id IN (?, ?, ?, ?, ?) ");
+                "SELECT id,data_id,group_id,tenant_id,app_name,content,md5 FROM config_info WHERE id IN (?, ?, ?, ?, ?) ");
     }
     
     @Test

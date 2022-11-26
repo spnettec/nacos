@@ -80,6 +80,10 @@ public class DataSourcePoolProperties {
     public void setPassword(final String password) {
         dataSource.setPassword(password);
     }
+
+    public void setTestQuery(final String testQuery) {
+        dataSource.setConnectionTestQuery(testQuery);
+    }
     
     public HikariDataSource getDataSource() {
         return dataSource;

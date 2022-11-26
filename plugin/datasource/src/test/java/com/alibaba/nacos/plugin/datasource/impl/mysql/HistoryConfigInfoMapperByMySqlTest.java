@@ -48,7 +48,7 @@ public class HistoryConfigInfoMapperByMySqlTest {
         String sql = historyConfigInfoMapperByMySql.findDeletedConfig();
         Assert.assertEquals(sql,
                 "SELECT DISTINCT data_id, group_id, tenant_id FROM his_config_info WHERE op_type = 'D' AND "
-                        + "gmt_modified >= ? AND gmt_modified <= ?");
+                        + "gmt_modified >=? AND gmt_modified <= ?");
     }
     
     @Test
@@ -64,7 +64,7 @@ public class HistoryConfigInfoMapperByMySqlTest {
         String sql = historyConfigInfoMapperByMySql.detailPreviousConfigHistory();
         Assert.assertEquals(sql,
                 "SELECT nid,data_id,group_id,tenant_id,app_name,content,md5,src_user,src_ip,op_type,gmt_create,"
-                        + "gmt_modified FROM his_config_info WHERE nid = (SELECT max(nid) FROM his_config_info WHERE id = ?) ");
+                        + "gmt_modified FROM his_config_info WHERE nid = (SELECT max(nid) FROM his_config_info WHERE id = ?)");
     }
     
     @Test

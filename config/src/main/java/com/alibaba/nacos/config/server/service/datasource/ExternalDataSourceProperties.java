@@ -14,7 +14,6 @@
 package com.alibaba.nacos.config.server.service.datasource;
 
 import com.alibaba.nacos.common.utils.Preconditions;
-import com.alibaba.nacos.common.utils.StringUtils;
 import com.zaxxer.hikari.HikariDataSource;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.boot.context.properties.bind.Bindable;
@@ -47,6 +46,8 @@ public class ExternalDataSourceProperties {
 
     private String driverName;
 
+    private String testQuery;
+
     private List<String> password = new ArrayList<>();
     
     public void setNum(Integer num) {
@@ -69,6 +70,10 @@ public class ExternalDataSourceProperties {
         this.driverName = driverName;
     }
 
+    public void setTestQuery(String testQuery) {
+        this.testQuery = testQuery;
+    }
+
     /**
      * Build serveral HikariDataSource.
      *
@@ -87,13 +92,11 @@ public class ExternalDataSourceProperties {
             Preconditions.checkArgument(url.size() >= currentSize, "db.url.%s is null", index);
             DataSourcePoolProperties poolProperties = DataSourcePoolProperties.build(environment);
             poolProperties.setDriverClassName(ObjectUtils.isEmpty(driverName) ? JDBC_DRIVER_NAME : driverName);
+            poolProperties.setTestQuery(ObjectUtils.isEmpty(testQuery) ? TEST_QUERY : testQuery);
             poolProperties.setJdbcUrl(url.get(index).trim());
             poolProperties.setUsername(getOrDefault(user, index, user.get(0)).trim());
             poolProperties.setPassword(getOrDefault(password, index, password.get(0)).trim());
             HikariDataSource ds = poolProperties.getDataSource();
-            if (StringUtils.isEmpty(ds.getConnectionTestQuery())) {
-                ds.setConnectionTestQuery(TEST_QUERY);
-            }
             dataSources.add(ds);
             callback.accept(ds);
         }

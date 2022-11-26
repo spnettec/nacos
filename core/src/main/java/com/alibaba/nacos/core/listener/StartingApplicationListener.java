@@ -70,18 +70,18 @@ public class StartingApplicationListener implements NacosApplicationListener {
     
     private static final String DEFAULT_FUNCTION_MODE = "All";
     
-    private static final String DEFAULT_DATABASE = "mysql";
-    
     /**
      * May be removed with the upgrade of springboot version.
      */
     public static final String DATASOURCE_PLATFORM_PROPERTY_OLD = "spring.datasource.platform";
+
+    public static final String DATASOURCE_PLATFORM_PROPERTY_NEW = "db.platform";
     
     private static final String DATASOURCE_PLATFORM_PROPERTY = "spring.sql.init.platform";
     
     private static final String DERBY_DATABASE = "derby";
     
-    private static final String DEFAULT_DATASOURCE_PLATFORM = "";
+    private static final String BLANK_STRING = "";
     
     private static final String DATASOURCE_MODE_EXTERNAL = "external";
     
@@ -252,7 +252,8 @@ public class StartingApplicationListener implements NacosApplicationListener {
         // External data sources are used by default in cluster mode
         String platform = this.getDatasourcePlatform(env);
         boolean useExternalStorage =
-                !DEFAULT_DATASOURCE_PLATFORM.equalsIgnoreCase(platform) && !DERBY_DATABASE.equalsIgnoreCase(platform);
+                (!BLANK_STRING.equals(platform) && !DERBY_DATABASE.equalsIgnoreCase(platform))
+                        || (BLANK_STRING.equals(platform) && !BLANK_STRING.equals(env.getProperty("db.driverName", BLANK_STRING)));
         
         // must initialize after setUseExternalDB
         // This value is true in stand-alone mode and false in cluster mode
@@ -280,9 +281,12 @@ public class StartingApplicationListener implements NacosApplicationListener {
      * @return platform
      */
     private String getDatasourcePlatform(ConfigurableEnvironment env) {
-        String platform = env.getProperty(DATASOURCE_PLATFORM_PROPERTY, DEFAULT_DATASOURCE_PLATFORM);
+        String platform = EnvUtil.getProperty(DATASOURCE_PLATFORM_PROPERTY_NEW, BLANK_STRING);
         if (StringUtils.isBlank(platform)) {
-            platform = env.getProperty(DATASOURCE_PLATFORM_PROPERTY_OLD, DEFAULT_DATASOURCE_PLATFORM);
+            platform = EnvUtil.getProperty(DATASOURCE_PLATFORM_PROPERTY, BLANK_STRING);
+        }
+        if (StringUtils.isBlank(platform)) {
+            platform = EnvUtil.getProperty(DATASOURCE_PLATFORM_PROPERTY_OLD, BLANK_STRING);
         }
         return platform;
     }
