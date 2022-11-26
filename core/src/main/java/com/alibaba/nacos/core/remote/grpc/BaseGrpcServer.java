@@ -40,7 +40,6 @@ import io.grpc.ServerInterceptors;
 import io.grpc.ServerServiceDefinition;
 import io.grpc.ServerTransportFilter;
 import io.grpc.netty.shaded.io.netty.channel.Channel;
-import io.grpc.netty.shaded.io.netty.channel.ChannelHandlerContext;
 import io.grpc.protobuf.ProtoUtils;
 import io.grpc.stub.ServerCalls;
 import io.grpc.util.MutableHandlerRegistry;
@@ -160,10 +159,8 @@ public abstract class BaseGrpcServer extends BaseRpcServer {
     
     private Channel getInternalChannel(ServerCall serverCall) {
         Object serverStream = ReflectUtils.getFieldValue(serverCall, "stream");
-        Object state = ReflectUtils.getFieldValue(serverStream, "state");
-        Object handler = ReflectUtils.getFieldValue(state, "handler");
-        ChannelHandlerContext ctx = (ChannelHandlerContext) ReflectUtils.getSuperFieldValue(handler, "ctx");
-        return ctx.channel();
+        Object writeQueue = ReflectUtils.getFieldValue(serverStream, "writeQueue");
+        return (Channel) ReflectUtils.getFieldValue(writeQueue, "channel");
     }
     
     private void addServices(MutableHandlerRegistry handlerRegistry, ServerInterceptor... serverInterceptor) {
