@@ -19,7 +19,7 @@ package com.alibaba.nacos.client.logging.logback;
 import ch.qos.logback.core.Context;
 import ch.qos.logback.core.ContextBase;
 import ch.qos.logback.core.joran.spi.ActionException;
-import ch.qos.logback.core.joran.spi.InterpretationContext;
+import ch.qos.logback.core.joran.spi.SaxEventInterpretationContext;
 import com.alibaba.nacos.client.env.NacosClientProperties;
 import org.junit.Assert;
 import org.junit.Test;
@@ -34,7 +34,7 @@ public class NacosClientPropertyActionTest {
         NacosClientProperties.PROTOTYPE.setProperty("test.nacos.logging.action.lookup", "true");
         
         Context context = new ContextBase();
-        final InterpretationContext interpretationContext = new InterpretationContext(context, null);
+        final SaxEventInterpretationContext interpretationContext = new SaxEventInterpretationContext(context, null);
         
         final Attributes mockAttr = Mockito.mock(AttributesForTest.class);
         Mockito.when(mockAttr.getValue(Mockito.eq("name"))).thenReturn("logPath");

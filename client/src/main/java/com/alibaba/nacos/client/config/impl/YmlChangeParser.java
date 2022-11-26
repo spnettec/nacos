@@ -20,13 +20,12 @@ import com.alibaba.nacos.api.config.ConfigChangeItem;
 import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.exception.runtime.NacosRuntimeException;
 import com.alibaba.nacos.common.utils.StringUtils;
+import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.ConstructorException;
-import org.yaml.snakeyaml.constructor.SafeConstructor;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -50,7 +49,7 @@ public class YmlChangeParser extends AbstractConfigChangeParser {
         Map<String, Object> oldMap = Collections.emptyMap();
         Map<String, Object> newMap = Collections.emptyMap();
         try {
-            Yaml yaml = new Yaml(new SafeConstructor());
+            Yaml yaml = new Yaml(new LoaderOptions());
             if (StringUtils.isNotBlank(oldContent)) {
                 oldMap = yaml.load(oldContent);
                 oldMap = getFlattenedMap(oldMap);
@@ -83,8 +82,7 @@ public class YmlChangeParser extends AbstractConfigChangeParser {
     }
     
     private void buildFlattenedMap(Map<String, Object> result, Map<String, Object> source, String path) {
-        for (Iterator<Map.Entry<String, Object>> itr = source.entrySet().iterator(); itr.hasNext(); ) {
-            Map.Entry<String, Object> e = itr.next();
+        for (Map.Entry<String, Object> e : source.entrySet()) {
             String key = e.getKey();
             if (StringUtils.isNotBlank(path)) {
                 if (e.getKey().startsWith("[")) {
