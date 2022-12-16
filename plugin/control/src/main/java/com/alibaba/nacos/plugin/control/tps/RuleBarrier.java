@@ -70,7 +70,7 @@ public abstract class RuleBarrier {
     /**
      * get barrier name.
      *
-     * @return
+     * @return String
      */
     public abstract String getBarrierName();
     
@@ -102,7 +102,7 @@ public abstract class RuleBarrier {
      * apply tps.
      *
      * @param barrierCheckRequest barrierCheckRequest.
-     * @return
+     * @return TpsCheckResponse
      */
     public abstract TpsCheckResponse applyTps(BarrierCheckRequest barrierCheckRequest);
     
@@ -117,7 +117,7 @@ public abstract class RuleBarrier {
      * get metrics.
      *
      * @param timeStamp timeStamp.
-     * @return
+     * @return TpsMetrics
      */
     public abstract TpsMetrics getMetrics(long timeStamp);
     

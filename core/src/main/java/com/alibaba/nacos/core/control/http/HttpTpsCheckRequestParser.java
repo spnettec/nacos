@@ -42,21 +42,21 @@ public abstract class HttpTpsCheckRequestParser {
      * parse tps check request.
      *
      * @param httpServletRequest http request.
-     * @return
+     * @return TpsCheckRequest
      */
     public abstract TpsCheckRequest parse(HttpServletRequest httpServletRequest);
     
     /**
      * get point name.
      *
-     * @return
+     * @return String
      */
     public abstract String getPointName();
     
     /**
      * get name.
      *
-     * @return
+     * @return String
      */
     public abstract String getName();
     

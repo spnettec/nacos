@@ -48,7 +48,7 @@ public abstract class SimpleCountRuleBarrier extends RuleBarrier {
      *
      * @param name   name.
      * @param period period.
-     * @return
+     * @return RateCounter
      */
     public abstract RateCounter createSimpleCounter(String name, TimeUnit period);
     

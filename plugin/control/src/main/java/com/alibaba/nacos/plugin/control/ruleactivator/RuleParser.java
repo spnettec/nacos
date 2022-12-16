@@ -30,7 +30,7 @@ public interface RuleParser {
      * parse tps rule content.
      *
      * @param ruleContent ruleContent.
-     * @return
+     * @return TpsControlRule
      */
     TpsControlRule parseTpsRule(String ruleContent);
     
@@ -38,14 +38,14 @@ public interface RuleParser {
      * parse connection rule.
      *
      * @param ruleContent ruleContent.
-     * @return
+     * @return ConnectionControlRule
      */
     ConnectionControlRule parseConnectionRule(String ruleContent);
     
     /**
      * get name.
      *
-     * @return
+     * @return String
      */
     String getName();
 }

@@ -75,7 +75,7 @@ public abstract class RuntimeConnectionEjector {
     /**
      * get name.
      *
-     * @return
+     * @return String
      */
     public abstract String getName();
 }

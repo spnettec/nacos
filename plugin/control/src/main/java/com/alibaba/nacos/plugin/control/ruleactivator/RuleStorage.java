@@ -27,7 +27,7 @@ public interface RuleStorage {
     /**
      * get storage name.
      *
-     * @return
+     * @return String
      */
     String getName();
     
@@ -42,7 +42,7 @@ public interface RuleStorage {
     /**
      * get connection rule.
      *
-     * @return
+     * @return String
      */
     String getConnectionRule();
     
@@ -59,7 +59,7 @@ public interface RuleStorage {
      * get tps rule.
      *
      * @param pointName point name.
-     * @return
+     * @return String
      */
     String getTpsRule(String pointName);
     

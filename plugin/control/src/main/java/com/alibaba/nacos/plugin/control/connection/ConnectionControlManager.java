@@ -47,7 +47,7 @@ public abstract class ConnectionControlManager {
     /**
      * get manager name.
      *
-     * @return
+     * @return String
      */
     public abstract String getName();
     
@@ -116,7 +116,7 @@ public abstract class ConnectionControlManager {
      * check connection allowed.
      *
      * @param connectionCheckRequest connectionCheckRequest.
-     * @return
+     * @return ConnectionCheckResponse
      */
     public abstract ConnectionCheckResponse check(ConnectionCheckRequest connectionCheckRequest);
     

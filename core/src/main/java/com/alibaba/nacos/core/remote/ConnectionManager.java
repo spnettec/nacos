@@ -72,7 +72,7 @@ public class ConnectionManager {
      * if monitor detail.
      *
      * @param clientIp clientIp.
-     * @return
+     * @return boolean
      */
     public boolean traced(String clientIp) {
         ConnectionControlRule connectionControlRule = ControlManagerCenter.getInstance().getConnectionControlManager()

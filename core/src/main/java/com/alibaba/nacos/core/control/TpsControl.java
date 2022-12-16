@@ -34,7 +34,7 @@ public @interface TpsControl {
     /**
      * alias name for control point.
      *
-     * @return
+     * @return String
      */
     String name() default "";
     
