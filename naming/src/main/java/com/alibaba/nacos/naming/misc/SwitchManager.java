@@ -25,11 +25,10 @@ import com.alibaba.nacos.naming.consistency.ConsistencyService;
 import com.alibaba.nacos.naming.consistency.Datum;
 import com.alibaba.nacos.naming.consistency.KeyBuilder;
 import com.alibaba.nacos.naming.consistency.RecordListener;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -45,14 +44,18 @@ import java.util.concurrent.locks.ReentrantLock;
 @Component
 public class SwitchManager implements RecordListener<SwitchDomain> {
     
-    @Autowired
-    private SwitchDomain switchDomain;
+    private final SwitchDomain switchDomain;
     
-    @Resource(name = "persistentConsistencyServiceDelegate")
-    private ConsistencyService consistencyService;
+    private final ConsistencyService consistencyService;
     
     ReentrantLock lock = new ReentrantLock();
-    
+
+    public SwitchManager(SwitchDomain switchDomain,
+            @Qualifier("persistentConsistencyServiceDelegate") ConsistencyService consistencyService) {
+        this.switchDomain = switchDomain;
+        this.consistencyService = consistencyService;
+    }
+
     /**
      * Init switch manager.
      */

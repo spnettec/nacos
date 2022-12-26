@@ -41,22 +41,22 @@ public class LdapAuthConfig {
     @Value(("${" + AuthConstants.NACOS_CORE_AUTH_LDAP_URL + ":ldap://localhost:389}"))
     private String ldapUrl;
     
-    @Value(("${" + AuthConstants.NACOS_CORE_AUTH_LDAP_BASEDC + ":dc=example,dc=org}"))
+    @Value("${" + AuthConstants.NACOS_CORE_AUTH_LDAP_BASEDC + ":dc=example,dc=org}")
     private String ldapBaseDc;
     
-    @Value(("${" + AuthConstants.NACOS_CORE_AUTH_LDAP_TIMEOUT + ":3000}"))
+    @Value("${" + AuthConstants.NACOS_CORE_AUTH_LDAP_TIMEOUT + ":3000}")
     private String ldapTimeOut;
     
-    @Value(("${" + AuthConstants.NACOS_CORE_AUTH_LDAP_USERDN + ":cn=admin,dc=example,dc=org}"))
+    @Value("${" + AuthConstants.NACOS_CORE_AUTH_LDAP_USERDN + ":cn=admin,dc=example,dc=org}")
     private String userDn;
     
-    @Value(("${" + AuthConstants.NACOS_CORE_AUTH_LDAP_PASSWORD + ":password}"))
+    @Value("${" + AuthConstants.NACOS_CORE_AUTH_LDAP_PASSWORD + ":password}")
     private String password;
     
-    @Value(("${" + AuthConstants.NACOS_CORE_AUTH_LDAP_FILTER_PREFIX + ":uid}"))
+    @Value("${" + AuthConstants.NACOS_CORE_AUTH_LDAP_FILTER_PREFIX + ":uid}")
     private String filterPrefix;
     
-    @Value(("${" + AuthConstants.NACOS_CORE_AUTH_CASE_SENSITIVE + ":true}"))
+    @Value("${" + AuthConstants.NACOS_CORE_AUTH_CASE_SENSITIVE + ":true}")
     private boolean caseSensitive;
     
     @Bean

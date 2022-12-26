@@ -20,7 +20,7 @@ import com.alibaba.nacos.common.spi.NacosServiceLoader;
 import com.alibaba.nacos.core.listener.NacosApplicationListener;
 import org.springframework.boot.ConfigurableBootstrapContext;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.context.event.EventPublishingRunListener;
+
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.Ordered;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -29,10 +29,9 @@ import java.time.Duration;
 import java.util.Collection;
 
 /**
- * {@link org.springframework.boot.SpringApplicationRunListener} before {@link EventPublishingRunListener} execution.
+ * nacos SpringApplicationRunListener.
  *
- * @author <a href="mailto:mercyblitz@gmail.com">Mercy</a>
- * @since 0.2.2
+ * @author Mercy
  */
 public class SpringApplicationRunListener implements org.springframework.boot.SpringApplicationRunListener, Ordered {
 
@@ -96,12 +95,7 @@ public class SpringApplicationRunListener implements org.springframework.boot.Sp
             nacosApplicationListener.failed(context, exception);
         }
     }
-    
-    /**
-     * Before {@link EventPublishingRunListener}.
-     *
-     * @return HIGHEST_PRECEDENCE
-     */
+
     @Override
     public int getOrder() {
         return HIGHEST_PRECEDENCE;

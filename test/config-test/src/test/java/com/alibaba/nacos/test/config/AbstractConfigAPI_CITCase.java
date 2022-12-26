@@ -34,7 +34,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.server.LocalServerPort;
 
 import java.net.HttpURLConnection;
 import java.util.HashMap;
@@ -85,7 +84,7 @@ public abstract class AbstractConfigAPI_CITCase {
             params.put("dataId", dataId);
             params.put("group", group);
             params.put("beta", "true");
-            result = agent.httpDelete(CONFIG_CONTROLLER_PATH + "/", null, params, agent.getEncode(), TIME_OUT);
+            result = agent.httpDelete(CONFIG_CONTROLLER_PATH, null, params, agent.getEncode(), TIME_OUT);
             Assert.assertEquals(HttpURLConnection.HTTP_OK, result.getCode());
             Assert.assertTrue(JacksonUtils.toObj(result.getData()).get("data").booleanValue());
             Assert.assertTrue(JacksonUtils.toObj(result.getData()).get("data").booleanValue());
@@ -712,7 +711,7 @@ public abstract class AbstractConfigAPI_CITCase {
      */
     @Test(timeout = 3 * TIME_OUT)
     public void nacos_openAPI_queryBeta_1() {
-        HttpRestResult<String> result = null;
+        HttpRestResult<String> result;
         
         try {
             final String content = "test-beta";
@@ -722,18 +721,18 @@ public abstract class AbstractConfigAPI_CITCase {
             params.put("dataId", dataId);
             params.put("group", group);
             params.put("content", content);
-            result = agent.httpPost(CONFIG_CONTROLLER_PATH + "/", headers, params, agent.getEncode(), TIME_OUT);
+            result = agent.httpPost(CONFIG_CONTROLLER_PATH, headers, params, agent.getEncode(), TIME_OUT);
             Assert.assertEquals(HttpURLConnection.HTTP_OK, result.getCode());
             Assert.assertEquals("true", result.getData());
             params.clear();
             params.put("dataId", dataId);
             params.put("group", group);
             params.put("beta", "true");
-            result = agent.httpGet(CONFIG_CONTROLLER_PATH + "/", null, params, agent.getEncode(), TIME_OUT);
+            result = agent.httpGet(CONFIG_CONTROLLER_PATH, null, params, agent.getEncode(), TIME_OUT);
             Assert.assertEquals(HttpURLConnection.HTTP_OK, result.getCode());
             Assert.assertEquals(content, JacksonUtils.toObj(result.getData()).get("data").get("content").textValue());
             // delete data
-            result = agent.httpDelete(CONFIG_CONTROLLER_PATH + "/", null, params, agent.getEncode(), TIME_OUT);
+            result = agent.httpDelete(CONFIG_CONTROLLER_PATH, null, params, agent.getEncode(), TIME_OUT);
             Assert.assertEquals(HttpURLConnection.HTTP_OK, result.getCode());
         } catch (Exception e) {
             
@@ -760,7 +759,7 @@ public abstract class AbstractConfigAPI_CITCase {
             params.put("dataId", dataId);
             params.put("group", group);
             params.put("content", content);
-            result = agent.httpPost(CONFIG_CONTROLLER_PATH + "/", headers, params, agent.getEncode(), TIME_OUT);
+            result = agent.httpPost(CONFIG_CONTROLLER_PATH, headers, params, agent.getEncode(), TIME_OUT);
             Assert.assertEquals(HttpURLConnection.HTTP_OK, result.getCode());
             Assert.assertEquals("true", result.getData());
             
@@ -768,7 +767,7 @@ public abstract class AbstractConfigAPI_CITCase {
             params.put("dataId", dataId);
             params.put("group", group);
             params.put("beta", "true");
-            result = agent.httpDelete(CONFIG_CONTROLLER_PATH + "/", null, params, agent.getEncode(), TIME_OUT);
+            result = agent.httpDelete(CONFIG_CONTROLLER_PATH, null, params, agent.getEncode(), TIME_OUT);
             
             Assert.assertEquals(HttpURLConnection.HTTP_OK, result.getCode());
             Assert.assertTrue(JacksonUtils.toObj(result.getData()).get("data").booleanValue());
@@ -800,7 +799,7 @@ public abstract class AbstractConfigAPI_CITCase {
             params.put("pageNo", "1");
             params.put("pageSize", "10");
             params.put("search", "blur");
-            result = agent.httpGet(CONFIG_CONTROLLER_PATH + "/", null, params, agent.getEncode(), TIME_OUT);
+            result = agent.httpGet(CONFIG_CONTROLLER_PATH, null, params, agent.getEncode(), TIME_OUT);
             Assert.assertEquals(HttpURLConnection.HTTP_OK, result.getCode());
             
             Assert.assertTrue(JacksonUtils.toObj(result.getData()).get("totalCount").intValue() >= 1);
@@ -833,7 +832,7 @@ public abstract class AbstractConfigAPI_CITCase {
             params.put("pageNo", "1");
             params.put("pageSize", "10");
             params.put("search", "blur");
-            result = agent.httpGet(CONFIG_CONTROLLER_PATH + "/", null, params, agent.getEncode(), TIME_OUT);
+            result = agent.httpGet(CONFIG_CONTROLLER_PATH, null, params, agent.getEncode(), TIME_OUT);
             
             Assert.assertEquals(HttpURLConnection.HTTP_OK, result.getCode());
             Assert.assertTrue(JacksonUtils.toObj(result.getData()).get("totalCount").intValue() >= 1);
@@ -867,7 +866,7 @@ public abstract class AbstractConfigAPI_CITCase {
             params.put("pageNo", "1");
             params.put("pageSize", "10");
             params.put("search", "accurate");
-            result = agent.httpGet(CONFIG_CONTROLLER_PATH + "/", null, params, agent.getEncode(), TIME_OUT);
+            result = agent.httpGet(CONFIG_CONTROLLER_PATH, null, params, agent.getEncode(), TIME_OUT);
             
             Assert.assertEquals(HttpURLConnection.HTTP_OK, result.getCode());
             Assert.assertEquals(1, JacksonUtils.toObj(result.getData()).get("totalCount").intValue());
@@ -902,7 +901,7 @@ public abstract class AbstractConfigAPI_CITCase {
             params.put("pageNo", "1");
             params.put("pageSize", "10");
             params.put("search", "accurate");
-            result = agent.httpGet(CONFIG_CONTROLLER_PATH + "/", null, params, agent.getEncode(), TIME_OUT);
+            result = agent.httpGet(CONFIG_CONTROLLER_PATH, null, params, agent.getEncode(), TIME_OUT);
             Assert.assertEquals(HttpURLConnection.HTTP_OK, result.getCode());
             Assert.assertEquals(1, JacksonUtils.toObj(result.getData()).get("totalCount").intValue());
             Assert.assertEquals(content,

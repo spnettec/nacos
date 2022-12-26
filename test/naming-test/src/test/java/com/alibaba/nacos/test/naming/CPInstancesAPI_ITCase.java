@@ -25,15 +25,16 @@ import com.alibaba.nacos.api.naming.pojo.ListView;
 import com.alibaba.nacos.common.utils.JacksonUtils;
 import com.alibaba.nacos.test.base.Params;
 import com.fasterxml.jackson.databind.JsonNode;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -61,7 +62,7 @@ public class CPInstancesAPI_ITCase {
     private NamingService naming1;
     private NamingService naming2;
 
-    @Value("${local.server.port}")
+    @LocalServerPort
     private int port;
 
     private URL base;
@@ -71,7 +72,7 @@ public class CPInstancesAPI_ITCase {
 
     @Before
     public void setUp() throws Exception {
-        String url = String.format("http://localhost:%d/", port);
+        String url = String.format("http://127.0.0.1:%d/", port);
         this.base = new URL(url);
 
         naming = NamingFactory.createNamingService("127.0.0.1" + ":" + port);

@@ -19,6 +19,7 @@ package com.alibaba.nacos.common.remote.client;
 import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.common.remote.ConnectionType;
 import com.alibaba.nacos.common.utils.CollectionUtils;
+import com.alibaba.nacos.common.utils.ReflectUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -49,7 +50,7 @@ public class RpcClientFactoryTest {
     public static void setUpBeforeClass() throws NoSuchFieldException, IllegalAccessException {
         clientMapField = RpcClientFactory.class.getDeclaredField("CLIENT_MAP");
         clientMapField.setAccessible(true);
-        Field modifiersField1 = Field.class.getDeclaredField("modifiers");
+        Field modifiersField1 = ReflectUtils.getModifiersField();
         modifiersField1.setAccessible(true);
         modifiersField1.setInt(clientMapField, clientMapField.getModifiers() & ~Modifier.FINAL);
     }

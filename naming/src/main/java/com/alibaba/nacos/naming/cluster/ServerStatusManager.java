@@ -16,14 +16,14 @@
 
 package com.alibaba.nacos.naming.cluster;
 
+import com.alibaba.nacos.common.utils.StringUtils;
 import com.alibaba.nacos.naming.consistency.ConsistencyService;
 import com.alibaba.nacos.naming.misc.GlobalExecutor;
 import com.alibaba.nacos.naming.misc.SwitchDomain;
-import com.alibaba.nacos.common.utils.StringUtils;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
 import java.util.Optional;
 
 /**
@@ -34,16 +34,17 @@ import java.util.Optional;
  */
 @Service
 public class ServerStatusManager {
-    
-    @Resource(name = "persistentConsistencyServiceDelegate")
-    private ConsistencyService consistencyService;
+
+    private final ConsistencyService consistencyService;
     
     private final SwitchDomain switchDomain;
     
     private ServerStatus serverStatus = ServerStatus.STARTING;
     
-    public ServerStatusManager(SwitchDomain switchDomain) {
+    public ServerStatusManager(SwitchDomain switchDomain,
+            @Qualifier("persistentConsistencyServiceDelegate") ConsistencyService consistencyService) {
         this.switchDomain = switchDomain;
+        this.consistencyService = consistencyService;
     }
     
     @PostConstruct

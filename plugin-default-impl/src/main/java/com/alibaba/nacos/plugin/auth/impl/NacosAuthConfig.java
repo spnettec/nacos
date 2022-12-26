@@ -24,18 +24,21 @@ import com.alibaba.nacos.plugin.auth.impl.filter.JwtAuthenticationTokenFilter;
 import com.alibaba.nacos.plugin.auth.impl.users.NacosUserDetailsServiceImpl;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.BeanIds;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.builders.WebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsUtils;
 
 import javax.annotation.PostConstruct;
@@ -45,8 +48,9 @@ import javax.annotation.PostConstruct;
  *
  * @author Nacos
  */
-@EnableGlobalMethodSecurity(prePostEnabled = true)
-public class NacosAuthConfig extends WebSecurityConfigurerAdapter {
+@Configuration
+@EnableMethodSecurity
+public class NacosAuthConfig {
     
     private static final String SECURITY_IGNORE_URLS_SPILT_CHAR = ",";
     
@@ -93,48 +97,39 @@ public class NacosAuthConfig extends WebSecurityConfigurerAdapter {
     }
     
     @Bean(name = BeanIds.AUTHENTICATION_MANAGER)
-    @Override
-    public AuthenticationManager authenticationManagerBean() throws Exception {
-        return super.authenticationManagerBean();
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
     }
-    
-    @Override
-    public void configure(WebSecurity web) {
-        
-        String ignoreUrls = null;
-        if (AuthSystemTypes.NACOS.name().equalsIgnoreCase(authConfigs.getNacosAuthSystemType())) {
-            ignoreUrls = DEFAULT_ALL_PATH_PATTERN;
-        } else if (AuthSystemTypes.LDAP.name().equalsIgnoreCase(authConfigs.getNacosAuthSystemType())) {
-            ignoreUrls = DEFAULT_ALL_PATH_PATTERN;
-        }
-        if (StringUtils.isBlank(authConfigs.getNacosAuthSystemType())) {
-            ignoreUrls = env.getProperty(PROPERTY_IGNORE_URLS, DEFAULT_ALL_PATH_PATTERN);
-        }
-        if (StringUtils.isNotBlank(ignoreUrls)) {
-            for (String each : ignoreUrls.trim().split(SECURITY_IGNORE_URLS_SPILT_CHAR)) {
-                web.ignoring().antMatchers(each.trim());
+
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return (web) -> {
+            String ignoreUrls = null;
+            if (AuthSystemTypes.NACOS.name().equalsIgnoreCase(authConfigs.getNacosAuthSystemType())) {
+                ignoreUrls = DEFAULT_ALL_PATH_PATTERN;
+            } else if (AuthSystemTypes.LDAP.name().equalsIgnoreCase(authConfigs.getNacosAuthSystemType())) {
+                ignoreUrls = DEFAULT_ALL_PATH_PATTERN;
             }
-        }
+            if (StringUtils.isBlank(authConfigs.getNacosAuthSystemType())) {
+                ignoreUrls = env.getProperty(PROPERTY_IGNORE_URLS, DEFAULT_ALL_PATH_PATTERN);
+            }
+            if (StringUtils.isNotBlank(ignoreUrls)) {
+                for (String each : ignoreUrls.trim().split(SECURITY_IGNORE_URLS_SPILT_CHAR)) {
+                    web.ignoring().requestMatchers(AntPathRequestMatcher.antMatcher(each.trim()));
+                }
+            }
+        };
     }
-    
-    @Override
-    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        if (AuthSystemTypes.NACOS.name().equalsIgnoreCase(authConfigs.getNacosAuthSystemType())) {
-            auth.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder());
-        } else if (AuthSystemTypes.LDAP.name().equalsIgnoreCase(authConfigs.getNacosAuthSystemType())) {
-            auth.authenticationProvider(ldapAuthenticationProvider);
-        }
-    }
-    
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
+
+    @Bean
+    public SecurityFilterChain authFilterChain(HttpSecurity http, PasswordEncoder passwordEncoder) throws Exception {
         
         if (StringUtils.isBlank(authConfigs.getNacosAuthSystemType())) {
             http.csrf().disable().cors()// We don't need CSRF for JWT based authentication
                     .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
-                    .authorizeRequests().requestMatchers(CorsUtils::isPreFlightRequest).permitAll()
-                    .antMatchers(LOGIN_ENTRY_POINT).permitAll().and().authorizeRequests()
-                    .antMatchers(TOKEN_BASED_AUTH_ENTRY_POINT).authenticated().and().exceptionHandling()
+                    .authorizeHttpRequests().requestMatchers(CorsUtils::isPreFlightRequest).permitAll()
+                    .requestMatchers(AntPathRequestMatcher.antMatcher(LOGIN_ENTRY_POINT)).permitAll().and().authorizeHttpRequests()
+                    .requestMatchers(AntPathRequestMatcher.antMatcher(TOKEN_BASED_AUTH_ENTRY_POINT)).authenticated().and().exceptionHandling()
                     .authenticationEntryPoint(new JwtAuthenticationEntryPoint());
             // disable cache
             http.headers().cacheControl();
@@ -142,6 +137,13 @@ public class NacosAuthConfig extends WebSecurityConfigurerAdapter {
             http.addFilterBefore(new JwtAuthenticationTokenFilter(tokenProvider),
                     UsernamePasswordAuthenticationFilter.class);
         }
+        AuthenticationManagerBuilder authenticationManagerBuilder = http.getSharedObject(AuthenticationManagerBuilder.class);
+        if (AuthSystemTypes.NACOS.name().equalsIgnoreCase(authConfigs.getNacosAuthSystemType())) {
+            authenticationManagerBuilder.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder);
+        } else if (AuthSystemTypes.LDAP.name().equalsIgnoreCase(authConfigs.getNacosAuthSystemType())) {
+            authenticationManagerBuilder.authenticationProvider(ldapAuthenticationProvider);
+        }
+        return http.build();
     }
     
     @Bean

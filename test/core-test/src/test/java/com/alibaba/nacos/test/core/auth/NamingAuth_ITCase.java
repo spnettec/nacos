@@ -27,8 +27,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.List;
@@ -45,7 +45,7 @@ import static org.junit.Assert.fail;
         webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 public class NamingAuth_ITCase extends AuthBase {
 
-    @Value("${local.server.port}")
+    @LocalServerPort
     private int port;
 
     private NamingService namingService;

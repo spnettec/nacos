@@ -18,6 +18,8 @@ package com.alibaba.nacos.test.core.auth;
 
 import com.alibaba.nacos.api.PropertyKeyConst;
 import com.alibaba.nacos.auth.config.AuthConfigs;
+import com.alibaba.nacos.common.event.ServerConfigChangeEvent;
+import com.alibaba.nacos.common.notify.NotifyCenter;
 import com.alibaba.nacos.common.utils.JacksonUtils;
 import com.alibaba.nacos.test.base.HttpClient4Test;
 import com.alibaba.nacos.test.base.Params;
@@ -61,7 +63,7 @@ public class AuthBase extends HttpClient4Test {
     protected Properties properties;
     
     protected String namespace1 = "namespace1";
-    
+
     public String login(String username, String password) {
         ResponseEntity<String> response = request("/nacos/v1/auth/users/login",
                 Params.newParams().appendParam("username", username).appendParam("password", password).done(),
@@ -82,6 +84,9 @@ public class AuthBase extends HttpClient4Test {
         TimeUnit.SECONDS.sleep(5L);
         String url = String.format("http://localhost:%d/", port);
         System.setProperty("nacos.core.auth.enabled", "true");
+        System.setProperty("nacos.core.auth.server.identity.key", "serverIdentity");
+        System.setProperty("nacos.core.auth.server.identity.value", "security");
+        NotifyCenter.publishEvent(ServerConfigChangeEvent.newEvent());
         this.base = new URL(url);
         accessToken = login();
         
@@ -227,7 +232,10 @@ public class AuthBase extends HttpClient4Test {
                         .appendParam("accessToken", accessToken).done(), String.class, HttpMethod.DELETE);
         
         Assert.assertTrue(response.getStatusCode().is2xxSuccessful());
-        
+
         System.setProperty("nacos.core.auth.enabled", "false");
+        System.clearProperty("nacos.core.auth.server.identity.key");
+        System.clearProperty("nacos.core.auth.server.identity.value");
+        NotifyCenter.publishEvent(ServerConfigChangeEvent.newEvent());
     }
 }

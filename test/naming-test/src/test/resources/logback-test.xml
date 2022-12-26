@@ -25,8 +25,7 @@
         <!--</encoder>-->
     <!--</appender>-->
 
-    <!--<root>-->
-        <!--<level value="OFF"/>-->
+    <!--<root level="OFF">-->
         <!--<appender-ref ref="DefaultAppender"/>-->
     <!--</root>-->
 </configuration>

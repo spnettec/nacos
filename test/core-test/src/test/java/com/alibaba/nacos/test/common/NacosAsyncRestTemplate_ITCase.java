@@ -32,8 +32,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.HashMap;
@@ -48,11 +48,10 @@ import java.util.Map;
 @FixMethodOrder(MethodSorters.JVM)
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = Nacos.class, properties = {
-        "server.servlet.context-path=/nacos","nacos.core.auth.enabled=false"},
-        webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+        "server.servlet.context-path=/nacos"}, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 public class NacosAsyncRestTemplate_ITCase {
     
-    @Value("${local.server.port}")
+    @LocalServerPort
     private int port;
     
     private NacosAsyncRestTemplate nacosRestTemplate = HttpClientBeanHolder

@@ -29,8 +29,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -48,7 +48,7 @@ import java.util.concurrent.TimeUnit;
         webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 public class User_ITCase extends HttpClient4Test {
 
-    @Value("${local.server.port}")
+    @LocalServerPort
     private int port;
 
     private String accessToken;
