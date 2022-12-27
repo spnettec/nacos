@@ -23,7 +23,7 @@ import ch.qos.logback.classic.spi.LoggerContextListener;
 import ch.qos.logback.core.CoreConstants;
 import com.alibaba.nacos.client.logging.AbstractNacosLogging;
 import com.alibaba.nacos.common.utils.ResourceUtils;
-import org.slf4j.impl.StaticLoggerBinder;
+import org.slf4j.LoggerFactory;
 
 /**
  * Support for Logback version 1.0.8 or higher
@@ -57,7 +57,7 @@ public class LogbackNacosLogging extends AbstractNacosLogging {
     private LoggerContext loadConfigurationOnStart() {
         String location = getLocation(NACOS_LOGBACK_LOCATION);
         try {
-            LoggerContext loggerContext = (LoggerContext) StaticLoggerBinder.getSingleton().getLoggerFactory();
+            LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();;
             NacosJoranConfigurator configurator = new NacosJoranConfigurator();
             configurator.setContext(loggerContext);
             configurator.doNacosConfigure(ResourceUtils.getResourceUrl(location));

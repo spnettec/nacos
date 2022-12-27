@@ -127,7 +127,7 @@
         <servlet-api.version>6.0.0</servlet-api.version>
         <commons-io.version>2.11.0</commons-io.version>
         <commons-collections4.version>4.4</commons-collections4.version>
-        <slf4j-api.version>2.0.5</slf4j-api.version>
+        <slf4j-api.version>2.0.6</slf4j-api.version>
         <logback.version>1.4.5</logback.version>
         <log4j.version>2.19.0</log4j.version>
         <concurrentlinkedhashmap.version>1.4.2</concurrentlinkedhashmap.version>
