@@ -104,8 +104,6 @@ public class StartingApplicationListener implements NacosApplicationListener {
         
         injectEnvironment(environment);
         
-        loadPreProperties(environment);
-        
         initSystemProperty();
     }
     
@@ -118,6 +116,8 @@ public class StartingApplicationListener implements NacosApplicationListener {
 
     @Override
     public void contextLoaded(ConfigurableApplicationContext context) {
+        loadPreProperties(context.getEnvironment());
+
         EnvUtil.customEnvironment();
     }
 

@@ -44,7 +44,11 @@ import java.util.concurrent.TimeUnit;
  * @since 1.2.0
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = Nacos.class, properties = {"server.servlet.context-path=/nacos"},
+@SpringBootTest(classes = Nacos.class, properties = {
+        "server.servlet.context-path=/nacos",
+        "nacos.core.auth.enabled=true",
+        "nacos.core.auth.server.identity.key=serverIdentity",
+        "nacos.core.auth.server.identity.value=security"},
         webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 public class User_ITCase extends HttpClient4Test {
 
@@ -128,7 +132,7 @@ public class User_ITCase extends HttpClient4Test {
 
         // Query a user:
         response = request("/nacos/v1/auth/users",
-            Params.newParams()
+            Params.newParams().appendParam("search", "accurate")
                 .appendParam("pageNo", "1")
                 .appendParam("pageSize", String.valueOf(Integer.MAX_VALUE))
                 .appendParam("accessToken", accessToken)
@@ -167,14 +171,16 @@ public class User_ITCase extends HttpClient4Test {
 
         // Query a user:
         response = request("/nacos/v1/auth/users",
-            Params.newParams()
+            Params.newParams().appendParam("search", "accurate")
                 .appendParam("pageNo", "1")
                 .appendParam("pageSize", String.valueOf(Integer.MAX_VALUE))
                 .appendParam("accessToken", accessToken)
                 .done(),
             String.class);
 
-        userPage = JacksonUtils.toObj(response.getBody(), new TypeReference<Page<User>>() {});
+        userPage = JacksonUtils.toObj(response.getBody(), new TypeReference<>() {
+
+        });
 
         Assert.assertNotNull(userPage);
         Assert.assertNotNull(userPage.getPageItems());
@@ -203,7 +209,7 @@ public class User_ITCase extends HttpClient4Test {
 
         // Query a user:
         response = request("/nacos/v1/auth/users",
-            Params.newParams()
+            Params.newParams().appendParam("search", "accurate")
                 .appendParam("pageNo", "1")
                 .appendParam("pageSize", String.valueOf(Integer.MAX_VALUE))
                 .appendParam("accessToken", accessToken)

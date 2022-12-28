@@ -44,7 +44,10 @@ import java.util.concurrent.TimeUnit;
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = Nacos.class, properties = {
-        "server.servlet.context-path=/nacos"}, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+        "server.servlet.context-path=/nacos","nacos.core.auth.enabled=true",
+        "nacos.core.auth.server.identity.key=serverIdentity",
+        "nacos.core.auth.server.identity.value=security"}
+        , webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 public class Permission_ITCase extends HttpClient4Test {
     
     @LocalServerPort
@@ -143,7 +146,7 @@ public class Permission_ITCase extends HttpClient4Test {
         
         // Query permission:
         response = request("/nacos/v1/auth/permissions",
-                Params.newParams().appendParam("role", "role1").appendParam("pageNo", "1").appendParam("pageSize", "10")
+                Params.newParams().appendParam("search", "accurate").appendParam("role", "role1").appendParam("pageNo", "1").appendParam("pageSize", "10")
                         .appendParam("accessToken", accessToken).done(), String.class, HttpMethod.GET);
         
         System.out.println(response);
@@ -180,7 +183,7 @@ public class Permission_ITCase extends HttpClient4Test {
         
         // Query permission:
         response = request("/nacos/v1/auth/permissions",
-                Params.newParams().appendParam("role", "role1").appendParam("pageNo", "1").appendParam("pageSize", "10")
+                Params.newParams().appendParam("search", "accurate").appendParam("role", "role1").appendParam("pageNo", "1").appendParam("pageSize", "10")
                         .appendParam("accessToken", accessToken).done(), String.class, HttpMethod.GET);
         
         Assert.assertTrue(response.getStatusCode().is2xxSuccessful());
@@ -215,12 +218,13 @@ public class Permission_ITCase extends HttpClient4Test {
         
         // Query permission:
         response = request("/nacos/v1/auth/permissions",
-                Params.newParams().appendParam("role", "role1").appendParam("pageNo", "1").appendParam("pageSize", "10")
+                Params.newParams().appendParam("search", "accurate").appendParam("role", "role1").appendParam("pageNo", "1").appendParam("pageSize", "10")
                         .appendParam("accessToken", accessToken).done(), String.class, HttpMethod.GET);
         
         Assert.assertTrue(response.getStatusCode().is2xxSuccessful());
         
-        permissionPage = JacksonUtils.toObj(response.getBody(), new TypeReference<Page<PermissionInfo>>() {
+        permissionPage = JacksonUtils.toObj(response.getBody(), new TypeReference<>() {
+
         });
         
         Assert.assertNotNull(permissionPage);

@@ -145,7 +145,7 @@ public class Role_ITCase extends HttpClient4Test {
 
         // Query role of user:
         response = request("/nacos/v1/auth/roles",
-            Params.newParams()
+            Params.newParams().appendParam("search", "accurate")
                 .appendParam("username", "username2")
                 .appendParam("pageNo", "1")
                 .appendParam("pageSize", "10")
@@ -156,7 +156,9 @@ public class Role_ITCase extends HttpClient4Test {
 
         Assert.assertTrue(response.getStatusCode().is2xxSuccessful());
 
-        Page<RoleInfo> roleInfoPage = JacksonUtils.toObj(response.getBody(), new TypeReference<Page<RoleInfo>>() {});
+        Page<RoleInfo> roleInfoPage = JacksonUtils.toObj(response.getBody(), new TypeReference<>() {
+
+        });
 
         Assert.assertNotNull(roleInfoPage);
         Assert.assertNotNull(roleInfoPage.getPageItems());
@@ -183,7 +185,7 @@ public class Role_ITCase extends HttpClient4Test {
 
         // Query roles of user:
         response = request("/nacos/v1/auth/roles",
-            Params.newParams()
+            Params.newParams().appendParam("search", "accurate")
                 .appendParam("username", "username2")
                 .appendParam("pageNo", "1")
                 .appendParam("pageSize", "10")
@@ -194,7 +196,9 @@ public class Role_ITCase extends HttpClient4Test {
 
         Assert.assertTrue(response.getStatusCode().is2xxSuccessful());
 
-        roleInfoPage = JacksonUtils.toObj(response.getBody(), new TypeReference<Page<RoleInfo>>() {});
+        roleInfoPage = JacksonUtils.toObj(response.getBody(), new TypeReference<>() {
+
+        });
 
         Assert.assertNotNull(roleInfoPage);
         Assert.assertNotNull(roleInfoPage.getPageItems());
@@ -228,7 +232,7 @@ public class Role_ITCase extends HttpClient4Test {
 
         // Query roles of user:
         response = request("/nacos/v1/auth/roles",
-            Params.newParams()
+            Params.newParams().appendParam("search", "accurate")
                 .appendParam("username", "username2")
                 .appendParam("pageNo", "1")
                 .appendParam("pageSize", "10")
@@ -270,7 +274,7 @@ public class Role_ITCase extends HttpClient4Test {
 
         // Query roles of user:
         response = request("/nacos/v1/auth/roles",
-            Params.newParams()
+            Params.newParams().appendParam("search", "accurate")
                 .appendParam("username", "username2")
                 .appendParam("pageNo", "1")
                 .appendParam("pageSize", "10")
@@ -281,7 +285,9 @@ public class Role_ITCase extends HttpClient4Test {
 
         Assert.assertTrue(response.getStatusCode().is2xxSuccessful());
 
-        roleInfoPage = JacksonUtils.toObj(response.getBody(), new TypeReference<Page<RoleInfo>>() {});
+        roleInfoPage = JacksonUtils.toObj(response.getBody(), new TypeReference<>() {
+
+        });
 
         Assert.assertNotNull(roleInfoPage);
         Assert.assertNotNull(roleInfoPage.getPageItems());

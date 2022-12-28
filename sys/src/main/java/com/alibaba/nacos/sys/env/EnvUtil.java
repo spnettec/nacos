@@ -92,7 +92,7 @@ public class EnvUtil {
     
     private static final String DEFAULT_CONFIG_LOCATION = "application.properties";
     
-    private static final String DEFAULT_RESOURCE_PATH = "/application.properties";
+    private static final String DEFAULT_RESOURCE_PATH = "/nacos_default_application.properties";
     
     private static final String DEFAULT_ADDITIONAL_PATH = "conf";
     

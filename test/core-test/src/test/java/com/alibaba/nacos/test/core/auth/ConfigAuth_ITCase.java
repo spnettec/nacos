@@ -45,7 +45,13 @@ import static org.junit.Assert.fail;
  * @since 1.2.0
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = Nacos.class, properties = {"server.servlet.context-path=/nacos"},
+@SpringBootTest(classes = Nacos.class,
+        properties = {
+                "server.servlet.context-path=/nacos",
+                "nacos.core.auth.enabled=true",
+                "nacos.core.auth.server.identity.key=serverIdentity",
+                "nacos.core.auth.server.identity.value=security"
+        },
         webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 public class ConfigAuth_ITCase extends AuthBase {
 
