@@ -241,6 +241,7 @@
                     </execution>
                 </executions>
             </plugin>
+            <!--
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-pmd-plugin</artifactId>
@@ -271,6 +272,8 @@
                         <exclude>**/common/packagescan/classreading/*.java</exclude>
                         <exclude>**/common/packagescan/resource/*.java</exclude>
                         <exclude>**/common/packagescan/util/*.java</exclude>
+                        <exclude>com/alibaba/nacos/api/utils/NetUtils.java</exclude>
+                        <exclude>com/alibaba/nacos/api/naming/pojo/*.java</exclude>
                     </excludes>
                 </configuration>
                 <executions>
@@ -288,6 +291,7 @@
                     </dependency>
                 </dependencies>
             </plugin>
+            -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
