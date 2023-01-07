@@ -509,10 +509,6 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <version>${maven-surefire-plugin.version}</version>
                         <configuration>
-                            <argLine>
-                                --add-opens java.base/java.lang=ALL-UNNAMED
-                                --add-opens java.base/java.util=ALL-UNNAMED
-                            </argLine>
                             <testFailureIgnore>false</testFailureIgnore>
                             <includes>
                                 <include>**/*CITCase.java</include>
@@ -532,10 +528,6 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <version>${maven-surefire-plugin.version}</version>
                         <configuration>
-                            <argLine>
-                                --add-opens java.base/java.lang=ALL-UNNAMED
-                                --add-opens java.base/java.util=ALL-UNNAMED
-                            </argLine>
                             <testFailureIgnore>false</testFailureIgnore>
                             <includes>
                                 <include>**/naming/*ITCase.java</include>
