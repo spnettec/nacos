@@ -119,7 +119,7 @@ public class GrpcUtils {
      * @return payload
      */
     public static Object parse(Payload payload) {
-        Class classType = PayloadRegistry.getClassByType(payload.getMetadata().getType());
+        Class<?> classType = PayloadRegistry.getClassByType(payload.getMetadata().getType());
         if (classType != null) {
             ByteString byteString = payload.getBody().getValue();
             ByteBuffer byteBuffer = byteString.asReadOnlyByteBuffer();
