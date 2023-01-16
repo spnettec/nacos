@@ -17,7 +17,8 @@
 package com.alibaba.nacos.plugin.datasource.impl.mysql;
 
 import com.alibaba.nacos.plugin.datasource.constants.DataSourceConstant;
-import com.alibaba.nacos.plugin.datasource.impl.derby.HistoryConfigInfoMapperByDerby;
+import com.alibaba.nacos.plugin.datasource.mapper.AbstractMapper;
+import com.alibaba.nacos.plugin.datasource.mapper.HistoryConfigInfoMapper;
 
 /**
  * The mysql implementation of HistoryConfigInfoMapper.
@@ -25,8 +26,8 @@ import com.alibaba.nacos.plugin.datasource.impl.derby.HistoryConfigInfoMapperByD
  * @author hyx
  **/
 
-public class HistoryConfigInfoMapperByMySql extends HistoryConfigInfoMapperByDerby {
-
+public class HistoryConfigInfoMapperByMySql extends AbstractMapper implements HistoryConfigInfoMapper {
+    
     @Override
     public String removeConfigHistory() {
         return "DELETE FROM his_config_info WHERE gmt_modified < ? LIMIT ?";

@@ -17,7 +17,7 @@
 package com.alibaba.nacos.plugin.datasource.impl.mysql;
 
 import com.alibaba.nacos.plugin.datasource.constants.DataSourceConstant;
-import com.alibaba.nacos.plugin.datasource.impl.derby.GroupCapacityMapperByDerby;
+import com.alibaba.nacos.plugin.datasource.mapper.AbstractMapper;
 import com.alibaba.nacos.plugin.datasource.mapper.GroupCapacityMapper;
 
 /**
@@ -25,7 +25,7 @@ import com.alibaba.nacos.plugin.datasource.mapper.GroupCapacityMapper;
  *
  * @author lixiaoshuang
  */
-public class GroupCapacityMapperByMysql extends GroupCapacityMapperByDerby {
+public class GroupCapacityMapperByMysql extends AbstractMapper implements GroupCapacityMapper {
 
     @Override
     public String getDataSource() {
@@ -37,3 +37,4 @@ public class GroupCapacityMapperByMysql extends GroupCapacityMapperByDerby {
         return "SELECT id, group_id FROM group_capacity WHERE id > ? LIMIT ?";
     }
 }
+

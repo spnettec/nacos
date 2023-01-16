@@ -16,6 +16,7 @@
 
 package com.alibaba.nacos.plugin.datasource.impl.mysql;
 
+import com.alibaba.nacos.common.utils.NamespaceUtil;
 import com.alibaba.nacos.plugin.datasource.constants.DataSourceConstant;
 import com.alibaba.nacos.plugin.datasource.constants.TableConstant;
 import org.junit.Assert;
@@ -38,7 +39,7 @@ public class ConfigInfoMapperByMySqlTest {
     @Test
     public void testFindConfigMaxId() {
         String sql = configInfoMapperByMySql.findConfigMaxId();
-        Assert.assertEquals(sql, "SELECT max(id) FROM config_info");
+        Assert.assertEquals(sql, "SELECT MAX(id) FROM config_info");
     }
     
     @Test
@@ -70,7 +71,8 @@ public class ConfigInfoMapperByMySqlTest {
     public void testGetTenantIdList() {
         String sql = configInfoMapperByMySql.getTenantIdList(0, 5);
         Assert.assertEquals(sql,
-                "SELECT tenant_id FROM config_info WHERE tenant_id != '' GROUP BY tenant_id LIMIT 0,5");
+                "SELECT tenant_id FROM config_info WHERE tenant_id != '"
+                        + NamespaceUtil.getNamespaceDefaultId() + "' GROUP BY tenant_id LIMIT 0,5");
     }
     
     @Test
@@ -107,7 +109,7 @@ public class ConfigInfoMapperByMySqlTest {
     public void testFindChangeConfig() {
         String sql = configInfoMapperByMySql.findChangeConfig();
         Assert.assertEquals(sql,
-                "SELECT data_id, group_id, tenant_id, app_name, content, gmt_modified,encrypted_data_key "
+                "SELECT data_id, group_id, tenant_id, app_name, content, gmt_modified, encrypted_data_key "
                         + "FROM config_info WHERE gmt_modified >= ? AND gmt_modified <= ?");
     }
     
@@ -142,13 +144,13 @@ public class ConfigInfoMapperByMySqlTest {
         String sql = configInfoMapperByMySql.findAllConfigInfo4Export(new ArrayList<>(), new HashMap<>());
         Assert.assertEquals(sql,
                 "SELECT id,data_id,group_id,tenant_id,app_name,content,type,md5,gmt_create,gmt_modified,src_user,"
-                        + "src_ip,c_desc,c_use,effect,c_schema,encrypted_data_key FROM config_info WHERE  1=1 ");
+                        + "src_ip,c_desc,c_use,effect,c_schema,encrypted_data_key FROM config_info WHERE  tenant_id = ? ");
     }
     
     @Test
     public void testFindConfigInfoBaseLikeCountRows() {
         String sql = configInfoMapperByMySql.findConfigInfoBaseLikeCountRows(new HashMap<>());
-        Assert.assertEquals(sql, "SELECT count(*) FROM config_info WHERE  (tenant_id='' or tenant_id is null) ");
+        Assert.assertEquals(sql, "SELECT count(*) FROM config_info WHERE  1=1 AND tenant_id='' ");
     }
     
     @Test
@@ -161,14 +163,15 @@ public class ConfigInfoMapperByMySqlTest {
     @Test
     public void testFindConfigInfo4PageCountRows() {
         String sql = configInfoMapperByMySql.findConfigInfo4PageCountRows(new HashMap<>());
-        Assert.assertEquals(sql, "SELECT count(*) FROM config_info WHERE  1=1 ");
+        Assert.assertEquals(sql, "SELECT count(*) FROM config_info WHERE  tenant_id=? ");
     }
     
     @Test
     public void testFindConfigInfo4PageFetchRows() {
         String sql = configInfoMapperByMySql.findConfigInfo4PageFetchRows(new HashMap<>(), 0, 5);
         Assert.assertEquals(sql,
-                "SELECT id,data_id,group_id,tenant_id,app_name,content,type,encrypted_data_key FROM config_info WHERE  1=1  LIMIT 0,5");
+                "SELECT id,data_id,group_id,tenant_id,app_name,content,type,encrypted_data_key FROM config_info"
+                        + " WHERE  tenant_id=?  LIMIT 0,5");
     }
     
     @Test
@@ -181,14 +184,15 @@ public class ConfigInfoMapperByMySqlTest {
     @Test
     public void testFindConfigInfoLike4PageCountRows() {
         String sql = configInfoMapperByMySql.findConfigInfoLike4PageCountRows(new HashMap<>());
-        Assert.assertEquals(sql, "SELECT count(*) FROM config_info WHERE  1=1 ");
+        Assert.assertEquals(sql, "SELECT count(*) FROM config_info WHERE  tenant_id LIKE ? ");
     }
     
     @Test
     public void testFindConfigInfoLike4PageFetchRows() {
         String sql = configInfoMapperByMySql.findConfigInfoLike4PageFetchRows(new HashMap<>(), 0, 5);
         Assert.assertEquals(sql,
-                "SELECT id,data_id,group_id,tenant_id,app_name,content,encrypted_data_key FROM config_info WHERE  1=1  LIMIT 0,5");
+                "SELECT id,data_id,group_id,tenant_id,app_name,content,encrypted_data_key FROM config_info "
+                        + "WHERE  tenant_id LIKE ?  LIMIT 0,5");
     }
     
     @Test

@@ -16,9 +16,11 @@
 
 package com.alibaba.nacos.plugin.datasource.impl.mysql;
 
+import com.alibaba.nacos.common.utils.NamespaceUtil;
 import com.alibaba.nacos.common.utils.StringUtils;
 import com.alibaba.nacos.plugin.datasource.constants.DataSourceConstant;
-import com.alibaba.nacos.plugin.datasource.impl.derby.ConfigInfoMapperByDerby;
+import com.alibaba.nacos.plugin.datasource.mapper.AbstractMapper;
+import com.alibaba.nacos.plugin.datasource.mapper.ConfigInfoMapper;
 
 import java.sql.Timestamp;
 import java.util.Map;
@@ -29,16 +31,16 @@ import java.util.Map;
  * @author hyx
  **/
 
-public class ConfigInfoMapperByMySql extends ConfigInfoMapperByDerby {
-
+public class ConfigInfoMapperByMySql extends AbstractMapper implements ConfigInfoMapper {
+    
     private static final String DATA_ID = "dataId";
-
+    
     private static final String GROUP = "group";
-
+    
     private static final String APP_NAME = "appName";
-
+    
     private static final String CONTENT = "content";
-
+    
     private static final String TENANT = "tenant";
 
     @Override
@@ -49,40 +51,36 @@ public class ConfigInfoMapperByMySql extends ConfigInfoMapperByDerby {
 
     @Override
     public String getTenantIdList(int startRow, int pageSize) {
-        return "SELECT tenant_id FROM config_info WHERE tenant_id != '' GROUP BY tenant_id LIMIT " + startRow + ","
+        return "SELECT tenant_id FROM config_info WHERE tenant_id != '" + NamespaceUtil.getNamespaceDefaultId()
+                + "' GROUP BY tenant_id LIMIT " + startRow + ","
                 + pageSize;
     }
-
+    
     @Override
     public String getGroupIdList(int startRow, int pageSize) {
-        return "SELECT group_id FROM config_info WHERE tenant_id ='' GROUP BY group_id LIMIT " + startRow + ","
+        return "SELECT group_id FROM config_info WHERE tenant_id ='" + NamespaceUtil.getNamespaceDefaultId()
+                + "' GROUP BY group_id LIMIT " + startRow + ","
                 + pageSize;
     }
-
+    
     @Override
     public String findAllConfigKey(int startRow, int pageSize) {
         return " SELECT data_id,group_id,app_name  FROM ( "
                 + " SELECT id FROM config_info WHERE tenant_id LIKE ? ORDER BY id LIMIT " + startRow + "," + pageSize
                 + " )" + " g, config_info t WHERE g.id = t.id  ";
     }
-
+    
     @Override
     public String findAllConfigInfoBaseFetchRows(int startRow, int pageSize) {
         return "SELECT t.id,data_id,group_id,content,md5"
                 + " FROM ( SELECT id FROM config_info ORDER BY id LIMIT ?,?  ) "
                 + " g, config_info t  WHERE g.id = t.id ";
     }
-
+    
     @Override
     public String findAllConfigInfoFragment(int startRow, int pageSize) {
         return "SELECT id,data_id,group_id,tenant_id,app_name,content,md5,gmt_modified,type,encrypted_data_key "
                 + "FROM config_info WHERE id > ? ORDER BY id ASC LIMIT " + startRow + "," + pageSize;
-    }
-
-    @Override
-    public String findChangeConfig() {
-        return "SELECT data_id, group_id, tenant_id, app_name, content, gmt_modified,encrypted_data_key "
-                + "FROM config_info WHERE gmt_modified >= ? AND gmt_modified <= ?";
     }
 
     @Override
@@ -101,11 +99,11 @@ public class ConfigInfoMapperByMySql extends ConfigInfoMapperByDerby {
         if (!StringUtils.isBlank(group)) {
             where += " AND group_id LIKE ? ";
         }
-
+        
         if (!StringUtils.isBlank(tenantTmp)) {
             where += " AND tenant_id = ? ";
         }
-
+        
         if (!StringUtils.isBlank(appName)) {
             where += " AND app_name = ? ";
         }
@@ -117,7 +115,7 @@ public class ConfigInfoMapperByMySql extends ConfigInfoMapperByDerby {
         }
         return sqlFetchRows + where + " AND id > " + lastMaxId + " ORDER BY id ASC" + " LIMIT " + 0 + "," + pageSize;
     }
-
+    
     @Override
     public String listGroupKeyMd5ByPageFetchRows(int startRow, int pageSize) {
         return "SELECT t.id,data_id,group_id,tenant_id,app_name,md5,type,gmt_modified,encrypted_data_key FROM "
@@ -128,7 +126,7 @@ public class ConfigInfoMapperByMySql extends ConfigInfoMapperByDerby {
     @Override
     public String findConfigInfoBaseLikeFetchRows(Map<String, String> params, int startRow, int pageSize) {
         final String sqlFetchRows = "SELECT id,data_id,group_id,tenant_id,content FROM config_info WHERE ";
-        String where = " 1=1 AND tenant_id='' ";
+        String where = " 1=1 AND tenant_id='" + NamespaceUtil.getNamespaceDefaultId() + "' ";
         if (!StringUtils.isBlank(params.get(DATA_ID))) {
             where += " AND data_id LIKE ? ";
         }
@@ -148,10 +146,7 @@ public class ConfigInfoMapperByMySql extends ConfigInfoMapperByDerby {
         final String group = params.get(GROUP);
         final String sql = "SELECT id,data_id,group_id,tenant_id,app_name,content,type,encrypted_data_key FROM config_info";
         StringBuilder where = new StringBuilder(" WHERE ");
-        where.append(" 1=1 ");
-        if (StringUtils.isNotBlank(params.get(TENANT))) {
-            where.append(" AND tenant_id=? ");
-        }
+        where.append(" tenant_id=? ");
         if (StringUtils.isNotBlank(dataId)) {
             where.append(" AND data_id=? ");
         }
@@ -163,7 +158,7 @@ public class ConfigInfoMapperByMySql extends ConfigInfoMapperByDerby {
         }
         return sql + where + " LIMIT " + startRow + "," + pageSize;
     }
-
+    
     @Override
     public String findConfigInfoBaseByGroupFetchRows(int startRow, int pageSize) {
         return "SELECT id,data_id,group_id,content FROM config_info WHERE group_id=? AND tenant_id=?" + " LIMIT "
@@ -172,16 +167,13 @@ public class ConfigInfoMapperByMySql extends ConfigInfoMapperByDerby {
 
     @Override
     public String findConfigInfoLike4PageFetchRows(Map<String, String> params, int startRow, int pageSize) {
-        final String dataId = params.get(DATA_ID);
-        final String group = params.get(GROUP);
+        String dataId = params.get(DATA_ID);
+        String group = params.get(GROUP);
         final String appName = params.get(APP_NAME);
         final String content = params.get(CONTENT);
         final String sqlFetchRows = "SELECT id,data_id,group_id,tenant_id,app_name,content,encrypted_data_key FROM config_info";
         StringBuilder where = new StringBuilder(" WHERE ");
-        where.append(" 1=1 ");
-        if (StringUtils.isNotBlank(params.get(TENANT))) {
-            where.append(" AND tenant_id LIKE ? ");
-        }
+        where.append(" tenant_id LIKE ? ");
         if (!StringUtils.isBlank(dataId)) {
             where.append(" AND data_id LIKE ? ");
         }
@@ -196,7 +188,7 @@ public class ConfigInfoMapperByMySql extends ConfigInfoMapperByDerby {
         }
         return sqlFetchRows + where + " LIMIT " + startRow + "," + pageSize;
     }
-
+    
     @Override
     public String findAllConfigInfoFetchRows(int startRow, int pageSize) {
         return "SELECT t.id,data_id,group_id,tenant_id,app_name,content,md5 "
@@ -208,4 +200,5 @@ public class ConfigInfoMapperByMySql extends ConfigInfoMapperByDerby {
     public String getDataSource() {
         return DataSourceConstant.MYSQL;
     }
+
 }
