@@ -16,15 +16,13 @@
 
 package com.alibaba.nacos.core.remote.grpc;
 
+import com.alibaba.nacos.common.utils.ReflectUtils;
 import io.grpc.Context;
 import io.grpc.Contexts;
 import io.grpc.Metadata;
 import io.grpc.ServerCall;
 import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
-import io.grpc.internal.ServerStream;
-import io.grpc.internal.ServerStreamHelper;
-import io.grpc.netty.shaded.io.grpc.netty.NettyChannelHelper;
 import io.grpc.netty.shaded.io.netty.channel.Channel;
 
 /**
@@ -53,9 +51,10 @@ public class GrpcConnectionInterceptor implements ServerInterceptor {
         
         return Contexts.interceptCall(ctx, call, headers, next);
     }
-    
+
     private Channel getInternalChannel(ServerCall serverCall) {
-        ServerStream serverStream = ServerStreamHelper.getServerStream(serverCall);
-        return NettyChannelHelper.getChannel(serverStream);
+        Object serverStream = ReflectUtils.getFieldValue(serverCall, "stream");
+        Object writeQueue = ReflectUtils.getFieldValue(serverStream, "writeQueue");
+        return (Channel) ReflectUtils.getFieldValue(writeQueue, "channel");
     }
 }

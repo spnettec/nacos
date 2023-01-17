@@ -672,27 +672,25 @@ public class EmbeddedConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
     @Override
     public Page<ConfigInfo> findConfigInfo4Page(final int pageNo, final int pageSize, final String dataId,
             final String group, final String tenant, final Map<String, Object> configAdvanceInfo) {
+        String tenantTmp = StringUtils.isBlank(tenant) ? StringUtils.EMPTY : tenant;
         final String appName = configAdvanceInfo == null ? null : (String) configAdvanceInfo.get("appName");
         final String configTags = configAdvanceInfo == null ? null : (String) configAdvanceInfo.get("config_tags");
         String sql = null;
         String sqlCount = null;
         List<String> paramList = new ArrayList<>();
+        paramList.add(tenantTmp);
         Map<String, String> paramsMap = new HashMap<>(16);
-        if (StringUtils.isNotBlank(tenant)) {
-            paramList.add(tenant);
-            paramsMap.put(TENANT, tenant);
-        }
         if (StringUtils.isNotBlank(dataId)) {
             paramList.add(dataId);
-            paramsMap.put(DATA_ID, dataId);
+            paramsMap.put(DATA_ID, DATA_ID);
         }
         if (StringUtils.isNotBlank(group)) {
             paramList.add(group);
-            paramsMap.put(GROUP, group);
+            paramsMap.put(GROUP, GROUP);
         }
         if (StringUtils.isNotBlank(appName)) {
             paramList.add(appName);
-            paramsMap.put(APP_NAME, appName);
+            paramsMap.put(APP_NAME, APP_NAME);
         }
         final int startRow = (pageNo - 1) * pageSize;
         if (StringUtils.isNotBlank(configTags)) {
@@ -955,6 +953,7 @@ public class EmbeddedConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
     @Override
     public Page<ConfigInfo> findConfigInfoLike4Page(final int pageNo, final int pageSize, final String dataId,
             final String group, final String tenant, final Map<String, Object> configAdvanceInfo) {
+        String tenantTmp = StringUtils.isBlank(tenant) ? StringUtils.EMPTY : tenant;
         final String appName = configAdvanceInfo == null ? null : (String) configAdvanceInfo.get("appName");
         final String content = configAdvanceInfo == null ? null : (String) configAdvanceInfo.get("content");
         final String configTags = configAdvanceInfo == null ? null : (String) configAdvanceInfo.get("config_tags");
@@ -963,29 +962,22 @@ public class EmbeddedConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
         Map<String, String> paramsMap = new HashMap<>(16);
         
         List<String> params = new ArrayList<>();
-        if (!StringUtils.isBlank(tenant)) {
-            String generateLikeArgument = generateLikeArgument(tenant);
-            params.add(generateLikeArgument);
-            paramsMap.put(TENANT, generateLikeArgument);
-        }
+        params.add(generateLikeArgument(tenantTmp));
         if (!StringUtils.isBlank(dataId)) {
-            String generateLikeArgument = generateLikeArgument(dataId);
-            params.add(generateLikeArgument);
-            paramsMap.put(DATA_ID, generateLikeArgument);
+            params.add(generateLikeArgument(dataId));
+            paramsMap.put(DATA_ID, DATA_ID);
         }
         if (!StringUtils.isBlank(group)) {
-            String generateLikeArgument = generateLikeArgument(group);
-            params.add(generateLikeArgument);
-            paramsMap.put(GROUP, generateLikeArgument);
+            params.add(generateLikeArgument(group));
+            paramsMap.put(GROUP, GROUP);
         }
         if (!StringUtils.isBlank(appName)) {
             params.add(appName);
-            paramsMap.put(APP_NAME, appName);
+            paramsMap.put(APP_NAME, APP_NAME);
         }
         if (!StringUtils.isBlank(content)) {
-            String generateLikeArgument = generateLikeArgument(content);
-            params.add(generateLikeArgument);
-            paramsMap.put(CONTENT, generateLikeArgument);
+            params.add(generateLikeArgument(content));
+            paramsMap.put(CONTENT, CONTENT);
         }
         final int startRow = (pageNo - 1) * pageSize;
         if (StringUtils.isNotBlank(configTags)) {
@@ -1024,19 +1016,16 @@ public class EmbeddedConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
         Map<String, String> paramsMap = new HashMap<>(16);
         List<String> params = new ArrayList<>();
         if (!StringUtils.isBlank(dataId)) {
-            String generateLikeArgument = generateLikeArgument(dataId);
-            params.add(generateLikeArgument);
-            paramsMap.put(DATA_ID, generateLikeArgument);
+            params.add(generateLikeArgument(dataId));
+            paramsMap.put(DATA_ID, DATA_ID);
         }
         if (!StringUtils.isBlank(group)) {
-            String generateLikeArgument = generateLikeArgument(group);
-            params.add(generateLikeArgument);
-            paramsMap.put(GROUP, generateLikeArgument);
+            params.add(generateLikeArgument(group));
+            paramsMap.put(GROUP, GROUP);
         }
         if (!StringUtils.isBlank(content)) {
-            String generateLikeArgument = generateLikeArgument(content);
-            params.add(generateLikeArgument);
-            paramsMap.put(CONTENT, generateLikeArgument);
+            params.add(generateLikeArgument(content));
+            paramsMap.put(CONTENT, CONTENT);
         }
         
         final int startRow = (pageNo - 1) * pageSize;
@@ -1068,24 +1057,22 @@ public class EmbeddedConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
         Map<String, String> paramsMap = new HashMap<>(16);
         List<Object> params = new ArrayList<>();
         if (!StringUtils.isBlank(dataId)) {
-            String generateLikeArgument = generateLikeArgument(dataId);
-            params.add(generateLikeArgument);
-            paramsMap.put(DATA_ID, generateLikeArgument);
+            params.add(generateLikeArgument(dataId));
+            paramsMap.put(DATA_ID, DATA_ID);
         }
         if (!StringUtils.isBlank(group)) {
-            String generateLikeArgument = generateLikeArgument(group);
-            params.add(generateLikeArgument);
-            paramsMap.put(GROUP, generateLikeArgument);
+            params.add(generateLikeArgument(group));
+            paramsMap.put(GROUP, GROUP);
         }
         
         if (!StringUtils.isBlank(tenantTmp)) {
             params.add(tenantTmp);
-            paramsMap.put(TENANT, tenantTmp);
+            paramsMap.put(TENANT, TENANT);
         }
         
         if (!StringUtils.isBlank(appName)) {
             params.add(appName);
-            paramsMap.put(APP_NAME, appName);
+            paramsMap.put(APP_NAME, APP_NAME);
         }
         if (startTime != null) {
             params.add(startTime);
@@ -1110,20 +1097,14 @@ public class EmbeddedConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
     public List<String> selectTagByConfig(String dataId, String group, String tenant) {
         ConfigTagsRelationMapper configTagsRelationMapper = mapperManager.findMapper(
                 dataSourceService.getDataSourceType(), TableConstant.CONFIG_TAGS_RELATION);
-        Object[] valueList = new Object[] { dataId, group, tenant };
-        List<String> whereList = Arrays.asList("data_id", "group_id", "tenant_id");
-        if (StringUtils.isNotBlank(tenant)) {
-            valueList = new Object[] { dataId, group };
-            whereList = Arrays.asList("data_id", "group_id");
-        }
-        String sql = configTagsRelationMapper.select(List.of("tag_name"),
-                whereList);
-        return databaseOperate.queryMany(sql, valueList, String.class);
+        String sql = configTagsRelationMapper.select(Arrays.asList("tag_name"),
+                Arrays.asList("data_id", "group_id", "tenant_id"));
+        return databaseOperate.queryMany(sql, new Object[] {dataId, group, tenant}, String.class);
     }
     
     @Override
     public List<ConfigInfo> findConfigInfosByIds(final String ids) {
-        if (StringUtils.isNotBlank(ids)) {
+        if (StringUtils.isBlank(ids)) {
             return null;
         }
         List<Long> paramList = new ArrayList<>();
@@ -1166,23 +1147,18 @@ public class EmbeddedConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
     
     @Override
     public ConfigAllInfo findConfigAllInfo(final String dataId, final String group, final String tenant) {
-        
+        final String tenantTmp = StringUtils.isBlank(tenant) ? StringUtils.EMPTY : tenant;
+
         ConfigInfoMapper configInfoMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                 TableConstant.CONFIG_INFO);
-        Object[] valueList = new Object[] { dataId, group, tenant };
-        List<String> whereList = Arrays.asList("data_id", "group_id", "tenant_id");
-        if (StringUtils.isNotBlank(tenant)) {
-            valueList = new Object[] { dataId, group };
-            whereList = Arrays.asList("data_id", "group_id");
-        }
         final String sql = configInfoMapper.select(
                 Arrays.asList("id", "data_id", "group_id", "tenant_id", "app_name", "content", "md5", "gmt_create",
                         "gmt_modified", "src_user", "src_ip", "c_desc", "c_use", "effect", "type", "c_schema",
-                        "encrypted_data_key"), whereList);
+                        "encrypted_data_key"), Arrays.asList("data_id", "group_id", "tenant_id"));
         
         List<String> configTagList = selectTagByConfig(dataId, group, tenant);
         
-        ConfigAllInfo configAdvance = databaseOperate.queryOne(sql, valueList,
+        ConfigAllInfo configAdvance = databaseOperate.queryOne(sql, new Object[] {dataId, group, tenantTmp},
                 CONFIG_ALL_INFO_ROW_MAPPER);
         
         if (configTagList != null && !configTagList.isEmpty()) {
@@ -1282,22 +1258,19 @@ public class EmbeddedConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
         if (!CollectionUtils.isEmpty(ids)) {
             paramList.addAll(ids);
         } else {
-            if (!StringUtils.isBlank(tenantTmp)) {
-                paramList.add(tenantTmp);
-                params.put(TENANT, tenantTmp);
-            }
+            paramList.add(tenantTmp);
+            params.put(TENANT, TENANT);
             if (!StringUtils.isBlank(dataId)) {
-                String generateLikeArgument = generateLikeArgument(dataId);
-                paramList.add(generateLikeArgument);
-                params.put(DATA_ID, generateLikeArgument);
+                paramList.add(generateLikeArgument(dataId));
+                params.put(DATA_ID, DATA_ID);
             }
             if (StringUtils.isNotBlank(group)) {
                 paramList.add(group);
-                params.put(GROUP, group);
+                params.put(GROUP, GROUP);
             }
             if (StringUtils.isNotBlank(appName)) {
                 paramList.add(appName);
-                params.put(APP_NAME, appName);
+                params.put(APP_NAME, APP_NAME);
             }
         }
         ConfigInfoMapper configInfoMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
