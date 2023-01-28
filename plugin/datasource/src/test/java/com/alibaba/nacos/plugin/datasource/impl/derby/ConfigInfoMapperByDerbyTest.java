@@ -78,7 +78,7 @@ public class ConfigInfoMapperByDerbyTest {
     public void testGetGroupIdList() {
         String sql = configInfoMapperByDerby.getGroupIdList(0, 5);
         Assert.assertEquals(sql,
-                "SELECT group_id FROM config_info WHERE (tenant_id ='' or tenant_id is null) GROUP BY group_id OFFSET 0 ROWS FETCH NEXT 5 ROWS ONLY");
+                "SELECT group_id FROM config_info WHERE tenant_id ='' GROUP BY group_id OFFSET 0 ROWS FETCH NEXT 5 ROWS ONLY");
     }
     
     @Test
@@ -143,34 +143,35 @@ public class ConfigInfoMapperByDerbyTest {
         String sql = configInfoMapperByDerby.findAllConfigInfo4Export(new ArrayList<>(), new HashMap<>());
         Assert.assertEquals(sql,
                 "SELECT id,data_id,group_id,tenant_id,app_name,content,type,md5,gmt_create,gmt_modified,src_user,"
-                        + "src_ip,c_desc,c_use,effect,c_schema,encrypted_data_key FROM config_info WHERE  1=1 ");
+                        + "src_ip,c_desc,c_use,effect,c_schema,encrypted_data_key FROM config_info WHERE  tenant_id = ? ");
     }
     
     @Test
     public void testFindConfigInfoBaseLikeCountRows() {
         String sql = configInfoMapperByDerby.findConfigInfoBaseLikeCountRows(new HashMap<>());
-        Assert.assertEquals(sql, "SELECT count(*) FROM config_info WHERE  (tenant_id='' or tenant_id is null) ");
+        Assert.assertEquals(sql, "SELECT count(*) FROM config_info WHERE  1=1 AND tenant_id='' ");
     }
     
     @Test
     public void testFindConfigInfoBaseLikeFetchRows() {
         String sql = configInfoMapperByDerby.findConfigInfoBaseLikeFetchRows(new HashMap<>(), 0, 5);
         Assert.assertEquals(sql,
-                "SELECT id,data_id,group_id,tenant_id,content FROM config_info "
-                        + "WHERE  (tenant_id='' or tenant_id is null)  OFFSET 0 ROWS FETCH NEXT 5 ROWS ONLY");
+                "SELECT id,data_id,group_id,tenant_id,content FROM config_info WHERE  1=1 AND tenant_id=''  "
+                        + "OFFSET 0 ROWS FETCH NEXT 5 ROWS ONLY");
     }
     
     @Test
     public void testFindConfigInfo4PageCountRows() {
         String sql = configInfoMapperByDerby.findConfigInfo4PageCountRows(new HashMap<>());
-        Assert.assertEquals(sql, "SELECT count(*) FROM config_info WHERE  1=1 ");
+        Assert.assertEquals(sql, "SELECT count(*) FROM config_info WHERE  tenant_id=? ");
     }
     
     @Test
     public void testFindConfigInfo4PageFetchRows() {
         String sql = configInfoMapperByDerby.findConfigInfo4PageFetchRows(new HashMap<>(), 0, 5);
         Assert.assertEquals(sql,
-                "SELECT id,data_id,group_id,tenant_id,app_name,content,type FROM config_info WHERE  1=1  OFFSET 0 ROWS FETCH NEXT 5 ROWS ONLY");
+                "SELECT id,data_id,group_id,tenant_id,app_name,content,type FROM config_info WHERE  tenant_id=?  "
+                        + "OFFSET 0 ROWS FETCH NEXT 5 ROWS ONLY");
     }
     
     @Test
@@ -183,7 +184,7 @@ public class ConfigInfoMapperByDerbyTest {
     @Test
     public void testFindConfigInfoLike4PageCountRows() {
         String sql = configInfoMapperByDerby.findConfigInfoLike4PageCountRows(new HashMap<>());
-        Assert.assertEquals(sql, "SELECT count(*) FROM config_info WHERE  1=1 ");
+        Assert.assertEquals(sql, "SELECT count(*) FROM config_info WHERE  tenant_id LIKE ? ");
     }
     
     @Test
@@ -191,7 +192,7 @@ public class ConfigInfoMapperByDerbyTest {
         String sql = configInfoMapperByDerby.findConfigInfoLike4PageFetchRows(new HashMap<>(), 0, 5);
         Assert.assertEquals(sql,
                 "SELECT id,data_id,group_id,tenant_id,app_name,content,encrypted_data_key FROM config_info "
-                        + "WHERE  1=1  OFFSET 0 ROWS FETCH NEXT 5 ROWS ONLY");
+                        + "WHERE  tenant_id LIKE ?  OFFSET 0 ROWS FETCH NEXT 5 ROWS ONLY");
     }
     
     @Test
