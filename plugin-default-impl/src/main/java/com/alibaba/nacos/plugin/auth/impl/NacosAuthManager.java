@@ -26,8 +26,7 @@ import com.alibaba.nacos.plugin.auth.impl.constant.AuthConstants;
 import com.alibaba.nacos.plugin.auth.impl.persistence.RoleInfo;
 import com.alibaba.nacos.plugin.auth.impl.roles.NacosRoleServiceImpl;
 import com.alibaba.nacos.plugin.auth.impl.users.NacosUser;
-import io.jsonwebtoken.ExpiredJwtException;
-import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -35,6 +34,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 /**
@@ -46,19 +46,15 @@ import java.util.List;
 @Component
 public class NacosAuthManager {
     
-    private final JwtTokenManager tokenManager;
+    @Autowired
+    private JwtTokenManager tokenManager;
     
-    private final AuthenticationManager authenticationManager;
+    @Autowired
+    private AuthenticationManager authenticationManager;
     
-    private final NacosRoleServiceImpl roleService;
-
-    public NacosAuthManager(JwtTokenManager tokenManager, AuthenticationManager authenticationManager,
-            NacosRoleServiceImpl roleService) {
-        this.tokenManager = tokenManager;
-        this.authenticationManager = authenticationManager;
-        this.roleService = roleService;
-    }
-
+    @Autowired
+    private NacosRoleServiceImpl roleService;
+    
     /**
      * Authentication of request, identify the user who request the resource.
      *
@@ -153,16 +149,11 @@ public class NacosAuthManager {
             throw new AccessException("user not found!");
         }
         
-        try {
-            tokenManager.validateToken(token);
-        } catch (ExpiredJwtException e) {
-            throw new AccessException("token expired!");
-        } catch (Exception e) {
-            throw new AccessException("token invalid!");
-        }
+        tokenManager.validateToken(token);
+        
     }
     
-    private NacosUser getNacosUser(String token) {
+    private NacosUser getNacosUser(String token) throws AccessException {
         Authentication authentication = tokenManager.getAuthentication(token);
         SecurityContextHolder.getContext().setAuthentication(authentication);
         
