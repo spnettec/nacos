@@ -16,10 +16,9 @@
 
 package com.alibaba.nacos.prometheus.conf;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.web.builders.WebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 
 import static com.alibaba.nacos.prometheus.api.ApiConstants.PROMETHEUS_CONTROLLER_PATH;
 
@@ -30,11 +29,9 @@ import static com.alibaba.nacos.prometheus.api.ApiConstants.PROMETHEUS_CONTROLLE
  * @author vividfish
  */
 @Configuration
-@ConditionalOnMissingBean(value = WebSecurityConfigurerAdapter.class)
-public class PrometheusSecurityConfiguration extends WebSecurityConfigurerAdapter {
-    
-    @Override
-    public void configure(WebSecurity web) throws Exception {
-        web.ignoring().mvcMatchers(PROMETHEUS_CONTROLLER_PATH);
+public class PrometheusSecurityConfiguration {
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return (web) -> web.ignoring().requestMatchers(PROMETHEUS_CONTROLLER_PATH);
     }
 }
