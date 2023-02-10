@@ -86,7 +86,7 @@ import static com.alibaba.nacos.config.server.service.repository.RowMapperManage
  *
  * @author lixiaoshuang
  */
-@SuppressWarnings(value = { "PMD.MethodReturnWrapperTypeRule", "checkstyle:linelength" })
+@SuppressWarnings(value = {"PMD.MethodReturnWrapperTypeRule", "checkstyle:linelength"})
 @Conditional(value = ConditionOnExternalStorage.class)
 @Service("externalConfigInfoPersistServiceImpl")
 public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistService {
@@ -198,12 +198,10 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
     @Override
     public long addConfigInfoAtomic(final long configId, final String srcIp, final String srcUser,
             final ConfigInfo configInfo, final Timestamp time, Map<String, Object> configAdvanceInfo) {
-        final String appNameTmp = StringUtils.isBlank(configInfo.getAppName())
-                ? StringUtils.EMPTY
-                : configInfo.getAppName();
-        final String tenantTmp = StringUtils.isBlank(configInfo.getTenant())
-                ? StringUtils.EMPTY
-                : configInfo.getTenant();
+        final String appNameTmp =
+                StringUtils.isBlank(configInfo.getAppName()) ? StringUtils.EMPTY : configInfo.getAppName();
+        final String tenantTmp =
+                StringUtils.isBlank(configInfo.getTenant()) ? StringUtils.EMPTY : configInfo.getTenant();
 
         final String desc = configAdvanceInfo == null ? null : (String) configAdvanceInfo.get("desc");
         final String use = configAdvanceInfo == null ? null : (String) configAdvanceInfo.get("use");
@@ -226,7 +224,6 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
         String[] returnGeneratedKeys = configInfoMapper.getPrimaryKeyGeneratedKeys();
         try {
             jt.update(new PreparedStatementCreator() {
-
                 @Override
                 public PreparedStatement createPreparedStatement(Connection connection) throws SQLException {
                     PreparedStatement ps = connection.prepareStatement(sql, returnGeneratedKeys);
@@ -374,7 +371,6 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
     public void removeConfigInfo(final String dataId, final String group, final String tenant, final String srcIp,
             final String srcUser) {
         tjt.execute(new TransactionCallback<Boolean>() {
-
             final Timestamp time = new Timestamp(System.currentTimeMillis());
 
             @Override
@@ -403,7 +399,6 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
         }
         ids.removeAll(Collections.singleton(null));
         return tjt.execute(new TransactionCallback<List<ConfigInfo>>() {
-
             final Timestamp time = new Timestamp(System.currentTimeMillis());
 
             @Override
@@ -650,8 +645,8 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
             ConfigInfoMapper configInfoMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                     TableConstant.CONFIG_INFO);
             return this.jt.queryForObject(configInfoMapper.select(Arrays.asList("id", "data_id", "group_id", "content"),
-                            Arrays.asList("data_id", "group_id", "tenant_id")),
-                    new Object[] { dataId, group, StringUtils.EMPTY }, CONFIG_INFO_BASE_ROW_MAPPER);
+                            Arrays.asList("data_id", "group_id", "tenant_id")), new Object[] {dataId, group, StringUtils.EMPTY},
+                    CONFIG_INFO_BASE_ROW_MAPPER);
         } catch (EmptyResultDataAccessException e) { // Indicates that the data does not exist, returns null.
             return null;
         } catch (CannotGetJdbcConnectionException e) {
@@ -667,7 +662,7 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
                     TableConstant.CONFIG_INFO);
             return this.jt.queryForObject(configInfoMapper.select(
                     Arrays.asList("id", "data_id", "group_id", "tenant_id", "app_name", "content"),
-                    Collections.singletonList("id")), new Object[] { id }, CONFIG_INFO_ROW_MAPPER);
+                    Collections.singletonList("id")), new Object[] {id}, CONFIG_INFO_ROW_MAPPER);
         } catch (EmptyResultDataAccessException e) { // Indicates that the data does not exist, returns null.
             return null;
         } catch (CannotGetJdbcConnectionException e) {
@@ -685,7 +680,7 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
             return this.jt.queryForObject(configInfoMapper.select(
                             Arrays.asList("id", "data_id", "group_id", "tenant_id", "app_name", "content", "md5", "type",
                                     "encrypted_data_key"), Arrays.asList("data_id", "group_id", "tenant_id")),
-                    new Object[] { dataId, group, tenantTmp }, CONFIG_INFO_WRAPPER_ROW_MAPPER);
+                    new Object[] {dataId, group, tenantTmp}, CONFIG_INFO_WRAPPER_ROW_MAPPER);
         } catch (EmptyResultDataAccessException e) { // Indicates that the data does not exist, returns null.
             return null;
         } catch (CannotGetJdbcConnectionException e) {
@@ -697,28 +692,26 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
     @Override
     public Page<ConfigInfo> findConfigInfo4Page(final int pageNo, final int pageSize, final String dataId,
             final String group, final String tenant, final Map<String, Object> configAdvanceInfo) {
+        String tenantTmp = StringUtils.isBlank(tenant) ? StringUtils.EMPTY : tenant;
         PaginationHelper<ConfigInfo> helper = createPaginationHelper();
         final String appName = configAdvanceInfo == null ? null : (String) configAdvanceInfo.get("appName");
         final String configTags = configAdvanceInfo == null ? null : (String) configAdvanceInfo.get("config_tags");
         String sql = null;
         String sqlCount = null;
         List<String> paramList = new ArrayList<>();
+        paramList.add(tenantTmp);
         Map<String, String> paramsMap = new HashMap<>(16);
-        if (StringUtils.isNotBlank(tenant)) {
-            paramList.add(tenant);
-            paramsMap.put(TENANT, tenant);
-        }
         if (StringUtils.isNotBlank(dataId)) {
             paramList.add(dataId);
-            paramsMap.put(DATA_ID, dataId);
+            paramsMap.put(DATA_ID, DATA_ID);
         }
         if (StringUtils.isNotBlank(group)) {
             paramList.add(group);
-            paramsMap.put(GROUP, group);
+            paramsMap.put(GROUP, GROUP);
         }
         if (StringUtils.isNotBlank(appName)) {
             paramList.add(appName);
-            paramsMap.put(APP_NAME, appName);
+            paramsMap.put(APP_NAME, APP_NAME);
         }
         final int startRow = (pageNo - 1) * pageSize;
         if (StringUtils.isNotBlank(configTags)) {
@@ -761,8 +754,7 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
                     TableConstant.CONFIG_INFO);
             return helper.fetchPage(configInfoMapper.findConfigInfoByAppCountRows(),
                     configInfoMapper.findConfigInfoByAppFetchRows(startRow, pageSize),
-                    new Object[] { generateLikeArgument(tenantTmp), appName }, pageNo, pageSize,
-                    CONFIG_INFO_ROW_MAPPER);
+                    new Object[] {generateLikeArgument(tenantTmp), appName}, pageNo, pageSize, CONFIG_INFO_ROW_MAPPER);
         } catch (CannotGetJdbcConnectionException e) {
             LogUtil.FATAL_LOG.error("[db-error] " + e, e);
             throw e;
@@ -778,7 +770,7 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
                     TableConstant.CONFIG_INFO);
             return helper.fetchPage(configInfoMapper.count(Arrays.asList("group_id", "tenant_id")),
                     configInfoMapper.findConfigInfoBaseByGroupFetchRows(startRow, pageSize),
-                    new Object[] { group, StringUtils.EMPTY }, pageNo, pageSize, CONFIG_INFO_BASE_ROW_MAPPER);
+                    new Object[] {group, StringUtils.EMPTY}, pageNo, pageSize, CONFIG_INFO_BASE_ROW_MAPPER);
         } catch (CannotGetJdbcConnectionException e) {
             LogUtil.FATAL_LOG.error("[db-error] " + e, e);
             throw e;
@@ -802,7 +794,7 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
         ConfigInfoMapper configInfoMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                 TableConstant.CONFIG_INFO);
         String sql = configInfoMapper.configInfoLikeTenantCount();
-        Integer result = jt.queryForObject(sql, new Object[] { tenant }, Integer.class);
+        Integer result = jt.queryForObject(sql, new Object[] {tenant}, Integer.class);
         if (result == null) {
             throw new IllegalArgumentException("configInfoCount error");
         }
@@ -839,8 +831,8 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
         PaginationHelper<ConfigInfo> helper = createPaginationHelper();
         try {
             return helper.fetchPageLimit(sqlCountRows, sqlFetchRows,
-                    new Object[] { generateLikeArgument(tenantTmp), (pageNo - 1) * pageSize, pageSize }, pageNo,
-                    pageSize, CONFIG_INFO_ROW_MAPPER);
+                    new Object[] {generateLikeArgument(tenantTmp), (pageNo - 1) * pageSize, pageSize}, pageNo, pageSize,
+                    CONFIG_INFO_ROW_MAPPER);
         } catch (CannotGetJdbcConnectionException e) {
             LogUtil.FATAL_LOG.error("[db-error] " + e, e);
             throw e;
@@ -871,7 +863,7 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
         page.setTotalCount(totalCount);
 
         try {
-            List<ConfigKey> result = jt.query(select, new Object[] { generateLikeArgument(tenantTmp) },
+            List<ConfigKey> result = jt.query(select, new Object[] {generateLikeArgument(tenantTmp)},
                     // new Object[0],
                     CONFIG_KEY_ROW_MAPPER);
 
@@ -894,8 +886,7 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
         String select = configInfoMapper.findAllConfigInfoFragment(0, pageSize);
         PaginationHelper<ConfigInfoWrapper> helper = createPaginationHelper();
         try {
-            return helper.fetchPageLimit(select, new Object[] { lastMaxId }, 1, pageSize,
-                    CONFIG_INFO_WRAPPER_ROW_MAPPER);
+            return helper.fetchPageLimit(select, new Object[] {lastMaxId}, 1, pageSize, CONFIG_INFO_WRAPPER_ROW_MAPPER);
         } catch (CannotGetJdbcConnectionException e) {
             LogUtil.FATAL_LOG.error("[db-error] " + e, e);
             throw e;
@@ -1014,29 +1005,22 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
         Map<String, String> paramsMap = new HashMap<>(16);
 
         List<String> params = new ArrayList<>();
-        if (!StringUtils.isBlank(tenant)) {
-            String generateLikeArgument = generateLikeArgument(tenant);
-            params.add(generateLikeArgument);
-            paramsMap.put(TENANT, generateLikeArgument);
-        }
+        params.add(generateLikeArgument(tenantTmp));
         if (!StringUtils.isBlank(dataId)) {
-            String generateLikeArgument = generateLikeArgument(dataId);
-            params.add(generateLikeArgument);
-            paramsMap.put(DATA_ID, generateLikeArgument);
+            params.add(generateLikeArgument(dataId));
+            paramsMap.put(DATA_ID, DATA_ID);
         }
         if (!StringUtils.isBlank(group)) {
-            String generateLikeArgument = generateLikeArgument(group);
-            params.add(generateLikeArgument);
-            paramsMap.put(GROUP, generateLikeArgument);
+            params.add(generateLikeArgument(group));
+            paramsMap.put(GROUP, GROUP);
         }
         if (!StringUtils.isBlank(appName)) {
             params.add(appName);
-            paramsMap.put(APP_NAME, appName);
+            paramsMap.put(APP_NAME, APP_NAME);
         }
         if (!StringUtils.isBlank(content)) {
-            String generateLikeArgument = generateLikeArgument(content);
-            params.add(generateLikeArgument);
-            paramsMap.put(CONTENT, generateLikeArgument);
+            params.add(generateLikeArgument(content));
+            paramsMap.put(CONTENT, CONTENT);
         }
         final int startRow = (pageNo - 1) * pageSize;
         if (StringUtils.isNotBlank(configTags)) {
@@ -1082,19 +1066,16 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
         List<String> params = new ArrayList<>();
 
         if (!StringUtils.isBlank(dataId)) {
-            String generateLikeArgument = generateLikeArgument(dataId);
-            params.add(generateLikeArgument);
-            paramsMap.put(DATA_ID, generateLikeArgument);
+            params.add(generateLikeArgument(dataId));
+            paramsMap.put(DATA_ID, DATA_ID);
         }
         if (!StringUtils.isBlank(group)) {
-            String generateLikeArgument = generateLikeArgument(group);
-            params.add(generateLikeArgument);
-            paramsMap.put(GROUP, generateLikeArgument);
+            params.add(generateLikeArgument(group));
+            paramsMap.put(GROUP, GROUP);
         }
         if (!StringUtils.isBlank(content)) {
-            String generateLikeArgument = generateLikeArgument(content);
-            params.add(generateLikeArgument);
-            paramsMap.put(CONTENT, generateLikeArgument);
+            params.add(generateLikeArgument(content));
+            paramsMap.put(CONTENT, CONTENT);
         }
 
         final int startRow = (pageNo - 1) * pageSize;
@@ -1118,7 +1099,7 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
             ConfigInfoMapper configInfoMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                     TableConstant.CONFIG_INFO);
             List<Map<String, Object>> list = jt.queryForList(configInfoMapper.findChangeConfig(),
-                    startTime, endTime);
+                    new Object[] {startTime, endTime});
             return convertChangeConfig(list);
         } catch (DataAccessException e) {
             LogUtil.FATAL_LOG.error("[db-error] " + e, e);
@@ -1134,24 +1115,22 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
         Map<String, String> paramsMap = new HashMap<>(16);
         List<Object> params = new ArrayList<>();
         if (!StringUtils.isBlank(dataId)) {
-            String generateLikeArgument = generateLikeArgument(dataId);
-            params.add(generateLikeArgument);
-            paramsMap.put(DATA_ID, generateLikeArgument);
+            params.add(generateLikeArgument(dataId));
+            paramsMap.put(DATA_ID, DATA_ID);
         }
         if (!StringUtils.isBlank(group)) {
-            String generateLikeArgument = generateLikeArgument(group);
-            params.add(generateLikeArgument);
-            paramsMap.put(GROUP, generateLikeArgument);
+            params.add(generateLikeArgument(group));
+            paramsMap.put(GROUP, GROUP);
         }
 
         if (!StringUtils.isBlank(tenantTmp)) {
             params.add(tenantTmp);
-            paramsMap.put(TENANT, tenantTmp);
+            paramsMap.put(TENANT, TENANT);
         }
 
         if (!StringUtils.isBlank(appName)) {
             params.add(appName);
-            paramsMap.put(APP_NAME, appName);
+            paramsMap.put(APP_NAME, APP_NAME);
         }
         if (startTime != null) {
             params.add(startTime);
@@ -1180,16 +1159,10 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
     public List<String> selectTagByConfig(String dataId, String group, String tenant) {
         ConfigTagsRelationMapper configTagsRelationMapper = mapperManager.findMapper(
                 dataSourceService.getDataSourceType(), TableConstant.CONFIG_TAGS_RELATION);
-        Object[] valueList = new Object[] { dataId, group, tenant };
-        List<String> whereList = Arrays.asList("data_id", "group_id", "tenant_id");
-        if (StringUtils.isBlank(tenant)) {
-            valueList = new Object[] { dataId, group };
-            whereList = Arrays.asList("data_id", "group_id");
-        }
-        String sql = configTagsRelationMapper.select(List.of("tag_name"),
-                whereList);
+        String sql = configTagsRelationMapper.select(Arrays.asList("tag_name"),
+                Arrays.asList("data_id", "group_id", "tenant_id"));
         try {
-            return jt.queryForList(sql, String.class, valueList);
+            return jt.queryForList(sql, new Object[] {dataId, group, tenant}, String.class);
         } catch (EmptyResultDataAccessException e) {
             return null;
         } catch (IncorrectResultSizeDataAccessException e) {
@@ -1213,8 +1186,8 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
         try {
             ConfigInfoMapper configInfoMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                     TableConstant.CONFIG_INFO);
-            return this.jt.query(configInfoMapper.findConfigInfosByIds(tagArr.length), CONFIG_INFO_ROW_MAPPER,
-                    paramList.toArray());
+            return this.jt.query(configInfoMapper.findConfigInfosByIds(tagArr.length), paramList.toArray(),
+                    CONFIG_INFO_ROW_MAPPER);
         } catch (EmptyResultDataAccessException e) { // Indicates that the data does not exist, returns null
             return null;
         } catch (CannotGetJdbcConnectionException e) {
@@ -1230,16 +1203,10 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
             List<String> configTagList = this.selectTagByConfig(dataId, group, tenant);
             ConfigInfoMapper configInfoMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                     TableConstant.CONFIG_INFO);
-            List<String> whereList = Arrays.asList("data_id", "group_id", "tenant_id");
-            Object[] valueList = new Object[]{dataId, group, tenant};
-            if (StringUtils.isBlank(tenant)) {
-                whereList = Arrays.asList("data_id", "group_id");
-                valueList = new Object[]{dataId, group};
-            }
             ConfigAdvanceInfo configAdvance = this.jt.queryForObject(configInfoMapper.select(
                             Arrays.asList("gmt_create", "gmt_modified", "src_user", "src_ip", "c_desc", "c_use", "effect",
-                                    "type", "c_schema"), whereList),
-                    CONFIG_ADVANCE_INFO_ROW_MAPPER, valueList);
+                                    "type", "c_schema"), Arrays.asList("data_id", "group_id", "tenant_id")),
+                    new Object[] {dataId, group, tenantTmp}, CONFIG_ADVANCE_INFO_ROW_MAPPER);
             if (configTagList != null && !configTagList.isEmpty()) {
                 StringBuilder configTagsTmp = new StringBuilder();
                 for (String configTag : configTagList) {
@@ -1262,21 +1229,16 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
 
     @Override
     public ConfigAllInfo findConfigAllInfo(final String dataId, final String group, final String tenant) {
+        final String tenantTmp = StringUtils.isBlank(tenant) ? StringUtils.EMPTY : tenant;
         try {
             List<String> configTagList = this.selectTagByConfig(dataId, group, tenant);
             ConfigInfoMapper configInfoMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                     TableConstant.CONFIG_INFO);
-            List<String> whereList = Arrays.asList("data_id", "group_id", "tenant_id");
-            Object[] valueList = new Object[]{dataId, group, tenant};
-            if (StringUtils.isBlank(tenant)) {
-                whereList = Arrays.asList("data_id", "group_id");
-                valueList = new Object[]{dataId, group};
-            }
             ConfigAllInfo configAdvance = this.jt.queryForObject(configInfoMapper.select(
                             Arrays.asList("id", "data_id", "group_id", "tenant_id", "app_name", "content", "md5", "gmt_create",
                                     "gmt_modified", "src_user", "src_ip", "c_desc", "c_use", "effect", "type", "c_schema",
-                                    "encrypted_data_key"), whereList),
-                    CONFIG_ALL_INFO_ROW_MAPPER, valueList);
+                                    "encrypted_data_key"), Arrays.asList("data_id", "group_id", "tenant_id")),
+                    new Object[] {dataId, group, tenantTmp}, CONFIG_ALL_INFO_ROW_MAPPER);
             if (configTagList != null && !configTagList.isEmpty()) {
                 StringBuilder configTagsTmp = new StringBuilder();
                 for (String configTag : configTagList) {
@@ -1373,8 +1335,8 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
             return this.jt.queryForObject(configInfoMapper.select(
                             Arrays.asList("id", "data_id", "group_id", "tenant_id", "app_name", "content", "type",
                                     "gmt_modified", "md5", "encrypted_data_key"),
-                            Arrays.asList("data_id", "group_id", "tenant_id")), CONFIG_INFO_WRAPPER_ROW_MAPPER, dataId, group,
-                    tenantTmp);
+                            Arrays.asList("data_id", "group_id", "tenant_id")), new Object[] {dataId, group, tenantTmp},
+                    CONFIG_INFO_WRAPPER_ROW_MAPPER);
         } catch (EmptyResultDataAccessException e) {
             return null;
         } catch (CannotGetJdbcConnectionException e) {
@@ -1392,22 +1354,19 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
         if (!CollectionUtils.isEmpty(ids)) {
             paramList.addAll(ids);
         } else {
-            if (!StringUtils.isBlank(tenantTmp)) {
-                paramList.add(tenantTmp);
-                params.put(TENANT, tenantTmp);
-            }
+            paramList.add(tenantTmp);
+            params.put(TENANT, TENANT);
             if (!StringUtils.isBlank(dataId)) {
-                String generateLikeArgument = generateLikeArgument(dataId);
-                paramList.add(generateLikeArgument);
-                params.put(DATA_ID, generateLikeArgument);
+                paramList.add(generateLikeArgument(dataId));
+                params.put(DATA_ID, DATA_ID);
             }
             if (StringUtils.isNotBlank(group)) {
                 paramList.add(group);
-                params.put(GROUP, group);
+                params.put(GROUP, GROUP);
             }
             if (StringUtils.isNotBlank(appName)) {
                 paramList.add(appName);
-                params.put(APP_NAME, appName);
+                params.put(APP_NAME, APP_NAME);
             }
         }
         ConfigInfoMapper configInfoMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
@@ -1432,7 +1391,7 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
                     TableConstant.CONFIG_INFO);
             return this.jt.query(
                     configInfoMapper.select(Arrays.asList("data_id", "group_id", "tenant_id", "app_name", "type"),
-                            Collections.singletonList("tenant_id")), new Object[] { tenantTmp },
+                            Collections.singletonList("tenant_id")), new Object[] {tenantTmp},
                     CONFIG_INFO_WRAPPER_ROW_MAPPER);
         } catch (EmptyResultDataAccessException e) { // Indicates that the data does not exist, returns null.
             return Collections.EMPTY_LIST;
@@ -1453,7 +1412,7 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
 
         PaginationHelper<ConfigInfoBase> helper = createPaginationHelper();
         try {
-            return helper.fetchPageLimit(sqlCountRows, sqlFetchRows, new Object[] { (pageNo - 1) * pageSize, pageSize },
+            return helper.fetchPageLimit(sqlCountRows, sqlFetchRows, new Object[] {(pageNo - 1) * pageSize, pageSize},
                     pageNo, pageSize, CONFIG_INFO_BASE_ROW_MAPPER);
         } catch (CannotGetJdbcConnectionException e) {
             LogUtil.FATAL_LOG.error("[db-error] " + e, e);

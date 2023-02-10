@@ -17,7 +17,8 @@
 package com.alibaba.nacos.plugin.datasource.impl.mysql;
 
 import com.alibaba.nacos.plugin.datasource.constants.DataSourceConstant;
-import com.alibaba.nacos.plugin.datasource.impl.derby.HistoryConfigInfoMapperByDerby;
+import com.alibaba.nacos.plugin.datasource.mapper.AbstractMapper;
+import com.alibaba.nacos.plugin.datasource.mapper.HistoryConfigInfoMapper;
 
 /**
  * The mysql implementation of HistoryConfigInfoMapper.
@@ -25,11 +26,19 @@ import com.alibaba.nacos.plugin.datasource.impl.derby.HistoryConfigInfoMapperByD
  * @author hyx
  **/
 
-public class HistoryConfigInfoMapperByMySql extends HistoryConfigInfoMapperByDerby {
-
+public class HistoryConfigInfoMapperByMySql extends AbstractMapper implements HistoryConfigInfoMapper {
+    
     @Override
     public String removeConfigHistory() {
         return "DELETE FROM his_config_info WHERE gmt_modified < ? LIMIT ?";
+    }
+
+    @Override
+    public String pageFindConfigHistoryFetchRows(int pageNo, int pageSize) {
+        final int offset = (pageNo - 1) * pageSize;
+        final int limit = pageSize;
+        return  "SELECT nid,data_id,group_id,tenant_id,app_name,src_ip,src_user,op_type,gmt_create,gmt_modified FROM his_config_info "
+                + "WHERE data_id = ? AND group_id = ? AND tenant_id = ? ORDER BY nid DESC  LIMIT " + offset + "," + limit;
     }
 
     @Override

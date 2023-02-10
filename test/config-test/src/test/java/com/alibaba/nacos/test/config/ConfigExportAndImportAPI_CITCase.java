@@ -52,6 +52,7 @@ import org.junit.*;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
@@ -75,7 +76,7 @@ public class ConfigExportAndImportAPI_CITCase {
     
     private static final String CONFIG_CONTROLLER_PATH = "/v1/cs/configs";
     
-    @Value("${local.server.port}")
+    @LocalServerPort
     private int port;
     
     private String serverAddr = null;

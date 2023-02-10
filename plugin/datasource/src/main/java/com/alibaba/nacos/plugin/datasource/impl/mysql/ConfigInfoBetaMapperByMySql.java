@@ -17,7 +17,8 @@
 package com.alibaba.nacos.plugin.datasource.impl.mysql;
 
 import com.alibaba.nacos.plugin.datasource.constants.DataSourceConstant;
-import com.alibaba.nacos.plugin.datasource.impl.derby.ConfigInfoBetaMapperByDerby;
+import com.alibaba.nacos.plugin.datasource.mapper.AbstractMapper;
+import com.alibaba.nacos.plugin.datasource.mapper.ConfigInfoBetaMapper;
 
 /**
  * The mysql implementation of ConfigInfoBetaMapper.
@@ -25,7 +26,7 @@ import com.alibaba.nacos.plugin.datasource.impl.derby.ConfigInfoBetaMapperByDerb
  * @author hyx
  **/
 
-public class ConfigInfoBetaMapperByMySql extends ConfigInfoBetaMapperByDerby {
+public class ConfigInfoBetaMapperByMySql extends AbstractMapper implements ConfigInfoBetaMapper {
 
     @Override
     public String findAllConfigInfoBetaForDumpAllFetchRows(int startRow, int pageSize) {

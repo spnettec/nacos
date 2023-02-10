@@ -17,16 +17,16 @@
 package com.alibaba.nacos.plugin.datasource.impl.mysql;
 
 import com.alibaba.nacos.plugin.datasource.constants.DataSourceConstant;
-import com.alibaba.nacos.plugin.datasource.impl.derby.ConfigInfoAggrMapperByDerby;
+import com.alibaba.nacos.plugin.datasource.mapper.AbstractMapper;
+import com.alibaba.nacos.plugin.datasource.mapper.ConfigInfoAggrMapper;
 
 /**
  * The mysql implementation of ConfigInfoAggrMapper.
  *
  * @author hyx
  **/
-
-public class ConfigInfoAggrMapperByMySql extends ConfigInfoAggrMapperByDerby {
-
+public class ConfigInfoAggrMapperByMySql extends AbstractMapper implements ConfigInfoAggrMapper {
+    
     @Override
     public String findConfigInfoAggrByPageFetchRows(int startRow, int pageSize) {
         return "SELECT data_id,group_id,tenant_id,datum_id,app_name,content FROM config_info_aggr WHERE data_id= ? AND "

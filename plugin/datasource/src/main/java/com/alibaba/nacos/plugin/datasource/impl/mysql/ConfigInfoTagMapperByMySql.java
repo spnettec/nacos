@@ -17,7 +17,8 @@
 package com.alibaba.nacos.plugin.datasource.impl.mysql;
 
 import com.alibaba.nacos.plugin.datasource.constants.DataSourceConstant;
-import com.alibaba.nacos.plugin.datasource.impl.derby.ConfigInfoTagMapperByDerby;
+import com.alibaba.nacos.plugin.datasource.mapper.AbstractMapper;
+import com.alibaba.nacos.plugin.datasource.mapper.ConfigInfoTagMapper;
 
 /**
  * The mysql implementation of ConfigInfoTagMapper.
@@ -25,7 +26,7 @@ import com.alibaba.nacos.plugin.datasource.impl.derby.ConfigInfoTagMapperByDerby
  * @author hyx
  **/
 
-public class ConfigInfoTagMapperByMySql extends ConfigInfoTagMapperByDerby {
+public class ConfigInfoTagMapperByMySql extends AbstractMapper implements ConfigInfoTagMapper {
 
     @Override
     public String findAllConfigInfoTagForDumpAllFetchRows(int startRow, int pageSize) {

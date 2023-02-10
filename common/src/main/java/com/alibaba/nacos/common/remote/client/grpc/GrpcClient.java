@@ -172,7 +172,8 @@ public abstract class GrpcClient extends RpcClient {
                 .executor(grpcExecutor).compressorRegistry(CompressorRegistry.getDefaultInstance())
                 .decompressorRegistry(DecompressorRegistry.getDefaultInstance())
                 .maxInboundMessageSize(clientConfig.maxInboundMessageSize())
-                .keepAliveTime(clientConfig.channelKeepAlive(), TimeUnit.MILLISECONDS).usePlaintext();
+                .keepAliveTime(clientConfig.channelKeepAlive(), TimeUnit.MILLISECONDS)
+                .keepAliveTimeout(clientConfig.channelKeepAliveTimeout(), TimeUnit.MILLISECONDS).usePlaintext();
         return managedChannelBuilder.build();
     }
     
@@ -239,8 +240,8 @@ public abstract class GrpcClient extends RpcClient {
                         } catch (Exception e) {
                             LoggerUtils.printIfErrorEnabled(LOGGER, "[{}]Handle server request exception: {}",
                                     grpcConn.getConnectionId(), payload.toString(), e.getMessage());
-                            Response errResponse = ErrorResponse
-                                    .build(NacosException.CLIENT_ERROR, "Handle server request error");
+                            Response errResponse = ErrorResponse.build(NacosException.CLIENT_ERROR,
+                                    "Handle server request error");
                             errResponse.setRequestId(request.getRequestId());
                             sendResponse(errResponse);
                         }
@@ -318,8 +319,8 @@ public abstract class GrpcClient extends RpcClient {
                     return null;
                 }
                 
-                BiRequestStreamGrpc.BiRequestStreamStub biRequestStreamStub = BiRequestStreamGrpc
-                        .newStub(newChannelStubTemp.getChannel());
+                BiRequestStreamGrpc.BiRequestStreamStub biRequestStreamStub = BiRequestStreamGrpc.newStub(
+                        newChannelStubTemp.getChannel());
                 GrpcConnection grpcConn = new GrpcConnection(serverInfo, grpcExecutor);
                 grpcConn.setConnectionId(((ServerCheckResponse) response).getConnectionId());
                 
