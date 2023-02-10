@@ -52,6 +52,8 @@ import com.alibaba.nacos.plugin.datasource.mapper.ConfigInfoTagMapper;
 import com.alibaba.nacos.plugin.datasource.mapper.ConfigTagsRelationMapper;
 import com.alibaba.nacos.plugin.datasource.mapper.HistoryConfigInfoMapper;
 import com.alibaba.nacos.plugin.datasource.mapper.TenantInfoMapper;
+import com.alibaba.nacos.plugin.datasource.model.MapperContext;
+import com.alibaba.nacos.plugin.datasource.model.MapperResult;
 import com.alibaba.nacos.plugin.encryption.handler.EncryptionHandler;
 import com.alibaba.nacos.sys.env.EnvUtil;
 import org.apache.commons.collections4.CollectionUtils;
@@ -123,7 +125,7 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
     protected TransactionTemplate tjt;
     
     private MapperManager mapperManager;
-
+    
     private static final String DATA_ID = "dataId";
     
     private static final String GROUP = "group";
@@ -484,7 +486,7 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
             return updateConfigInfoCas(configInfo, srcIp, srcUser, time, configAdvanceInfo, notify);
         }
     }
-
+    
     @Override
     public void removeConfigInfo(final String dataId, final String group, final String tenant, final String srcIp,
             final String srcUser) {
@@ -643,12 +645,17 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
         final String tenantTmp = StringUtils.isBlank(tenant) ? StringUtils.EMPTY : tenant;
         ConfigInfoAggrMapper configInfoAggrMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                 TableConstant.CONFIG_INFO_AGGR);
-        final String sql = configInfoAggrMapper.batchRemoveAggr(datumList.size());
-        final Object[] args = new Object[3 + datumList.size()];
-        args[0] = dataId;
-        args[1] = group;
-        args[2] = tenantTmp;
-        System.arraycopy(datumList.toArray(), 0, args, 3, datumList.size());
+
+        MapperContext context = new MapperContext();
+        context.put("datum_id", datumList);
+        context.put("data_id", dataId);
+        context.put("group_id", group);
+        context.put("tenant_id", tenantTmp);
+
+        MapperResult mapperResult = configInfoAggrMapper.batchRemoveAggr(context);
+        final String sql = mapperResult.getSql();
+        Object[] args = mapperResult.getParamList().toArray();
+
         try {
             jt.update(sql, args);
         } catch (CannotGetJdbcConnectionException e) {
@@ -808,7 +815,7 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
             throw e;
         }
     }
-
+    
     @Override
     public ConfigInfoBase findConfigInfoBase(final String dataId, final String group) {
         try {
@@ -858,7 +865,7 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
             throw e;
         }
     }
-
+    
     @Override
     public Page<ConfigInfo> findConfigInfo4Page(final int pageNo, final int pageSize, final String dataId,
             final String group, final String tenant, final Map<String, Object> configAdvanceInfo) {
@@ -912,7 +919,7 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
             throw e;
         }
     }
-
+    
     @Override
     public Page<ConfigInfo> findConfigInfoByApp(final int pageNo, final int pageSize, final String tenant,
             final String appName) {
@@ -1034,16 +1041,25 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
         final String tenantTmp = StringUtils.isBlank(tenant) ? StringUtils.EMPTY : tenant;
         ConfigInfoAggrMapper configInfoAggrMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                 TableConstant.CONFIG_INFO_AGGR);
-        String sql = configInfoAggrMapper.aggrConfigInfoCount(datumIds.size(), isIn);
-        List<Object> objectList = com.alibaba.nacos.common.utils.CollectionUtils.list(dataId, group, tenantTmp);
-        objectList.addAll(datumIds);
-        Integer result = jt.queryForObject(sql, Integer.class, objectList.toArray());
+
+        MapperContext context = new MapperContext();
+        context.put("datum_id", datumIds);
+        context.put("isIn", true);
+        context.put("data_id", dataId);
+        context.put("group_id", group);
+        context.put("tenant_id", tenantTmp);
+
+        MapperResult mapperResult = configInfoAggrMapper.aggrConfigInfoCount(context);
+        String sql = mapperResult.getSql();
+        Object[] args = mapperResult.getParamList().toArray();
+
+        Integer result = jt.queryForObject(sql, Integer.class, args);
         if (result == null) {
             throw new IllegalArgumentException("aggrConfigInfoCount error");
         }
         return result.intValue();
     }
-
+    
     @Override
     public Page<ConfigInfo> findAllConfigInfo(final int pageNo, final int pageSize, final String tenant) {
         String tenantTmp = StringUtils.isBlank(tenant) ? StringUtils.EMPTY : tenant;
@@ -1166,7 +1182,7 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
         try {
             return helper.fetchPageLimit(sqlCountRows, sqlFetchRows, new Object[] {}, pageNo, pageSize,
                     CONFIG_INFO_TAG_WRAPPER_ROW_MAPPER);
-
+            
         } catch (CannotGetJdbcConnectionException e) {
             LogUtil.FATAL_LOG.error("[db-error] " + e.toString(), e);
             throw e;
@@ -1283,7 +1299,7 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
         String sqlCountRows = null;
         String sqlFetchRows = null;
         Map<String, String> paramsMap = new HashMap<>(16);
-
+        
         List<String> params = new ArrayList<>();
         params.add(generateLikeArgument(tenantTmp));
         if (!StringUtils.isBlank(dataId)) {
@@ -1317,11 +1333,11 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
             sqlCountRows = configInfoMapper.findConfigInfoLike4PageCountRows(paramsMap);
             sqlFetchRows = configInfoMapper.findConfigInfoLike4PageFetchRows(paramsMap, startRow, pageSize);
         }
-
+        
         try {
             Page<ConfigInfo> page = helper.fetchPage(sqlCountRows, sqlFetchRows, params.toArray(), pageNo, pageSize,
                     CONFIG_INFO_ROW_MAPPER);
-
+            
             for (ConfigInfo configInfo : page.getPageItems()) {
                 Pair<String, String> pair = EncryptionHandler.decryptHandler(configInfo.getDataId(),
                         configInfo.getEncryptedDataKey(), configInfo.getContent());
@@ -1340,11 +1356,11 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
         if (StringUtils.isBlank(dataId) && StringUtils.isBlank(group)) {
             throw new IOException("invalid param");
         }
-
+        
         PaginationHelper<ConfigInfoBase> helper = createPaginationHelper();
         Map<String, String> paramsMap = new HashMap<>(16);
         List<String> params = new ArrayList<>();
-
+        
         if (!StringUtils.isBlank(dataId)) {
             params.add(generateLikeArgument(dataId));
             paramsMap.put(DATA_ID, DATA_ID);
@@ -1357,13 +1373,13 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
             params.add(generateLikeArgument(content));
             paramsMap.put(CONTENT, CONTENT);
         }
-
+        
         final int startRow = (pageNo - 1) * pageSize;
         ConfigInfoMapper configInfoMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                 TableConstant.CONFIG_INFO);
         String sqlCountRows = configInfoMapper.findConfigInfoBaseLikeCountRows(paramsMap);
         String sqlFetchRows = configInfoMapper.findConfigInfoBaseLikeFetchRows(paramsMap, startRow, pageSize);
-
+        
         try {
             return helper.fetchPage(sqlCountRows, sqlFetchRows, params.toArray(), pageNo, pageSize,
                     CONFIG_INFO_BASE_ROW_MAPPER);
@@ -1402,10 +1418,18 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
         String tenantTmp = StringUtils.isBlank(tenant) ? StringUtils.EMPTY : tenant;
         ConfigInfoAggrMapper configInfoAggrMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                 TableConstant.CONFIG_INFO_AGGR);
-        String sql = configInfoAggrMapper.findConfigInfoAggrIsOrdered();
+
+        MapperContext context = new MapperContext();
+        context.put("data_id", dataId);
+        context.put("group_id", group);
+        context.put("tenant_id", tenantTmp);
+
+        MapperResult mapperResult = configInfoAggrMapper.findConfigInfoAggrIsOrdered(context);
+        String sql = mapperResult.getSql();
+        Object[] args = mapperResult.getParamList().toArray();
         
         try {
-            return this.jt.query(sql, new Object[] {dataId, group, tenantTmp}, CONFIG_INFO_AGGR_ROW_MAPPER);
+            return this.jt.query(sql, args, CONFIG_INFO_AGGR_ROW_MAPPER);
         } catch (CannotGetJdbcConnectionException e) {
             LogUtil.FATAL_LOG.error("[db-error] " + e.toString(), e);
             throw e;
@@ -1426,14 +1450,24 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
         final int startRow = (pageNo - 1) * pageSize;
         String sqlCountRows = configInfoAggrMapper.select(Arrays.asList("count(*)"),
                 Arrays.asList("data_id", "group_id", "tenant_id"));
-        String sqlFetchRows = configInfoAggrMapper.findConfigInfoAggrByPageFetchRows(startRow, pageSize);
+
+        MapperContext context = new MapperContext();
+        context.put("data_id", dataId);
+        context.put("group_id", group);
+        context.put("tenant_id", tenantTmp);
+        context.put("startRow", startRow);
+        context.put("pageSize", pageSize);
+
+        MapperResult mapperResult = configInfoAggrMapper.findConfigInfoAggrByPageFetchRows(context);
+        String sqlFetchRows = mapperResult.getSql();
+        Object[] sqlFetchArgs = mapperResult.getParamList().toArray();
+
         PaginationHelper<ConfigInfoAggr> helper = createPaginationHelper();
         try {
             return helper.fetchPageLimit(sqlCountRows, new Object[] {dataId, group, tenantTmp}, sqlFetchRows,
-                    new Object[] {dataId, group, tenantTmp}, pageNo, pageSize, CONFIG_INFO_AGGR_ROW_MAPPER);
-
+                    sqlFetchArgs, pageNo, pageSize, CONFIG_INFO_AGGR_ROW_MAPPER);
         } catch (CannotGetJdbcConnectionException e) {
-            LogUtil.FATAL_LOG.error("[db-error] " + e, e);
+            LogUtil.FATAL_LOG.error("[db-error] " + e.toString(), e);
             throw e;
         }
     }
@@ -1446,7 +1480,7 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
         String sqlFetchRows = "SELECT data_id,group_id,tenant_id,datum_id,app_name,content FROM config_info_aggr WHERE ";
         StringBuilder where = new StringBuilder(" 1=1 ");
         // Whitelist, please leave the synchronization condition empty, there is no configuration that meets the conditions
-        if (configKeys.length == 0 && !blacklist) {
+        if (configKeys.length == 0 && blacklist == false) {
             Page<ConfigInfoAggr> page = new Page<>();
             page.setTotalCount(0);
             return page;
@@ -1605,12 +1639,12 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
             params.add(generateLikeArgument(group));
             paramsMap.put(GROUP, GROUP);
         }
-
+        
         if (!StringUtils.isBlank(tenantTmp)) {
             params.add(tenantTmp);
             paramsMap.put(TENANT, TENANT);
         }
-
+        
         if (!StringUtils.isBlank(appName)) {
             params.add(appName);
             paramsMap.put(APP_NAME, APP_NAME);
@@ -1627,7 +1661,7 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
         String sqlCountRows = configInfoMapper.findChangeConfigCountRows(paramsMap, startTime, endTime);
         String sqlFetchRows = configInfoMapper.findChangeConfigFetchRows(paramsMap, startTime, endTime, startRow,
                 pageSize, lastMaxId);
-
+        
         PaginationHelper<ConfigInfoWrapper> helper = createPaginationHelper();
         try {
             return helper.fetchPage(sqlCountRows, sqlFetchRows, params.toArray(), pageNo, pageSize, lastMaxId,
@@ -1667,7 +1701,7 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
         final String schema = configAdvanceInfo == null ? null : (String) configAdvanceInfo.get("schema");
         final String encryptedDataKey =
                 configInfo.getEncryptedDataKey() == null ? StringUtils.EMPTY : configInfo.getEncryptedDataKey();
-
+        
         final String md5Tmp = MD5Utils.md5Hex(configInfo.getContent(), Constants.ENCODE);
         
         KeyHolder keyHolder = new GeneratedKeyHolder();
@@ -1833,7 +1867,7 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
         String schema = configAdvanceInfo == null ? null : (String) configAdvanceInfo.get("schema");
         final String encryptedDataKey =
                 configInfo.getEncryptedDataKey() == null ? StringUtils.EMPTY : configInfo.getEncryptedDataKey();
-
+        
         try {
             ConfigInfoMapper configInfoMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                     TableConstant.CONFIG_INFO);
@@ -1966,7 +2000,7 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
         final String md5Tmp = MD5Utils.md5Hex(configInfo.getContent(), Constants.ENCODE);
         String encryptedDataKey = StringUtils.isBlank(configInfo.getEncryptedDataKey()) ? StringUtils.EMPTY
                 : configInfo.getEncryptedDataKey();
-
+        
         try {
             HistoryConfigInfoMapper historyConfigInfoMapper = mapperManager.findMapper(
                     dataSourceService.getDataSourceType(), TableConstant.HIS_CONFIG_INFO);
@@ -2002,7 +2036,7 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
         }
         return page;
     }
-
+    
     @Override
     public ConfigHistoryInfo detailConfigHistory(Long nid) {
         HistoryConfigInfoMapper historyConfigInfoMapper = mapperManager.findMapper(
@@ -2222,7 +2256,7 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
             return false;
         }
     }
-
+    
     @Override
     public List<ConfigAllInfo> findAllConfigInfo4Export(final String dataId, final String group, final String tenant,
             final String appName, final List<Long> ids) {
@@ -2358,7 +2392,7 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
         }
         return result.intValue();
     }
-
+    
     @Override
     public List<ConfigInfoWrapper> queryConfigInfoByNamespace(String tenant) {
         if (Objects.isNull(tenant)) {
@@ -2379,5 +2413,5 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
             throw e;
         }
     }
-
+    
 }
