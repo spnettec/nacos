@@ -33,6 +33,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -64,7 +65,7 @@ public class HttpLoginProcessor implements LoginProcessor {
         String contextPath = ContextPathUtil.normalizeContextPath(
                 properties.getProperty(PropertyKeyConst.CONTEXT_PATH, webContext));
         String server = properties.getProperty(NacosAuthLoginConstant.SERVER, StringUtils.EMPTY);
-        
+
         if (!server.startsWith(HTTPS_PREFIX) && !server.startsWith(HTTP_PREFIX)) {
             if (!InternetAddressUtil.containsPort(server)) {
                 server = server + InternetAddressUtil.IP_PORT_SPLITER + ParamUtil.getDefaultServerPort();
@@ -73,7 +74,19 @@ public class HttpLoginProcessor implements LoginProcessor {
         }
         
         String url = server + contextPath + LOGIN_URL;
-        
+
+        try {
+            URL originalURL = new URL(url);
+            String host = originalURL.getHost();
+            InetAddress inet = InetAddress.getByName(host);
+            String ip = inet.getHostAddress();
+            if(host != null && !host.equals(ip)){
+                url = new URL(originalURL.getProtocol(), ip, originalURL.getPort(), originalURL.getFile()).toString();
+            }
+        } catch (UnknownHostException | MalformedURLException ignored) {
+        }
+
+
         Map<String, String> params = new HashMap<>(2);
         Map<String, String> bodyMap = new HashMap<>(2);
         params.put(PropertyKeyConst.USERNAME, properties.getProperty(PropertyKeyConst.USERNAME, StringUtils.EMPTY));
