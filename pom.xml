@@ -146,8 +146,8 @@
         <mockito-core.version>4.9.0</mockito-core.version>
         <HikariCP.version>5.0.1</HikariCP.version>
         <SnakeYaml.version>1.33</SnakeYaml.version>
-        <jraft-core.version>1.3.17.B</jraft-core.version>
-        <rpc-grpc-impl.version>1.3.17.B</rpc-grpc-impl.version>
+        <jraft-core.version>1.3.18.B</jraft-core.version>
+        <rpc-grpc-impl.version>1.3.18.B</rpc-grpc-impl.version>
     </properties>
     <!-- == -->
     <!-- =========================================================Build plugins================================================ -->
