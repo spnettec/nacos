@@ -90,7 +90,7 @@
         <!-- Compiler settings properties -->
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
-        <netty.version>4.1.87.Final</netty.version>
+        <netty.version>4.1.88.Final</netty.version>
         <!-- Maven properties -->
         <maven.test.skip>false</maven.test.skip>
         <maven.javadoc.skip>true</maven.javadoc.skip>
