@@ -19,7 +19,7 @@
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     
     <parent>
-        <groupId>com.alibaba.nacos</groupId>
+        <groupId>com.github.heyoulin.nacos</groupId>
         <artifactId>nacos-all</artifactId>
         <version>${revision}</version>
         <relativePath>../pom.xml</relativePath>
@@ -41,7 +41,7 @@
             <artifactId>nacos-common</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.alibaba.nacos</groupId>
+            <groupId>com.github.heyoulin.nacos</groupId>
             <artifactId>nacos-auth-plugin</artifactId>
         </dependency>
         <dependency>

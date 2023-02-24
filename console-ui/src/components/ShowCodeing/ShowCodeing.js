@@ -131,7 +131,7 @@ public class ConfigController {
 * Demo for Nacos
 * pom.xml
     <dependency>
-        <groupId>com.alibaba.nacos</groupId>
+        <groupId>com.github.heyoulin.nacos</groupId>
         <artifactId>nacos-client</artifactId>
         <version>\${version}</version>
     </dependency>
