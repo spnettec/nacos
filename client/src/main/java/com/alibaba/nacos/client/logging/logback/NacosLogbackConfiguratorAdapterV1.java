@@ -36,22 +36,13 @@ import java.util.List;
  * @see <a href="https://github.com/alibaba/nacos/issues/6999">#6999</a>
  */
 public class NacosLogbackConfiguratorAdapterV1 extends JoranConfigurator implements NacosLogbackConfigurator {
-    
-    /**
-     * ensure that Nacos configuration does not affect user configuration savepoints.
-     *
-     * @param eventList safe data
-     */
+
     @Override
-    public void registerSafeConfiguration(List<SaxEvent> eventList) {
+    public void addElementSelectorAndActionAssociations(RuleStore rs) {
+        super.addElementSelectorAndActionAssociations(rs);
+        rs.addRule(new ElementSelector("configuration/nacosClientProperty"), NacosClientPropertyAction::new);
     }
-    
-    @Override
-    public void addInstanceRules(RuleStore rs) {
-        super.addInstanceRules(rs);
-        rs.addRule(new ElementSelector("configuration/nacosClientProperty"), new NacosClientPropertyAction());
-    }
-    
+
     @Override
     public int getVersion() {
         return 1;
