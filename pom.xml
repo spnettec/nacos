@@ -165,6 +165,9 @@
                     <groupId>org.springframework.boot</groupId>
                     <artifactId>spring-boot-maven-plugin</artifactId>
                     <version>${spring-boot-dependencies.version}</version>
+                    <configuration>
+                        <attach>false</attach>
+                    </configuration>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -349,6 +352,7 @@
                         <exclude>**/gogo.proto</exclude>
                         <exclude>**/any.proto</exclude>
                         <exclude>src/main/java/com/alibaba/nacos/common/packagescan/classreading/**</exclude>
+                        <exclude>.flattened-pom.xml</exclude>
                     </excludes>
                 </configuration>
                 <executions>
@@ -426,36 +430,31 @@
                 <version>${maven-assembly-plugin.version}</version>
             </plugin>
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>flatten-maven-plugin</artifactId>
-                <version>${maven-flatten-version}</version>
+                <groupId>icu.easyj.maven.plugins</groupId>
+                <artifactId>easyj-maven-plugin</artifactId>
+                <version>${maven-easyj-version}</version>
                 <configuration>
-                    <updatePomFile>true</updatePomFile>
-                    <flattenMode>resolveCiFriendliesOnly</flattenMode>
-                    <pomElements>
-                        <dependencies>expand</dependencies>
-                    </pomElements>
+                    <simplifiedPomFileName>.flattened-pom.xml</simplifiedPomFileName>
+                    <useTabIndent>true</useTabIndent>
                 </configuration>
                 <executions>
                     <execution>
-                        <id>flatten</id>
-                        <phase>process-resources</phase>
+                        <id>flatten-pom</id>
                         <goals>
-                            <goal>flatten</goal>
+                            <goal>simplify-pom</goal>
                         </goals>
                     </execution>
                     <execution>
-                        <id>flatten.clean</id>
-                        <phase>clean</phase>
+                        <id>clean-flattened-pom</id>
                         <goals>
-                            <goal>clean</goal>
+                            <goal>clean-simplify-pom</goal>
                         </goals>
                     </execution>
                 </executions>
             </plugin>
         </plugins>
     </build>
-
+    
     <profiles>
         <profile>
             <id>release-sign-artifacts</id>
