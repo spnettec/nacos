@@ -52,8 +52,6 @@ import com.alibaba.nacos.plugin.datasource.mapper.ConfigInfoTagMapper;
 import com.alibaba.nacos.plugin.datasource.mapper.ConfigTagsRelationMapper;
 import com.alibaba.nacos.plugin.datasource.mapper.HistoryConfigInfoMapper;
 import com.alibaba.nacos.plugin.datasource.mapper.TenantInfoMapper;
-import com.alibaba.nacos.plugin.datasource.model.MapperContext;
-import com.alibaba.nacos.plugin.datasource.model.MapperResult;
 import com.alibaba.nacos.plugin.encryption.handler.EncryptionHandler;
 import com.alibaba.nacos.sys.env.EnvUtil;
 import org.apache.commons.collections4.CollectionUtils;

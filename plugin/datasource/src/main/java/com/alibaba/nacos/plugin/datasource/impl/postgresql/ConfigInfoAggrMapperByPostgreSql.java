@@ -19,8 +19,6 @@ package com.alibaba.nacos.plugin.datasource.impl.postgresql;
 import com.alibaba.nacos.common.utils.CollectionUtils;
 import com.alibaba.nacos.plugin.datasource.constants.DataSourceConstant;
 import com.alibaba.nacos.plugin.datasource.impl.derby.ConfigInfoAggrMapperByDerby;
-import com.alibaba.nacos.plugin.datasource.model.MapperContext;
-import com.alibaba.nacos.plugin.datasource.model.MapperResult;
 
 import java.util.List;
 
@@ -33,17 +31,9 @@ import java.util.List;
 public class ConfigInfoAggrMapperByPostgreSql extends ConfigInfoAggrMapperByDerby {
 
     @Override
-    public MapperResult findConfigInfoAggrByPageFetchRows(MapperContext context) {
-        final Integer startRow = (Integer) context.getWhereParameter("startRow");
-        final Integer pageSize = (Integer) context.getWhereParameter("pageSize");
-        final String dataId = (String) context.getWhereParameter("data_id");
-        final String groupId = (String) context.getWhereParameter("group_id");
-        final String tenantId = (String) context.getWhereParameter("tenant_id");
-
-        String sql = "SELECT data_id,group_id,tenant_id,datum_id,app_name,content FROM config_info_aggr WHERE data_id= ? AND "
+    public String findConfigInfoAggrByPageFetchRows(int startRow, int pageSize) {
+        return "SELECT data_id,group_id,tenant_id,datum_id,app_name,content FROM config_info_aggr WHERE data_id= ? AND "
                 + "group_id= ? AND tenant_id= ? ORDER BY datum_id LIMIT " + startRow + "," + pageSize;
-        List<Object> paramList = CollectionUtils.list(dataId, groupId, tenantId);
-        return new MapperResult(sql, paramList);
     }
 
     @Override
