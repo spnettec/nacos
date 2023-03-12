@@ -20,6 +20,8 @@ import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.exception.runtime.NacosRuntimeException;
 import com.alibaba.nacos.common.utils.CollectionUtils;
 import com.alibaba.nacos.config.server.model.ConfigMetadata;
+import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.constructor.AbstractConstruct;
 import org.yaml.snakeyaml.constructor.SafeConstructor;
 import org.yaml.snakeyaml.introspector.Property;
@@ -51,7 +53,7 @@ public class YamlParserUtil {
      * @return YAML string.
      */
     public static String dumpObject(Object object) {
-        return new Yaml(new YamlParserConstructor(), new CustomRepresenter()).dumpAsMap(object);
+        return new Yaml(new YamlParserConstructor(), new CustomRepresenter(new DumperOptions())).dumpAsMap(object);
     }
     
     /**
@@ -64,7 +66,7 @@ public class YamlParserUtil {
      * @return Java object.
      */
     public static <T> T loadObject(String content, Class<T> type) {
-        return new Yaml(new YamlParserConstructor(), new CustomRepresenter()).loadAs(content, type);
+        return new Yaml(new YamlParserConstructor(), new CustomRepresenter(new DumperOptions())).loadAs(content, type);
     }
     
     public static class YamlParserConstructor extends SafeConstructor {
@@ -72,13 +74,17 @@ public class YamlParserUtil {
         public static Tag configMetadataTag = new Tag(ConfigMetadata.class);
         
         public YamlParserConstructor() {
-            super();
+            super(new LoaderOptions());
             yamlConstructors.put(configMetadataTag, new ConstructYamlConfigMetadata());
         }
     }
     
     public static class CustomRepresenter extends Representer {
-        
+
+        public CustomRepresenter(DumperOptions options) {
+            super(options);
+        }
+
         @Override
         protected NodeTuple representJavaBeanProperty(Object javaBean, Property property, Object propertyValue,
                 Tag customTag) {
