@@ -78,9 +78,9 @@ public class AbstractNamingClientProxyTest {
         Map<String, String> mockIdentityContext = new HashMap<>();
         String serviceName = "aaa";
         mockIdentityContext.put("ak", ak);
-        long time = System.currentTimeMillis();
-        mockIdentityContext.put("data", time + "@@" + serviceName);
-        mockIdentityContext.put("signature", SignUtil.sign(time + "@@" + serviceName, sk));
+        String data = System.currentTimeMillis() + "@@" + serviceName;
+        mockIdentityContext.put("data", data);
+        mockIdentityContext.put("signature", SignUtil.sign(data, sk));
         when(sc.getIdentityContext(any(RequestResource.class))).thenReturn(mockIdentityContext);
         AbstractNamingClientProxy proxy = new MockNamingClientProxy(sc);
         Map<String, String> spasHeaders = proxy.getSecurityHeaders("", "", serviceName);
