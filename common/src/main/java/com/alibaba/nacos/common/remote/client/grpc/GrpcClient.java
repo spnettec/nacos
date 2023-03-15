@@ -56,6 +56,8 @@ import io.grpc.stub.StreamObserver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Properties;
@@ -181,6 +183,12 @@ public abstract class GrpcClient extends RpcClient {
     private ManagedChannel createNewManagedChannel(String serverIp, int serverPort) {
         LOGGER.info("grpc client connection server:{} ip,serverPort:{},grpcTslConfig:{}", serverIp, serverPort,
                 JacksonUtils.toJson(clientConfig.tlsConfig()));
+        try {
+            InetAddress inet = InetAddress.getByName(serverIp);
+            serverIp = inet.getHostAddress();
+        } catch (UnknownHostException ignored) {
+            LOGGER.error("invalid ip->{}", serverIp);
+        }
         ManagedChannelBuilder<?> managedChannelBuilder = buildChannel(serverIp, serverPort, buildSslContext())
                 .executor(grpcExecutor).compressorRegistry(CompressorRegistry.getDefaultInstance())
                 .decompressorRegistry(DecompressorRegistry.getDefaultInstance())
