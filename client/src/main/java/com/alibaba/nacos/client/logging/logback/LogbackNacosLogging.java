@@ -26,10 +26,8 @@ import com.alibaba.nacos.common.log.NacosLogbackConfigurator;
 import com.alibaba.nacos.common.spi.NacosServiceLoader;
 import com.alibaba.nacos.common.utils.ResourceUtils;
 import org.slf4j.LoggerFactory;
-import org.slf4j.impl.StaticLoggerBinder;
 
 import java.util.Collection;
-import java.util.stream.Collectors;
 
 /**
  * Support for Logback version 1.0.8 or higher
@@ -59,7 +57,7 @@ public class LogbackNacosLogging extends AbstractNacosLogging {
     @Override
     public void loadConfiguration() {
         LoggerContext loggerContext = loadConfigurationOnStart();
-        if (loggerContext.getObject(CoreConstants.RECONFIGURE_ON_CHANGE_TASK) != null && !hasListener(loggerContext)) {
+        if (!hasListener(loggerContext)) {
             addListener(loggerContext);
         }
     }
@@ -80,7 +78,7 @@ public class LogbackNacosLogging extends AbstractNacosLogging {
             Collection<NacosLogbackConfigurator> nacosLogbackConfigurators = NacosServiceLoader.load(
                     NacosLogbackConfigurator.class);
             NacosLogbackConfigurator nacosLogbackConfigurator = nacosLogbackConfigurators.stream()
-                    .filter(c -> c.getVersion() == userVersion).collect(Collectors.toList()).get(0);
+                    .filter(c -> c.getVersion() == userVersion).toList().get(0);
             nacosLogbackConfigurator.setContext(loggerContext);
             nacosLogbackConfigurator.configure(ResourceUtils.getResourceUrl(location));
             return loggerContext;
