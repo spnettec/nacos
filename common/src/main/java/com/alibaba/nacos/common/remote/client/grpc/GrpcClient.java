@@ -137,9 +137,10 @@ public abstract class GrpcClient extends RpcClient {
                 .setThreadPoolMaxSize(threadPoolMaxSize).setLabels(labels).build());
     }
 
-    public GrpcClient(String name, Integer threadPoolCoreSize, Integer threadPoolMaxSize, Map<String, String> labels, RpcClientTlsConfig tlsConfig) {
-        this(DefaultGrpcClientConfig.newBuilder().setName(name).setThreadPoolCoreSize(threadPoolCoreSize).setTlsConfig(tlsConfig)
-                .setThreadPoolMaxSize(threadPoolMaxSize).setLabels(labels).build());
+    public GrpcClient(String name, Integer threadPoolCoreSize, Integer threadPoolMaxSize, Map<String, String> labels,
+            RpcClientTlsConfig tlsConfig) {
+        this(DefaultGrpcClientConfig.newBuilder().setName(name).setThreadPoolCoreSize(threadPoolCoreSize)
+                .setTlsConfig(tlsConfig).setThreadPoolMaxSize(threadPoolMaxSize).setLabels(labels).build());
     }
 
     protected ThreadPoolExecutor createGrpcExecutor(String serverIp) {
@@ -189,8 +190,8 @@ public abstract class GrpcClient extends RpcClient {
         } catch (UnknownHostException ignored) {
             LOGGER.error("invalid ip->{}", serverIp);
         }
-        ManagedChannelBuilder<?> managedChannelBuilder = buildChannel(serverIp, serverPort, buildSslContext())
-                .executor(grpcExecutor).compressorRegistry(CompressorRegistry.getDefaultInstance())
+        ManagedChannelBuilder<?> managedChannelBuilder = buildChannel(serverIp, serverPort, buildSslContext()).executor(
+                        grpcExecutor).compressorRegistry(CompressorRegistry.getDefaultInstance())
                 .decompressorRegistry(DecompressorRegistry.getDefaultInstance())
                 .maxInboundMessageSize(clientConfig.maxInboundMessageSize())
                 .keepAliveTime(clientConfig.channelKeepAlive(), TimeUnit.MILLISECONDS)
@@ -229,12 +230,17 @@ public abstract class GrpcClient extends RpcClient {
         } catch (Exception e) {
             LoggerUtils.printIfErrorEnabled(LOGGER,
                     "Server check fail, please check server {} ,port {} is available , error ={}", ip, port, e);
+            if (this.clientConfig != null && this.clientConfig.tlsConfig() != null && this.clientConfig.tlsConfig()
+                    .getEnableTls()) {
+                LoggerUtils.printIfErrorEnabled(LOGGER,
+                        "current client is require tls encrypted ,server must support tls ,please check");
+            }
             return null;
         }
     }
 
     private StreamObserver<Payload> bindRequestStream(final BiRequestStreamGrpc.BiRequestStreamStub streamStub,
-                                                      final GrpcConnection grpcConn) {
+            final GrpcConnection grpcConn) {
 
         return streamStub.requestBiStream(new StreamObserver<Payload>() {
 
@@ -372,13 +378,11 @@ public abstract class GrpcClient extends RpcClient {
 
     private ManagedChannelBuilder buildChannel(String serverIp, int port, Optional<SslContext> sslContext) {
         if (sslContext.isPresent()) {
-            return NettyChannelBuilder.forAddress(serverIp, port)
-                    .negotiationType(NegotiationType.TLS)
+            return NettyChannelBuilder.forAddress(serverIp, port).negotiationType(NegotiationType.TLS)
                     .sslContext(sslContext.get());
 
         } else {
-            return ManagedChannelBuilder
-                    .forAddress(serverIp, port).usePlaintext();
+            return ManagedChannelBuilder.forAddress(serverIp, port).usePlaintext();
         }
     }
 
@@ -408,12 +412,14 @@ public abstract class GrpcClient extends RpcClient {
             }
 
             if (tlsConfig.getMutualAuthEnable()) {
-                if (StringUtils.isBlank(tlsConfig.getCertChainFile()) || StringUtils.isBlank(tlsConfig.getCertPrivateKey())) {
+                if (StringUtils.isBlank(tlsConfig.getCertChainFile()) || StringUtils.isBlank(
+                        tlsConfig.getCertPrivateKey())) {
                     throw new IllegalArgumentException("client certChainFile or certPrivateKey must be not null");
                 }
                 Resource certChainFile = resourceLoader.getResource(tlsConfig.getCertChainFile());
                 Resource privateKey = resourceLoader.getResource(tlsConfig.getCertPrivateKey());
-                builder.keyManager(certChainFile.getInputStream(), privateKey.getInputStream(), tlsConfig.getCertPrivateKeyPassword());
+                builder.keyManager(certChainFile.getInputStream(), privateKey.getInputStream(),
+                        tlsConfig.getCertPrivateKeyPassword());
             }
             return Optional.of(builder.build());
         } catch (Exception e) {
