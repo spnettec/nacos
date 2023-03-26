@@ -167,9 +167,13 @@ public class ConfigInfoMapperByDerby extends AbstractMapper implements ConfigInf
         final String content = params.get("content");
         final String dataId = params.get(DATA_ID);
         final String group = params.get(GROUP);
+        final String tenantId = params.get("tenant_id");
         final String sqlFetchRows = "SELECT id,data_id,group_id,tenant_id,app_name,content,encrypted_data_key FROM config_info";
         StringBuilder where = new StringBuilder(" WHERE ");
-        where.append(" tenant_id LIKE ? ");
+        where.append(" 1=1 ");
+        if (!StringUtils.isBlank(tenantId)) {
+            where.append(" AND tenant_id LIKE ? ");
+        }
         if (!StringUtils.isBlank(dataId)) {
             where.append(" AND data_id LIKE ? ");
         }

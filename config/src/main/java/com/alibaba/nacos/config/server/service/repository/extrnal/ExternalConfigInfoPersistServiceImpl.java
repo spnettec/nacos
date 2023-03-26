@@ -22,6 +22,7 @@ import com.alibaba.nacos.common.utils.Pair;
 import com.alibaba.nacos.common.utils.StringUtils;
 import com.alibaba.nacos.config.server.configuration.ConditionOnExternalStorage;
 import com.alibaba.nacos.config.server.constant.Constants;
+import com.alibaba.nacos.config.server.constant.PropertiesConstant;
 import com.alibaba.nacos.config.server.enums.FileTypeEnum;
 import com.alibaba.nacos.config.server.model.ConfigAdvanceInfo;
 import com.alibaba.nacos.config.server.model.ConfigAllInfo;
@@ -67,13 +68,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 import static com.alibaba.nacos.config.server.service.repository.RowMapperManager.CONFIG_ADVANCE_INFO_ROW_MAPPER;
 import static com.alibaba.nacos.config.server.service.repository.RowMapperManager.CONFIG_ALL_INFO_ROW_MAPPER;
@@ -218,15 +213,47 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
 
         ConfigInfoMapper configInfoMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                 TableConstant.CONFIG_INFO);
-        final String sql = configInfoMapper.insert(
-                Arrays.asList("data_id", "group_id", "tenant_id", "app_name", "content", "md5", "src_ip", "src_user",
-                        "gmt_create", "gmt_modified", "c_desc", "c_use", "effect", "type", "c_schema",
-                        "encrypted_data_key"));
-        String[] returnGeneratedKeys = configInfoMapper.getPrimaryKeyGeneratedKeys();
-        try {
-            jt.update(new PreparedStatementCreator() {
-                @Override
-                public PreparedStatement createPreparedStatement(Connection connection) throws SQLException {
+        List<String> insertList = new ArrayList<>(Arrays.asList("data_id", "group_id", "tenant_id", "app_name", "content", "md5", "src_ip", "src_user",
+                "gmt_create", "gmt_modified", "c_desc", "c_use", "effect", "type", "c_schema",
+                "encrypted_data_key"));
+        String sql;
+        if (dataSourceService.getDataSourceType().equals(PropertiesConstant.ORACLE)) {
+            insertList.add("id");
+            sql = configInfoMapper.insert(insertList);
+            try {
+                final long generatedId = new Random().nextLong();
+                jt.update(connection -> {
+                    PreparedStatement ps = connection.prepareStatement(sql);
+                    ps.setString(1, configInfo.getDataId());
+                    ps.setString(2, configInfo.getGroup());
+                    ps.setString(3, tenantTmp);
+                    ps.setString(4, appNameTmp);
+                    ps.setString(5, configInfo.getContent());
+                    ps.setString(6, md5Tmp);
+                    ps.setString(7, srcIp);
+                    ps.setString(8, srcUser);
+                    ps.setTimestamp(9, time);
+                    ps.setTimestamp(10, time);
+                    ps.setString(11, desc);
+                    ps.setString(12, use);
+                    ps.setString(13, effect);
+                    ps.setString(14, type);
+                    ps.setString(15, schema);
+                    ps.setString(16, encryptedDataKey);
+                    ps.setLong(17, generatedId);
+                    return ps;
+                });
+
+                return generatedId;
+            } catch (CannotGetJdbcConnectionException e) {
+                LogUtil.FATAL_LOG.error("[db-error] " + e, e);
+                throw e;
+            }
+        } else {
+            sql = configInfoMapper.insert(insertList);
+            String[] returnGeneratedKeys = configInfoMapper.getPrimaryKeyGeneratedKeys();
+            try {
+                jt.update(connection -> {
                     PreparedStatement ps = connection.prepareStatement(sql, returnGeneratedKeys);
                     ps.setString(1, configInfo.getDataId());
                     ps.setString(2, configInfo.getGroup());
@@ -245,16 +272,16 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
                     ps.setString(15, schema);
                     ps.setString(16, encryptedDataKey);
                     return ps;
+                }, keyHolder);
+                Number nu = keyHolder.getKey();
+                if (nu == null) {
+                    throw new IllegalArgumentException("insert config_info fail");
                 }
-            }, keyHolder);
-            Number nu = keyHolder.getKey();
-            if (nu == null) {
-                throw new IllegalArgumentException("insert config_info fail");
+                return nu.longValue();
+            } catch (CannotGetJdbcConnectionException e) {
+                LogUtil.FATAL_LOG.error("[db-error] " + e, e);
+                throw e;
             }
-            return nu.longValue();
-        } catch (CannotGetJdbcConnectionException e) {
-            LogUtil.FATAL_LOG.error("[db-error] " + e, e);
-            throw e;
         }
     }
 
@@ -690,13 +717,19 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
     @Override
     public ConfigInfoWrapper findConfigInfo(final String dataId, final String group, final String tenant) {
         final String tenantTmp = StringUtils.isBlank(tenant) ? StringUtils.EMPTY : tenant;
+        List<String> whereList = new ArrayList<>(Arrays.asList("data_id", "group_id"));
+        List<Object> parasList = new ArrayList<>(Arrays.asList(dataId, group));
+        if (!StringUtils.isBlank(tenantTmp)) {
+            whereList.add("tenant_id");
+            parasList.add(tenantTmp);
+        }
         try {
             ConfigInfoMapper configInfoMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                     TableConstant.CONFIG_INFO);
             return this.jt.queryForObject(configInfoMapper.select(
                             Arrays.asList("id", "data_id", "group_id", "tenant_id", "app_name", "content", "md5", "type",
-                                    "encrypted_data_key"), Arrays.asList("data_id", "group_id", "tenant_id")),
-                    new Object[] {dataId, group, tenantTmp}, CONFIG_INFO_WRAPPER_ROW_MAPPER);
+                                    "encrypted_data_key"), whereList),
+                    parasList.toArray(), CONFIG_INFO_WRAPPER_ROW_MAPPER);
         } catch (EmptyResultDataAccessException e) { // Indicates that the data does not exist, returns null.
             return null;
         } catch (CannotGetJdbcConnectionException e) {
@@ -1025,7 +1058,10 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
         Map<String, String> paramsMap = new HashMap<>(16);
 
         List<String> params = new ArrayList<>();
-        params.add(generateLikeArgument(tenantTmp));
+        if (!StringUtils.isBlank(tenantTmp)) {
+            params.add(generateLikeArgument(tenantTmp));
+            paramsMap.put(TENANT, TENANT);
+        }
         if (!StringUtils.isBlank(dataId)) {
             params.add(generateLikeArgument(dataId));
             paramsMap.put(DATA_ID, DATA_ID);
@@ -1254,11 +1290,17 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
             List<String> configTagList = this.selectTagByConfig(dataId, group, tenant);
             ConfigInfoMapper configInfoMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                     TableConstant.CONFIG_INFO);
+            List<String> whereList = new ArrayList<>(Arrays.asList("data_id", "group_id"));
+            List<Object> parasList = new ArrayList<>(Arrays.asList(dataId, group));
+            if (!StringUtils.isBlank(tenantTmp)) {
+                whereList.add("tenant_id");
+                parasList.add(tenantTmp);
+            }
             ConfigAllInfo configAdvance = this.jt.queryForObject(configInfoMapper.select(
                             Arrays.asList("id", "data_id", "group_id", "tenant_id", "app_name", "content", "md5", "gmt_create",
                                     "gmt_modified", "src_user", "src_ip", "c_desc", "c_use", "effect", "type", "c_schema",
-                                    "encrypted_data_key"), Arrays.asList("data_id", "group_id", "tenant_id")),
-                    new Object[] {dataId, group, tenantTmp}, CONFIG_ALL_INFO_ROW_MAPPER);
+                                    "encrypted_data_key"), whereList),
+                    parasList.toArray(), CONFIG_ALL_INFO_ROW_MAPPER);
             if (configTagList != null && !configTagList.isEmpty()) {
                 StringBuilder configTagsTmp = new StringBuilder();
                 for (String configTag : configTagList) {

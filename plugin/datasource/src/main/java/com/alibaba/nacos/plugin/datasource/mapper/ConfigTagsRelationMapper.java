@@ -100,9 +100,13 @@ public interface ConfigTagsRelationMapper extends Mapper {
         final String content = params.get("content");
         final String dataId = params.get("dataId");
         final String group = params.get("group");
+        final String tenantId = params.get("tenant_id");
         StringBuilder where = new StringBuilder(" WHERE ");
         final String sqlCountRows = "SELECT count(*) FROM config_info  a LEFT JOIN config_tags_relation b ON a.id=b.id ";
-        where.append(" a.tenant_id LIKE ? ");
+        where.append(" 1=1 ");
+        if (!StringUtils.isBlank(tenantId)) {
+            where.append(" AND a.tenant_id LIKE ? ");
+        }
         if (!StringUtils.isBlank(dataId)) {
             where.append(" AND a.data_id LIKE ? ");
         }

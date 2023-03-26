@@ -391,9 +391,13 @@ public interface ConfigInfoMapper extends Mapper {
         final String content = params.get("content");
         final String dataId = params.get("dataId");
         final String group = params.get(GROUP);
+        final String tenantId = params.get("tenant_id");
         final String sqlCountRows = "SELECT count(*) FROM config_info";
         StringBuilder where = new StringBuilder(" WHERE ");
-        where.append(" tenant_id LIKE ? ");
+        where.append(" 1=1 ");
+        if (!StringUtils.isBlank(tenantId)) {
+            where.append(" AND tenant_id LIKE ? ");
+        }
         if (!StringUtils.isBlank(dataId)) {
             where.append(" AND data_id LIKE ? ");
         }
