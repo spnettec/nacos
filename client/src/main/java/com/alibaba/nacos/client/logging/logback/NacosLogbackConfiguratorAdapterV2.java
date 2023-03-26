@@ -18,16 +18,15 @@ package com.alibaba.nacos.client.logging.logback;
 
 import ch.qos.logback.classic.joran.JoranConfigurator;
 import ch.qos.logback.core.Context;
-import ch.qos.logback.core.joran.event.SaxEvent;
 import ch.qos.logback.core.joran.spi.ElementSelector;
 import ch.qos.logback.core.joran.spi.JoranException;
 import ch.qos.logback.core.joran.spi.RuleStore;
 import com.alibaba.nacos.common.log.NacosLogbackConfigurator;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.List;
 
 /**
  * ensure that Nacos configuration does not affect user configuration savepoints and  scanning url.
@@ -35,7 +34,7 @@ import java.util.List;
  * @author <a href="mailto:hujun3@xiaomi.com">hujun</a>
  * @see <a href="https://github.com/alibaba/nacos/issues/6999">#6999</a>
  */
-public class NacosLogbackConfiguratorAdapterV1 extends JoranConfigurator implements NacosLogbackConfigurator {
+public class NacosLogbackConfiguratorAdapterV2 extends JoranConfigurator implements NacosLogbackConfigurator {
 
     @Override
     public void addElementSelectorAndActionAssociations(RuleStore rs) {
@@ -45,7 +44,7 @@ public class NacosLogbackConfiguratorAdapterV1 extends JoranConfigurator impleme
 
     @Override
     public int getVersion() {
-        return 1;
+        return 2;
     }
 
     @Override
