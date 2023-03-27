@@ -39,6 +39,7 @@ import com.alibaba.nacos.config.server.service.repository.HistoryConfigInfoPersi
 import com.alibaba.nacos.config.server.service.repository.PaginationHelper;
 import com.alibaba.nacos.config.server.utils.LogUtil;
 import com.alibaba.nacos.config.server.utils.ParamUtils;
+import com.alibaba.nacos.config.server.utils.SystemConfig;
 import com.alibaba.nacos.plugin.datasource.MapperManager;
 import com.alibaba.nacos.plugin.datasource.constants.TableConstant;
 import com.alibaba.nacos.plugin.datasource.mapper.ConfigInfoMapper;
@@ -218,7 +219,7 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
             insertList.add("id");
             sql = configInfoMapper.insert(insertList);
             try {
-                final int generatedId = new Random().nextInt();
+                final long generatedId = SystemConfig.nextId();
                 jt.update(connection -> {
                     PreparedStatement ps = connection.prepareStatement(sql);
                     ps.setString(1, configInfo.getDataId());

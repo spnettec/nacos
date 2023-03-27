@@ -29,6 +29,7 @@ import com.alibaba.nacos.config.server.service.datasource.DynamicDataSource;
 import com.alibaba.nacos.config.server.service.repository.HistoryConfigInfoPersistService;
 import com.alibaba.nacos.config.server.service.repository.PaginationHelper;
 import com.alibaba.nacos.config.server.utils.LogUtil;
+import com.alibaba.nacos.config.server.utils.SystemConfig;
 import com.alibaba.nacos.plugin.datasource.MapperManager;
 import com.alibaba.nacos.plugin.datasource.constants.TableConstant;
 import com.alibaba.nacos.plugin.datasource.mapper.HistoryConfigInfoMapper;
@@ -109,7 +110,7 @@ public class ExternalHistoryConfigInfoPersistServiceImpl implements HistoryConfi
             List<String> inertList = new ArrayList<>(Arrays.asList("id", "data_id", "group_id", "tenant_id", "app_name", "content", "md5", "src_ip",
                     "src_user", "gmt_modified", "gmt_create", "op_type", "encrypted_data_key"));
             if (dataSourceService.getDataSourceType().equals(PropertiesConstant.ORACLE)) {
-                final int generatedNid = new Random().nextInt();
+                final long generatedNid = SystemConfig.nextId();
                 inertList.add("nid");
                 jt.update(connection -> {
                     PreparedStatement ps = connection.prepareStatement(historyConfigInfoMapper.insert(
@@ -239,10 +240,10 @@ public class ExternalHistoryConfigInfoPersistServiceImpl implements HistoryConfi
         HistoryConfigInfoMapper historyConfigInfoMapper = mapperManager.findMapper(
                 dataSourceService.getDataSourceType(), TableConstant.HIS_CONFIG_INFO);
         String sql = historyConfigInfoMapper.findConfigHistoryCountByTime();
-        Integer result = jt.queryForObject(sql, Integer.class, new Object[] {startTime});
+        Integer result = jt.queryForObject(sql, Integer.class, startTime);
         if (result == null) {
             throw new IllegalArgumentException("findConfigHistoryCountByTime error");
         }
-        return result.intValue();
+        return result;
     }
 }

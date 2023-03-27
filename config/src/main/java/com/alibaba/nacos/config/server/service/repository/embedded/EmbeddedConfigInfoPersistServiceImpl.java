@@ -967,7 +967,10 @@ public class EmbeddedConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
         Map<String, String> paramsMap = new HashMap<>(16);
         
         List<String> params = new ArrayList<>();
-        params.add(generateLikeArgument(tenantTmp));
+        if (!StringUtils.isBlank(tenantTmp)) {
+            params.add(generateLikeArgument(tenantTmp));
+            paramsMap.put(TENANT, TENANT);
+        }
         if (!StringUtils.isBlank(dataId)) {
             params.add(generateLikeArgument(dataId));
             paramsMap.put(DATA_ID, DATA_ID);

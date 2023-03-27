@@ -35,7 +35,8 @@ public class SystemConfig {
     public static final String LOCAL_IP = getHostAddress();
     
     private static final Logger LOGGER = LoggerFactory.getLogger(SystemConfig.class);
-    
+
+    private static final Sequence SEQUENCE = new Sequence();
     private static String getHostAddress() {
         String address = System.getProperty("nacos.server.ip");
         if (StringUtils.isNotEmpty(address)) {
@@ -61,6 +62,10 @@ public class SystemConfig {
             LOGGER.error("get local host address error", e);
         }
         return address;
+    }
+
+    public static long nextId(){
+        return SEQUENCE.nextId();
     }
     
 }
