@@ -109,7 +109,7 @@ public class ExternalHistoryConfigInfoPersistServiceImpl implements HistoryConfi
             List<String> inertList = new ArrayList<>(Arrays.asList("id", "data_id", "group_id", "tenant_id", "app_name", "content", "md5", "src_ip",
                     "src_user", "gmt_modified", "gmt_create", "op_type", "encrypted_data_key"));
             if (dataSourceService.getDataSourceType().equals(PropertiesConstant.ORACLE)) {
-                final long generatedNid = new Random().nextLong();
+                final int generatedNid = new Random().nextInt();
                 inertList.add("nid");
                 jt.update(connection -> {
                     PreparedStatement ps = connection.prepareStatement(historyConfigInfoMapper.insert(

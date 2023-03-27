@@ -218,7 +218,7 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
             insertList.add("id");
             sql = configInfoMapper.insert(insertList);
             try {
-                final long generatedId = new Random().nextLong();
+                final int generatedId = new Random().nextInt();
                 jt.update(connection -> {
                     PreparedStatement ps = connection.prepareStatement(sql);
                     ps.setString(1, configInfo.getDataId());
