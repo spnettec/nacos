@@ -64,10 +64,7 @@ import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.util.*;
 
 import static com.alibaba.nacos.config.server.service.repository.RowMapperManager.CONFIG_ADVANCE_INFO_ROW_MAPPER;
@@ -623,12 +620,23 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
         try {
             ConfigInfoMapper configInfoMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                     TableConstant.CONFIG_INFO);
-            jt.update(configInfoMapper.update(
-                            Arrays.asList("content", "md5", "src_ip", "src_user", "gmt_modified", "app_name", "c_desc", "c_use",
-                                    "effect", "type", "c_schema", "encrypted_data_key"),
-                            Arrays.asList("data_id", "group_id", "tenant_id")), configInfo.getContent(), md5Tmp, srcIp, srcUser,
+            String updateSql = configInfoMapper.update(
+                    Arrays.asList("content", "md5", "src_ip", "src_user", "gmt_modified", "app_name", "c_desc", "c_use",
+                            "effect", "type", "c_schema", "encrypted_data_key"),
+                    Arrays.asList("data_id", "group_id", "tenant_id"));
+            List<Object> parasList = new ArrayList<>(Arrays.asList(configInfo.getContent(), md5Tmp, srcIp, srcUser,
                     time, appNameTmp, desc, use, effect, type, schema, encryptedDataKey, configInfo.getDataId(),
-                    configInfo.getGroup(), tenantTmp);
+                    configInfo.getGroup(), tenantTmp));
+            List<Integer> argTypes = new ArrayList<>(Arrays.asList(Types.VARCHAR,Types.VARCHAR,Types.VARCHAR,Types.VARCHAR,
+                    Types.TIMESTAMP,Types.VARCHAR,Types.VARCHAR,Types.VARCHAR,Types.VARCHAR,Types.VARCHAR,Types.VARCHAR,
+                    Types.VARCHAR,Types.VARCHAR,Types.VARCHAR,Types.VARCHAR));
+            if (dataSourceService.getDataSourceType().equals(PropertiesConstant.ORACLE) && StringUtils.isBlank(tenantTmp)) {
+                updateSql = updateSql.replace("tenant_id = ?","tenant_id is NULL");
+                int index = parasList.size()-1;
+                parasList.remove(index);
+                argTypes.remove(index);
+            }
+            jt.update(updateSql,parasList.toArray(),argTypes.stream().mapToInt(i->i).toArray());
         } catch (CannotGetJdbcConnectionException e) {
             LogUtil.FATAL_LOG.error("[db-error] " + e, e);
             throw e;
@@ -641,9 +649,19 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
         try {
             ConfigInfoMapper configInfoMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                     TableConstant.CONFIG_INFO);
-            jt.update(configInfoMapper.update(Collections.singletonList("md5"),
-                            Arrays.asList("data_id", "group_id", "tenant_id", "gmt_modified")), md5, dataId, group, tenantTmp,
-                    lastTime);
+            String updateSql = configInfoMapper.update(List.of("md5"),
+                    Arrays.asList("data_id", "group_id", "gmt_modified", "tenant_id"));
+            List<Object> parasList = new ArrayList<>(Arrays.asList(md5, dataId, group,
+                    lastTime, tenantTmp));
+            List<Integer> argTypes = new ArrayList<>(Arrays.asList(Types.VARCHAR,Types.VARCHAR,Types.VARCHAR,
+                    Types.TIMESTAMP,Types.VARCHAR));
+            if (dataSourceService.getDataSourceType().equals(PropertiesConstant.ORACLE) && StringUtils.isBlank(tenantTmp)) {
+                updateSql = updateSql.replace("tenant_id = ?","tenant_id is NULL");
+                int index = parasList.size()-1;
+                parasList.remove(index);
+                argTypes.remove(index);
+            }
+            jt.update(updateSql, parasList.toArray(),argTypes.stream().mapToInt(i->i).toArray());
         } catch (CannotGetJdbcConnectionException e) {
             LogUtil.FATAL_LOG.error("[db-error] " + e, e);
             throw e;
@@ -687,8 +705,17 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
         try {
             ConfigInfoMapper configInfoMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                     TableConstant.CONFIG_INFO);
-            return this.jt.queryForObject(configInfoMapper.select(Arrays.asList("id", "data_id", "group_id", "content"),
-                            Arrays.asList("data_id", "group_id", "tenant_id")), new Object[] {dataId, group, StringUtils.EMPTY},
+            String selecteSql = configInfoMapper.update(Arrays.asList("id", "data_id", "group_id", "content"),
+                    Arrays.asList("data_id", "group_id", "tenant_id"));
+            List<Object> parasList = new ArrayList<>(Arrays.asList(dataId, group, StringUtils.EMPTY));
+            List<Integer> argTypes = new ArrayList<>(Arrays.asList(Types.VARCHAR,Types.VARCHAR,Types.VARCHAR));
+            if (dataSourceService.getDataSourceType().equals(PropertiesConstant.ORACLE)) {
+                selecteSql = selecteSql.replace("tenant_id = ?","tenant_id is NULL");
+                int index = parasList.size()-1;
+                parasList.remove(index);
+                argTypes.remove(index);
+            }
+            return this.jt.queryForObject(selecteSql, parasList.toArray(),argTypes.stream().mapToInt(i->i).toArray(),
                     CONFIG_INFO_BASE_ROW_MAPPER);
         } catch (EmptyResultDataAccessException e) { // Indicates that the data does not exist, returns null.
             return null;
