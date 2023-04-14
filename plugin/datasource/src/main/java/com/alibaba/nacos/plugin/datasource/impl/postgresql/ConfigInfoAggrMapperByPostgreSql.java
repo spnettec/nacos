@@ -29,13 +29,6 @@ import java.util.List;
  **/
 
 public class ConfigInfoAggrMapperByPostgreSql extends ConfigInfoAggrMapperByDerby {
-
-    @Override
-    public String findConfigInfoAggrByPageFetchRows(int startRow, int pageSize) {
-        return "SELECT data_id,group_id,tenant_id,datum_id,app_name,content FROM config_info_aggr WHERE data_id= ? AND "
-                + "group_id= ? AND tenant_id= ? ORDER BY datum_id LIMIT " + startRow + "," + pageSize;
-    }
-
     @Override
     public String getDataSource() {
         return DataSourceConstant.POSTGRESQL;

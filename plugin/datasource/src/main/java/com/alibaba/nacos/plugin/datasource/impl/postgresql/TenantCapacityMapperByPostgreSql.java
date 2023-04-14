@@ -32,9 +32,4 @@ public class TenantCapacityMapperByPostgreSql extends TenantCapacityMapperByDerb
         return DataSourceConstant.POSTGRESQL;
     }
 
-    @Override
-    public String getCapacityList4CorrectUsage() {
-        return "SELECT id, tenant_id FROM tenant_capacity WHERE id>? LIMIT ?";
-    }
-
 }

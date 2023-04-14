@@ -28,11 +28,6 @@ import com.alibaba.nacos.plugin.datasource.impl.derby.HistoryConfigInfoMapperByD
 public class HistoryConfigInfoMapperByPostgreSql extends HistoryConfigInfoMapperByDerby {
 
     @Override
-    public String removeConfigHistory() {
-        return "DELETE FROM his_config_info WHERE gmt_modified < ? LIMIT ?";
-    }
-
-    @Override
     public String getDataSource() {
         return DataSourceConstant.POSTGRESQL;
     }
