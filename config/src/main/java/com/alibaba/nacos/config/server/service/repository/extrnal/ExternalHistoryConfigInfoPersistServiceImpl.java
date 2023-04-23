@@ -20,6 +20,7 @@ import com.alibaba.nacos.common.utils.MD5Utils;
 import com.alibaba.nacos.common.utils.StringUtils;
 import com.alibaba.nacos.config.server.configuration.ConditionOnExternalStorage;
 import com.alibaba.nacos.config.server.constant.Constants;
+import com.alibaba.nacos.config.server.constant.PropertiesConstant;
 import com.alibaba.nacos.config.server.model.ConfigHistoryInfo;
 import com.alibaba.nacos.config.server.model.ConfigInfo;
 import com.alibaba.nacos.config.server.model.Page;
@@ -28,6 +29,7 @@ import com.alibaba.nacos.config.server.service.datasource.DynamicDataSource;
 import com.alibaba.nacos.config.server.service.repository.HistoryConfigInfoPersistService;
 import com.alibaba.nacos.config.server.service.repository.PaginationHelper;
 import com.alibaba.nacos.config.server.utils.LogUtil;
+import com.alibaba.nacos.config.server.utils.SystemConfig;
 import com.alibaba.nacos.plugin.datasource.MapperManager;
 import com.alibaba.nacos.plugin.datasource.constants.FieldConstant;
 import com.alibaba.nacos.plugin.datasource.constants.TableConstant;
@@ -41,6 +43,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.sql.PreparedStatement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -111,11 +114,50 @@ public class ExternalHistoryConfigInfoPersistServiceImpl implements HistoryConfi
         try {
             HistoryConfigInfoMapper historyConfigInfoMapper = mapperManager.findMapper(
                     dataSourceService.getDataSourceType(), TableConstant.HIS_CONFIG_INFO);
-            jt.update(historyConfigInfoMapper.insert(
-                            Arrays.asList("id", "data_id", "group_id", "tenant_id", "app_name", "content", "md5", "src_ip",
-                                    "src_user", "gmt_modified", "op_type", "encrypted_data_key")), id, configInfo.getDataId(),
-                    configInfo.getGroup(), tenantTmp, appNameTmp, configInfo.getContent(), md5Tmp, srcIp, srcUser, time,
-                    ops, encryptedDataKey);
+            List<String> inertList = new ArrayList<>(Arrays.asList("id", "data_id", "group_id", "tenant_id", "app_name", "content", "md5", "src_ip",
+                    "src_user", "gmt_modified", "gmt_create", "op_type", "encrypted_data_key"));
+            if (dataSourceService.getDataSourceType().equals(PropertiesConstant.ORACLE)) {
+                final long generatedNid = SystemConfig.nextId();
+                inertList.add("nid");
+                jt.update(connection -> {
+                    PreparedStatement ps = connection.prepareStatement(historyConfigInfoMapper.insert(
+                            inertList));
+                    ps.setLong(1, id);
+                    ps.setString(2, configInfo.getDataId());
+                    ps.setString(3, configInfo.getGroup());
+                    ps.setString(4, tenantTmp);
+                    ps.setString(5, appNameTmp);
+                    ps.setString(6, configInfo.getContent());
+                    ps.setString(7, md5Tmp);
+                    ps.setString(8, srcIp);
+                    ps.setString(9, srcUser);
+                    ps.setTimestamp(10, time);
+                    ps.setTimestamp(11, time);
+                    ps.setString(12, ops);
+                    ps.setString(13, encryptedDataKey);
+                    ps.setLong(14, generatedNid);
+                    return ps;
+                });
+            } else {
+                jt.update(connection -> {
+                    PreparedStatement ps = connection.prepareStatement(historyConfigInfoMapper.insert(
+                            inertList));
+                    ps.setLong(1, id);
+                    ps.setString(2, configInfo.getDataId());
+                    ps.setString(3, configInfo.getGroup());
+                    ps.setString(4, tenantTmp);
+                    ps.setString(5, appNameTmp);
+                    ps.setString(6, configInfo.getContent());
+                    ps.setString(7, md5Tmp);
+                    ps.setString(8, srcIp);
+                    ps.setString(9, srcUser);
+                    ps.setTimestamp(10, time);
+                    ps.setTimestamp(11, time);
+                    ps.setString(12, ops);
+                    ps.setString(13, encryptedDataKey);
+                    return ps;
+                });
+            }
         } catch (DataAccessException e) {
             LogUtil.FATAL_LOG.error("[db-error] " + e, e);
             throw e;
@@ -168,6 +210,17 @@ public class ExternalHistoryConfigInfoPersistServiceImpl implements HistoryConfi
                 dataSourceService.getDataSourceType(), TableConstant.HIS_CONFIG_INFO);
         
         String sqlCountRows = historyConfigInfoMapper.count(Arrays.asList("data_id", "group_id", "tenant_id"));
+        if (dataSourceService.getDataSourceType().equals(PropertiesConstant.ORACLE) ) {
+            if(StringUtils.isBlank(dataId)) {
+                sqlCountRows = sqlCountRows.replace("data_id = ?", "data_id is NULL");
+            }
+            if(StringUtils.isBlank(group)) {
+                sqlCountRows = sqlCountRows.replace("group_id = ?", "group_id is NULL");
+            }
+            if(StringUtils.isBlank(tenantTmp)) {
+                sqlCountRows = sqlCountRows.replace("tenant_id = ?", "tenant_id is NULL");
+            }
+        }
         MapperResult sqlFetchRows = historyConfigInfoMapper.pageFindConfigHistoryFetchRows(context);
         
         Page<ConfigHistoryInfo> page;

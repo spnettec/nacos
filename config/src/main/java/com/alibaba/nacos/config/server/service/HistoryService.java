@@ -104,7 +104,7 @@ public class HistoryService {
             String namespaceId) throws AccessException {
         if (!Objects.equals(configHistoryInfo.getDataId(), dataId) || !Objects
                 .equals(configHistoryInfo.getGroup(), group) || !Objects
-                .equals(configHistoryInfo.getTenant(), namespaceId)) {
+                .equals(configHistoryInfo.getTenant() == null?"":configHistoryInfo.getTenant(), namespaceId == null?"":namespaceId)) {
             throw new AccessException("Please check dataId, group or namespaceId.");
         }
     }
