@@ -56,7 +56,10 @@ public class LdapAuth_ITCase extends AuthBase {
     }
     
     @RunWith(SpringRunner.class)
-    @SpringBootTest(classes = Nacos.class, properties = {"server.servlet.context-path=/nacos",
+    @SpringBootTest(classes = Nacos.class, properties = {
+            "server.servlet.context-path=/nacos",
+            "nacos.core.auth.server.identity.key=serverIdentity",
+            "nacos.core.auth.server.identity.value=security",
             "nacos.core.auth.system.type=ldap"}, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
     public static class NonTlsTest extends LdapAuth_ITCase {
         
@@ -67,7 +70,10 @@ public class LdapAuth_ITCase extends AuthBase {
     }
     
     @RunWith(SpringRunner.class)
-    @SpringBootTest(classes = Nacos.class, properties = {"server.servlet.context-path=/nacos",
+    @SpringBootTest(classes = Nacos.class, properties = {
+            "server.servlet.context-path=/nacos",
+            "nacos.core.auth.server.identity.key=serverIdentity",
+            "nacos.core.auth.server.identity.value=security",
             "nacos.core.auth.system.type=ldap",
             "nacos.core.auth.ldap.url=ldaps://localhost:636"}, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
     public static class TlsTest extends LdapAuth_ITCase {

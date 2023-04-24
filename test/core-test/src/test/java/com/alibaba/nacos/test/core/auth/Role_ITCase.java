@@ -42,7 +42,11 @@ import java.util.concurrent.TimeUnit;
  * @since 1.2.0
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = Nacos.class, properties = {"server.servlet.context-path=/nacos"},
+@SpringBootTest(classes = Nacos.class, properties = {
+        "server.servlet.context-path=/nacos",
+        "nacos.core.auth.enabled=true",
+        "nacos.core.auth.server.identity.key=serverIdentity",
+        "nacos.core.auth.server.identity.value=security"},
         webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 public class Role_ITCase extends HttpClient4Test {
 
