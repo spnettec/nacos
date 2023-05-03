@@ -85,7 +85,7 @@
     </issueManagement>
     
     <properties>
-        <revision>2.2.3.B</revision>
+        <revision>2.2.4.B</revision>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <!-- Compiler settings properties -->
@@ -133,22 +133,22 @@
         <logback.version>1.4.7</logback.version>
         <log4j.version>2.20.0</log4j.version>
         <concurrentlinkedhashmap.version>1.4.2</concurrentlinkedhashmap.version>
-        <mysql-connector-java.version>8.0.28</mysql-connector-java.version>
-        <derby.version>10.14.2.0</derby.version>
+        <mysql-connector-java.version>8.0.33</mysql-connector-java.version>
+        <derby.version>10.16.1.1</derby.version>
         <jackson-core.version>2.15.0</jackson-core.version>
-        <jjwt.version>0.11.2</jjwt.version>
-        <guava.version>30.1-jre</guava.version>
+        <jjwt.version>0.11.5</jjwt.version>
+        <guava.version>31.1-jre</guava.version>
         <javatuples.version>1.2</javatuples.version>
         <grpc-java.version>1.54.1</grpc-java.version>
-        <proto-google-common-protos.version>2.14.2</proto-google-common-protos.version>
+        <proto-google-common-protos.version>2.17.0</proto-google-common-protos.version>
         <protobuf-java.version>3.22.3</protobuf-java.version>
         <protoc-gen-grpc-java.version>${grpc-java.version}</protoc-gen-grpc-java.version>
         <hessian.version>4.0.66</hessian.version>
-        <mockito-core.version>4.9.0</mockito-core.version>
+        <mockito-core.version>5.2.0</mockito-core.version>
         <HikariCP.version>5.0.1</HikariCP.version>
         <SnakeYaml.version>2.0</SnakeYaml.version>
-        <jraft-core.version>1.3.20.B</jraft-core.version>
-        <rpc-grpc-impl.version>1.3.20.B</rpc-grpc-impl.version>
+        <jraft-core.version>1.3.21.B</jraft-core.version>
+        <rpc-grpc-impl.version>1.3.21.B</rpc-grpc-impl.version>
     </properties>
     <!-- == -->
     <!-- =========================================================Build plugins================================================ -->
@@ -830,8 +830,8 @@
             
             <!-- JDBC libs -->
             <dependency>
-                <groupId>mysql</groupId>
-                <artifactId>mysql-connector-java</artifactId>
+                <groupId>com.mysql</groupId>
+                <artifactId>mysql-connector-j</artifactId>
                 <version>${mysql-connector-java.version}</version>
             </dependency>
             
@@ -840,7 +840,11 @@
                 <artifactId>derby</artifactId>
                 <version>${derby.version}</version>
             </dependency>
-            
+            <dependency>
+                <groupId>org.apache.derby</groupId>
+                <artifactId>derbytools</artifactId>
+                <version>${derby.version}</version>
+            </dependency>
             <!-- JRaft -->
             <dependency>
                 <groupId>com.github.heyoulin.sofa-jraft</groupId>
