@@ -60,8 +60,6 @@ public class PropertiesConstant {
     
     public static final String DATASOURCE_PLATFORM_PROPERTY = "spring.sql.init.platform";
 
-    public static final String DATASOURCE_PLATFORM_PROPERTY_NEW = "db.platform";
-
     public static final String MYSQL = "mysql";
     
     public static final String DERBY = "derby";

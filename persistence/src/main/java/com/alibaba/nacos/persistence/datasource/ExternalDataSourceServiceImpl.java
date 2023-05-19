@@ -79,7 +79,7 @@ public class ExternalDataSourceServiceImpl implements DataSourceService {
     
     private String dataSourceType = "";
     
-    private final String defaultDataSourceType = PropertiesConstant.MYSQL;
+    private final String defaultDataSourceType = "";
     
     @Override
     public void init() {

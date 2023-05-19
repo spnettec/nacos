@@ -18,12 +18,11 @@ package com.alibaba.nacos.persistence.datasource;
 
 import com.alibaba.nacos.common.utils.CollectionUtils;
 import com.alibaba.nacos.common.utils.Preconditions;
-import com.alibaba.nacos.common.utils.StringUtils;
 import com.zaxxer.hikari.HikariDataSource;
-import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.boot.context.properties.bind.Bindable;
 import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.core.env.Environment;
+import org.springframework.util.ObjectUtils;
 
 import java.util.ArrayList;
 import java.util.List;

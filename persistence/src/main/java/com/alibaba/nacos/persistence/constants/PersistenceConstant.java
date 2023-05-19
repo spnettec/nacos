@@ -31,6 +31,8 @@ public class PersistenceConstant {
     public static final String DATASOURCE_PLATFORM_PROPERTY_OLD = "spring.datasource.platform";
     
     public static final String DATASOURCE_PLATFORM_PROPERTY = "spring.sql.init.platform";
+
+    public static final String DATASOURCE_PLATFORM_PROPERTY_NEW = "db.platform";
     
     public static final String MYSQL = "mysql";
     

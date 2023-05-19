@@ -598,6 +598,7 @@
         <module>plugin</module>
         <module>plugin-default-impl</module>
         <module>prometheus</module>
+        <module>persistence</module>
     </modules>
     
     <!-- Default dependencies in all subprojects -->
@@ -646,7 +647,7 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.alibaba.nacos</groupId>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>nacos-persistence</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -727,7 +728,7 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.alibaba.nacos</groupId>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>nacos-config-plugin</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -737,12 +738,12 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.github.heyoulin.nacos</groupId>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>nacos-trace-plugin</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.github.heyoulin.nacos</groupId>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>nacos-datasource-plugin</artifactId>
                 <version>${project.version}</version>
             </dependency>

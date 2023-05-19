@@ -43,7 +43,7 @@
             <artifactId>nacos-consistency</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.alibaba.nacos</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>nacos-persistence</artifactId>
         </dependency>
         

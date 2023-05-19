@@ -45,7 +45,7 @@
             <artifactId>nacos-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.github.heyoulin.nacos</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>nacos-persistence</artifactId>
         </dependency>
         <dependency>
@@ -78,7 +78,7 @@
         </dependency>
 
         <dependency>
-            <groupId>com.alibaba.nacos</groupId>
+            <groupId>com.github.heyoulin.nacos</groupId>
             <artifactId>nacos-config-plugin</artifactId>
         </dependency>
 
