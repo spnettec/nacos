@@ -22,7 +22,7 @@ import com.alibaba.nacos.common.notify.NotifyCenter;
 import com.alibaba.nacos.common.utils.MD5Utils;
 import com.alibaba.nacos.common.utils.Pair;
 import com.alibaba.nacos.common.utils.StringUtils;
-import com.alibaba.nacos.config.server.configuration.ConditionOnEmbeddedStorage;
+import com.alibaba.nacos.persistence.configuration.condition.ConditionOnEmbeddedStorage;
 import com.alibaba.nacos.config.server.constant.Constants;
 import com.alibaba.nacos.config.server.enums.FileTypeEnum;
 import com.alibaba.nacos.config.server.exception.NacosConfigException;
@@ -37,19 +37,23 @@ import com.alibaba.nacos.config.server.model.ConfigInfoChanged;
 import com.alibaba.nacos.config.server.model.ConfigInfoTagWrapper;
 import com.alibaba.nacos.config.server.model.ConfigInfoWrapper;
 import com.alibaba.nacos.config.server.model.ConfigKey;
-import com.alibaba.nacos.config.server.model.Page;
+import com.alibaba.nacos.persistence.model.Page;
 import com.alibaba.nacos.config.server.model.SameConfigPolicy;
 import com.alibaba.nacos.config.server.model.SubInfo;
-import com.alibaba.nacos.config.server.model.TenantInfo;
-import com.alibaba.nacos.config.server.model.event.DerbyImportEvent;
-import com.alibaba.nacos.config.server.service.datasource.DataSourceService;
-import com.alibaba.nacos.config.server.service.datasource.DynamicDataSource;
-import com.alibaba.nacos.config.server.service.repository.PaginationHelper;
+import com.alibaba.nacos.core.namespace.model.TenantInfo;
+import com.alibaba.nacos.persistence.model.event.DerbyImportEvent;
+import com.alibaba.nacos.persistence.datasource.DataSourceService;
+import com.alibaba.nacos.persistence.datasource.DynamicDataSource;
+import com.alibaba.nacos.persistence.repository.PaginationHelper;
 import com.alibaba.nacos.config.server.service.repository.PersistService;
 import com.alibaba.nacos.config.server.service.sql.EmbeddedStorageContextUtils;
 import com.alibaba.nacos.config.server.utils.ParamUtils;
 import com.alibaba.nacos.core.distributed.id.IdGeneratorManager;
+import com.alibaba.nacos.persistence.repository.embedded.EmbeddedPaginationHelperImpl;
+import com.alibaba.nacos.persistence.repository.embedded.operate.DatabaseOperate;
+import com.alibaba.nacos.persistence.repository.embedded.EmbeddedStorageContextHolder;
 import com.alibaba.nacos.plugin.datasource.MapperManager;
+import com.alibaba.nacos.plugin.datasource.constants.CommonConstant;
 import com.alibaba.nacos.plugin.datasource.constants.FieldConstant;
 import com.alibaba.nacos.plugin.datasource.constants.TableConstant;
 import com.alibaba.nacos.plugin.datasource.mapper.ConfigInfoAggrMapper;
@@ -84,20 +88,20 @@ import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
-import static com.alibaba.nacos.config.server.service.repository.RowMapperManager.CONFIG_ADVANCE_INFO_ROW_MAPPER;
-import static com.alibaba.nacos.config.server.service.repository.RowMapperManager.CONFIG_ALL_INFO_ROW_MAPPER;
-import static com.alibaba.nacos.config.server.service.repository.RowMapperManager.CONFIG_INFO_AGGR_ROW_MAPPER;
-import static com.alibaba.nacos.config.server.service.repository.RowMapperManager.CONFIG_INFO_BASE_ROW_MAPPER;
-import static com.alibaba.nacos.config.server.service.repository.RowMapperManager.CONFIG_INFO_BETA_WRAPPER_ROW_MAPPER;
-import static com.alibaba.nacos.config.server.service.repository.RowMapperManager.CONFIG_INFO_CHANGED_ROW_MAPPER;
-import static com.alibaba.nacos.config.server.service.repository.RowMapperManager.CONFIG_INFO_ROW_MAPPER;
-import static com.alibaba.nacos.config.server.service.repository.RowMapperManager.CONFIG_INFO_TAG_WRAPPER_ROW_MAPPER;
-import static com.alibaba.nacos.config.server.service.repository.RowMapperManager.CONFIG_INFO_WRAPPER_ROW_MAPPER;
-import static com.alibaba.nacos.config.server.service.repository.RowMapperManager.CONFIG_KEY_ROW_MAPPER;
-import static com.alibaba.nacos.config.server.service.repository.RowMapperManager.HISTORY_DETAIL_ROW_MAPPER;
-import static com.alibaba.nacos.config.server.service.repository.RowMapperManager.HISTORY_LIST_ROW_MAPPER;
-import static com.alibaba.nacos.config.server.service.repository.RowMapperManager.MAP_ROW_MAPPER;
-import static com.alibaba.nacos.config.server.service.repository.RowMapperManager.TENANT_INFO_ROW_MAPPER;
+import static com.alibaba.nacos.config.server.service.repository.ConfigRowMapperInjector.CONFIG_ADVANCE_INFO_ROW_MAPPER;
+import static com.alibaba.nacos.config.server.service.repository.ConfigRowMapperInjector.CONFIG_ALL_INFO_ROW_MAPPER;
+import static com.alibaba.nacos.config.server.service.repository.ConfigRowMapperInjector.CONFIG_INFO_AGGR_ROW_MAPPER;
+import static com.alibaba.nacos.config.server.service.repository.ConfigRowMapperInjector.CONFIG_INFO_BASE_ROW_MAPPER;
+import static com.alibaba.nacos.config.server.service.repository.ConfigRowMapperInjector.CONFIG_INFO_BETA_WRAPPER_ROW_MAPPER;
+import static com.alibaba.nacos.config.server.service.repository.ConfigRowMapperInjector.CONFIG_INFO_CHANGED_ROW_MAPPER;
+import static com.alibaba.nacos.config.server.service.repository.ConfigRowMapperInjector.CONFIG_INFO_ROW_MAPPER;
+import static com.alibaba.nacos.config.server.service.repository.ConfigRowMapperInjector.CONFIG_INFO_TAG_WRAPPER_ROW_MAPPER;
+import static com.alibaba.nacos.config.server.service.repository.ConfigRowMapperInjector.CONFIG_INFO_WRAPPER_ROW_MAPPER;
+import static com.alibaba.nacos.config.server.service.repository.ConfigRowMapperInjector.CONFIG_KEY_ROW_MAPPER;
+import static com.alibaba.nacos.config.server.service.repository.ConfigRowMapperInjector.HISTORY_DETAIL_ROW_MAPPER;
+import static com.alibaba.nacos.config.server.service.repository.ConfigRowMapperInjector.HISTORY_LIST_ROW_MAPPER;
+import static com.alibaba.nacos.persistence.repository.RowMapperManager.MAP_ROW_MAPPER;
+import static com.alibaba.nacos.core.namespace.repository.NamespaceRowMapperInjector.TENANT_INFO_ROW_MAPPER;
 import static com.alibaba.nacos.config.server.utils.LogUtil.DEFAULT_LOG;
 
 /**
@@ -156,7 +160,7 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
     public EmbeddedStoragePersistServiceImpl(DatabaseOperate databaseOperate, IdGeneratorManager idGeneratorManager) {
         this.databaseOperate = databaseOperate;
         this.idGeneratorManager = idGeneratorManager;
-        Boolean isDataSourceLogEnable = EnvUtil.getProperty(Constants.NACOS_PLUGIN_DATASOURCE_LOG, Boolean.class,
+        Boolean isDataSourceLogEnable = EnvUtil.getProperty(CommonConstant.NACOS_PLUGIN_DATASOURCE_LOG, Boolean.class,
                 false);
         NotifyCenter.registerToSharePublisher(DerbyImportEvent.class);
         mapperManager = MapperManager.instance(isDataSourceLogEnable);
@@ -239,7 +243,7 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
             EmbeddedStorageContextUtils.onModifyConfigInfo(configInfo, srcIp, time);
             databaseOperate.blockUpdate(consumer);
         } finally {
-            EmbeddedStorageContextUtils.cleanAllContext();
+            EmbeddedStorageContextHolder.cleanAllContext();
         }
     }
     
@@ -263,11 +267,11 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
                     configInfo.getContent(), md5, betaIps, srcIp, srcUser, time, time, encryptedDataKey};
             
             EmbeddedStorageContextUtils.onModifyConfigBetaInfo(configInfo, betaIps, srcIp, time);
-            EmbeddedStorageContextUtils.addSqlContext(sql, args);
+            EmbeddedStorageContextHolder.addSqlContext(sql, args);
             
             databaseOperate.blockUpdate();
         } finally {
-            EmbeddedStorageContextUtils.cleanAllContext();
+            EmbeddedStorageContextHolder.cleanAllContext();
         }
     }
     
@@ -291,11 +295,11 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
                     appNameTmp, configInfo.getContent(), md5, srcIp, srcUser, time, time};
             
             EmbeddedStorageContextUtils.onModifyConfigTagInfo(configInfo, tagTmp, srcIp, time);
-            EmbeddedStorageContextUtils.addSqlContext(sql, args);
+            EmbeddedStorageContextHolder.addSqlContext(sql, args);
             
             databaseOperate.blockUpdate();
         } finally {
-            EmbeddedStorageContextUtils.cleanAllContext();
+            EmbeddedStorageContextHolder.cleanAllContext();
         }
     }
     
@@ -333,7 +337,7 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
             EmbeddedStorageContextUtils.onModifyConfigInfo(configInfo, srcIp, time);
             databaseOperate.blockUpdate();
         } finally {
-            EmbeddedStorageContextUtils.cleanAllContext();
+            EmbeddedStorageContextHolder.cleanAllContext();
         }
     }
     
@@ -371,7 +375,7 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
             EmbeddedStorageContextUtils.onModifyConfigInfo(configInfo, srcIp, time);
             return databaseOperate.blockUpdate();
         } finally {
-            EmbeddedStorageContextUtils.cleanAllContext();
+            EmbeddedStorageContextHolder.cleanAllContext();
         }
     }
     
@@ -396,11 +400,11 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
                     encryptedDataKey, configInfo.getDataId(), configInfo.getGroup(), tenantTmp};
             
             EmbeddedStorageContextUtils.onModifyConfigBetaInfo(configInfo, betaIps, srcIp, time);
-            EmbeddedStorageContextUtils.addSqlContext(sql, args);
+            EmbeddedStorageContextHolder.addSqlContext(sql, args);
             
             databaseOperate.blockUpdate();
         } finally {
-            EmbeddedStorageContextUtils.cleanAllContext();
+            EmbeddedStorageContextHolder.cleanAllContext();
         }
     }
     
@@ -413,10 +417,10 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
         configInfo.setTenant(tenantTmp);
         try {
             String md5 = MD5Utils.md5Hex(configInfo.getContent(), Constants.ENCODE);
-
+            
             ConfigInfoBetaMapper configInfoBetaMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                     TableConstant.CONFIG_INFO_BETA);
-
+            
             MapperContext context = new MapperContext();
             context.putUpdateParameter(FieldConstant.CONTENT, configInfo.getContent());
             context.putUpdateParameter(FieldConstant.MD5, md5);
@@ -430,19 +434,19 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
             context.putWhereParameter(FieldConstant.GROUP_ID, configInfo.getGroup());
             context.putWhereParameter(FieldConstant.TENANT_ID, tenantTmp);
             context.putWhereParameter(FieldConstant.MD5, configInfo.getMd5());
-
+            
             MapperResult mapperResult = configInfoBetaMapper.updateConfigInfo4BetaCas(context);
-
+            
             final String sql = mapperResult.getSql();
             List<Object> paramList = mapperResult.getParamList();
             final Object[] args = paramList.toArray();
             
             EmbeddedStorageContextUtils.onModifyConfigBetaInfo(configInfo, betaIps, srcIp, time);
-            EmbeddedStorageContextUtils.addSqlContext(sql, args);
+            EmbeddedStorageContextHolder.addSqlContext(sql, args);
             
             return databaseOperate.blockUpdate();
         } finally {
-            EmbeddedStorageContextUtils.cleanAllContext();
+            EmbeddedStorageContextHolder.cleanAllContext();
         }
     }
     
@@ -457,7 +461,7 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
         
         try {
             String md5 = MD5Utils.md5Hex(configInfo.getContent(), Constants.ENCODE);
-
+            
             ConfigInfoTagMapper configInfoTagMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                     TableConstant.CONFIG_INFO_TAG);
             final String sql = configInfoTagMapper.update(
@@ -467,11 +471,11 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
                     configInfo.getDataId(), configInfo.getGroup(), tenantTmp, tagTmp};
             
             EmbeddedStorageContextUtils.onModifyConfigTagInfo(configInfo, tagTmp, srcIp, time);
-            EmbeddedStorageContextUtils.addSqlContext(sql, args);
+            EmbeddedStorageContextHolder.addSqlContext(sql, args);
             
             databaseOperate.blockUpdate();
         } finally {
-            EmbeddedStorageContextUtils.cleanAllContext();
+            EmbeddedStorageContextHolder.cleanAllContext();
         }
     }
     
@@ -495,21 +499,21 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
             context.putUpdateParameter(FieldConstant.SRC_USER, srcUser);
             context.putUpdateParameter(FieldConstant.GMT_MODIFIED, time);
             context.putUpdateParameter(FieldConstant.APP_NAME, appNameTmp);
-
+            
             context.putWhereParameter(FieldConstant.DATA_ID, configInfo.getDataId());
             context.putWhereParameter(FieldConstant.GROUP_ID, configInfo.getGroup());
             context.putWhereParameter(FieldConstant.TENANT_ID, tenantTmp);
             context.putWhereParameter(FieldConstant.TAG_ID, tagTmp);
             context.putWhereParameter(FieldConstant.MD5, configInfo.getMd5());
-
+            
             final MapperResult mapperResult = configInfoTagMapper.updateConfigInfo4TagCas(context);
             
             EmbeddedStorageContextUtils.onModifyConfigTagInfo(configInfo, tagTmp, srcIp, time);
-            EmbeddedStorageContextUtils.addSqlContext(mapperResult.getSql(), mapperResult.getParamList());
+            EmbeddedStorageContextHolder.addSqlContext(mapperResult.getSql(), mapperResult.getParamList());
             
             return databaseOperate.blockUpdate();
         } finally {
-            EmbeddedStorageContextUtils.cleanAllContext();
+            EmbeddedStorageContextHolder.cleanAllContext();
         }
     }
     
@@ -566,14 +570,14 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
                     Arrays.asList("data_id", "group_id", "tenant_id", "gmt_modified"));
             final Object[] args = new Object[] {md5, dataId, group, tenantTmp, lastTime};
             
-            EmbeddedStorageContextUtils.addSqlContext(sql, args);
+            EmbeddedStorageContextHolder.addSqlContext(sql, args);
             
-            boolean result = databaseOperate.update(EmbeddedStorageContextUtils.getCurrentSqlContext());
+            boolean result = databaseOperate.update(EmbeddedStorageContextHolder.getCurrentSqlContext());
             if (!result) {
                 throw new NacosConfigException("Failed to config the MD5 modification");
             }
         } finally {
-            EmbeddedStorageContextUtils.cleanAllContext();
+            EmbeddedStorageContextHolder.cleanAllContext();
         }
     }
     
@@ -632,12 +636,12 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
                 
                 EmbeddedStorageContextUtils.onDeleteConfigInfo(tenantTmp, group, dataId, srcIp, time);
                 
-                boolean result = databaseOperate.update(EmbeddedStorageContextUtils.getCurrentSqlContext());
+                boolean result = databaseOperate.update(EmbeddedStorageContextHolder.getCurrentSqlContext());
                 if (!result) {
                     throw new NacosConfigException("config deletion failed");
                 }
             } finally {
-                EmbeddedStorageContextUtils.cleanAllContext();
+                EmbeddedStorageContextHolder.cleanAllContext();
             }
         }
     }
@@ -661,14 +665,14 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
             }
             
             EmbeddedStorageContextUtils.onBatchDeleteConfigInfo(configInfoList);
-            boolean result = databaseOperate.update(EmbeddedStorageContextUtils.getCurrentSqlContext());
+            boolean result = databaseOperate.update(EmbeddedStorageContextHolder.getCurrentSqlContext());
             if (!result) {
                 throw new NacosConfigException("Failed to config batch deletion");
             }
             
             return configInfoList;
         } finally {
-            EmbeddedStorageContextUtils.cleanAllContext();
+            EmbeddedStorageContextHolder.cleanAllContext();
         }
     }
     
@@ -685,14 +689,14 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
                 
                 EmbeddedStorageContextUtils.onDeleteConfigBetaInfo(tenantTmp, group, dataId,
                         System.currentTimeMillis());
-                EmbeddedStorageContextUtils.addSqlContext(sql, args);
+                EmbeddedStorageContextHolder.addSqlContext(sql, args);
                 
-                boolean result = databaseOperate.update(EmbeddedStorageContextUtils.getCurrentSqlContext());
+                boolean result = databaseOperate.update(EmbeddedStorageContextHolder.getCurrentSqlContext());
                 if (!result) {
                     throw new NacosConfigException("[Tag] Configuration deletion failed");
                 }
             } finally {
-                EmbeddedStorageContextUtils.cleanAllContext();
+                EmbeddedStorageContextHolder.cleanAllContext();
             }
             
         }
@@ -705,7 +709,7 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
         String tenantTmp = StringUtils.isBlank(tenant) ? StringUtils.EMPTY : tenant;
         String contentTmp = StringUtils.isBlank(content) ? StringUtils.EMPTY : content;
         final Timestamp now = new Timestamp(System.currentTimeMillis());
-
+        
         ConfigInfoAggrMapper configInfoAggrMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                 TableConstant.CONFIG_INFO_AGGR);
         final String select = configInfoAggrMapper.select(Collections.singletonList("content"),
@@ -720,20 +724,20 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
         
         if (Objects.isNull(dbContent)) {
             final Object[] args = new Object[] {dataId, group, tenantTmp, datumId, appNameTmp, contentTmp, now};
-            EmbeddedStorageContextUtils.addSqlContext(insert, args);
+            EmbeddedStorageContextHolder.addSqlContext(insert, args);
         } else if (!dbContent.equals(content)) {
             final Object[] args = new Object[] {contentTmp, now, dataId, group, tenantTmp, datumId};
-            EmbeddedStorageContextUtils.addSqlContext(update, args);
+            EmbeddedStorageContextHolder.addSqlContext(update, args);
         }
         
         try {
-            boolean result = databaseOperate.update(EmbeddedStorageContextUtils.getCurrentSqlContext());
+            boolean result = databaseOperate.update(EmbeddedStorageContextHolder.getCurrentSqlContext());
             if (!result) {
                 throw new NacosConfigException("[Merge] Configuration release failed");
             }
             return true;
         } finally {
-            EmbeddedStorageContextUtils.cleanAllContext();
+            EmbeddedStorageContextHolder.cleanAllContext();
         }
     }
     
@@ -741,40 +745,40 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
     public void removeSingleAggrConfigInfo(final String dataId, final String group, final String tenant,
             final String datumId) {
         final String tenantTmp = StringUtils.isBlank(tenant) ? StringUtils.EMPTY : tenant;
-
+        
         ConfigInfoAggrMapper configInfoAggrMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                 TableConstant.CONFIG_INFO_AGGR);
         final String sql = configInfoAggrMapper.delete(Arrays.asList("data_id", "group_id", "tenant_id", "datum_id"));
         final Object[] args = new Object[] {dataId, group, tenantTmp, datumId};
-        EmbeddedStorageContextUtils.addSqlContext(sql, args);
+        EmbeddedStorageContextHolder.addSqlContext(sql, args);
         
         try {
-            boolean result = databaseOperate.update(EmbeddedStorageContextUtils.getCurrentSqlContext());
+            boolean result = databaseOperate.update(EmbeddedStorageContextHolder.getCurrentSqlContext());
             if (!result) {
                 throw new NacosConfigException("[aggregation with single] Configuration deletion failed");
             }
         } finally {
-            EmbeddedStorageContextUtils.cleanAllContext();
+            EmbeddedStorageContextHolder.cleanAllContext();
         }
     }
     
     @Override
     public void removeAggrConfigInfo(final String dataId, final String group, final String tenant) {
         final String tenantTmp = StringUtils.isBlank(tenant) ? StringUtils.EMPTY : tenant;
-
+        
         ConfigInfoAggrMapper configInfoAggrMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                 TableConstant.CONFIG_INFO_AGGR);
         final String sql = configInfoAggrMapper.delete(Arrays.asList("data_id", "group_id", "tenant_id"));
         final Object[] args = new Object[] {dataId, group, tenantTmp};
-        EmbeddedStorageContextUtils.addSqlContext(sql, args);
+        EmbeddedStorageContextHolder.addSqlContext(sql, args);
         
         try {
-            boolean result = databaseOperate.update(EmbeddedStorageContextUtils.getCurrentSqlContext());
+            boolean result = databaseOperate.update(EmbeddedStorageContextHolder.getCurrentSqlContext());
             if (!result) {
                 throw new NacosConfigException("[aggregation with all] Configuration deletion failed");
             }
         } finally {
-            EmbeddedStorageContextUtils.cleanAllContext();
+            EmbeddedStorageContextHolder.cleanAllContext();
         }
     }
     
@@ -784,28 +788,28 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
         final String tenantTmp = StringUtils.isBlank(tenant) ? StringUtils.EMPTY : tenant;
         ConfigInfoAggrMapper configInfoAggrMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                 TableConstant.CONFIG_INFO_AGGR);
-
+        
         MapperContext context = new MapperContext();
         context.putWhereParameter(FieldConstant.DATUM_ID, datumList);
         context.putWhereParameter(FieldConstant.DATA_ID, dataId);
         context.putWhereParameter(FieldConstant.GROUP_ID, group);
         context.putWhereParameter(FieldConstant.TENANT_ID, tenantTmp);
-
+        
         MapperResult mapperResult = configInfoAggrMapper.batchRemoveAggr(context);
         String sql = mapperResult.getSql();
         List<Object> paramList = mapperResult.getParamList();
         Object[] args = paramList.toArray();
-
-        EmbeddedStorageContextUtils.addSqlContext(sql, args);
+        
+        EmbeddedStorageContextHolder.addSqlContext(sql, args);
         
         try {
-            boolean result = databaseOperate.update(EmbeddedStorageContextUtils.getCurrentSqlContext());
+            boolean result = databaseOperate.update(EmbeddedStorageContextHolder.getCurrentSqlContext());
             if (!result) {
                 throw new NacosConfigException("[aggregation] Failed to configure batch deletion");
             }
             return true;
         } finally {
-            EmbeddedStorageContextUtils.cleanAllContext();
+            EmbeddedStorageContextHolder.cleanAllContext();
         }
     }
     
@@ -853,14 +857,14 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
                 addAggrConfigInfo(dataId, group, tenant, entry.getKey(), appName, entry.getValue());
             }
             
-            isPublishOk = databaseOperate.update(EmbeddedStorageContextUtils.getCurrentSqlContext());
+            isPublishOk = databaseOperate.update(EmbeddedStorageContextHolder.getCurrentSqlContext());
             
             if (isPublishOk == null) {
                 return false;
             }
             return isPublishOk;
         } finally {
-            EmbeddedStorageContextUtils.cleanAllContext();
+            EmbeddedStorageContextHolder.cleanAllContext();
         }
     }
     
@@ -880,17 +884,17 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
         for (Entry<String, String> datumEntry : datumMap.entrySet()) {
             final Object[] args = new Object[] {dataId, group, tenantTmp, datumEntry.getKey(), appNameTmp,
                     datumEntry.getValue(), new Timestamp(System.currentTimeMillis())};
-            EmbeddedStorageContextUtils.addSqlContext(sql, args);
+            EmbeddedStorageContextHolder.addSqlContext(sql, args);
         }
         try {
-            isReplaceOk = databaseOperate.update(EmbeddedStorageContextUtils.getCurrentSqlContext());
+            isReplaceOk = databaseOperate.update(EmbeddedStorageContextHolder.getCurrentSqlContext());
             
             if (isReplaceOk == null) {
                 return false;
             }
             return isReplaceOk;
         } finally {
-            EmbeddedStorageContextUtils.cleanAllContext();
+            EmbeddedStorageContextHolder.cleanAllContext();
         }
         
     }
@@ -974,9 +978,9 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
         final String configTags = configAdvanceInfo == null ? null : (String) configAdvanceInfo.get("config_tags");
         MapperResult sql;
         MapperResult sqlCount;
-
+        
         final MapperContext context = new MapperContext();
-
+    
         context.putWhereParameter(FieldConstant.TENANT_ID, tenantTmp);
         if (StringUtils.isNotBlank(dataId)) {
             context.putWhereParameter(FieldConstant.DATA_ID, dataId);
@@ -987,10 +991,10 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
         if (StringUtils.isNotBlank(appName)) {
             context.putWhereParameter(FieldConstant.APP_NAME, appName);
         }
-
+     
         context.setStartRow((pageNo - 1) * pageSize);
         context.setPageSize(pageSize);
-
+        
         if (StringUtils.isNotBlank(configTags)) {
             String[] tagArr = configTags.split(",");
             context.putWhereParameter(FieldConstant.TAG_ARR, Arrays.asList(tagArr));
@@ -1001,7 +1005,7 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
         } else {
             ConfigInfoMapper configInfoMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                     TableConstant.CONFIG_INFO);
-
+            
             sqlCount = configInfoMapper.findConfigInfo4PageCountRows(context);
             sql = configInfoMapper.findConfigInfo4PageFetchRows(context);
         }
@@ -1027,7 +1031,7 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
         MapperContext context = new MapperContext(startRow, pageSize);
         context.putWhereParameter(FieldConstant.APP_NAME, appName);
         context.putWhereParameter(FieldConstant.TENANT_ID, generateLikeArgument(tenantTmp));
-
+        
         PaginationHelper<ConfigInfo> helper = createPaginationHelper();
         MapperResult countRows = configInfoMapper.findConfigInfoByAppCountRows(context);
         MapperResult fetchRows = configInfoMapper.findConfigInfoByAppFetchRows(context);
@@ -1041,12 +1045,12 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
         final int startRow = (pageNo - 1) * pageSize;
         ConfigInfoMapper configInfoMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                 TableConstant.CONFIG_INFO);
-
+        
         MapperContext context = new MapperContext(startRow, pageSize);
         context.putWhereParameter(FieldConstant.GROUP_ID, group);
         context.putWhereParameter(FieldConstant.TENANT_ID, StringUtils.EMPTY);
         MapperResult mapperResult = configInfoMapper.findConfigInfoBaseByGroupFetchRows(context);
-
+        
         return helper.fetchPage(configInfoMapper.count(Arrays.asList("group_id", "tenant_id")), mapperResult.getSql(),
                 mapperResult.getParamList().toArray(), pageNo, pageSize, CONFIG_INFO_BASE_ROW_MAPPER);
     }
@@ -1110,7 +1114,7 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
                 TableConstant.CONFIG_INFO);
         int from = (page - 1) * pageSize;
         MapperResult mapperResult = configInfoMapper.getTenantIdList(new MapperContext(from, pageSize));
-
+        
         Page<Map<String, Object>> pageList = helper.fetchPageLimit(mapperResult.getSql(),
                 mapperResult.getParamList().toArray(), page, pageSize, MAP_ROW_MAPPER);
         return pageList.getPageItems().stream().map(map -> String.valueOf(map.get("TENANT_ID")))
@@ -1125,7 +1129,7 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
                 TableConstant.CONFIG_INFO);
         int from = (page - 1) * pageSize;
         MapperResult mapperResult = configInfoMapper.getGroupIdList(new MapperContext(from, pageSize));
-
+        
         Page<Map<String, Object>> pageList = helper.fetchPageLimit(mapperResult.getSql(),
                 mapperResult.getParamList().toArray(), page, pageSize, MAP_ROW_MAPPER);
         return pageList.getPageItems().stream().map(map -> String.valueOf(map.get("GROUP_ID")))
@@ -1153,7 +1157,7 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
         final String tenantTmp = StringUtils.isBlank(tenant) ? StringUtils.EMPTY : tenant;
         ConfigInfoAggrMapper configInfoAggrMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                 TableConstant.CONFIG_INFO_AGGR);
-
+        
         MapperContext context = new MapperContext();
         context.putWhereParameter(FieldConstant.DATUM_ID, datumIds);
         context.putWhereParameter(FieldConstant.IS_IN, true);
@@ -1165,7 +1169,7 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
         
         String sql = mapperResult.getSql();
         Object[] args = mapperResult.getParamList().toArray();
-
+        
         Integer result = databaseOperate.queryOne(sql, args, Integer.class);
         if (result == null) {
             throw new IllegalArgumentException("aggrConfigInfoCount error");
@@ -1195,7 +1199,7 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
         final String tenantTmp = StringUtils.isBlank(tenant) ? StringUtils.EMPTY : tenant;
         ConfigInfoMapper configInfoMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                 TableConstant.CONFIG_INFO);
-
+        
         MapperContext context = new MapperContext((pageNo - 1) * pageSize, pageSize);
         context.putWhereParameter(FieldConstant.TENANT_ID, generateLikeArgument(tenantTmp));
         final MapperResult mapperResult = configInfoMapper.findAllConfigKey(context);
@@ -1258,13 +1262,13 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
         ConfigInfoBetaMapper configInfoBetaMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                 TableConstant.CONFIG_INFO_BETA);
         String sqlCountRows = configInfoBetaMapper.count(null);
-
+        
         MapperContext context = new MapperContext();
         context.setStartRow(startRow);
         context.setPageSize(pageSize);
-
+        
         MapperResult mapperResult = configInfoBetaMapper.findAllConfigInfoBetaForDumpAllFetchRows(context);
-
+        
         String sqlFetchRows = mapperResult.getSql();
         PaginationHelper<ConfigInfoBetaWrapper> helper = createPaginationHelper();
         return helper.fetchPageLimit(sqlCountRows, sqlFetchRows, new Object[] {}, pageNo, pageSize,
@@ -1389,10 +1393,10 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
         final String configTags = configAdvanceInfo == null ? null : (String) configAdvanceInfo.get("config_tags");
         MapperResult sqlCountRows;
         MapperResult sqlFetchRows;
-
+    
         MapperContext context = new MapperContext((pageNo - 1) * pageSize, pageSize);
         context.putWhereParameter(FieldConstant.TENANT_ID, generateLikeArgument(tenantTmp));
-
+    
         if (!StringUtils.isBlank(dataId)) {
             context.putWhereParameter(FieldConstant.DATA_ID, generateLikeArgument(dataId));
         }
@@ -1405,7 +1409,7 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
         if (!StringUtils.isBlank(content)) {
             context.putWhereParameter(FieldConstant.CONTENT, generateLikeArgument(content));
         }
-
+        
         if (StringUtils.isNotBlank(configTags)) {
             String[] tagArr = configTags.split(",");
             context.putWhereParameter(FieldConstant.TAG_ARR, tagArr);
@@ -1438,7 +1442,7 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
             throw new IOException("invalid param");
         }
         MapperContext context = new MapperContext((pageNo - 1) * pageSize, pageSize);
-
+        
         if (!StringUtils.isBlank(dataId)) {
             context.putWhereParameter(FieldConstant.DATA_ID, generateLikeArgument(dataId));
         }
@@ -1486,7 +1490,7 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
         MapperResult mapperResult = configInfoAggrMapper.findConfigInfoAggrIsOrdered(context);
         String sql = mapperResult.getSql();
         Object[] args = mapperResult.getParamList().toArray();
-
+        
         return databaseOperate.queryMany(sql, args, CONFIG_INFO_AGGR_ROW_MAPPER);
     }
     
@@ -1499,7 +1503,7 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
         final int startRow = (pageNo - 1) * pageSize;
         final String sqlCountRows = configInfoAggrMapper.select(Arrays.asList("count(*)"),
                 Arrays.asList("data_id", "group_id", "tenant_id"));
-
+        
         MapperContext context = new MapperContext();
         context.putWhereParameter(FieldConstant.DATA_ID, dataId);
         context.putWhereParameter(FieldConstant.GROUP_ID, group);
@@ -1633,11 +1637,11 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
     public List<ConfigInfoWrapper> findChangeConfig(final Timestamp startTime, final Timestamp endTime) {
         ConfigInfoMapper configInfoMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                 TableConstant.CONFIG_INFO);
-
+        
         MapperContext context = new MapperContext();
         context.putWhereParameter(FieldConstant.START_TIME, startTime);
         context.putWhereParameter(FieldConstant.END_TIME, endTime);
-
+        
         MapperResult mapperResult = configInfoMapper.findChangeConfig(context);
         List<Map<String, Object>> list = databaseOperate.queryMany(mapperResult.getSql(),
                 mapperResult.getParamList().toArray());
@@ -1650,7 +1654,7 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
             final String appName, final Timestamp startTime, final Timestamp endTime, final int pageNo,
             final int pageSize, final long lastMaxId) {
         String tenantTmp = StringUtils.isBlank(tenant) ? StringUtils.EMPTY : tenant;
-
+    
         MapperContext context = new MapperContext((pageNo - 1) * pageSize, pageSize);
         if (!StringUtils.isBlank(dataId)) {
             context.putWhereParameter(FieldConstant.DATA_ID, generateLikeArgument(dataId));
@@ -1658,11 +1662,11 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
         if (!StringUtils.isBlank(group)) {
             context.putWhereParameter(FieldConstant.GROUP_ID, generateLikeArgument(group));
         }
-
+    
         if (!StringUtils.isBlank(tenantTmp)) {
             context.putWhereParameter(FieldConstant.TENANT, tenantTmp);
         }
-
+    
         if (!StringUtils.isBlank(appName)) {
             context.putWhereParameter(FieldConstant.APP_NAME, appName);
         }
@@ -1672,7 +1676,7 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
         if (endTime != null) {
             context.putWhereParameter(FieldConstant.END_TIME, endTime);
         }
-
+        
         ConfigInfoMapper configInfoMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                 TableConstant.CONFIG_INFO);
         MapperResult sqlCountRows = configInfoMapper.findChangeConfigCountRows(context);
@@ -1721,7 +1725,7 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
         final Object[] args = new Object[] {id, configInfo.getDataId(), configInfo.getGroup(), tenantTmp, appNameTmp,
                 configInfo.getContent(), md5Tmp, srcIp, srcUser, time, time, desc, use, effect, type, schema,
                 encryptedDataKey};
-        EmbeddedStorageContextUtils.addSqlContext(sql, args);
+        EmbeddedStorageContextHolder.addSqlContext(sql, args);
         return id;
     }
     
@@ -1732,7 +1736,7 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
         final String sql = configTagsRelationMapper.insert(
                 Arrays.asList("id", "tag_name", "tag_type", "data_id", "group_id", "tenant_id"));
         final Object[] args = new Object[] {configId, tagName, StringUtils.EMPTY, dataId, group, tenant};
-        EmbeddedStorageContextUtils.addSqlContext(sql, args);
+        EmbeddedStorageContextHolder.addSqlContext(sql, args);
     }
     
     @Override
@@ -1751,7 +1755,7 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
                 dataSourceService.getDataSourceType(), TableConstant.CONFIG_TAGS_RELATION);
         final String sql = configTagsRelationMapper.delete(Arrays.asList("id"));
         final Object[] args = new Object[] {id};
-        EmbeddedStorageContextUtils.addSqlContext(sql, args);
+        EmbeddedStorageContextHolder.addSqlContext(sql, args);
     }
     
     @Override
@@ -1772,7 +1776,7 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
         final String sql = configInfoMapper.delete(Arrays.asList("data_id", "group_id", "tenant_id"));
         final Object[] args = new Object[] {dataId, group, tenantTmp};
         
-        EmbeddedStorageContextUtils.addSqlContext(sql, args);
+        EmbeddedStorageContextHolder.addSqlContext(sql, args);
     }
     
     @Override
@@ -1790,7 +1794,7 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
         MapperContext context = new MapperContext();
         context.putWhereParameter(FieldConstant.IDS, paramList);
         MapperResult result = configInfoMapper.removeConfigInfoByIdsAtomic(context);
-        EmbeddedStorageContextUtils.addSqlContext(result.getSql(), result.getParamList());
+        EmbeddedStorageContextHolder.addSqlContext(result.getSql(), result.getParamList());
     }
     
     @Override
@@ -1805,11 +1809,11 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
         final Object[] args = new Object[] {dataId, group, tenantTmp, tagTmp};
         
         EmbeddedStorageContextUtils.onDeleteConfigTagInfo(tenantTmp, group, dataId, tagTmp, srcIp);
-        EmbeddedStorageContextUtils.addSqlContext(sql, args);
+        EmbeddedStorageContextHolder.addSqlContext(sql, args);
         try {
-            databaseOperate.update(EmbeddedStorageContextUtils.getCurrentSqlContext());
+            databaseOperate.update(EmbeddedStorageContextHolder.getCurrentSqlContext());
         } finally {
-            EmbeddedStorageContextUtils.cleanAllContext();
+            EmbeddedStorageContextHolder.cleanAllContext();
         }
     }
     
@@ -1838,7 +1842,7 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
         final Object[] args = new Object[] {configInfo.getContent(), md5Tmp, srcIp, srcUser, time, appNameTmp, desc,
                 use, effect, type, schema, encryptedDataKey, configInfo.getDataId(), configInfo.getGroup(), tenantTmp};
         
-        EmbeddedStorageContextUtils.addSqlContext(sql, args);
+        EmbeddedStorageContextHolder.addSqlContext(sql, args);
     }
     
     private void updateConfigInfoAtomicCas(final ConfigInfo configInfo, final String srcIp, final String srcUser,
@@ -1874,8 +1878,8 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
         context.putWhereParameter(FieldConstant.TENANT_ID, tenantTmp);
         context.putWhereParameter(FieldConstant.MD5, configInfo.getMd5());
         final MapperResult mapperResult = configInfoMapper.updateConfigInfoAtomicCas(context);
-
-        EmbeddedStorageContextUtils.addSqlContext(true, mapperResult.getSql(), mapperResult.getParamList().toArray());
+        
+        EmbeddedStorageContextHolder.addSqlContext(true, mapperResult.getSql(), mapperResult.getParamList().toArray());
     }
     
     @Override
@@ -1971,7 +1975,7 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
         final Object[] args = new Object[] {configHistoryId, configInfo.getDataId(), configInfo.getGroup(), tenantTmp,
                 appNameTmp, configInfo.getContent(), md5Tmp, srcIp, srcUser, time, ops, encryptedDataKey};
         
-        EmbeddedStorageContextUtils.addSqlContext(sql, args);
+        EmbeddedStorageContextHolder.addSqlContext(sql, args);
     }
     
     @Override
@@ -1981,7 +1985,7 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
         
         HistoryConfigInfoMapper historyConfigInfoMapper = mapperManager.findMapper(
                 dataSourceService.getDataSourceType(), TableConstant.HIS_CONFIG_INFO);
-
+        
         MapperContext context = new MapperContext();
         context.putWhereParameter(FieldConstant.DATA_ID, dataId);
         context.putWhereParameter(FieldConstant.GROUP_ID, group);
@@ -2027,36 +2031,36 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
                         "gmt_modified"));
         final Object[] args = new Object[] {kp, tenantId, tenantName, tenantDesc, createResoure, time, time};
         
-        EmbeddedStorageContextUtils.addSqlContext(sql, args);
+        EmbeddedStorageContextHolder.addSqlContext(sql, args);
         
         try {
-            boolean result = databaseOperate.update(EmbeddedStorageContextUtils.getCurrentSqlContext());
+            boolean result = databaseOperate.update(EmbeddedStorageContextHolder.getCurrentSqlContext());
             if (!result) {
                 throw new NacosConfigException("Namespace creation failed");
             }
         } finally {
-            EmbeddedStorageContextUtils.cleanAllContext();
+            EmbeddedStorageContextHolder.cleanAllContext();
         }
     }
     
     @Override
     public void updateTenantNameAtomic(String kp, String tenantId, String tenantName, String tenantDesc) {
-
+        
         TenantInfoMapper tenantInfoMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                 TableConstant.TENANT_INFO);
         final String sql = tenantInfoMapper.update(Arrays.asList("tenant_name", "tenant_desc", "gmt_modified"),
                 Arrays.asList("kp", "tenant_id"));
         final Object[] args = new Object[] {tenantName, tenantDesc, System.currentTimeMillis(), kp, tenantId};
         
-        EmbeddedStorageContextUtils.addSqlContext(sql, args);
+        EmbeddedStorageContextHolder.addSqlContext(sql, args);
         
         try {
-            boolean result = databaseOperate.update(EmbeddedStorageContextUtils.getCurrentSqlContext());
+            boolean result = databaseOperate.update(EmbeddedStorageContextHolder.getCurrentSqlContext());
             if (!result) {
                 throw new NacosConfigException("Namespace update failed");
             }
         } finally {
-            EmbeddedStorageContextUtils.cleanAllContext();
+            EmbeddedStorageContextHolder.cleanAllContext();
         }
     }
     
@@ -2085,12 +2089,12 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
         TenantInfoMapper tenantInfoMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                 TableConstant.TENANT_INFO);
         
-        EmbeddedStorageContextUtils.addSqlContext(tenantInfoMapper.delete(Arrays.asList("kp", "tenant_id")), kp,
+        EmbeddedStorageContextHolder.addSqlContext(tenantInfoMapper.delete(Arrays.asList("kp", "tenant_id")), kp,
                 tenantId);
         try {
-            databaseOperate.update(EmbeddedStorageContextUtils.getCurrentSqlContext());
+            databaseOperate.update(EmbeddedStorageContextHolder.getCurrentSqlContext());
         } finally {
-            EmbeddedStorageContextUtils.cleanAllContext();
+            EmbeddedStorageContextHolder.cleanAllContext();
         }
     }
     
@@ -2149,7 +2153,7 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
                 TableConstant.CONFIG_INFO);
         String sqlCountRows = configInfoMapper.count(null);
         MapperContext context = new MapperContext((pageNo - 1) * pageSize, pageSize);
-
+        
         MapperResult sqlFetchRows = configInfoMapper.listGroupKeyMd5ByPageFetchRows(context);
         PaginationHelper<ConfigInfoWrapper> helper = createPaginationHelper();
         Page<ConfigInfoWrapper> page = helper.fetchPageLimit(sqlCountRows, sqlFetchRows.getSql(),
@@ -2199,7 +2203,7 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
         ConfigInfoMapper configInfoMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                 TableConstant.CONFIG_INFO);
         MapperContext context = new MapperContext();
-
+    
         if (!CollectionUtils.isEmpty(ids)) {
             context.putWhereParameter(FieldConstant.IDS, ids);
         } else {
@@ -2214,7 +2218,7 @@ public class EmbeddedStoragePersistServiceImpl implements PersistService {
                 context.putWhereParameter(FieldConstant.APP_NAME, appName);
             }
         }
-
+        
         MapperResult mapperResult = configInfoMapper.findAllConfigInfo4Export(context);
         return databaseOperate.queryMany(mapperResult.getSql(), mapperResult.getParamList().toArray(),
                 CONFIG_ALL_INFO_ROW_MAPPER);

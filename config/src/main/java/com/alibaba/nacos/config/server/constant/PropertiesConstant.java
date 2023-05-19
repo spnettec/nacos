@@ -69,15 +69,15 @@ public class PropertiesConstant {
     public static final String POSTGRESQL = "postgresql";
 
     public static final String ORACLE = "oracle";
-
+    
     public static final String EMPTY_DATASOURCE_PLATFORM = "";
     
     public static final String EMBEDDED_STORAGE = "embeddedStorage";
-
+    
     public static final String SEARCH_MAX_CAPACITY = "nacos.config.search.max_capacity";
-
+    
     public static final String SEARCH_MAX_THREAD = "nacos.config.search.max_thread";
-
+    
     public static final String SEARCH_WAIT_TIMEOUT = "nacos.config.search.wait_timeout";
-
+    
 }

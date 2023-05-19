@@ -18,8 +18,8 @@ package com.alibaba.nacos.test.core.auth;
 
 import com.alibaba.nacos.Nacos;
 import com.alibaba.nacos.common.utils.JacksonUtils;
-import com.alibaba.nacos.config.server.model.Page;
-import com.alibaba.nacos.plugin.auth.impl.persistence.PermissionInfo;
+import com.alibaba.nacos.persistence.model.Page;
+import com.alibaba.nacos.plugin.auth.api.Permission;
 import com.alibaba.nacos.test.base.HttpClient4Test;
 import com.alibaba.nacos.test.base.Params;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -30,7 +30,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -44,10 +44,7 @@ import java.util.concurrent.TimeUnit;
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = Nacos.class, properties = {
-        "server.servlet.context-path=/nacos","nacos.core.auth.enabled=true",
-        "nacos.core.auth.server.identity.key=serverIdentity",
-        "nacos.core.auth.server.identity.value=security"}
-        , webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+        "server.servlet.context-path=/nacos"}, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 public class Permission_ITCase extends HttpClient4Test {
     
     @LocalServerPort
@@ -146,20 +143,20 @@ public class Permission_ITCase extends HttpClient4Test {
         
         // Query permission:
         response = request("/nacos/v1/auth/permissions",
-                Params.newParams().appendParam("search", "accurate").appendParam("role", "role1").appendParam("pageNo", "1").appendParam("pageSize", "10")
+                Params.newParams().appendParam("role", "role1").appendParam("pageNo", "1").appendParam("pageSize", "10")
                         .appendParam("accessToken", accessToken).done(), String.class, HttpMethod.GET);
         
         System.out.println(response);
         Assert.assertTrue(response.getStatusCode().is2xxSuccessful());
         
-        Page<PermissionInfo> permissionPage = JacksonUtils.toObj(response.getBody(), new TypeReference<Page<PermissionInfo>>() {
+        Page<Permission> permissionPage = JacksonUtils.toObj(response.getBody(), new TypeReference<Page<Permission>>() {
         });
         
         Assert.assertNotNull(permissionPage);
         Assert.assertNotNull(permissionPage.getPageItems());
         
         boolean found1 = false, found2 = false;
-        for (PermissionInfo permission : permissionPage.getPageItems()) {
+        for (Permission permission : permissionPage.getPageItems()) {
             if (permission.getResource().equals("public:*:*") && permission.getAction().equals("rw")) {
                 found1 = true;
             }
@@ -183,12 +180,12 @@ public class Permission_ITCase extends HttpClient4Test {
         
         // Query permission:
         response = request("/nacos/v1/auth/permissions",
-                Params.newParams().appendParam("search", "accurate").appendParam("role", "role1").appendParam("pageNo", "1").appendParam("pageSize", "10")
+                Params.newParams().appendParam("role", "role1").appendParam("pageNo", "1").appendParam("pageSize", "10")
                         .appendParam("accessToken", accessToken).done(), String.class, HttpMethod.GET);
         
         Assert.assertTrue(response.getStatusCode().is2xxSuccessful());
         
-        permissionPage = JacksonUtils.toObj(response.getBody(), new TypeReference<Page<PermissionInfo>>() {
+        permissionPage = JacksonUtils.toObj(response.getBody(), new TypeReference<Page<Permission>>() {
         });
         
         Assert.assertNotNull(permissionPage);
@@ -197,7 +194,7 @@ public class Permission_ITCase extends HttpClient4Test {
         found1 = false;
         found2 = false;
         
-        for (PermissionInfo permission : permissionPage.getPageItems()) {
+        for (Permission permission : permissionPage.getPageItems()) {
             if (permission.getResource().equals("public:*:*") && permission.getAction().equals("rw")) {
                 found1 = true;
             }
@@ -218,13 +215,12 @@ public class Permission_ITCase extends HttpClient4Test {
         
         // Query permission:
         response = request("/nacos/v1/auth/permissions",
-                Params.newParams().appendParam("search", "accurate").appendParam("role", "role1").appendParam("pageNo", "1").appendParam("pageSize", "10")
+                Params.newParams().appendParam("role", "role1").appendParam("pageNo", "1").appendParam("pageSize", "10")
                         .appendParam("accessToken", accessToken).done(), String.class, HttpMethod.GET);
         
         Assert.assertTrue(response.getStatusCode().is2xxSuccessful());
         
-        permissionPage = JacksonUtils.toObj(response.getBody(), new TypeReference<>() {
-
+        permissionPage = JacksonUtils.toObj(response.getBody(), new TypeReference<Page<Permission>>() {
         });
         
         Assert.assertNotNull(permissionPage);
@@ -233,7 +229,7 @@ public class Permission_ITCase extends HttpClient4Test {
         found1 = false;
         found2 = false;
         
-        for (PermissionInfo permission : permissionPage.getPageItems()) {
+        for (Permission permission : permissionPage.getPageItems()) {
             if (permission.getResource().equals("public:*:*") && permission.getAction().equals("rw")) {
                 found1 = true;
             }
