@@ -113,7 +113,7 @@ public class ConfigRawDiskService implements ConfigDiskService {
     
     private static File targetBatchFile(String dataId, String group, String tenant) {
         File file = null;
-        if (org.apache.commons.lang.StringUtils.isBlank(tenant)) {
+        if (org.apache.commons.lang3.StringUtils.isBlank(tenant)) {
             file = new File(EnvUtil.getNacosHome(), BATCH_DIR);
         } else {
             file = new File(EnvUtil.getNacosHome(), TENANT_BATCH_DIR);

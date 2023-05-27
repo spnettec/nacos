@@ -425,7 +425,7 @@ public class ConfigServletInner {
         if (isBeta && cacheItem.getConfigCacheBeta() != null) {
             encryptedDataKey = cacheItem.getConfigCacheBeta().getEncryptedDataKey();
         } else {
-            if (org.apache.commons.lang.StringUtils.isBlank(tag)) {
+            if (org.apache.commons.lang3.StringUtils.isBlank(tag)) {
                 if (isUseTag(cacheItem, autoTag)) {
                     // autoTag
                     encryptedDataKey = cacheItem.getTagEncryptedDataKey(autoTag);
@@ -441,7 +441,7 @@ public class ConfigServletInner {
             }
         }
 
-        if (org.apache.commons.lang.StringUtils.isNotBlank(encryptedDataKey)) {
+        if (org.apache.commons.lang3.StringUtils.isNotBlank(encryptedDataKey)) {
             response.setHeader("Encrypted-Data-Key", encryptedDataKey);
         }
     }

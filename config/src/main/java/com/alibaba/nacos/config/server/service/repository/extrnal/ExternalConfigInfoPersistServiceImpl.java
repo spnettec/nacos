@@ -21,6 +21,7 @@ import com.alibaba.nacos.common.utils.MD5Utils;
 import com.alibaba.nacos.common.utils.Pair;
 import com.alibaba.nacos.common.utils.StringUtils;
 import com.alibaba.nacos.config.server.constant.Constants;
+import com.alibaba.nacos.config.server.constant.PropertiesConstant;
 import com.alibaba.nacos.config.server.enums.FileTypeEnum;
 import com.alibaba.nacos.config.server.model.ConfigAdvanceInfo;
 import com.alibaba.nacos.config.server.model.ConfigAllInfo;
@@ -35,6 +36,7 @@ import com.alibaba.nacos.config.server.service.repository.ConfigInfoPersistServi
 import com.alibaba.nacos.config.server.service.repository.HistoryConfigInfoPersistService;
 import com.alibaba.nacos.config.server.utils.LogUtil;
 import com.alibaba.nacos.config.server.utils.ParamUtils;
+import com.alibaba.nacos.config.server.utils.SystemConfig;
 import com.alibaba.nacos.persistence.configuration.condition.ConditionOnExternalStorage;
 import com.alibaba.nacos.persistence.datasource.DataSourceService;
 import com.alibaba.nacos.persistence.datasource.DynamicDataSource;
@@ -70,10 +72,7 @@ import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -82,12 +81,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import static com.alibaba.nacos.config.server.service.repository.ConfigRowMapperInjector.CONFIG_ADVANCE_INFO_ROW_MAPPER;
-import static com.alibaba.nacos.config.server.service.repository.ConfigRowMapperInjector.CONFIG_ALL_INFO_ROW_MAPPER;
-import static com.alibaba.nacos.config.server.service.repository.ConfigRowMapperInjector.CONFIG_INFO_BASE_ROW_MAPPER;
-import static com.alibaba.nacos.config.server.service.repository.ConfigRowMapperInjector.CONFIG_INFO_ROW_MAPPER;
-import static com.alibaba.nacos.config.server.service.repository.ConfigRowMapperInjector.CONFIG_INFO_WRAPPER_ROW_MAPPER;
-import static com.alibaba.nacos.config.server.service.repository.ConfigRowMapperInjector.CONFIG_KEY_ROW_MAPPER;
+import static com.alibaba.nacos.config.server.service.repository.ConfigRowMapperInjector.*;
 
 /**
  * ExternalConfigInfoPersistServiceImpl.
