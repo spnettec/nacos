@@ -125,7 +125,7 @@
         <p3c-pmd.version>2.1.1</p3c-pmd.version>
 
         <!-- dependency version -->
-        <spring-boot-dependencies.version>3.0.6</spring-boot-dependencies.version>
+        <spring-boot-dependencies.version>3.1.0</spring-boot-dependencies.version>
         <servlet-api.version>6.0.0</servlet-api.version>
         <commons-io.version>2.11.0</commons-io.version>
         <commons-collections4.version>4.4</commons-collections4.version>
@@ -135,13 +135,13 @@
         <concurrentlinkedhashmap.version>1.4.2</concurrentlinkedhashmap.version>
         <mysql-connector-java.version>8.0.33</mysql-connector-java.version>
         <derby.version>10.16.1.1</derby.version>
-        <jackson-core.version>2.15.0</jackson-core.version>
+        <jackson-core.version>2.15.2</jackson-core.version>
         <jjwt.version>0.11.5</jjwt.version>
         <guava.version>31.1-jre</guava.version>
         <javatuples.version>1.2</javatuples.version>
-        <grpc-java.version>1.54.1</grpc-java.version>
-        <proto-google-common-protos.version>2.17.0</proto-google-common-protos.version>
-        <protobuf-java.version>3.22.3</protobuf-java.version>
+        <grpc-java.version>1.55.1</grpc-java.version>
+        <proto-google-common-protos.version>2.19.1</proto-google-common-protos.version>
+        <protobuf-java.version>3.23.2</protobuf-java.version>
         <protoc-gen-grpc-java.version>${grpc-java.version}</protoc-gen-grpc-java.version>
         <hessian.version>4.0.66</hessian.version>
         <mockito-core.version>5.2.0</mockito-core.version>
