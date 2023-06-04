@@ -81,11 +81,6 @@
             <groupId>com.github.heyoulin.nacos</groupId>
             <artifactId>nacos-config-plugin</artifactId>
         </dependency>
-
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpasyncclient</artifactId>
-        </dependency>
         
         <!-- Provided -->
         <dependency>
