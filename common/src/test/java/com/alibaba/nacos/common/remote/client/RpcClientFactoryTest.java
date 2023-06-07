@@ -48,7 +48,7 @@ public class RpcClientFactoryTest {
     @Mock
     RpcClient rpcClient;
     
-    @Mock(lenient = true)
+    @Mock(strictness = Mock.Strictness.LENIENT)
     RpcClientTlsConfig tlsConfig;
     
     @BeforeClass
