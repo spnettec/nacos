@@ -38,7 +38,7 @@
         </dependency>
 
         <dependency>
-            <groupId>com.alibaba.nacos</groupId>
+            <groupId>com.github.heyoulin.nacos</groupId>
             <artifactId>nacos-sys</artifactId>
             <scope>provided</scope>
         </dependency>
