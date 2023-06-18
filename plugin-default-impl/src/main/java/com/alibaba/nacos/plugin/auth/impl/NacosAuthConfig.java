@@ -39,6 +39,7 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -49,6 +50,8 @@ import org.springframework.web.cors.CorsUtils;
 
 import javax.annotation.PostConstruct;
 
+import static org.springframework.security.config.Customizer.withDefaults;
+
 /**
  * Spring security config.
  *
@@ -57,43 +60,43 @@ import javax.annotation.PostConstruct;
 @Configuration
 @EnableMethodSecurity
 public class NacosAuthConfig {
-    
+
     private static final String SECURITY_IGNORE_URLS_SPILT_CHAR = ",";
-    
+
     private static final String LOGIN_ENTRY_POINT = "/v1/auth/login";
-    
+
     private static final String TOKEN_BASED_AUTH_ENTRY_POINT = "/v1/auth/**";
-    
+
     private static final String DEFAULT_ALL_PATH_PATTERN = "/**";
-    
+
     private static final String PROPERTY_IGNORE_URLS = "nacos.security.ignore.urls";
-    
+
     private final Environment env;
-    
+
     private final TokenManagerDelegate tokenProvider;
-    
+
     private final AuthConfigs authConfigs;
-    
+
     private final NacosUserDetailsServiceImpl userDetailsService;
-    
+
     private final LdapAuthenticationProvider ldapAuthenticationProvider;
-    
+
     private final ControllerMethodsCache methodsCache;
-    
+
     public NacosAuthConfig(Environment env, TokenManagerDelegate tokenProvider, AuthConfigs authConfigs,
-            NacosUserDetailsServiceImpl userDetailsService,
-            ObjectProvider<LdapAuthenticationProvider> ldapAuthenticationProvider,
-            ControllerMethodsCache methodsCache) {
-        
+                           NacosUserDetailsServiceImpl userDetailsService,
+                           ObjectProvider<LdapAuthenticationProvider> ldapAuthenticationProvider,
+                           ControllerMethodsCache methodsCache) {
+
         this.env = env;
         this.tokenProvider = tokenProvider;
         this.authConfigs = authConfigs;
         this.userDetailsService = userDetailsService;
         this.ldapAuthenticationProvider = ldapAuthenticationProvider.getIfAvailable();
         this.methodsCache = methodsCache;
-        
+
     }
-    
+
     /**
      * Init.
      */
@@ -109,7 +112,7 @@ public class NacosAuthConfig {
 
     @Bean
     public SecurityFilterChain authFilterChain(HttpSecurity http, PasswordEncoder passwordEncoder) throws Exception {
-        http.csrf().disable().cors(); // We don't need CSRF for JWT based authentication
+        http.csrf(AbstractHttpConfigurer::disable).cors(withDefaults()); // We don't need CSRF for JWT based authentication
         String ignoreUrls = null;
         if (AuthSystemTypes.NACOS.name().equalsIgnoreCase(authConfigs.getNacosAuthSystemType())) {
             ignoreUrls = DEFAULT_ALL_PATH_PATTERN;
@@ -122,21 +125,28 @@ public class NacosAuthConfig {
 
         if (StringUtils.isNotBlank(ignoreUrls)) {
             for (String each : ignoreUrls.trim().split(SECURITY_IGNORE_URLS_SPILT_CHAR)) {
-                http.authorizeHttpRequests().requestMatchers(AntPathRequestMatcher.antMatcher(each.trim()))
-                        .permitAll();
+                http.authorizeHttpRequests(authorizeHttpRequests -> authorizeHttpRequests
+                        .requestMatchers(AntPathRequestMatcher.antMatcher(each.trim()))
+                        .permitAll());
             }
         }
         if (StringUtils.isBlank(authConfigs.getNacosAuthSystemType())) {
-            http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
-                    .authorizeHttpRequests().requestMatchers(CorsUtils::isPreFlightRequest).permitAll()
-                    .requestMatchers(AntPathRequestMatcher.antMatcher(LOGIN_ENTRY_POINT)).permitAll().and().authorizeHttpRequests()
-                    .requestMatchers(AntPathRequestMatcher.antMatcher(TOKEN_BASED_AUTH_ENTRY_POINT)).authenticated().and().exceptionHandling()
-                    .authenticationEntryPoint(new JwtAuthenticationEntryPoint());
-            // disable cache
-            http.headers().cacheControl();
-            
-            http.addFilterBefore(new JwtAuthenticationTokenFilter(tokenProvider),
-                    UsernamePasswordAuthenticationFilter.class);
+            http.sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                    .authorizeHttpRequests(authorizeHttpRequests -> authorizeHttpRequests
+                            .requestMatchers(CorsUtils::isPreFlightRequest)
+                            .permitAll()
+                            .requestMatchers(AntPathRequestMatcher.antMatcher(LOGIN_ENTRY_POINT))
+                            .permitAll())
+                    .authorizeHttpRequests(authorizeHttpRequests -> authorizeHttpRequests
+                            .requestMatchers(AntPathRequestMatcher.antMatcher(TOKEN_BASED_AUTH_ENTRY_POINT))
+                            .authenticated())
+                    .exceptionHandling(exceptionHandling -> exceptionHandling
+                            .authenticationEntryPoint(new JwtAuthenticationEntryPoint()))
+                    // disable cache
+                    .headers((headers) -> headers
+                            .cacheControl(withDefaults()))
+
+                    .addFilterBefore(new JwtAuthenticationTokenFilter(tokenProvider), UsernamePasswordAuthenticationFilter.class);
         }
 
         AuthenticationManagerBuilder authenticationManagerBuilder = http.getSharedObject(AuthenticationManagerBuilder.class);
@@ -148,7 +158,7 @@ public class NacosAuthConfig {
 
         return http.build();
     }
-    
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -165,7 +175,7 @@ public class NacosAuthConfig {
 
     @Bean
     public IAuthenticationManager defaultAuthenticationManager(NacosUserDetailsServiceImpl userDetailsService,
-            TokenManagerDelegate jwtTokenManager, NacosRoleServiceImpl roleService) {
+                                                               TokenManagerDelegate jwtTokenManager, NacosRoleServiceImpl roleService) {
         return new DefaultAuthenticationManager(userDetailsService, jwtTokenManager, roleService);
     }
 }
