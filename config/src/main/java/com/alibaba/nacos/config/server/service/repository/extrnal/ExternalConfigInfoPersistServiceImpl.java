@@ -73,6 +73,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import java.io.IOException;
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -81,7 +82,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import static com.alibaba.nacos.config.server.service.repository.ConfigRowMapperInjector.*;
+import static com.alibaba.nacos.config.server.service.repository.ConfigRowMapperInjector.CONFIG_ADVANCE_INFO_ROW_MAPPER;
+import static com.alibaba.nacos.config.server.service.repository.ConfigRowMapperInjector.CONFIG_ALL_INFO_ROW_MAPPER;
+import static com.alibaba.nacos.config.server.service.repository.ConfigRowMapperInjector.CONFIG_INFO_BASE_ROW_MAPPER;
+import static com.alibaba.nacos.config.server.service.repository.ConfigRowMapperInjector.CONFIG_INFO_ROW_MAPPER;
+import static com.alibaba.nacos.config.server.service.repository.ConfigRowMapperInjector.CONFIG_INFO_STATE_WRAPPER_ROW_MAPPER;
+import static com.alibaba.nacos.config.server.service.repository.ConfigRowMapperInjector.CONFIG_INFO_WRAPPER_ROW_MAPPER;
+import static com.alibaba.nacos.config.server.service.repository.ConfigRowMapperInjector.CONFIG_KEY_ROW_MAPPER;
 
 /**
  * ExternalConfigInfoPersistServiceImpl.
@@ -155,7 +162,7 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
                 addConfigTagsRelation(configId, configTags, configInfo.getDataId(), configInfo.getGroup(),
                         configInfo.getTenant());
                 Timestamp now = new Timestamp(System.currentTimeMillis());
-
+                
                 historyConfigInfoPersistService.insertConfigHistoryAtomic(0, configInfo, srcIp, srcUser, now, "I");
                 ConfigInfoStateWrapper configInfoCurrent = this.findConfigInfoState(configInfo.getDataId(),
                         configInfo.getGroup(), configInfo.getTenant());
@@ -163,7 +170,7 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
                     return new ConfigOperateResult(false);
                 }
                 return new ConfigOperateResult(configInfoCurrent.getId(), configInfoCurrent.getLastModified());
-
+                
             } catch (CannotGetJdbcConnectionException e) {
                 LogUtil.FATAL_LOG.error("[db-error] " + e, e);
                 throw e;
@@ -265,7 +272,7 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
             try {
                 jt.update(connection -> {
                     Timestamp now = new Timestamp(System.currentTimeMillis());
-
+                    
                     PreparedStatement ps = connection.prepareStatement(sql, returnGeneratedKeys);
                     ps.setString(1, configInfo.getDataId());
                     ps.setString(2, configInfo.getGroup());
@@ -544,7 +551,7 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
                             configInfo.getGroup(), configInfo.getTenant());
                 }
                 Timestamp now = new Timestamp(System.currentTimeMillis());
-
+                
                 historyConfigInfoPersistService.insertConfigHistoryAtomic(oldConfigInfo.getId(), oldConfigInfo, srcIp,
                         srcUser, now, "U");
                 return getConfigInfoOperateResult(configInfo.getDataId(), configInfo.getGroup(),
@@ -555,16 +562,16 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
             }
         });
     }
-
+    
     private ConfigOperateResult getConfigInfoOperateResult(String dataId, String group, String tenant) {
         ConfigInfoStateWrapper configInfoLast = this.findConfigInfoState(dataId, group, tenant);
         if (configInfoLast == null) {
             return new ConfigOperateResult(false);
         }
         return new ConfigOperateResult(configInfoLast.getId(), configInfoLast.getLastModified());
-
+        
     }
-
+    
     @Override
     public ConfigOperateResult updateConfigInfoCas(final ConfigInfo configInfo, final String srcIp,
             final String srcUser, final Map<String, Object> configAdvanceInfo) {
@@ -599,7 +606,7 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
                             configInfo.getGroup(), configInfo.getTenant());
                 }
                 Timestamp now = new Timestamp(System.currentTimeMillis());
-
+                
                 historyConfigInfoPersistService.insertConfigHistoryAtomic(oldConfigInfo.getId(), oldConfigInfo, srcIp,
                         srcUser, now, "U");
                 ConfigInfoStateWrapper configInfoLast = this.findConfigInfoState(configInfo.getDataId(),
@@ -630,7 +637,7 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
             ConfigInfoMapper configInfoMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                     TableConstant.CONFIG_INFO);
             Timestamp now = new Timestamp(System.currentTimeMillis());
-
+            
             MapperContext context = new MapperContext();
             context.putUpdateParameter(FieldConstant.CONTENT, configInfo.getContent());
             context.putUpdateParameter(FieldConstant.MD5, md5Tmp);
@@ -834,7 +841,7 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
         final String configTags = configAdvanceInfo == null ? null : (String) configAdvanceInfo.get("config_tags");
         MapperResult sql;
         MapperResult sqlCount;
-
+        
         final MapperContext context = new MapperContext();
         context.putWhereParameter(FieldConstant.TENANT_ID, tenantTmp);
         if (StringUtils.isNotBlank(dataId)) {
@@ -842,7 +849,7 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
         }
         if (StringUtils.isNotBlank(group)) {
             context.putWhereParameter(FieldConstant.GROUP_ID, group);
-
+            
         }
         if (StringUtils.isNotBlank(appName)) {
             context.putWhereParameter(FieldConstant.APP_NAME, appName);
@@ -1236,15 +1243,16 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
     }
     
     @Override
-    public List<ConfigInfoWrapper> findChangeConfig(final Timestamp startTime, final Timestamp endTime) {
+    public List<ConfigInfoWrapper> findChangeConfig(final Timestamp startTime, long lastMaxId, final int pageSize) {
         try {
             ConfigInfoMapper configInfoMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                     TableConstant.CONFIG_INFO);
             
             MapperContext context = new MapperContext();
             context.putWhereParameter(FieldConstant.START_TIME, startTime);
-            context.putWhereParameter(FieldConstant.END_TIME, endTime);
-            
+            context.putWhereParameter(FieldConstant.PAGE_SIZE, pageSize);
+            context.putWhereParameter(FieldConstant.LAST_MAX_ID, lastMaxId);
+
             MapperResult mapperResult = configInfoMapper.findChangeConfig(context);
             List<Map<String, Object>> list = jt.queryForList(mapperResult.getSql(),
                     mapperResult.getParamList().toArray());
@@ -1434,12 +1442,14 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
     public List<ConfigInfoWrapper> convertChangeConfig(List<Map<String, Object>> list) {
         List<ConfigInfoWrapper> configs = new ArrayList<>();
         for (Map<String, Object> map : list) {
+            Long id = (Long) map.get("id");
             String dataId = (String) map.get("data_id");
             String group = (String) map.get("group_id");
             String tenant = (String) map.get("tenant_id");
             String content = (String) map.get("content");
-            long mTime = ((Timestamp) map.get("gmt_modified")).getTime();
+            long mTime = ((LocalDateTime) map.get("gmt_modified")).toInstant(ZoneOffset.ofHours(8)).toEpochMilli();
             ConfigInfoWrapper config = new ConfigInfoWrapper();
+            config.setId(id);
             config.setDataId(dataId);
             config.setGroup(group);
             config.setTenant(tenant);
@@ -1482,7 +1492,7 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
             throw e;
         }
     }
-
+    
     @Override
     public ConfigInfoStateWrapper findConfigInfoState(final String dataId, final String group, final String tenant) {
         String tenantTmp = StringUtils.isBlank(tenant) ? StringUtils.EMPTY : tenant;
@@ -1497,7 +1507,7 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
             throw e;
         }
     }
-
+    
     @Override
     public ConfigInfoWrapper queryConfigInfo(final String dataId, final String group, final String tenant) {
         String tenantTmp = StringUtils.isBlank(tenant) ? StringUtils.EMPTY : tenant;
