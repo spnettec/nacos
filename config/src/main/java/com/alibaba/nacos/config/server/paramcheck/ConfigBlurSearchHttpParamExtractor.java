@@ -22,52 +22,37 @@ import com.alibaba.nacos.common.utils.StringUtils;
 import com.alibaba.nacos.config.server.constant.Constants;
 import com.alibaba.nacos.core.paramcheck.AbstractHttpParamExtractor;
 
-import jakarta.servlet.http.HttpServletRequest;
-import java.net.URLDecoder;
+import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * ConfigListener http param extractor.
+ * The type Config blur search http param extractor.
  *
  * @author zhuoguang
  */
-public class ConfigListenerHttpParamExtractor extends AbstractHttpParamExtractor {
+public class ConfigBlurSearchHttpParamExtractor extends AbstractHttpParamExtractor {
     
-    static final char WORD_SEPARATOR_CHAR = (char) 2;
-    
-    static final char LINE_SEPARATOR_CHAR = (char) 1;
+    private static final String BLUR_SEARCH_MODE = "blur";
     
     @Override
     public void init() {
-        addTargetRequest(Constants.CONFIG_CONTROLLER_PATH + "/listener", HttpMethod.POST);
+        addTargetRequest(Constants.CONFIG_CONTROLLER_PATH, HttpMethod.GET);
+        addTargetRequest(Constants.CONFIG_CONTROLLER_PATH + "/", HttpMethod.GET);
     }
     
     @Override
     public List<ParamInfo> extractParam(HttpServletRequest request) throws Exception {
+        String searchMode = request.getParameter("search");
         ArrayList<ParamInfo> paramInfos = new ArrayList<>();
-        String listenConfigs = request.getParameter("Listening-Configs");
-        if (StringUtils.isBlank(listenConfigs)) {
+        if (StringUtils.equals(searchMode, BLUR_SEARCH_MODE)) {
             return paramInfos;
         }
-        listenConfigs = URLDecoder.decode(listenConfigs, Constants.ENCODE);
-        if (StringUtils.isBlank(listenConfigs)) {
-            return paramInfos;
-        }
-        String[] lines = listenConfigs.split(Character.toString(LINE_SEPARATOR_CHAR));
-        for (String line : lines) {
-            ParamInfo paramInfo = new ParamInfo();
-            String[] words = line.split(Character.toString(WORD_SEPARATOR_CHAR));
-            if (words.length < 3 || words.length > 4) {
-                throw new IllegalArgumentException("invalid probeModify");
-            }
-            paramInfo.setDataId(words[0]);
-            paramInfo.setGroup(words[1]);
-            if (words.length == 4) {
-                paramInfo.setNamespaceId(words[3]);
-            }
-            paramInfos.add(paramInfo);
-        }
+        ParamInfo paramInfo = new ParamInfo();
+        paramInfo.setNamespaceId(request.getParameter("tenant"));
+        paramInfo.setDataId(request.getParameter("dataId"));
+        paramInfo.setGroup(request.getParameter("group"));
+        paramInfos.add(paramInfo);
         return paramInfos;
     }
 }
