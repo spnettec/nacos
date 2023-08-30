@@ -41,6 +41,9 @@ public class RpcAckCallbackSynchronizer {
 
     /**
      * notify  ack.
+     *
+     * @param connectionId connectionId
+     * @param response     response
      */
     public static void ackNotify(String connectionId, Response response) {
 
@@ -70,7 +73,12 @@ public class RpcAckCallbackSynchronizer {
     }
 
     /**
-     * notify  ackid.
+     * sync callback.
+     *
+     * @param connectionId      connectionId
+     * @param requestId         requestId
+     * @param defaultPushFuture defaultPushFuture
+     * @throws NacosException NacosException
      */
     public static void syncCallback(String connectionId, String requestId, DefaultRequestFuture defaultPushFuture)
             throws NacosException {
@@ -98,7 +106,7 @@ public class RpcAckCallbackSynchronizer {
     }
 
     /**
-     * clear context of connectionId.
+     * init context of connectionId if necessary.
      *
      * @param connectionId connectionId
      */
@@ -114,9 +122,10 @@ public class RpcAckCallbackSynchronizer {
     }
 
     /**
-     * clear context of connectionId.
+     * clear context of requestId.
      *
      * @param connectionId connectionId
+     * @param requestId    requestId
      */
     public static void clearFuture(String connectionId, String requestId) {
         Map<String, DefaultRequestFuture> stringDefaultPushFutureMap = CALLBACK_CONTEXT.get(connectionId);
