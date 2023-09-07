@@ -409,7 +409,7 @@ public class ServerListManager implements Closeable {
         
         // Using unified event processor, NotifyCenter
         NotifyCenter.publishEvent(new ServerListChangeEvent());
-        LOGGER.info("[{}] [update-serverlist] serverlist updated to {}", name, serverUrls);
+        LOGGER.info("[{}] [update-serverList] serverList updated to {}", name, serverUrls);
     }
     
     private List<String> getApacheServerList(String url, String name) {
