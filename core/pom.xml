@@ -128,7 +128,12 @@
         <!-- JRaft dependency end -->
 
         <dependency>
-            <groupId>org.apache.commons</groupId>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpasyncclient</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-collections</groupId>
             <artifactId>commons-collections4</artifactId>
         </dependency>
 
@@ -146,14 +151,14 @@
             <artifactId>micrometer-registry-elastic</artifactId>
         </dependency>
         <!--   micrometer end    -->
-
+        
         <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-testing</artifactId>
         </dependency>
         <dependency>
             <groupId>com.github.heyoulin.nacos</groupId>
-            <artifactId>nacos-contrl-plugin</artifactId>
+            <artifactId>nacos-control-plugin</artifactId>
             <version>${revision}</version>
         </dependency>
         <dependency>
