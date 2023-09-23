@@ -39,7 +39,6 @@ import jakarta.servlet.AsyncContext;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -365,7 +364,7 @@ public class LongPollingService {
                                         RequestUtil
                                                 .getRemoteIp((HttpServletRequest) clientSub.asyncContext.getRequest()),
                                         "polling", clientSub.clientMd5Map.size(), clientSub.probeRequestSize, groupKey);
-                        clientSub.sendResponse(Arrays.asList(groupKey));
+                        clientSub.sendResponse(Collections.singletonList(groupKey));
                     }
                 }
                 
