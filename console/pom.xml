@@ -73,6 +73,10 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.github.heyoulin.nacos</groupId>
+            <artifactId>default-auth-plugin</artifactId>
+        </dependency>
     </dependencies>
     
     <build>

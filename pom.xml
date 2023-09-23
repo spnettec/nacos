@@ -770,7 +770,11 @@
                 <artifactId>nacos-sys</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>default-auth-plugin</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             <dependency>
                 <groupId>jakarta.servlet</groupId>
                 <artifactId>jakarta.servlet-api</artifactId>
