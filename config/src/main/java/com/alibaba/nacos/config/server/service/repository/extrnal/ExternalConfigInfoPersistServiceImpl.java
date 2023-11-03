@@ -712,7 +712,7 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
             ConfigInfoMapper configInfoMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                     TableConstant.CONFIG_INFO);
             String updateSql = configInfoMapper.update(Collections.singletonList("md5"),
-                    Arrays.asList("data_id", "group_id", "gmt_modified", "tenant_id"));
+                    Arrays.asList("data_id", "group_id", "tenant_id", "gmt_modified"));
             List<Object> parasList = new ArrayList<>(Arrays.asList(md5, dataId, group,
                     lastTime, tenantTmp));
             List<Integer> argTypes = new ArrayList<>(Arrays.asList(Types.VARCHAR,Types.VARCHAR,Types.VARCHAR,
@@ -807,14 +807,14 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
     @Override
     public ConfigInfoWrapper findConfigInfo(final String dataId, final String group, final String tenant) {
         final String tenantTmp = StringUtils.isBlank(tenant) ? StringUtils.EMPTY : tenant;
-        List<String> whereList = new ArrayList<>(Arrays.asList("data_id", "group_id","tenant_id"));
+        List<String> whereList = new ArrayList<>(Arrays.asList("data_id", "group_id", "tenant_id"));
         List<Object> parasList = new ArrayList<>(Arrays.asList(dataId, group,tenantTmp));
         try {
             ConfigInfoMapper configInfoMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                     TableConstant.CONFIG_INFO);
             String selectSql = configInfoMapper.select(
                     Arrays.asList("id", "data_id", "group_id", "tenant_id", "app_name", "content", "md5", "type",
-                            "encrypted_data_key"), whereList);
+                            "encrypted_data_key", "gmt_modified"), whereList);
             if (dataSourceService.getDataSourceType().equals(PropertiesConstant.ORACLE) && StringUtils.isBlank(tenantTmp)) {
                 selectSql = selectSql.replace("tenant_id = ?","tenant_id is NULL");
                 int index = parasList.size()-1;
