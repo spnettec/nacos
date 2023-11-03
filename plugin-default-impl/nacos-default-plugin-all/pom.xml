@@ -34,7 +34,7 @@
         </dependency>
         <dependency>
             <groupId>com.github.heyoulin.nacos</groupId>
-            <artifactId>default-control-plugin</artifactId>
+            <artifactId>nacos-control-plugin</artifactId>
             <version>${revision}</version>
         </dependency>
     </dependencies>
