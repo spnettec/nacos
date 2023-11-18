@@ -772,11 +772,7 @@
                 <artifactId>nacos-sys</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>default-auth-plugin</artifactId>
-                <version>${project.version}</version>
-            </dependency>
+            
             <dependency>
                 <groupId>jakarta.servlet</groupId>
                 <artifactId>jakarta.servlet-api</artifactId>
@@ -865,11 +861,7 @@
                 <artifactId>derby</artifactId>
                 <version>${derby.version}</version>
             </dependency>
-            <dependency>
-                <groupId>org.apache.derby</groupId>
-                <artifactId>derbytools</artifactId>
-                <version>${derby.version}</version>
-            </dependency>
+            
             <!-- JRaft -->
             <dependency>
                 <groupId>com.github.heyoulin.sofa-jraft</groupId>

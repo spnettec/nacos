@@ -31,7 +31,7 @@
     <name>nacos-client ${project.version}</name>
     <url>https://nacos.io</url>
     <description>Nacos client pom.xml file</description>
-
+    
     <dependencies>
         
         <dependency>
@@ -107,9 +107,20 @@
         </dependency>
         
         <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpasyncclient</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcore</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>io.prometheus</groupId>
             <artifactId>simpleclient</artifactId>
         </dependency>
+
         <dependency>
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>

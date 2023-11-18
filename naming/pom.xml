@@ -32,7 +32,7 @@
     
     <name>nacos-naming ${project.version}</name>
     <url>https://nacos.io</url>
-
+    
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>

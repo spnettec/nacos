@@ -24,6 +24,7 @@ import com.alibaba.nacos.naming.misc.SwitchDomain;
 import com.alibaba.nacos.naming.pojo.Subscriber;
 import com.alibaba.nacos.naming.remote.udp.AckEntry;
 import com.alibaba.nacos.naming.remote.udp.UdpConnector;
+import com.fasterxml.jackson.core.Version;
 import org.apache.commons.collections4.MapUtils;
 import com.fasterxml.jackson.core.util.VersionUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,13 +50,13 @@ public class UdpPushService {
     
     @Autowired
     private SwitchDomain switchDomain;
-
+    
     private final UdpConnector udpConnector;
-
+    
     public UdpPushService(UdpConnector udpConnector) {
         this.udpConnector = udpConnector;
     }
-
+    
     /**
      * Push Data without callback.
      *
@@ -100,7 +101,7 @@ public class UdpPushService {
         long lastRefTime = System.nanoTime();
         return prepareAckEntry(socketAddress, prepareHostsData(JacksonUtils.toJson(serviceInfo)), lastRefTime);
     }
-
+    
     private static AckEntry prepareAckEntry(InetSocketAddress socketAddress, Map<String, Object> data,
             long lastRefTime) {
         if (MapUtils.isEmpty(data)) {
@@ -119,7 +120,7 @@ public class UdpPushService {
             return null;
         }
     }
-
+    
     private static AckEntry prepareAckEntry(InetSocketAddress socketAddress, byte[] dataBytes, Map<String, Object> data,
             long lastRefTime) {
         String key = AckEntry
@@ -137,7 +138,7 @@ public class UdpPushService {
         }
         return null;
     }
-
+    
     /**
      * Judge whether this agent is supported to push.
      *
@@ -153,23 +154,27 @@ public class UdpPushService {
         ClientInfo clientInfo = new ClientInfo(agent);
         
         if (ClientInfo.ClientType.JAVA == clientInfo.type
-                && clientInfo.version.compareTo(VersionUtil.parseVersion(switchDomain.getPushJavaVersion(), null, null)) >= 0) {
+                && clientInfo.version.compareTo(parseVersion(switchDomain.getPushJavaVersion())) >= 0) {
             return true;
         } else if (ClientInfo.ClientType.DNS == clientInfo.type
-                && clientInfo.version.compareTo(VersionUtil.parseVersion(switchDomain.getPushPythonVersion(), null, null)) >= 0) {
+                && clientInfo.version.compareTo(parseVersion(switchDomain.getPushPythonVersion())) >= 0) {
             return true;
         } else if (ClientInfo.ClientType.C == clientInfo.type
-                && clientInfo.version.compareTo(VersionUtil.parseVersion(switchDomain.getPushCVersion(), null, null)) >= 0) {
+                && clientInfo.version.compareTo(parseVersion(switchDomain.getPushCVersion())) >= 0) {
             return true;
         } else if (ClientInfo.ClientType.GO == clientInfo.type
-                && clientInfo.version.compareTo(VersionUtil.parseVersion(switchDomain.getPushGoVersion(), null, null)) >= 0) {
+                && clientInfo.version.compareTo(parseVersion(switchDomain.getPushGoVersion())) >= 0) {
             return true;
         } else if (ClientInfo.ClientType.CSHARP == clientInfo.type
-                && clientInfo.version.compareTo(VersionUtil.parseVersion(switchDomain.getPushCSharpVersion(), null, null)) >= 0) {
+                && clientInfo.version.compareTo(parseVersion(switchDomain.getPushCSharpVersion())) >= 0) {
             return true;
         }
         
         return false;
+    }
+
+    private Version parseVersion(String version) {
+        return VersionUtil.parseVersion(version, null, null);
     }
 
     private static byte[] compressIfNecessary(byte[] dataBytes) throws IOException {
@@ -186,7 +191,7 @@ public class UdpPushService {
         
         return out.toByteArray();
     }
-
+    
     private static Map<String, Object> prepareHostsData(String dataContent) {
         Map<String, Object> result = new HashMap<String, Object>(2);
         result.put("type", "dom");
