@@ -1001,7 +1001,7 @@ public class ExternalStoragePersistServiceImpl implements PersistService {
                     mapperResult.getSql(), mapperResult.getParamList().toArray(), pageNo, pageSize,
                     CONFIG_INFO_BASE_ROW_MAPPER);
         } catch (CannotGetJdbcConnectionException e) {
-            LogUtil.FATAL_LOG.error("[db-error] " + e.toString(), e);
+            LogUtil.FATAL_LOG.error("[db-error] " + e, e);
             throw e;
         }
     }

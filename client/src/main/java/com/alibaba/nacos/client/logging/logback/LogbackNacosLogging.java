@@ -58,7 +58,7 @@ public class LogbackNacosLogging extends AbstractNacosLogging {
     @Override
     public void loadConfiguration() {
         LoggerContext loggerContext = loadConfigurationOnStart();
-        if (loggerContext.getObject(CoreConstants.RECONFIGURE_ON_CHANGE_TASK) != null && !hasListener(loggerContext)) {
+        if (!hasListener(loggerContext)) {
             addListener(loggerContext);
         }
     }
