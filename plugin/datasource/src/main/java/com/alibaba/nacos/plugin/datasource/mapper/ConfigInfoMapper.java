@@ -290,7 +290,7 @@ public interface ConfigInfoMapper extends Mapper {
 
         final List<Object> paramList = new ArrayList<>();
         final String sqlCountRows = "SELECT count(*) FROM config_info WHERE ";
-        String where = " 1=1 AND tenant_id='" + NamespaceUtil.getNamespaceDefaultId() + "' ";
+        String where = " tenant_id='" + NamespaceUtil.getNamespaceDefaultId() + "' ";
 
         if (!StringUtils.isBlank(dataId)) {
             where += " AND data_id LIKE ? ";
@@ -388,9 +388,11 @@ public interface ConfigInfoMapper extends Mapper {
         final List<Object> paramList = new ArrayList<>();
 
         final String sqlCountRows = "SELECT count(*) FROM config_info";
-        StringBuilder where = new StringBuilder(" WHERE ");
-        where.append(" tenant_id LIKE ? ");
-        paramList.add(tenantId);
+        StringBuilder where = new StringBuilder(" WHERE 1=1");
+        if (StringUtils.isNotBlank(tenantId)) {
+            where.append(" AND tenant_id LIKE ? ");
+            paramList.add(tenantId);
+        }
         if (!StringUtils.isBlank(dataId)) {
             where.append(" AND data_id LIKE ? ");
             paramList.add(dataId);
