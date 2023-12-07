@@ -39,7 +39,7 @@ public class TenantCapacityMapperByDerby extends AbstractMapper implements Tenan
     
     @Override
     public MapperResult getCapacityList4CorrectUsage(MapperContext context) {
-        String sql = "SELECT id, tenant_id FROM tenant_capacity WHERE id>? OFFSET 0 ROWS FETCH NEXT ? ROWS ONLY";
+        String sql = "SELECT id, tenant_id FROM tenant_capacity WHERE id>? order by id OFFSET 0 ROWS FETCH NEXT ? ROWS ONLY";
         return new MapperResult(sql, CollectionUtils.list(context.getWhereParameter(FieldConstant.ID),
                 context.getWhereParameter(FieldConstant.LIMIT_SIZE)));
     }

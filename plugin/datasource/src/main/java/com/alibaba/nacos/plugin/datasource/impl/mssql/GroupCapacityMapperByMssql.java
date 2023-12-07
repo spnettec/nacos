@@ -14,22 +14,22 @@
  * limitations under the License.
  */
 
-package com.alibaba.nacos.plugin.datasource.constants;
+package com.alibaba.nacos.plugin.datasource.impl.mssql;
+
+import com.alibaba.nacos.plugin.datasource.constants.DataSourceConstant;
+import com.alibaba.nacos.plugin.datasource.impl.derby.GroupCapacityMapperByDerby;
+import com.alibaba.nacos.plugin.datasource.mapper.GroupCapacityMapper;
 
 /**
- * The data source name.
+ * The derby implementation of {@link GroupCapacityMapper}.
  *
- * @author hyx
- **/
+ * @author lixiaoshuang
+ */
+public class GroupCapacityMapperByMssql extends GroupCapacityMapperByDerby {
 
-public class DataSourceConstant {
-    public static final String MYSQL = "mysql";
+    @Override
+    public String getDataSource() {
+        return DataSourceConstant.MSSQL;
+    }
 
-    public static final String POSTGRESQL = "postgresql";
-    
-    public static final String DERBY = "derby";
-
-    public static final String ORACLE = "oracle";
-
-    public static final String MSSQL = "mssql";
 }

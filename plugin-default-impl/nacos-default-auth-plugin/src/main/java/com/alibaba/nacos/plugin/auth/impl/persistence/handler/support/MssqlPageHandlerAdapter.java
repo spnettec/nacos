@@ -16,31 +16,31 @@
 
 package com.alibaba.nacos.plugin.auth.impl.persistence.handler.support;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import com.alibaba.nacos.persistence.constants.PersistenceConstant;
 import com.alibaba.nacos.plugin.auth.impl.constant.AuthPageConstant;
 import com.alibaba.nacos.plugin.auth.impl.model.OffsetFetchResult;
 import com.alibaba.nacos.plugin.auth.impl.persistence.handler.PageHandlerAdapter;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * derby page handler adapter.
  *
  * @author huangKeMing
  */
-public class DerbyPageHandlerAdapter implements PageHandlerAdapter {
+public class MssqlPageHandlerAdapter implements PageHandlerAdapter {
     
     @Override
     public boolean supports(String dataSourceType) {
-        return PersistenceConstant.DERBY.equals(dataSourceType) || "oracle".equals(dataSourceType);
+        return "mssql".equals(dataSourceType);
     }
     
     @Override
     public OffsetFetchResult addOffsetAndFetchNext(String fetchSql, Object[] arg, int pageNo, int pageSize) {
         if (!fetchSql.contains(AuthPageConstant.OFFSET)) {
-            fetchSql += " " + AuthPageConstant.OFFSET_ROWS + " " + AuthPageConstant.FETCH_NEXT;
+            fetchSql += " ORDER BY 1 " + AuthPageConstant.OFFSET_ROWS + " " + AuthPageConstant.FETCH_NEXT;
             
             List<Object> newArgsList = new ArrayList<>(Arrays.asList(arg));
             newArgsList.add((pageNo - 1) * pageSize);

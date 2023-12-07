@@ -14,22 +14,21 @@
  * limitations under the License.
  */
 
-package com.alibaba.nacos.plugin.datasource.constants;
+package com.alibaba.nacos.plugin.datasource.impl.mssql;
+
+import com.alibaba.nacos.plugin.datasource.constants.DataSourceConstant;
+import com.alibaba.nacos.plugin.datasource.impl.derby.TenantInfoMapperByDerby;
 
 /**
- * The data source name.
+ * The mysql implementation of TenantInfoMapper.
  *
  * @author hyx
  **/
 
-public class DataSourceConstant {
-    public static final String MYSQL = "mysql";
+public class TenantInfoMapperByMssql extends TenantInfoMapperByDerby {
 
-    public static final String POSTGRESQL = "postgresql";
-    
-    public static final String DERBY = "derby";
-
-    public static final String ORACLE = "oracle";
-
-    public static final String MSSQL = "mssql";
+    @Override
+    public String getDataSource() {
+        return DataSourceConstant.MSSQL;
+    }
 }

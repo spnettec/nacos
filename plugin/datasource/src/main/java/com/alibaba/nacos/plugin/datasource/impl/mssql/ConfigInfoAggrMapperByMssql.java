@@ -14,22 +14,20 @@
  * limitations under the License.
  */
 
-package com.alibaba.nacos.plugin.datasource.constants;
+package com.alibaba.nacos.plugin.datasource.impl.mssql;
+
+import com.alibaba.nacos.plugin.datasource.constants.DataSourceConstant;
+import com.alibaba.nacos.plugin.datasource.impl.derby.ConfigInfoAggrMapperByDerby;
 
 /**
- * The data source name.
+ * The mysql implementation of ConfigInfoAggrMapper.
  *
  * @author hyx
  **/
 
-public class DataSourceConstant {
-    public static final String MYSQL = "mysql";
-
-    public static final String POSTGRESQL = "postgresql";
-    
-    public static final String DERBY = "derby";
-
-    public static final String ORACLE = "oracle";
-
-    public static final String MSSQL = "mssql";
+public class ConfigInfoAggrMapperByMssql extends ConfigInfoAggrMapperByDerby {
+    @Override
+    public String getDataSource() {
+        return DataSourceConstant.MSSQL;
+    }
 }
