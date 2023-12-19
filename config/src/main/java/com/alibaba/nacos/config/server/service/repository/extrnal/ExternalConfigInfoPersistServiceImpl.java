@@ -34,6 +34,7 @@ import com.alibaba.nacos.config.server.model.ConfigOperateResult;
 import com.alibaba.nacos.config.server.model.SameConfigPolicy;
 import com.alibaba.nacos.config.server.service.repository.ConfigInfoPersistService;
 import com.alibaba.nacos.config.server.service.repository.HistoryConfigInfoPersistService;
+import com.alibaba.nacos.config.server.service.sql.ExternalStorageUtils;
 import com.alibaba.nacos.config.server.utils.LogUtil;
 import com.alibaba.nacos.config.server.utils.ParamUtils;
 import com.alibaba.nacos.config.server.utils.SystemConfig;
@@ -64,7 +65,6 @@ import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreator;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.TransactionStatus;
@@ -228,7 +228,7 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
             }
         }
     }
-    
+
     @Override
     public long addConfigInfoAtomic(final long configId, final String srcIp, final String srcUser,
             final ConfigInfo configInfo, Map<String, Object> configAdvanceInfo) {
@@ -245,7 +245,7 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
         
         final String md5Tmp = MD5Utils.md5Hex(configInfo.getContent(), Constants.ENCODE);
         
-        KeyHolder keyHolder = new GeneratedKeyHolder();
+        KeyHolder keyHolder = ExternalStorageUtils.createKeyHolder();
         
         ConfigInfoMapper configInfoMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                 TableConstant.CONFIG_INFO);
@@ -1339,6 +1339,8 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
                 .select(Collections.singletonList("tag_name"), Arrays.asList("data_id", "group_id", "tenant_id"));
         try {
             return jt.queryForList(sql, new Object[] {dataId, group, tenant}, String.class);
+        } catch (EmptyResultDataAccessException e) {
+            return null;
         } catch (IncorrectResultSizeDataAccessException e) {
             return null;
         } catch (CannotGetJdbcConnectionException e) {
@@ -1465,18 +1467,18 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
     public List<ConfigInfoWrapper> convertChangeConfig(List<Map<String, Object>> list) {
         List<ConfigInfoWrapper> configs = new ArrayList<>();
         for (Map<String, Object> map : list) {
-            Long id = (Long) map.get("id");
+            Long id = ((java.lang.Number) map.get("id")).longValue();
             String dataId = (String) map.get("data_id");
             String group = (String) map.get("group_id");
             String tenant = (String) map.get("tenant_id");
-            String content = (String) map.get("content");
+            String md5 = (String) map.get("md5");
             long mTime = ((LocalDateTime) map.get("gmt_modified")).toInstant(ZoneOffset.ofHours(8)).toEpochMilli();
             ConfigInfoWrapper config = new ConfigInfoWrapper();
             config.setId(id);
             config.setDataId(dataId);
             config.setGroup(group);
+            config.setMd5(md5);
             config.setTenant(tenant);
-            config.setContent(content);
             config.setLastModified(mTime);
             configs.add(config);
         }
