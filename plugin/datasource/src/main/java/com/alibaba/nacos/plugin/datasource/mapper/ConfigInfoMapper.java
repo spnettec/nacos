@@ -389,7 +389,7 @@ public interface ConfigInfoMapper extends Mapper {
 
         final String sqlCountRows = "SELECT count(*) FROM config_info";
         StringBuilder where = new StringBuilder(" WHERE 1=1");
-        if (StringUtils.isNotBlank(tenantId)) {
+        if (!StringUtils.isBlank(tenantId)) {
             where.append(" AND tenant_id LIKE ? ");
             paramList.add(tenantId);
         }
