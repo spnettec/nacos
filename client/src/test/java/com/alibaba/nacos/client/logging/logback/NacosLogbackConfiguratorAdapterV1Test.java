@@ -53,11 +53,11 @@ public class NacosLogbackConfiguratorAdapterV1Test {
     
     ContextBase context;
     
-    NacosLogbackConfiguratorAdapterV1 nacosLogbackConfiguratorAdapter;
+    NacosLogbackConfiguratorAdapterV2 nacosLogbackConfiguratorAdapter;
     
     @Before
     public void setUp() throws Exception {
-        nacosLogbackConfiguratorAdapter = new NacosLogbackConfiguratorAdapterV1();
+        nacosLogbackConfiguratorAdapter = new NacosLogbackConfiguratorAdapterV2();
         context = new ContextBase();
         nacosLogbackConfiguratorAdapter.setContext(context);
         when(url.openConnection()).thenReturn(urlConnection);

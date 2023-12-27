@@ -20,7 +20,6 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.LoggerContextListener;
-import ch.qos.logback.core.CoreConstants;
 import com.alibaba.nacos.client.logging.AbstractNacosLogging;
 import com.alibaba.nacos.common.log.NacosLogbackConfigurator;
 import com.alibaba.nacos.common.spi.NacosServiceLoader;
@@ -35,7 +34,6 @@ import java.util.Collection;
  *
  * @author <a href="mailto:huangxiaoyu1018@gmail.com">hxy1991</a>
  * @author <a href="mailto:hujun3@xiaomi.com">hujun</a>
- *
  * @since 0.9.0
  */
 public class LogbackNacosLogging extends AbstractNacosLogging {
@@ -58,7 +56,7 @@ public class LogbackNacosLogging extends AbstractNacosLogging {
     @Override
     public void loadConfiguration() {
         LoggerContext loggerContext = loadConfigurationOnStart();
-        if (!hasListener(loggerContext)) {
+        if (loggerContext.getObject("RECONFIGURE_ON_CHANGE_TASK") != null && !hasListener(loggerContext)) {
             addListener(loggerContext);
         }
     }
