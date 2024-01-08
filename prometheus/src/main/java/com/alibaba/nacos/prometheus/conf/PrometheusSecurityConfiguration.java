@@ -16,12 +16,14 @@
 
 package com.alibaba.nacos.prometheus.conf;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
-import static com.alibaba.nacos.prometheus.api.ApiConstants.*;
+import static com.alibaba.nacos.prometheus.api.ApiConstants.PROMETHEUS_CONTROLLER_NAMESPACE_PATH;
+import static com.alibaba.nacos.prometheus.api.ApiConstants.PROMETHEUS_CONTROLLER_PATH;
+import static com.alibaba.nacos.prometheus.api.ApiConstants.PROMETHEUS_CONTROLLER_SERVICE_PATH;
 
 
 /**
@@ -30,10 +32,15 @@ import static com.alibaba.nacos.prometheus.api.ApiConstants.*;
  * @author vividfish
  */
 @Configuration
-@ConditionalOnMissingBean(value = WebSecurityCustomizer.class)
 public class PrometheusSecurityConfiguration {
+
     @Bean
-    public WebSecurityCustomizer webSecurityCustomizer() {
-        return (web) -> web.ignoring().requestMatchers(PROMETHEUS_CONTROLLER_PATH,PROMETHEUS_CONTROLLER_NAMESPACE_PATH,PROMETHEUS_CONTROLLER_SERVICE_PATH);
+    public WebSecurityCustomizer prometheusWebSecurityCustomizer() {
+        return web -> {
+            web.ignoring().requestMatchers(AntPathRequestMatcher.antMatcher(PROMETHEUS_CONTROLLER_PATH));
+            web.ignoring().requestMatchers(AntPathRequestMatcher.antMatcher(PROMETHEUS_CONTROLLER_NAMESPACE_PATH));
+            web.ignoring().requestMatchers(AntPathRequestMatcher.antMatcher(PROMETHEUS_CONTROLLER_SERVICE_PATH));
+        };
     }
+
 }

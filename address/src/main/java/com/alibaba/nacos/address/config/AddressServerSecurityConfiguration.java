@@ -24,14 +24,15 @@ import org.springframework.security.web.SecurityFilterChain;
 
 /**
  * nacos web security configuration.
+ *
  * @author onewe
  */
 @Configuration
-@Order(99)
 public class AddressServerSecurityConfiguration {
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    @Order(99)
+    public SecurityFilterChain addressServerSecurityFilterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(requestMatcherRegistry -> requestMatcherRegistry.requestMatchers("/v1/as/**").authenticated())
                 .csrf().disable().httpBasic();
         return http.build();
