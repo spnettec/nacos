@@ -138,7 +138,7 @@
         <jjwt.version>0.12.3</jjwt.version>
         <guava.version>33.0.0-jre</guava.version>
         <javatuples.version>1.2</javatuples.version>
-        <grpc-java.version>1.60.1</grpc-java.version>
+        <grpc-java.version>1.61.0</grpc-java.version>
         <proto-google-common-protos.version>2.29.0</proto-google-common-protos.version>
         <protobuf-java.version>3.25.2</protobuf-java.version>
         <protoc-gen-grpc-java.version>${grpc-java.version}</protoc-gen-grpc-java.version>
