@@ -62,10 +62,7 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.util.*;
 
 import static com.alibaba.nacos.config.server.service.repository.ConfigRowMapperInjector.*;
@@ -236,7 +233,6 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
         final String md5Tmp = MD5Utils.md5Hex(configInfo.getContent(), Constants.ENCODE);
         List<String> insertList = new ArrayList<>(Arrays.asList("data_id", "group_id", "tenant_id", "app_name", "content", "md5", "src_ip", "src_user",
                 "gmt_create", "gmt_modified", "c_desc", "c_use", "effect", "type", "c_schema",
-                "encrypted_data_key",
                 "encrypted_data_key"));
 
         if (dataSourceService.getDataSourceType().equals(PropertiesConstant.ORACLE)) {
@@ -653,13 +649,24 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
             ConfigInfoMapper configInfoMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                     TableConstant.CONFIG_INFO);
             Timestamp now = new Timestamp(System.currentTimeMillis());
-            
-            jt.update(configInfoMapper.update(
-                            Arrays.asList("content", "md5", "src_ip", "src_user", "gmt_modified", "app_name", "c_desc", "c_use",
-                                    "effect", "type", "c_schema", "encrypted_data_key"),
-                            Arrays.asList("data_id", "group_id", "tenant_id")), configInfo.getContent(), md5Tmp, srcIp, srcUser,
+
+            String updateSql = configInfoMapper.update(
+                    Arrays.asList("content", "md5", "src_ip", "src_user", "gmt_modified", "app_name", "c_desc", "c_use",
+                            "effect", "type", "c_schema", "encrypted_data_key"),
+                    Arrays.asList("data_id", "group_id", "tenant_id"));
+            List<Object> parasList = new ArrayList<>(Arrays.asList(configInfo.getContent(), md5Tmp, srcIp, srcUser,
                     now, appNameTmp, desc, use, effect, type, schema, encryptedDataKey, configInfo.getDataId(),
-                    configInfo.getGroup(), tenantTmp);
+                    configInfo.getGroup(), tenantTmp));
+            List<Integer> argTypes = new ArrayList<>(Arrays.asList(Types.VARCHAR,Types.VARCHAR,Types.VARCHAR,Types.VARCHAR,
+                    Types.TIMESTAMP,Types.VARCHAR,Types.VARCHAR,Types.VARCHAR,Types.VARCHAR,Types.VARCHAR,Types.VARCHAR,
+                    Types.VARCHAR,Types.VARCHAR,Types.VARCHAR,Types.VARCHAR));
+            if (dataSourceService.getDataSourceType().equals(PropertiesConstant.ORACLE) && StringUtils.isBlank(tenantTmp)) {
+                updateSql = updateSql.replace("tenant_id = ?","tenant_id is NULL");
+                int index = parasList.size()-1;
+                parasList.remove(index);
+                argTypes.remove(index);
+            }
+            jt.update(updateSql,parasList.toArray(),argTypes.stream().mapToInt(i->i).toArray());
         } catch (CannotGetJdbcConnectionException e) {
             LogUtil.FATAL_LOG.error("[db-error] " + e, e);
             throw e;
@@ -1040,10 +1047,17 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
     @Override
     public ConfigInfoStateWrapper findConfigInfoState(final String dataId, final String group, final String tenant) {
         String tenantTmp = StringUtils.isBlank(tenant) ? StringUtils.EMPTY : tenant;
+        List<Object> parasList = new ArrayList<>(Arrays.asList(dataId, group,tenantTmp));
         try {
+            String selectSql = "SELECT id,data_id,group_id,tenant_id,gmt_modified FROM config_info WHERE data_id = ? AND group_id = ? AND tenant_id = ?";
+            if(dataSourceService.getDataSourceType().equals(PropertiesConstant.ORACLE)){
+                selectSql = selectSql.replace("tenant_id = ?","tenant_id is NULL");
+                int index = parasList.size()-1;
+                parasList.remove(index);
+            }
             return this.jt.queryForObject(
-                    "SELECT id,data_id,group_id,tenant_id,gmt_modified FROM config_info WHERE data_id=? AND group_id=? AND tenant_id=?",
-                    CONFIG_INFO_STATE_WRAPPER_ROW_MAPPER, dataId, group, tenantTmp);
+                    selectSql,
+                    CONFIG_INFO_STATE_WRAPPER_ROW_MAPPER, parasList.toArray());
         } catch (EmptyResultDataAccessException e) { // Indicates that the data does not exist, returns null.
             return null;
         } catch (CannotGetJdbcConnectionException e) {
@@ -1093,7 +1107,7 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
                     TableConstant.CONFIG_INFO);
             String selectSql = configInfoMapper.select(Arrays.asList("data_id", "group_id", "tenant_id", "app_name", "type"),
                     Collections.singletonList("tenant_id"));
-            List<Object> parasList = new ArrayList<>(Arrays.asList(tenantTmp));
+            List<Object> parasList = new ArrayList<>(List.of(tenantTmp));
             if (dataSourceService.getDataSourceType().equals(PropertiesConstant.ORACLE)  && StringUtils.isBlank(tenantTmp)) {
                 selectSql = selectSql.replace("tenant_id = ?","tenant_id is NULL");
                 int index = parasList.size()-1;
