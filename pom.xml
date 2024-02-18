@@ -127,7 +127,7 @@
         <!-- dependency version -->
         <spring-boot-dependencies.version>3.2.2</spring-boot-dependencies.version>
         <servlet-api.version>6.0.0</servlet-api.version>
-        <commons-io.version>2.14.0</commons-io.version>
+        <commons-io.version>2.15.1</commons-io.version>
         <commons-collections4.version>4.4</commons-collections4.version>
         <slf4j-api.version>2.0.11</slf4j-api.version>
         <logback.version>1.4.14</logback.version>
