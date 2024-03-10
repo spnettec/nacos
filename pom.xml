@@ -284,8 +284,6 @@
                         <exclude>**/common/packagescan/classreading/*.java</exclude>
                         <exclude>**/common/packagescan/resource/*.java</exclude>
                         <exclude>**/common/packagescan/util/*.java</exclude>
-                        <exclude>com/alibaba/nacos/api/utils/NetUtils.java</exclude>
-                        <exclude>com/alibaba/nacos/api/naming/pojo/*.java</exclude>
                     </excludes>
                 </configuration>
                 <executions>
