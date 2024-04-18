@@ -52,12 +52,12 @@ public class NacosLogbackConfiguratorAdapterV1Test {
     private InputStream inputStream;
     
     ContextBase context;
-    
-    NacosLogbackConfiguratorAdapterV2 nacosLogbackConfiguratorAdapter;
+
+    NacosLogbackConfiguratorAdapterV1 nacosLogbackConfiguratorAdapter;
     
     @Before
     public void setUp() throws Exception {
-        nacosLogbackConfiguratorAdapter = new NacosLogbackConfiguratorAdapterV2();
+        nacosLogbackConfiguratorAdapter = new NacosLogbackConfiguratorAdapterV1();
         context = new ContextBase();
         nacosLogbackConfiguratorAdapter.setContext(context);
         when(url.openConnection()).thenReturn(urlConnection);

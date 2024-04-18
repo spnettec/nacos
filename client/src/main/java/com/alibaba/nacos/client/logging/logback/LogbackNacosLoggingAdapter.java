@@ -90,7 +90,7 @@ public class LogbackNacosLoggingAdapter implements NacosLoggingAdapter {
     public void loadConfiguration(NacosLoggingProperties loggingProperties) {
         String location = loggingProperties.getLocation();
         LoggerContext loggerContext = loadConfigurationOnStart(location);
-        if (loggerContext.getObject(CoreConstants.RECONFIGURE_ON_CHANGE_TASK) != null && hasNoListener(loggerContext)) {
+        if (loggerContext.getObject("RECONFIGURE_ON_CHANGE_TASK") != null && hasNoListener(loggerContext)) {
             addListener(loggerContext, location);
         }
     }

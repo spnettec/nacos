@@ -92,7 +92,7 @@ public class LogbackNacosLoggingAdapterTest {
     @Test
     public void testLoadConfigurationSuccess() {
         LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
-        loggerContext.putObject(CoreConstants.RECONFIGURE_ON_CHANGE_TASK, new ReconfigureOnChangeTask());
+        loggerContext.putObject("RECONFIGURE_ON_CHANGE_TASK", new ReconfigureOnChangeTask());
         logbackNacosLoggingAdapter.loadConfiguration(loggingProperties);
         for (Logger each : loggerContext.getLoggerList()) {
             if (!"com.alibaba.nacos.client.naming".equals(each.getName())) {
@@ -147,7 +147,7 @@ public class LogbackNacosLoggingAdapterTest {
     @Test
     public void testLoadConfigurationReload() {
         LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
-        loggerContext.putObject(CoreConstants.RECONFIGURE_ON_CHANGE_TASK, new ReconfigureOnChangeTask());
+        loggerContext.putObject("RECONFIGURE_ON_CHANGE_TASK", new ReconfigureOnChangeTask());
         logbackNacosLoggingAdapter.loadConfiguration(loggingProperties);
         loggerContext.reset();
         verify(loggerContextListener).onReset(loggerContext);
@@ -162,7 +162,7 @@ public class LogbackNacosLoggingAdapterTest {
     @Test
     public void testLoadConfigurationStart() {
         LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
-        loggerContext.putObject(CoreConstants.RECONFIGURE_ON_CHANGE_TASK, new ReconfigureOnChangeTask());
+        loggerContext.putObject("RECONFIGURE_ON_CHANGE_TASK", new ReconfigureOnChangeTask());
         logbackNacosLoggingAdapter.loadConfiguration(loggingProperties);
         loggerContext.start();
         verify(loggerContextListener).onStart(loggerContext);
@@ -177,7 +177,7 @@ public class LogbackNacosLoggingAdapterTest {
     @Test
     public void testLoadConfigurationStop() {
         LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
-        loggerContext.putObject(CoreConstants.RECONFIGURE_ON_CHANGE_TASK, new ReconfigureOnChangeTask());
+        loggerContext.putObject("RECONFIGURE_ON_CHANGE_TASK", new ReconfigureOnChangeTask());
         logbackNacosLoggingAdapter.loadConfiguration(loggingProperties);
         loggerContext.stop();
         verify(loggerContextListener).onReset(loggerContext);
