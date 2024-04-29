@@ -135,7 +135,6 @@
         <concurrentlinkedhashmap.version>1.4.2</concurrentlinkedhashmap.version>
         <mysql-connector-java.version>8.2.0</mysql-connector-java.version>
         <jackson-core.version>2.17.0</jackson-core.version>
-        <derby.version>10.17.1.0</derby.version>
         <jjwt.version>0.12.5</jjwt.version>
         <guava.version>33.1.0-jre</guava.version>
         <javatuples.version>1.2</javatuples.version>
@@ -144,7 +143,8 @@
         <protobuf-java.version>3.25.3</protobuf-java.version>
         <protoc-gen-grpc-java.version>${grpc-java.version}</protoc-gen-grpc-java.version>
         <hessian.version>4.0.66</hessian.version>
-        <mockito.version>5.11.0</mockito.version>
+        <mockito-core.version>5.2.0</mockito-core.version>
+        <mockito.version>4.11.0</mockito.version>
         <HikariCP.version>5.1.0</HikariCP.version>
         <SnakeYaml.version>2.2</SnakeYaml.version>
         <jraft-core.version>1.3.25.B</jraft-core.version>
@@ -615,6 +615,7 @@
     
     <!-- Default dependencies in all subprojects -->
     <dependencies>
+
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -655,14 +656,6 @@
                 <groupId>org.junit</groupId>
                 <artifactId>junit-bom</artifactId>
                 <version>${junit5.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <dependency>
-                <!-- Import dependency management from Spring Boot -->
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-dependencies</artifactId>
-                <version>${spring-boot-dependencies.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -892,13 +885,7 @@
                 <artifactId>mysql-connector-j</artifactId>
                 <version>${mysql-connector-java.version}</version>
             </dependency>
-            
-            <dependency>
-                <groupId>org.apache.derby</groupId>
-                <artifactId>derby</artifactId>
-                <version>${derby.version}</version>
-            </dependency>
-            
+
             <!-- JRaft -->
             <dependency>
                 <groupId>com.github.heyoulin.sofa-jraft</groupId>
@@ -993,13 +980,6 @@
                 <artifactId>protobuf-java</artifactId>
                 <version>${protobuf-java.version}</version>
             </dependency>
-            
-            <dependency>
-                <groupId>org.mockito</groupId>
-                <artifactId>mockito-all</artifactId>
-                <version>${mockito-all.version}</version>
-            </dependency>
-            
             <dependency>
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-core</artifactId>
