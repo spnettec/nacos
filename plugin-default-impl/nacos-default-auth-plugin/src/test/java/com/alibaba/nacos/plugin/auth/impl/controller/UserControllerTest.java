@@ -34,6 +34,8 @@ import org.springframework.mock.env.MockEnvironment;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -44,7 +46,7 @@ import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class UserControllerTest {
-
+    
     @Mock
     private HttpServletRequest request;
     
@@ -86,9 +88,10 @@ public class UserControllerTest {
     }
     
     @Test
-    public void testLoginWithAuthedUser() throws AccessException {
+    public void testLoginWithAuthedUser() throws AccessException, IOException {
         when(authenticationManager.authenticate(request)).thenReturn(user);
         when(authenticationManager.hasGlobalAdminRole(user)).thenReturn(true);
+        when(authenticationManager.hasGlobalAdminRole()).thenReturn(true);
         when(authConfigs.getNacosAuthSystemType()).thenReturn(AuthSystemTypes.NACOS.name());
         when(tokenManagerDelegate.getTokenTtlInSeconds(anyString())).thenReturn(18000L);
         Object actual = userController.login("nacos", "nacos", response, request);
@@ -98,7 +101,7 @@ public class UserControllerTest {
         assertTrue(actualString.contains("\"tokenTtl\":18000"));
         assertTrue(actualString.contains("\"globalAdmin\":true"));
     }
-
+    
     private void injectObject(String fieldName, Object value) throws NoSuchFieldException, IllegalAccessException {
         Field field = UserController.class.getDeclaredField(fieldName);
         field.setAccessible(true);
