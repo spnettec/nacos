@@ -710,11 +710,13 @@
                 <artifactId>nacos-logback-adapter-12</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <!--
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>logback-adapter</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            -->
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>nacos-log4j2-adapter</artifactId>
