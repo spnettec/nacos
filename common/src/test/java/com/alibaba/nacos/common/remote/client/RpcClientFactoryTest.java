@@ -48,8 +48,11 @@ public class RpcClientFactoryTest {
     @Mock
     RpcClient rpcClient;
     
-    @Mock(strictness = Mock.Strictness.LENIENT)
-    RpcClientTlsConfig tlsConfig;
+    @Mock(lenient = true)
+    RpcClientTlsConfig clusterClientTlsConfig;
+
+    @Mock(lenient = true)
+    RpcClientTlsConfig rpcClientTlsConfig;
     
     @BeforeClass
     public static void setUpBeforeClass() throws NoSuchFieldException, IllegalAccessException {
@@ -167,9 +170,9 @@ public class RpcClientFactoryTest {
     
     @Test
     public void testCreateClusterClientTsl() {
-        Mockito.when(tlsConfig.getEnableTls()).thenReturn(true);
+        Mockito.when(clusterClientTlsConfig.getEnableTls()).thenReturn(true);
         RpcClient client = RpcClientFactory.createClusterClient("testClient", ConnectionType.GRPC,
-                Collections.singletonMap("labelKey", "labelValue"), tlsConfig);
+                Collections.singletonMap("labelKey", "labelValue"), clusterClientTlsConfig);
         Map<String, String> labesMap = new HashMap<>();
         labesMap.put("labelKey", "labelValue");
         labesMap.put("tls.enable", "true");
@@ -181,9 +184,9 @@ public class RpcClientFactoryTest {
     
     @Test
     public void testCreateClientTsl() {
-        Mockito.when(tlsConfig.getEnableTls()).thenReturn(true);
+        Mockito.when(rpcClientTlsConfig.getEnableTls()).thenReturn(true);
         RpcClient client = RpcClientFactory.createClient("testClient", ConnectionType.GRPC,
-                Collections.singletonMap("labelKey", "labelValue"), tlsConfig);
+                Collections.singletonMap("labelKey", "labelValue"), rpcClientTlsConfig);
         Map<String, String> labesMap = new HashMap<>();
         labesMap.put("labelKey", "labelValue");
         labesMap.put("tls.enable", "true");

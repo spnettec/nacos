@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2020 Alibaba Group Holding Ltd.
+ * Copyright 1999-2022 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,11 @@
  * limitations under the License.
  */
 
-package com.alibaba.nacos.common.remote.client;
-
-import com.alibaba.nacos.common.remote.TlsConfig;
+package com.alibaba.nacos.plugin.datasource.impl;
 
 /**
- * gRPC config for sdk.
- *
- * @author githubcheng2978
- */
-public class RpcClientTlsConfig extends TlsConfig {
+ * A custom interface. just for test
+ * @author mikolls
+ **/
+public interface TestInterface {
 }
