@@ -21,36 +21,40 @@ import com.alibaba.nacos.api.naming.CommonParams;
 import com.alibaba.nacos.auth.annotation.Secured;
 import com.alibaba.nacos.common.utils.StringUtils;
 import com.alibaba.nacos.plugin.auth.api.Resource;
-import jakarta.servlet.http.HttpServletRequest;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.lang.reflect.Method;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
 
-@RunWith(MockitoJUnitRunner.class)
-public class NamingHttpResourceParserTest {
+@ExtendWith(MockitoExtension.class)
+// todo remove this
+@MockitoSettings(strictness = Strictness.LENIENT)
+class NamingHttpResourceParserTest {
     
     @Mock
     private HttpServletRequest request;
     
     private NamingHttpResourceParser resourceParser;
     
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         resourceParser = new NamingHttpResourceParser();
     }
     
     @Test
     @Secured()
-    public void testParseWithFullContext() throws NoSuchMethodException {
+    void testParseWithFullContext() throws NoSuchMethodException {
         Secured secured = getMethodSecure();
         Mockito.when(request.getParameter(eq(CommonParams.NAMESPACE_ID))).thenReturn("testNs");
         Mockito.when(request.getParameter(eq(CommonParams.GROUP_NAME))).thenReturn("testG");
@@ -64,7 +68,7 @@ public class NamingHttpResourceParserTest {
     
     @Test
     @Secured()
-    public void testParseWithoutNamespace() throws NoSuchMethodException {
+    void testParseWithoutNamespace() throws NoSuchMethodException {
         Secured secured = getMethodSecure();
         Mockito.when(request.getParameter(eq(CommonParams.GROUP_NAME))).thenReturn("testG");
         Mockito.when(request.getParameter(eq(CommonParams.SERVICE_NAME))).thenReturn("testS");
@@ -77,7 +81,7 @@ public class NamingHttpResourceParserTest {
     
     @Test
     @Secured()
-    public void testParseWithoutGroup() throws NoSuchMethodException {
+    void testParseWithoutGroup() throws NoSuchMethodException {
         Secured secured = getMethodSecure();
         Mockito.when(request.getParameter(eq(CommonParams.NAMESPACE_ID))).thenReturn("testNs");
         Mockito.when(request.getParameter(eq(CommonParams.SERVICE_NAME))).thenReturn("testS");
@@ -90,7 +94,7 @@ public class NamingHttpResourceParserTest {
     
     @Test
     @Secured()
-    public void testParseWithGroupInService() throws NoSuchMethodException {
+    void testParseWithGroupInService() throws NoSuchMethodException {
         Secured secured = getMethodSecure();
         Mockito.when(request.getParameter(eq(CommonParams.NAMESPACE_ID))).thenReturn("testNs");
         Mockito.when(request.getParameter(eq(CommonParams.SERVICE_NAME))).thenReturn("testG@@testS");
@@ -103,7 +107,7 @@ public class NamingHttpResourceParserTest {
     
     @Test
     @Secured()
-    public void testParseWithoutService() throws NoSuchMethodException {
+    void testParseWithoutService() throws NoSuchMethodException {
         Secured secured = getMethodSecure();
         Mockito.when(request.getParameter(eq(CommonParams.NAMESPACE_ID))).thenReturn("testNs");
         Mockito.when(request.getParameter(eq(CommonParams.GROUP_NAME))).thenReturn("testG");
@@ -116,7 +120,7 @@ public class NamingHttpResourceParserTest {
     
     @Test
     @Secured()
-    public void testParseWithoutGroupAndService() throws NoSuchMethodException {
+    void testParseWithoutGroupAndService() throws NoSuchMethodException {
         Secured secured = getMethodSecure();
         Mockito.when(request.getParameter(eq(CommonParams.NAMESPACE_ID))).thenReturn("testNs");
         Resource actual = resourceParser.parse(request, secured);
@@ -128,7 +132,7 @@ public class NamingHttpResourceParserTest {
     
     @Test
     @Secured(tags = {"testTag"})
-    public void testParseWithTags() throws NoSuchMethodException {
+    void testParseWithTags() throws NoSuchMethodException {
         Secured secured = getMethodSecure();
         Mockito.when(request.getParameter(eq(CommonParams.NAMESPACE_ID))).thenReturn("testNs");
         Mockito.when(request.getParameter(eq(CommonParams.GROUP_NAME))).thenReturn("testG");
@@ -145,7 +149,7 @@ public class NamingHttpResourceParserTest {
         StackTraceElement[] traces = new Exception().getStackTrace();
         StackTraceElement callerElement = traces[1];
         String methodName = callerElement.getMethodName();
-        Method method = this.getClass().getMethod(methodName);
+        Method method = this.getClass().getDeclaredMethod(methodName);
         return method.getAnnotation(Secured.class);
     }
 }
