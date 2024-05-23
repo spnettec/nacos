@@ -18,7 +18,6 @@ package com.alibaba.nacos.common.utils;
 
 import org.apache.commons.io.Charsets;
 import org.junit.jupiter.api.Test;
-import sun.security.action.GetPropertyAction;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
