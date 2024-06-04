@@ -20,12 +20,12 @@ import ch.qos.logback.core.ContextBase;
 import ch.qos.logback.core.joran.spi.JoranException;
 import ch.qos.logback.core.status.ErrorStatus;
 import ch.qos.logback.core.status.Status;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,44 +33,44 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
-@RunWith(MockitoJUnitRunner.class)
-public class NacosLogbackConfiguratorAdapterV1Test {
-    
-    @Mock
-    private URL url;
-    
-    @Mock
-    private URLConnection urlConnection;
-    
-    @Mock
-    private InputStream inputStream;
-    
+@ExtendWith(MockitoExtension.class)
+class NacosLogbackConfiguratorAdapterV1Test {
+
     ContextBase context;
 
     NacosLogbackConfiguratorAdapterV1 nacosLogbackConfiguratorAdapter;
-    
-    @Before
-    public void setUp() throws Exception {
+
+    @Mock
+    private URL url;
+
+    @Mock
+    private URLConnection urlConnection;
+
+    @Mock
+    private InputStream inputStream;
+
+    @BeforeEach
+    void setUp() throws Exception {
         nacosLogbackConfiguratorAdapter = new NacosLogbackConfiguratorAdapterV1();
         context = new ContextBase();
         nacosLogbackConfiguratorAdapter.setContext(context);
         when(url.openConnection()).thenReturn(urlConnection);
         when(urlConnection.getInputStream()).thenReturn(inputStream);
     }
-    
-    @After
-    public void tearDown() throws Exception {
+
+    @AfterEach
+    void tearDown() throws Exception {
         context.stop();
     }
-    
+
     @Test
-    public void testConfigureWithError() throws Exception {
+    void testConfigureWithError() throws Exception {
         doThrow(new IOException("test")).when(inputStream).close();
         try {
             nacosLogbackConfiguratorAdapter.configure(url);

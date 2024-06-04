@@ -19,21 +19,24 @@ package com.alibaba.nacos.core.paramcheck;
 import com.alibaba.nacos.core.code.ControllerMethodsCache;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for the {@link ParamCheckerFilter}.
+ *
  * @author lynn.lqp
  * @date 2023/11/7
  */
-public class ParamCheckerFilterTest {
+class ParamCheckerFilterTest {
 
     private ParamCheckerFilter filter;
 
@@ -48,7 +51,7 @@ public class ParamCheckerFilterTest {
     private FilterChain chain;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         filter = new ParamCheckerFilter(mock(ControllerMethodsCache.class));
         methodsCache = mock(ControllerMethodsCache.class);
         serverParamCheckConfig = mock(ServerParamCheckConfig.class);
@@ -58,14 +61,14 @@ public class ParamCheckerFilterTest {
     }
 
     @Test
-    public void testDoFilterParamCheckDisabled() throws IOException, ServletException {
+    void testDoFilterParamCheckDisabled() throws IOException, ServletException {
         when(serverParamCheckConfig.isParamCheckEnabled()).thenReturn(false);
         filter.doFilter(request, response, chain);
         verify(chain).doFilter(request, response);
     }
 
     @Test
-    public void testDoFilterMethodNotFound() throws IOException, ServletException {
+    void testDoFilterMethodNotFound() throws IOException, ServletException {
         when(methodsCache.getMethod(request)).thenReturn(null);
         filter.doFilter(request, response, chain);
         verify(chain).doFilter(request, response);
