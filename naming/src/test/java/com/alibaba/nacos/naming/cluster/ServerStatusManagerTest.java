@@ -47,7 +47,7 @@ class ServerStatusManagerTest {
     @Test
     void testInit() {
         try (MockedStatic mocked = mockStatic(GlobalExecutor.class)) {
-            ServerStatusManager serverStatusManager = new ServerStatusManager(mock(SwitchDomain.class));
+            ServerStatusManager serverStatusManager = new ServerStatusManager(mock(SwitchDomain.class), mock(ConsistencyService.class));
             serverStatusManager.init();
             mocked.verify(() -> GlobalExecutor.registerServerStatusUpdater(any()));
         }
@@ -55,7 +55,7 @@ class ServerStatusManagerTest {
 
     @Test
     void testGetServerStatus() {
-        ServerStatusManager serverStatusManager = new ServerStatusManager(mock(SwitchDomain.class));
+        ServerStatusManager serverStatusManager = new ServerStatusManager(mock(SwitchDomain.class), mock(ConsistencyService.class));
         ServerStatus serverStatus = serverStatusManager.getServerStatus();
         assertEquals(ServerStatus.STARTING, serverStatus);
 
@@ -63,7 +63,7 @@ class ServerStatusManagerTest {
 
     @Test
     public void testGetErrorMsg() throws NoSuchFieldException, IllegalAccessException {
-        ServerStatusManager serverStatusManager = new ServerStatusManager(mock(SwitchDomain.class));
+        ServerStatusManager serverStatusManager = new ServerStatusManager(mock(SwitchDomain.class), mock(ConsistencyService.class));
         Field field = ServerStatusManager.class.getDeclaredField("consistencyService");
         field.setAccessible(true);
         ConsistencyService consistencyService = mock(ConsistencyService.class);
@@ -78,7 +78,7 @@ class ServerStatusManagerTest {
         SwitchDomain switchDomain = mock(SwitchDomain.class);
         String expect = ServerStatus.DOWN.toString();
         when(switchDomain.getOverriddenServerStatus()).thenReturn(expect);
-        ServerStatusManager serverStatusManager = new ServerStatusManager(switchDomain);
+        ServerStatusManager serverStatusManager = new ServerStatusManager(switchDomain, mock(ConsistencyService.class));
         ServerStatusManager.ServerStatusUpdater updater = serverStatusManager.new ServerStatusUpdater();
         //then
         updater.run();
@@ -90,7 +90,7 @@ class ServerStatusManagerTest {
     @Test
     void testUpdaterFromConsistency1() throws NoSuchFieldException, IllegalAccessException {
         SwitchDomain switchDomain = mock(SwitchDomain.class);
-        ServerStatusManager serverStatusManager = new ServerStatusManager(switchDomain);
+        ServerStatusManager serverStatusManager = new ServerStatusManager(switchDomain, mock(ConsistencyService.class));
         Field field = ServerStatusManager.class.getDeclaredField("consistencyService");
         field.setAccessible(true);
         ConsistencyService consistencyService = mock(ConsistencyService.class);
@@ -106,7 +106,7 @@ class ServerStatusManagerTest {
     @Test
     void testUpdaterFromConsistency2() throws NoSuchFieldException, IllegalAccessException {
         SwitchDomain switchDomain = mock(SwitchDomain.class);
-        ServerStatusManager serverStatusManager = new ServerStatusManager(switchDomain);
+        ServerStatusManager serverStatusManager = new ServerStatusManager(switchDomain, mock(ConsistencyService.class));
         Field field = ServerStatusManager.class.getDeclaredField("consistencyService");
         field.setAccessible(true);
         ConsistencyService consistencyService = mock(ConsistencyService.class);
