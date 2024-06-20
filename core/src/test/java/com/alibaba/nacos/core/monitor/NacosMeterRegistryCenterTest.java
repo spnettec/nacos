@@ -17,7 +17,7 @@
 package com.alibaba.nacos.core.monitor;
 
 import com.alibaba.nacos.sys.utils.ApplicationUtils;
-import io.micrometer.prometheus.PrometheusMeterRegistry;
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,21 +34,21 @@ import static org.mockito.Mockito.when;
 @MockitoSettings(strictness = Strictness.LENIENT)
 @ExtendWith(MockitoExtension.class)
 class NacosMeterRegistryCenterTest {
-    
+
     @Mock
     private ConfigurableApplicationContext context;
-    
+
     @AfterAll
     static void tearDown() {
         ApplicationUtils.injectContext(null);
     }
-    
+
     @BeforeEach
     void initMeterRegistry() {
         ApplicationUtils.injectContext(context);
         when(context.getBean(PrometheusMeterRegistry.class)).thenReturn(null);
     }
-    
+
     @Test
     void testGetMeterRegistry() {
         assertNotNull(NacosMeterRegistryCenter.getMeterRegistry(NacosMeterRegistryCenter.CORE_STABLE_REGISTRY));
@@ -57,5 +57,5 @@ class NacosMeterRegistryCenterTest {
         assertNotNull(NacosMeterRegistryCenter.getMeterRegistry(NacosMeterRegistryCenter.TOPN_CONFIG_CHANGE_REGISTRY));
         assertNotNull(NacosMeterRegistryCenter.getMeterRegistry(NacosMeterRegistryCenter.TOPN_SERVICE_CHANGE_REGISTRY));
     }
-    
+
 }

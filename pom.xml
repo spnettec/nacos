@@ -125,16 +125,16 @@
         <p3c-pmd.version>2.1.1</p3c-pmd.version>
 
         <!-- dependency version -->
-        <spring-boot-dependencies.version>3.2.5</spring-boot-dependencies.version>
+        <spring-boot-dependencies.version>3.3.0</spring-boot-dependencies.version>
         <servlet-api.version>6.0.0</servlet-api.version>
         <commons-io.version>2.16.0</commons-io.version>
         <commons-collections4.version>4.4</commons-collections4.version>
-        <slf4j-api.version>2.0.12</slf4j-api.version>
-        <logback.version>1.5.3</logback.version>
+        <slf4j-api.version>2.0.13</slf4j-api.version>
+        <logback.version>1.5.6</logback.version>
         <log4j.version>2.23.1</log4j.version>
         <concurrentlinkedhashmap.version>1.4.2</concurrentlinkedhashmap.version>
         <mysql-connector-java.version>8.2.0</mysql-connector-java.version>
-        <jackson-core.version>2.17.0</jackson-core.version>
+        <jackson-core.version>2.17.1</jackson-core.version>
         <jjwt.version>0.12.5</jjwt.version>
         <guava.version>33.1.0-jre</guava.version>
         <javatuples.version>1.2</javatuples.version>
