@@ -28,7 +28,6 @@ import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.naming.remote.request.NotifySubscriberRequest;
 import com.alibaba.nacos.api.remote.request.Request;
 import com.alibaba.nacos.api.remote.request.RequestMeta;
-import com.alibaba.nacos.api.remote.request.SetupAckRequest;
 import com.alibaba.nacos.api.remote.response.Response;
 import com.alibaba.nacos.common.ability.AbstractAbilityControlManager;
 import com.alibaba.nacos.common.ability.discover.NacosAbilityManagerHolder;
@@ -44,14 +43,13 @@ import com.alibaba.nacos.core.remote.RequestFilters;
 import com.alibaba.nacos.core.remote.RequestHandler;
 import com.alibaba.nacos.core.remote.RequestHandlerRegistry;
 import com.alibaba.nacos.test.ability.component.TestServerAbilityControlManager;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import javax.annotation.Resource;
 import java.lang.reflect.Field;
@@ -62,70 +60,73 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
 
-@RunWith(SpringRunner.class)
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(classes = Nacos.class, properties = {
         "server.servlet.context-path=/nacos"}, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @SuppressWarnings("all")
-public class AbilityDiscovery {
-    
+class AbilityDiscovery {
+
     @LocalServerPort
     private int port;
-    
+
     @Resource
     private RequestHandlerRegistry requestHandlerRegistry;
-    
+
     @Resource
     private RequestFilters filters;
-    
+
     @Resource
     private ConnectionManager connectionManager;
-    
+
     private RpcClient client;
 
     private RpcClient clusterClient;
 
     private ConfigService configService;
-    
+
     private AbstractAbilityControlManager oldInstance;
-    
+
     /**
      * test server judge client abilities
      */
     private volatile boolean serverSuccess = false;
-    
+
     private volatile boolean clientSuccess = false;
 
     private volatile boolean clusterSuccess = false;
-    
+
     private Field abstractAbilityControlManager;
-    
+
     private Field registryHandlerFields;
 
     private Field serverReuqestHandlersField;
-    
+
     private Field currentConnField;
 
     private Field setupRequestHandlerField;
-    
-    @Before
-    public void setup() throws NoSuchFieldException, IllegalAccessException, NacosException {
+
+    @BeforeEach
+    void setup() throws NoSuchFieldException, IllegalAccessException, NacosException {
         // load class
         oldInstance = NacosAbilityManagerHolder.getInstance();
-        
+
         // replace
-        abstractAbilityControlManager = NacosAbilityManagerHolder.class
-                .getDeclaredField("abstractAbilityControlManager");
+        abstractAbilityControlManager = NacosAbilityManagerHolder.class.getDeclaredField("abstractAbilityControlManager");
         abstractAbilityControlManager.setAccessible(true);
         abstractAbilityControlManager.set(NacosAbilityManagerHolder.class, new TestServerAbilityControlManager());
-        
+
         // get registry field
         registryHandlerFields = RequestHandlerRegistry.class.getDeclaredField("registryHandlers");
         registryHandlerFields.setAccessible(true);
-        
+
         // currentConn
         currentConnField = RpcClient.class.getDeclaredField("currentConnection");
         currentConnField.setAccessible(true);
-        
+
         // init config service
         Properties properties = new Properties();
         properties.put(PropertyKeyConst.SERVER_ADDR, "127.0.0.1:" + port);
@@ -146,12 +147,12 @@ public class AbilityDiscovery {
             public String genNextServer() {
                 return "127.0.0.1:" + port;
             }
-        
+
             @Override
             public String getCurrentServer() {
                 return "127.0.0.1:" + port;
             }
-        
+
             @Override
             public List<String> getServerList() {
                 return Collections.singletonList("127.0.0.1:" + port);
@@ -180,66 +181,65 @@ public class AbilityDiscovery {
         // connect to server
         clusterClient.start();
     }
-    
+
     @Test
-    public void testClientDiscovery() throws NacosException {
+    void testClientDiscovery() throws NacosException {
         // client judge ability
-        Assert.assertEquals(client.getConnectionAbility(AbilityKey.SERVER_TEST_1), AbilityStatus.SUPPORTED);
-        Assert.assertEquals(client.getConnectionAbility(AbilityKey.SERVER_TEST_2), AbilityStatus.NOT_SUPPORTED);
+        assertEquals(AbilityStatus.SUPPORTED, client.getConnectionAbility(AbilityKey.SERVER_TEST_1));
+        assertEquals(AbilityStatus.NOT_SUPPORTED, client.getConnectionAbility(AbilityKey.SERVER_TEST_2));
     }
-    
+
     @Test
-    public void testServerDiscoveryAndJudge() throws Exception {
-        Map<String, RequestHandler> handlers = (Map<String, RequestHandler>) registryHandlerFields
-                .get(requestHandlerRegistry);
-        
+    void testServerDiscoveryAndJudge() throws Exception {
+        Map<String, RequestHandler> handlers = (Map<String, RequestHandler>) registryHandlerFields.get(requestHandlerRegistry);
+
         // set handler
         RequestHandler oldRequestHandler = handlers.remove(ConfigQueryRequest.class.getSimpleName());
         handlers.put(ConfigQueryRequest.class.getSimpleName(), new ClientRequestHandler(filters));
         configService.getConfig("test", "DEFAULT_GROUP", 2000);
         // wait server invoke
         Thread.sleep(3000);
-        Assert.assertTrue(serverSuccess);
+        assertTrue(serverSuccess);
         // recover
         handlers.remove(ConfigQueryRequest.class.getSimpleName());
         handlers.put(ConfigQueryRequest.class.getSimpleName(), oldRequestHandler);
     }
-    
+
     @Test
-    public void testClientJudge() throws Exception {
+    void testClientJudge() throws Exception {
         List<ServerRequestHandler> handlers = (List<ServerRequestHandler>) serverReuqestHandlersField.get(client);
         handlers.clear();
         // register
         client.registerServerRequestHandler(new ServerRequestHandler() {
             @Override
             public Response requestReply(Request request, Connection connection) {
-                if (connection.getConnectionAbility(AbilityKey.SERVER_TEST_1).equals(AbilityStatus.SUPPORTED) && connection
-                        .getConnectionAbility(AbilityKey.SERVER_TEST_2).equals(AbilityStatus.NOT_SUPPORTED)) {
+                if (connection.getConnectionAbility(AbilityKey.SERVER_TEST_1).equals(AbilityStatus.SUPPORTED)
+                        && connection.getConnectionAbility(AbilityKey.SERVER_TEST_2).equals(AbilityStatus.NOT_SUPPORTED)) {
                     clientSuccess = true;
                 }
-                return new Response(){};
+                return new Response() {
+                };
             }
         });
 
         // get id
         Connection conn = (Connection) currentConnField.get(client);
-        
+
         com.alibaba.nacos.core.remote.Connection connection = connectionManager.getConnection(conn.getConnectionId());
         try {
             connection.request(new NotifySubscriberRequest(), 2000L);
         } catch (NacosException e) {
             // nothing to do
         }
-        
+
         // wait client react
         Thread.sleep(4000);
-        Assert.assertTrue(clientSuccess);
+        assertTrue(clientSuccess);
     }
 
     @Test
-    public void testClusterClient() throws IllegalAccessException, NacosException, InterruptedException, NoSuchFieldException {
-        Map<String, RequestHandler> handlers = (Map<String, RequestHandler>) registryHandlerFields
-                .get(requestHandlerRegistry);
+    void testClusterClient() throws IllegalAccessException, NacosException, InterruptedException, NoSuchFieldException {
+        Map<String, RequestHandler> handlers = (Map<String, RequestHandler>) registryHandlerFields.get(requestHandlerRegistry);
 
         // set handler
         RequestHandler oldRequestHandler = handlers.remove(ConfigQueryRequest.class.getSimpleName());
@@ -247,41 +247,41 @@ public class AbilityDiscovery {
         configService.getConfig("test", "DEFAULT_GROUP", 2000);
         // wait server invoke
         Thread.sleep(3000);
-        Assert.assertTrue(clusterSuccess);
+        assertTrue(clusterSuccess);
         // recover
         handlers.remove(ConfigQueryRequest.class.getSimpleName());
         handlers.put(ConfigQueryRequest.class.getSimpleName(), oldRequestHandler);
     }
 
     @Test
-    public void testNegotiationTimeout() throws Exception {
+    void testNegotiationTimeout() throws Exception {
         Object origin = setupRequestHandlerField.get(client);
         // set null for setupRequestHandlerField
         setupRequestHandlerField.set(client, null);
         // try connect
         Connection connection = client.connectToServer(new RpcClient.ServerInfo("127.0.0.1", port));
-        Assert.assertNull(connection);
+        assertNull(connection);
         // recovery
         setupRequestHandlerField.set(client, origin);
     }
-    
-    @After
-    public void recover() throws IllegalAccessException, NacosException {
+
+    @AfterEach
+    void recover() throws IllegalAccessException, NacosException {
         abstractAbilityControlManager.set(NacosAbilityManagerHolder.class, oldInstance);
         client.shutdown();
     }
-    
+
     /**
      * just to test ability
      */
     class ClientRequestHandler extends RequestHandler<ConfigQueryRequest, ConfigQueryResponse> {
-        
+
         public ClientRequestHandler(RequestFilters requestFilters) throws NoSuchFieldException, IllegalAccessException {
             Field declaredField = RequestHandler.class.getDeclaredField("requestFilters");
             declaredField.setAccessible(true);
             declaredField.set(this, requestFilters);
         }
-        
+
         @Override
         public ConfigQueryResponse handle(ConfigQueryRequest request, RequestMeta meta) throws NacosException {
             if (meta.getConnectionAbility(AbilityKey.SDK_CLIENT_TEST_1).equals(AbilityStatus.SUPPORTED)) {
