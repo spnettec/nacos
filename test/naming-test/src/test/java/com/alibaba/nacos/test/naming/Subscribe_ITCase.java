@@ -33,7 +33,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 
@@ -57,14 +57,14 @@ import static org.junit.jupiter.api.Assertions.fail;
 @SpringBootTest(classes = Nacos.class, properties = {
         "server.servlet.context-path=/nacos"}, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class Subscribe_ITCase extends NamingBase {
-    
+
     private NamingService naming;
-    
+
     @LocalServerPort
     private int port;
-    
+
     private volatile List<Instance> instances = Collections.emptyList();
-    
+
     @BeforeEach
     void init() throws Exception {
         instances.clear();
@@ -78,7 +78,7 @@ class Subscribe_ITCase extends NamingBase {
         String url = String.format("http://localhost:%d/", port);
         this.base = new URL(url);
     }
-    
+
     /**
      * 添加IP，收到通知
      *
@@ -88,7 +88,7 @@ class Subscribe_ITCase extends NamingBase {
     @Timeout(value = 4 * TIME_OUT, unit = TimeUnit.MILLISECONDS)
     void subscribeAdd() throws Exception {
         String serviceName = randomDomainName();
-        
+
         naming.subscribe(serviceName, new EventListener() {
             @Override
             public void onEvent(Event event) {
@@ -97,16 +97,16 @@ class Subscribe_ITCase extends NamingBase {
                 instances = ((NamingEvent) event).getInstances();
             }
         });
-        
+
         naming.registerInstance(serviceName, "127.0.0.1", TEST_PORT, "c1");
-        
+
         while (instances.isEmpty()) {
             Thread.sleep(1000L);
         }
-        
+
         assertTrue(verifyInstanceList(instances, naming.getAllInstances(serviceName)));
     }
-    
+
     /**
      * 删除IP，收到通知
      *
@@ -117,12 +117,12 @@ class Subscribe_ITCase extends NamingBase {
     void subscribeDelete() throws Exception {
         String serviceName = randomDomainName();
         naming.registerInstance(serviceName, "127.0.0.1", TEST_PORT, "c1");
-        
+
         TimeUnit.SECONDS.sleep(3);
-        
+
         naming.subscribe(serviceName, new EventListener() {
             int index = 0;
-            
+
             @Override
             public void onEvent(Event event) {
                 if (index == 0) {
@@ -134,18 +134,18 @@ class Subscribe_ITCase extends NamingBase {
                 instances = ((NamingEvent) event).getInstances();
             }
         });
-        
+
         TimeUnit.SECONDS.sleep(1);
-        
+
         naming.deregisterInstance(serviceName, "127.0.0.1", TEST_PORT, "c1");
-        
+
         while (!instances.isEmpty()) {
             Thread.sleep(1000L);
         }
-        
+
         assertTrue(instances.isEmpty());
     }
-    
+
     /**
      * 添加不可用IP，收到通知
      *
@@ -155,7 +155,7 @@ class Subscribe_ITCase extends NamingBase {
     @Timeout(value = 4 * TIME_OUT, unit = TimeUnit.MILLISECONDS)
     void subscribeUnhealthy() throws Exception {
         String serviceName = randomDomainName();
-        
+
         naming.subscribe(serviceName, new EventListener() {
             @Override
             public void onEvent(Event event) {
@@ -164,22 +164,22 @@ class Subscribe_ITCase extends NamingBase {
                 instances = ((NamingEvent) event).getInstances();
             }
         });
-        
+
         naming.registerInstance(serviceName, "1.1.1.1", TEST_PORT, "c1");
-        
+
         while (instances.isEmpty()) {
             Thread.sleep(1000L);
         }
-        
+
         assertTrue(verifyInstanceList(instances, naming.getAllInstances(serviceName)));
     }
-    
+
     @Test
     @Timeout(value = 4 * TIME_OUT, unit = TimeUnit.MILLISECONDS)
     void subscribeEmpty() throws Exception {
-        
+
         String serviceName = randomDomainName();
-        
+
         naming.subscribe(serviceName, new EventListener() {
             @Override
             public void onEvent(Event event) {
@@ -188,32 +188,32 @@ class Subscribe_ITCase extends NamingBase {
                 instances = ((NamingEvent) event).getInstances();
             }
         });
-        
+
         naming.registerInstance(serviceName, "1.1.1.1", TEST_PORT, "c1");
-        
+
         while (instances.isEmpty()) {
             Thread.sleep(1000L);
         }
-        
+
         assertTrue(verifyInstanceList(instances, naming.getAllInstances(serviceName)));
-        
+
         naming.deregisterInstance(serviceName, "1.1.1.1", TEST_PORT, "c1");
-        
+
         while (!instances.isEmpty()) {
             Thread.sleep(1000L);
         }
-        
+
         assertEquals(0, instances.size());
         assertEquals(0, naming.getAllInstances(serviceName).size());
     }
-    
+
     @Test
     void querySubscribers() throws Exception {
-        
+
         String serviceName = randomDomainName();
-        
+
         naming.registerInstance(serviceName, "1.1.1.1", TEST_PORT, "c1");
-        
+
         EventListener listener = new EventListener() {
             @Override
             public void onEvent(Event event) {
@@ -222,25 +222,25 @@ class Subscribe_ITCase extends NamingBase {
                 instances = ((NamingEvent) event).getInstances();
             }
         };
-        
+
         naming.subscribe(serviceName, listener);
-        
+
         TimeUnit.SECONDS.sleep(3);
-        
+
         ResponseEntity<String> response = request(NamingBase.NAMING_CONTROLLER_PATH + "/service/subscribers",
                 Params.newParams().appendParam("serviceName", serviceName).appendParam("pageNo", "1").appendParam("pageSize", "10").done(),
                 String.class, HttpMethod.GET);
         assertTrue(response.getStatusCode().is2xxSuccessful());
-        
+
         JsonNode body = JacksonUtils.toObj(response.getBody());
-        
+
         assertEquals(1, body.get("subscribers").size());
-        
+
         Properties properties = new Properties();
         properties.setProperty("namingRequestTimeout", "300000");
         properties.setProperty("serverAddr", "127.0.0.1" + ":" + port);
         NamingService naming2 = NamingFactory.createNamingService(properties);
-        
+
         naming2.subscribe(serviceName, new EventListener() {
             @Override
             public void onEvent(Event event) {
@@ -249,20 +249,20 @@ class Subscribe_ITCase extends NamingBase {
                 instances = ((NamingEvent) event).getInstances();
             }
         });
-        
+
         TimeUnit.SECONDS.sleep(3);
-        
+
         response = request(NamingBase.NAMING_CONTROLLER_PATH + "/service/subscribers",
                 Params.newParams().appendParam("serviceName", serviceName).appendParam("pageNo", "1").appendParam("pageSize", "10").done(),
                 String.class, HttpMethod.GET);
         assertTrue(response.getStatusCode().is2xxSuccessful());
-        
+
         body = JacksonUtils.toObj(response.getBody());
-        
+
         // server will remove duplicate subscriber by ip port service app and so on
         assertEquals(1, body.get("subscribers").size());
     }
-    
+
     @Test
     void subscribeSameServiceForTwoNamingService() throws Exception {
         Properties properties1 = new Properties();
@@ -273,10 +273,10 @@ class Subscribe_ITCase extends NamingBase {
         properties2.setProperty("serverAddr", "127.0.0.1" + ":" + port);
         properties2.setProperty("namespace", "ns-002");
         final NamingService naming2 = NamingFactory.createNamingService(properties2);
-        
+
         final ConcurrentHashSet<Instance> concurrentHashSet1 = new ConcurrentHashSet();
         final String serviceName = randomDomainName();
-        
+
         naming1.subscribe(serviceName, new EventListener() {
             @Override
             public void onEvent(Event event) {
@@ -293,13 +293,13 @@ class Subscribe_ITCase extends NamingBase {
                 concurrentHashSet1.addAll(((NamingEvent) event).getInstances());
             }
         });
-        
+
         naming1.registerInstance(serviceName, "1.1.1.1", TEST_PORT, "c1");
-        
+
         while (instances.isEmpty()) {
             Thread.sleep(1000L);
         }
-        
+
         try {
             assertTrue(verifyInstanceList(instances, naming1.getAllInstances(serviceName)));
             assertEquals(0, concurrentHashSet1.size());
@@ -308,11 +308,11 @@ class Subscribe_ITCase extends NamingBase {
             naming2.shutDown();
         }
     }
-    
+
     @Test
     void subscribeUsingAbstractNamingChangeListener() throws Exception {
         String serviceName = randomDomainName();
-        
+
         naming.subscribe(serviceName, new AbstractNamingChangeListener() {
             @Override
             public void onChange(NamingChangeEvent event) {
@@ -322,16 +322,16 @@ class Subscribe_ITCase extends NamingBase {
                 assertTrue(event.isAdded());
             }
         });
-        
+
         naming.registerInstance(serviceName, "127.0.0.1", TEST_PORT, "c1");
-        
+
         while (instances.isEmpty()) {
             Thread.sleep(1000L);
         }
-        
+
         assertTrue(verifyInstanceList(instances, naming.getAllInstances(serviceName)));
     }
-    
+
     @Test
     void testListenerFirstCallback() throws Exception {
         String serviceName = randomDomainName();
@@ -345,13 +345,13 @@ class Subscribe_ITCase extends NamingBase {
                 count.incrementAndGet();
             }
         });
-        
+
         naming.registerInstance(serviceName, "127.0.0.1", TEST_PORT, "c1");
-        
+
         while (instances.isEmpty()) {
             Thread.sleep(1000L);
         }
-        
+
         naming.subscribe(serviceName, new EventListener() {
             @Override
             public void onEvent(Event event) {
@@ -361,7 +361,7 @@ class Subscribe_ITCase extends NamingBase {
                 count.incrementAndGet();
             }
         });
-        
+
         int i = 0;
         while (count.get() < 2) {
             Thread.sleep(1000L);

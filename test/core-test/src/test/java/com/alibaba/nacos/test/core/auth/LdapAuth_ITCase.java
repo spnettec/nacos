@@ -26,7 +26,7 @@ import org.junit.platform.suite.api.Suite;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 
@@ -37,22 +37,22 @@ import java.util.concurrent.TimeUnit;
 @Suite
 @SelectClasses({LdapAuth_ITCase.NonTlsTest.class, LdapAuth_ITCase.TlsTest.class})
 class LdapAuth_ITCase {
-    
+
     @Test
     void empty() {
-    
+
     }
-    
+
     abstract class LdapBase extends AuthBase {
-        
+
         @LocalServerPort
         private int port;
-        
+
         private String filterPrefix = "uid";
-        
+
         @MockBean
         private LdapTemplate ldapTemplate;
-        
+
         @BeforeEach
         void init() throws Exception {
             Mockito.when(ldapTemplate.authenticate("", "(" + filterPrefix + "=" + "karson" + ")", "karson")).thenReturn(true);
@@ -63,30 +63,30 @@ class LdapAuth_ITCase {
             this.base = new URL(url);
         }
     }
-    
+
     @Nested
     @DirtiesContext
     @SpringBootTest(classes = Nacos.class, properties = {"server.servlet.context-path=/nacos",
             "nacos.core.auth.system.type=ldap"}, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
     class NonTlsTest extends LdapBase {
-        
+
         @Test
         void testLdapAuth() throws Exception {
             super.login("karson", "karson");
         }
     }
-    
+
     @Nested
     @DirtiesContext
     @SpringBootTest(classes = Nacos.class, properties = {"server.servlet.context-path=/nacos", "nacos.core.auth.system.type=ldap",
             "nacos.core.auth.ldap.url=ldaps://localhost:636"}, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
     class TlsTest extends LdapBase {
-        
+
         @Test
         void testLdapAuth() throws Exception {
             super.login("karson", "karson");
         }
     }
-    
-    
+
+
 }

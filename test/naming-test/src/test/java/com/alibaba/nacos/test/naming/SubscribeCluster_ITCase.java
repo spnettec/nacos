@@ -27,7 +27,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -49,14 +49,14 @@ import static org.junit.jupiter.api.Assertions.fail;
 @SpringBootTest(classes = Nacos.class, properties = {
         "server.servlet.context-path=/nacos"}, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class SubscribeCluster_ITCase {
-    
+
     private NamingService naming;
-    
+
     @LocalServerPort
     private int port;
-    
+
     private volatile List<Instance> instances = Collections.emptyList();
-    
+
     @BeforeEach
     void init() throws Exception {
         instances.clear();
@@ -65,7 +65,7 @@ class SubscribeCluster_ITCase {
             naming = NamingFactory.createNamingService("127.0.0.1" + ":" + port);
         }
     }
-    
+
     /**
      * 添加IP，收到通知
      *
@@ -75,7 +75,7 @@ class SubscribeCluster_ITCase {
     @Timeout(value = 10000L, unit = TimeUnit.MILLISECONDS)
     void subscribeAdd() throws Exception {
         String serviceName = randomDomainName();
-        
+
         naming.subscribe(serviceName, Arrays.asList("c1"), new EventListener() {
             @Override
             public void onEvent(Event event) {
@@ -84,16 +84,16 @@ class SubscribeCluster_ITCase {
                 instances = ((NamingEvent) event).getInstances();
             }
         });
-        
+
         naming.registerInstance(serviceName, "127.0.0.1", TEST_PORT, "c1");
-        
+
         while (instances.isEmpty()) {
             Thread.sleep(1000L);
         }
-        
+
         assertTrue(verifyInstanceList(instances, naming.getAllInstances(serviceName)));
     }
-    
+
     /**
      * 删除IP，收到通知
      *
@@ -104,12 +104,12 @@ class SubscribeCluster_ITCase {
     void subscribeDelete() throws Exception {
         String serviceName = randomDomainName();
         naming.registerInstance(serviceName, "127.0.0.1", TEST_PORT, "c1");
-        
+
         TimeUnit.SECONDS.sleep(3);
-        
+
         naming.subscribe(serviceName, Arrays.asList("c1"), new EventListener() {
             int index = 0;
-            
+
             @Override
             public void onEvent(Event event) {
                 if (index == 0) {
@@ -121,18 +121,18 @@ class SubscribeCluster_ITCase {
                 instances = ((NamingEvent) event).getInstances();
             }
         });
-        
+
         TimeUnit.SECONDS.sleep(1);
-        
+
         naming.deregisterInstance(serviceName, "127.0.0.1", TEST_PORT, "c1");
-        
+
         while (!instances.isEmpty()) {
             Thread.sleep(1000L);
         }
-        
+
         assertTrue(instances.isEmpty());
     }
-    
+
     /**
      * 添加不可用IP，收到通知
      *
@@ -142,7 +142,7 @@ class SubscribeCluster_ITCase {
     @Timeout(value = 10000L, unit = TimeUnit.MILLISECONDS)
     void subscribeUnhealthy() throws Exception {
         String serviceName = randomDomainName();
-        
+
         naming.subscribe(serviceName, Arrays.asList("c1"), new EventListener() {
             @Override
             public void onEvent(Event event) {
@@ -151,16 +151,16 @@ class SubscribeCluster_ITCase {
                 instances = ((NamingEvent) event).getInstances();
             }
         });
-        
+
         naming.registerInstance(serviceName, "1.1.1.1", TEST_PORT, "c1");
-        
+
         while (instances.isEmpty()) {
             Thread.sleep(1000L);
         }
-        
+
         assertTrue(verifyInstanceList(instances, naming.getAllInstances(serviceName)));
     }
-    
+
     /**
      * 新增其他cluster IP，不会收到通知
      *
@@ -169,10 +169,10 @@ class SubscribeCluster_ITCase {
     @Test
     void subscribeOtherCluster() throws Exception {
         String serviceName = randomDomainName();
-        
+
         naming.subscribe(serviceName, Arrays.asList("c2"), new EventListener() {
             int index = 0;
-            
+
             @Override
             public void onEvent(Event event) {
                 if (index == 0) {
@@ -184,9 +184,9 @@ class SubscribeCluster_ITCase {
                 instances = ((NamingEvent) event).getInstances();
             }
         });
-        
+
         naming.registerInstance(serviceName, "1.1.1.1", TEST_PORT, "c1");
-        
+
         int i = 0;
         while (instances.isEmpty()) {
             Thread.sleep(1000L);
@@ -194,7 +194,7 @@ class SubscribeCluster_ITCase {
                 return;
             }
         }
-        
+
         fail();
     }
 }

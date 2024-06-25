@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -51,36 +51,36 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
         "server.servlet.context-path=" + CONTEXT_PATH}, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @TestMethodOrder(MethodName.class)
 public class ConfigAPI_V2_CITCase extends HttpClient4Test {
-    
+
     public static final long TIME_OUT = 5000;
-    
+
     public static final String CONTEXT_PATH = "/nacos";
-    
+
     private static final String CONFIG_V2_CONTROLLER_PATH = CONTEXT_PATH + Constants.CONFIG_CONTROLLER_V2_PATH;
-    
+
     private static final String CONTENT = randomContent();
-    
+
     private final String DATA_ID = "nacos.example";
-    
+
     private final String GROUP = "DEFAULT_GROUP";
-    
+
     private final String NAME_SPACE_ID = "public";
-    
+
     @LocalServerPort
     private int port;
-    
+
     @BeforeAll
     static void beforeClass() {
         ConfigCleanUtils.changeToNewTestNacosHome(ConfigAPI_V2_CITCase.class.getSimpleName());
     }
-    
-    
+
+
     @AfterAll
     @BeforeAll
     static void cleanClientCache() throws Exception {
         ConfigCleanUtils.cleanClientCache();
     }
-    
+
     public static String randomContent() {
         StringBuilder sb = new StringBuilder();
         Random rand = new Random();
@@ -91,13 +91,13 @@ public class ConfigAPI_V2_CITCase extends HttpClient4Test {
         }
         return sb.toString();
     }
-    
+
     @BeforeEach
     void setUp() throws Exception {
         String url = String.format("http://127.0.0.1:%d/", port);
         this.base = new URL(url);
     }
-    
+
     @Test
     void test() throws Exception {
         publishConfig();
@@ -115,7 +115,7 @@ public class ConfigAPI_V2_CITCase extends HttpClient4Test {
         }
         assertTrue(thrown);
     }
-    
+
     public void publishConfig() throws Exception {
         ResponseEntity<String> response = request(CONFIG_V2_CONTROLLER_PATH,
                 Params.newParams().appendParam("dataId", DATA_ID).appendParam("group", GROUP).appendParam("namespaceId", NAME_SPACE_ID)
@@ -123,9 +123,9 @@ public class ConfigAPI_V2_CITCase extends HttpClient4Test {
         assertTrue(response.getStatusCode().is2xxSuccessful());
         JsonNode json = JacksonUtils.toObj(response.getBody());
         assertTrue(json.get("data").asBoolean());
-        
+
     }
-    
+
     public String getConfig(boolean ignoreStatusCode) throws Exception {
         ResponseEntity<String> response = request(CONFIG_V2_CONTROLLER_PATH,
                 Params.newParams().appendParam("dataId", DATA_ID).appendParam("group", GROUP).appendParam("namespaceId", NAME_SPACE_ID)
@@ -140,7 +140,7 @@ public class ConfigAPI_V2_CITCase extends HttpClient4Test {
         JsonNode json = JacksonUtils.toObj(response.getBody());
         return json.get("data").asText();
     }
-    
+
     public void deleteConfig() throws Exception {
         ResponseEntity<String> response = request(CONFIG_V2_CONTROLLER_PATH,
                 Params.newParams().appendParam("dataId", DATA_ID).appendParam("group", GROUP).appendParam("namespaceId", NAME_SPACE_ID)
@@ -148,6 +148,6 @@ public class ConfigAPI_V2_CITCase extends HttpClient4Test {
         assertTrue(response.getStatusCode().is2xxSuccessful());
         JsonNode json = JacksonUtils.toObj(response.getBody());
         assertTrue(json.get("data").asBoolean());
-        
+
     }
 }

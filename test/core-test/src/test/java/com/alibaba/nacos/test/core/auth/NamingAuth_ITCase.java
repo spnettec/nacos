@@ -28,7 +28,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.List;
@@ -45,29 +45,29 @@ import static org.junit.jupiter.api.Assertions.fail;
 @SpringBootTest(classes = Nacos.class, properties = {
         "server.servlet.context-path=/nacos"}, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class NamingAuth_ITCase extends AuthBase {
-    
+
     @LocalServerPort
     private int port;
-    
+
     private NamingService namingService;
-    
+
     @BeforeEach
     void init() throws Exception {
         super.init(port);
     }
-    
+
     @AfterEach
     public void destroy() {
         super.destroy();
     }
-    
+
     @Test
     void writeWithReadPermission() throws Exception {
-        
+
         properties.put(PropertyKeyConst.USERNAME, username1);
         properties.put(PropertyKeyConst.PASSWORD, password1);
         namingService = NacosFactory.createNamingService(properties);
-        
+
         try {
             namingService.registerInstance("test.1", "1.2.3.4", 80);
             fail();
@@ -75,7 +75,7 @@ class NamingAuth_ITCase extends AuthBase {
             NacosException cause = (NacosException) ne.getCause();
             assertEquals(HttpStatus.SC_FORBIDDEN, cause.getErrCode());
         }
-        
+
         try {
             namingService.deregisterInstance("test.1", "1.2.3.4", 80);
             fail();
@@ -85,7 +85,7 @@ class NamingAuth_ITCase extends AuthBase {
         }
         namingService.shutDown();
     }
-    
+
     @Test
     void readWithReadPermission() throws Exception {
         properties.put(PropertyKeyConst.USERNAME, username2);
@@ -93,42 +93,42 @@ class NamingAuth_ITCase extends AuthBase {
         NamingService namingService1 = NacosFactory.createNamingService(properties);
         namingService1.registerInstance("test.1", "1.2.3.4", 80);
         TimeUnit.SECONDS.sleep(5L);
-        
+
         properties.put(PropertyKeyConst.USERNAME, username1);
         properties.put(PropertyKeyConst.PASSWORD, password1);
         namingService = NacosFactory.createNamingService(properties);
-        
+
         List<Instance> list = namingService.getAllInstances("test.1");
         assertEquals(1, list.size());
         namingService1.shutDown();
         namingService.shutDown();
     }
-    
+
     @Test
     void writeWithWritePermission() throws Exception {
-        
+
         properties.put(PropertyKeyConst.USERNAME, username2);
         properties.put(PropertyKeyConst.PASSWORD, password2);
         namingService = NacosFactory.createNamingService(properties);
-        
+
         namingService.registerInstance("test.1", "1.2.3.4", 80);
-        
+
         TimeUnit.SECONDS.sleep(5L);
-        
+
         namingService.deregisterInstance("test.1", "1.2.3.4", 80);
         namingService.shutDown();
     }
-    
+
     @Test
     void readWithWritePermission() throws Exception {
-        
+
         properties.put(PropertyKeyConst.USERNAME, username2);
         properties.put(PropertyKeyConst.PASSWORD, password2);
         namingService = NacosFactory.createNamingService(properties);
-        
+
         namingService.registerInstance("test.1", "1.2.3.4", 80);
         TimeUnit.SECONDS.sleep(5L);
-        
+
         try {
             namingService.getAllInstances("test.1");
             fail();
@@ -136,24 +136,24 @@ class NamingAuth_ITCase extends AuthBase {
             NacosException cause = (NacosException) ne.getCause();
             assertEquals(HttpStatus.SC_FORBIDDEN, cause.getErrCode());
         }
-        
+
         namingService.shutDown();
     }
-    
+
     @Test
     void readWriteWithFullPermission() throws Exception {
-        
+
         properties.put(PropertyKeyConst.USERNAME, username3);
         properties.put(PropertyKeyConst.PASSWORD, password3);
         namingService = NacosFactory.createNamingService(properties);
-        
+
         namingService.registerInstance("test.1", "1.2.3.4", 80);
         TimeUnit.SECONDS.sleep(5L);
-        
+
         List<Instance> list = namingService.getAllInstances("test.1");
-        
+
         assertEquals(1, list.size());
         namingService.shutDown();
     }
-    
+
 }

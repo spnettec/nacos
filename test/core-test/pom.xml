@@ -23,19 +23,12 @@
         <groupId>com.github.heyoulin.nacos</groupId>
         <version>${revision}</version>
     </parent>
-    <dependencies>
-        <dependency>
-            <groupId>org.springframework.ldap</groupId>
-            <artifactId>spring-ldap-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
     <modelVersion>4.0.0</modelVersion>
     <name>nacos-core-test ${project.version}</name>
     <url>https://nacos.io</url>
-    
+
     <artifactId>core-test</artifactId>
-    
+
     <dependencies>
         <dependency>
             <groupId>org.junit.platform</groupId>

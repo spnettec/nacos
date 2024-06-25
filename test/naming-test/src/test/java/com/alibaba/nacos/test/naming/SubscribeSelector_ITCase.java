@@ -29,7 +29,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 
 import java.util.Collections;
 import java.util.List;
@@ -44,16 +44,16 @@ import static org.junit.jupiter.api.Assertions.fail;
 @SpringBootTest(classes = Nacos.class, properties = {
         "server.servlet.context-path=/nacos"}, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class SubscribeSelector_ITCase extends NamingBase {
-    
+
     private NamingService naming;
-    
+
     private NamingSelector selector = new DefaultNamingSelector(instance -> instance.getIp().startsWith("172.18.137"));
-    
+
     @LocalServerPort
     private int port;
-    
+
     private volatile List<Instance> instances = Collections.emptyList();
-    
+
     @BeforeEach
     void init() throws Exception {
         instances.clear();
@@ -61,7 +61,7 @@ class SubscribeSelector_ITCase extends NamingBase {
             naming = NamingFactory.createNamingService("127.0.0.1" + ":" + port);
         }
     }
-    
+
     /**
      * Add IP and receive notification.
      *
@@ -71,7 +71,7 @@ class SubscribeSelector_ITCase extends NamingBase {
     @Timeout(value = 10000L, unit = TimeUnit.MILLISECONDS)
     void subscribeAdd() throws Exception {
         String serviceName = randomDomainName();
-        
+
         naming.subscribe(serviceName, selector, new EventListener() {
             @Override
             public void onEvent(Event event) {
@@ -80,16 +80,16 @@ class SubscribeSelector_ITCase extends NamingBase {
                 instances = ((NamingEvent) event).getInstances();
             }
         });
-        
+
         naming.registerInstance(serviceName, "172.18.137.1", TEST_PORT);
-        
+
         while (instances.isEmpty()) {
             Thread.sleep(1000L);
         }
-        
+
         assertTrue(verifyInstanceList(instances, naming.getAllInstances(serviceName)));
     }
-    
+
     /**
      * Delete IP and receive notification.
      *
@@ -100,12 +100,12 @@ class SubscribeSelector_ITCase extends NamingBase {
     void subscribeDelete() throws Exception {
         String serviceName = randomDomainName();
         naming.registerInstance(serviceName, "172.18.137.1", TEST_PORT, "c1");
-        
+
         TimeUnit.SECONDS.sleep(3);
-        
+
         naming.subscribe(serviceName, selector, new EventListener() {
             int index = 0;
-            
+
             @Override
             public void onEvent(Event event) {
                 instances = ((NamingEvent) event).getInstances();
@@ -117,18 +117,18 @@ class SubscribeSelector_ITCase extends NamingBase {
                 System.out.println(((NamingEvent) event).getInstances());
             }
         });
-        
+
         TimeUnit.SECONDS.sleep(1);
-        
+
         naming.deregisterInstance(serviceName, "172.18.137.1", TEST_PORT, "c1");
-        
+
         while (!instances.isEmpty()) {
             Thread.sleep(1000L);
         }
-        
+
         assertTrue(instances.isEmpty());
     }
-    
+
     /**
      * Add non target IP and do not receive notification.
      *
@@ -137,10 +137,10 @@ class SubscribeSelector_ITCase extends NamingBase {
     @Test
     void subscribeOtherIp() throws Exception {
         String serviceName = randomDomainName();
-        
+
         naming.subscribe(serviceName, selector, new EventListener() {
             int index = 0;
-            
+
             @Override
             public void onEvent(Event event) {
                 instances = ((NamingEvent) event).getInstances();
@@ -152,9 +152,9 @@ class SubscribeSelector_ITCase extends NamingBase {
                 System.out.println(((NamingEvent) event).getInstances());
             }
         });
-        
+
         naming.registerInstance(serviceName, "1.1.1.1", TEST_PORT, "c1");
-        
+
         int i = 0;
         while (instances.isEmpty()) {
             Thread.sleep(1000L);
@@ -162,7 +162,7 @@ class SubscribeSelector_ITCase extends NamingBase {
                 return;
             }
         }
-        
+
         fail();
     }
 }

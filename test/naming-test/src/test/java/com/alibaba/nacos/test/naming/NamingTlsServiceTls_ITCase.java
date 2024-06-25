@@ -28,7 +28,7 @@ import org.junit.jupiter.api.MethodOrderer.MethodName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 
 import java.util.HashMap;
 import java.util.List;
@@ -52,15 +52,15 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
         RpcConstants.NACOS_SERVER_RPC + ".certPrivateKey=test-server-key.pem"}, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @Disabled("TODO, Fix cert expired problem")
 class NamingTlsServiceTls_ITCase {
-    
-    
+
+
     @LocalServerPort
     private int port;
-    
+
     @Test
     void Tls_a_ServerAndPlainClient() throws NacosException {
         assertThrows(NacosException.class, () -> {
-            
+
             Instance instance = new Instance();
             instance.setIp("127.0.0.1");
             instance.setPort(8081);
@@ -72,11 +72,11 @@ class NamingTlsServiceTls_ITCase {
             map.put("version", "2.0");
             namingService.registerInstance(randomDomainName(), instance);
             namingService.shutDown();
-            
+
         });
-        
+
     }
-    
+
     @Test
     void Tls_b_ServerAndTlsClientTrustCa() throws NacosException {
         String serviceName = randomDomainName();
@@ -103,9 +103,9 @@ class NamingTlsServiceTls_ITCase {
         assertEquals(1, instances.size());
         assertEquals("2.0", instances.get(0).getMetadata().get("version"));
         namingService.shutDown();
-        
+
     }
-    
+
     @Test
     void Tls_c_ServerAndTlsClientAll() throws NacosException {
         String serviceName = randomDomainName();

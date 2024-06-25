@@ -36,7 +36,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -58,31 +58,31 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SpringBootTest(classes = Nacos.class, properties = {
         "server.servlet.context-path=/nacos"}, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class NacosAsyncRestTemplate_ITCase {
-    
+
     private static final HttpClientFactory PROCESSOR_ASYNC_HTTP_CLIENT_FACTORY = new ProcessorHttpClientFactory();
-    
+
     private final String CONFIG_INSTANCE_PATH = "/nacos/v1/ns";
-    
+
     @LocalServerPort
     private int port;
-    
+
     private NacosAsyncRestTemplate nacosRestTemplate = HttpClientBeanHolder.getNacosAsyncRestTemplate(
             LoggerFactory.getLogger(NacosAsyncRestTemplate_ITCase.class));
-    
+
     private NacosAsyncRestTemplate processorRestTemplate = null;
-    
+
     private String IP = null;
-    
+
     @Autowired
     private Environment environment;
-    
+
     @BeforeEach
     void init() throws NacosException {
         IP = String.format("http://localhost:%d", port);
         EnvUtil.setEnvironment((ConfigurableEnvironment) environment);
         processorRestTemplate = HttpClientBeanHolder.getNacosAsyncRestTemplate(PROCESSOR_ASYNC_HTTP_CLIENT_FACTORY);
     }
-    
+
     @Test
     void test_url_post_form() throws Exception {
         String url = IP + CONFIG_INSTANCE_PATH + "/instance";
@@ -98,7 +98,7 @@ class NacosAsyncRestTemplate_ITCase {
         System.out.println(restResult.getHeader());
         assertTrue(restResult.ok());
     }
-    
+
     @Test
     void test_url_post_form_by_processor() throws Exception {
         String url = IP + CONFIG_INSTANCE_PATH + "/instance";
@@ -114,7 +114,7 @@ class NacosAsyncRestTemplate_ITCase {
         System.out.println(restResult.getHeader());
         assertTrue(restResult.ok());
     }
-    
+
     @Test
     void test_url_put_form() throws Exception {
         String url = IP + CONFIG_INSTANCE_PATH + "/instance";
@@ -130,7 +130,7 @@ class NacosAsyncRestTemplate_ITCase {
         System.out.println(restResult.getHeader());
         assertTrue(restResult.ok());
     }
-    
+
     @Test
     void test_url_get() throws Exception {
         String url = IP + CONFIG_INSTANCE_PATH + "/instance/list";
@@ -144,7 +144,7 @@ class NacosAsyncRestTemplate_ITCase {
         assertTrue(restResult.ok());
         assertEquals("DEFAULT_GROUP@@app-test", restResult.getData().get("name"));
     }
-    
+
     @Test
     void test_url_by_map() throws Exception {
         String url = IP + CONFIG_INSTANCE_PATH + "/instance/list";
@@ -159,7 +159,7 @@ class NacosAsyncRestTemplate_ITCase {
         assertTrue(restResult.ok());
         assertEquals("DEFAULT_GROUP@@app-test", restResult.getData().get("name"));
     }
-    
+
     @Test
     void test_url_delete() throws Exception {
         String url = IP + CONFIG_INSTANCE_PATH + "/instance";
@@ -172,35 +172,35 @@ class NacosAsyncRestTemplate_ITCase {
         System.out.println(restResult.getHeader());
         assertTrue(restResult.ok());
     }
-    
+
     private class CallbackMap<T> implements Callback<T> {
-        
+
         private HttpRestResult<T> restResult;
-        
+
         private Throwable throwable;
-        
+
         @Override
         public void onReceive(RestResult<T> result) {
             restResult = (HttpRestResult<T>) result;
         }
-        
+
         @Override
         public void onError(Throwable throwable) {
             this.throwable = throwable;
         }
-        
+
         @Override
         public void onCancel() {
-        
+
         }
-        
+
         public HttpRestResult<T> getRestResult() {
             return restResult;
         }
-        
+
         public Throwable getThrowable() {
             return throwable;
         }
     }
-    
+
 }

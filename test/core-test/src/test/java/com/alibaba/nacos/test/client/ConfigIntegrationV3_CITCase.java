@@ -33,7 +33,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -54,23 +54,23 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
         RpcConstants.NACOS_SERVER_RPC + ".certChainFile=test-server-cert.pem",
         RpcConstants.NACOS_SERVER_RPC + ".certPrivateKey=test-server-key.pem"}, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 public class ConfigIntegrationV3_CITCase {
-    
+
     public static AtomicInteger increment = new AtomicInteger(100);
-    
+
     @LocalServerPort
     private int port;
-    
+
     @BeforeAll
     static void beforeClass() throws IOException {
         ConfigCleanUtils.changeToNewTestNacosHome(ConfigIntegrationV3_CITCase.class.getSimpleName());
     }
-    
+
     @BeforeAll
     @AfterAll
     static void cleanClientCache() throws Exception {
         ConfigCleanUtils.cleanClientCache();
     }
-    
+
     @Test
     void test_e_TlsServerAndPlainClient() throws Exception {
         RpcClient client = RpcClientFactory.createClient("testTlsServerAndPlainClient", ConnectionType.GRPC,
@@ -80,9 +80,9 @@ public class ConfigIntegrationV3_CITCase {
         serverInfo.setServerPort(port);
         Connection connection = client.connectToServer(serverInfo);
         ConfigPublishRequest configPublishRequest = new ConfigPublishRequest();
-        
+
         String content = UUID.randomUUID().toString();
-        
+
         configPublishRequest.setContent(content);
         configPublishRequest.setGroup("test-group" + increment.getAndIncrement());
         configPublishRequest.setDataId("test-data" + increment.getAndIncrement());
@@ -91,7 +91,7 @@ public class ConfigIntegrationV3_CITCase {
         assertTrue(response.isSuccess());
         connection.close();
     }
-    
+
     @Test
     void test_f_ServerTlsTrustAll() throws Exception {
         RpcClientTlsConfig tlsConfig = new RpcClientTlsConfig();
@@ -111,16 +111,16 @@ public class ConfigIntegrationV3_CITCase {
         Response response = connectionTrustAll.request(configPublishRequest, TimeUnit.SECONDS.toMillis(3));
         assertTrue(response.isSuccess());
         connectionTrustAll.close();
-        
+
     }
-    
+
     @Disabled("TODO, Fix cert expired problem")
     @Test
     void test_g_ServerTlsTrustCa() throws Exception {
-        
+
         RpcClient.ServerInfo serverInfo = new RpcClient.ServerInfo();
         serverInfo.setServerIp("127.0.0.1");
-        
+
         serverInfo.setServerPort(EnvUtil.getPort());
         RpcClientTlsConfig tlsConfig = new RpcClientTlsConfig();
         tlsConfig.setEnableTls(true);
@@ -130,7 +130,7 @@ public class ConfigIntegrationV3_CITCase {
         Connection connectionTrustCa = clientTrustCa.connectToServer(serverInfo);
         ConfigPublishRequest configPublishRequestCa = new ConfigPublishRequest();
         String contentCa = UUID.randomUUID().toString();
-        
+
         configPublishRequestCa.setContent(contentCa);
         configPublishRequestCa.setGroup("test-group" + increment.getAndIncrement());
         configPublishRequestCa.setDataId("test-data" + increment.getAndIncrement());
