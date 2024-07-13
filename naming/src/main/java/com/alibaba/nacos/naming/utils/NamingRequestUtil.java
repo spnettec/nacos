@@ -22,7 +22,7 @@ import com.alibaba.nacos.core.context.RequestContextHolder;
 import com.alibaba.nacos.core.context.addition.AddressContext;
 import com.alibaba.nacos.core.utils.WebUtils;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Naming request util.
@@ -30,7 +30,7 @@ import javax.servlet.http.HttpServletRequest;
  * @author xiweng.yy
  */
 public class NamingRequestUtil {
-    
+
     /**
      * Get source ip from request context.
      *
@@ -44,7 +44,7 @@ public class NamingRequestUtil {
         }
         return sourceIp;
     }
-    
+
     /**
      * Get source ip from request context first, if it can't found, get from http request.
      *
@@ -59,7 +59,7 @@ public class NamingRequestUtil {
         }
         return sourceIp;
     }
-    
+
     /**
      * Get source ip from request context first, if it can't found, get from http request.
      *

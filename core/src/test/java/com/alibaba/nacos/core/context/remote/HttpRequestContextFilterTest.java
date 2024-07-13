@@ -32,13 +32,13 @@ import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.Servlet;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.FilterConfig;
+import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -46,18 +46,18 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class HttpRequestContextFilterTest {
-    
+
     @Mock
     private MockHttpServletRequest servletRequest;
-    
+
     @Mock
     private MockHttpServletResponse servletResponse;
-    
+
     @Mock
     private Servlet servlet;
-    
+
     HttpRequestContextFilter filter;
-    
+
     @BeforeEach
     void setUp() {
         filter = new HttpRequestContextFilter();
@@ -72,12 +72,12 @@ class HttpRequestContextFilterTest {
         when(servletRequest.getRemotePort()).thenReturn(3306);
         when(servletRequest.getHeader("X-Forwarded-For")).thenReturn("2.2.2.2");
     }
-    
+
     @AfterEach
     void tearDown() {
         RequestContextHolder.removeContext();
     }
-    
+
     @Test
     public void testDoFilterSetsCorrectContextValues() throws Exception {
         MockNextFilter nextFilter = new MockNextFilter("testApp", "GBK");
@@ -86,7 +86,7 @@ class HttpRequestContextFilterTest {
             throw nextFilter.error;
         }
     }
-    
+
     @Test
     public void testDoFilterWithoutEncoding() throws Exception {
         when(servletRequest.getCharacterEncoding()).thenReturn("");
@@ -96,7 +96,7 @@ class HttpRequestContextFilterTest {
             throw nextFilter.error;
         }
     }
-    
+
     @Test
     public void testGetAppNameWithFallback() throws Exception {
         when(servletRequest.getHeader(HttpHeaderConsts.APP_FILED)).thenReturn("");
@@ -106,25 +106,25 @@ class HttpRequestContextFilterTest {
             throw nextFilter.error;
         }
     }
-    
+
     private static class MockNextFilter implements Filter {
-        
+
         private final String app;
-        
+
         private final String encoding;
-        
+
         AssertionError error;
-        
+
         public MockNextFilter(String app, String encoding) {
             this.app = app;
             this.encoding = encoding;
         }
-        
+
         @Override
         public void init(FilterConfig filterConfig) throws ServletException {
             Filter.super.init(filterConfig);
         }
-        
+
         @Override
         public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
                 throws IOException, ServletException {
@@ -143,7 +143,7 @@ class HttpRequestContextFilterTest {
                 this.error = error;
             }
         }
-        
+
         @Override
         public void destroy() {
             Filter.super.destroy();

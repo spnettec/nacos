@@ -24,12 +24,12 @@ import com.alibaba.nacos.core.context.addition.BasicContext;
 import com.alibaba.nacos.core.utils.WebUtils;
 import org.apache.http.HttpHeaders;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 
 import static com.alibaba.nacos.api.common.Constants.CLIENT_APPNAME_HEADER;
@@ -40,9 +40,9 @@ import static com.alibaba.nacos.api.common.Constants.CLIENT_APPNAME_HEADER;
  * @author xiweng.yy
  */
 public class HttpRequestContextFilter implements Filter {
-    
+
     private static final String PATTERN_REQUEST_TARGET = "%s %s";
-    
+
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
             throws IOException, ServletException {
@@ -59,20 +59,20 @@ public class HttpRequestContextFilter implements Filter {
             RequestContextHolder.removeContext();
         }
     }
-    
+
     private void setRequestTarget(HttpServletRequest request, RequestContext requestContext) {
         String uri = request.getRequestURI();
         String method = request.getMethod();
         requestContext.getBasicContext().setRequestTarget(String.format(PATTERN_REQUEST_TARGET, method, uri));
     }
-    
+
     private void setEncoding(HttpServletRequest request, RequestContext requestContext) {
         String encoding = request.getCharacterEncoding();
         if (StringUtils.isNotBlank(encoding)) {
             requestContext.getBasicContext().setEncoding(encoding);
         }
     }
-    
+
     private void setAddressContext(HttpServletRequest request, RequestContext requestContext) {
         String remoteAddress = request.getRemoteAddr();
         int remotePort = request.getRemotePort();
@@ -83,7 +83,7 @@ public class HttpRequestContextFilter implements Filter {
         requestContext.getBasicContext().getAddressContext().setSourceIp(sourceIp);
         requestContext.getBasicContext().getAddressContext().setHost(host);
     }
-    
+
     private void setOtherBasicContext(HttpServletRequest request, RequestContext requestContext) {
         String userAgent = WebUtils.getUserAgent(request);
         requestContext.getBasicContext().setUserAgent(userAgent);
@@ -92,7 +92,7 @@ public class HttpRequestContextFilter implements Filter {
             requestContext.getBasicContext().setApp(app);
         }
     }
-    
+
     private String getAppName(HttpServletRequest request) {
         String app = request.getHeader(HttpHeaderConsts.APP_FILED);
         if (StringUtils.isBlank(app)) {

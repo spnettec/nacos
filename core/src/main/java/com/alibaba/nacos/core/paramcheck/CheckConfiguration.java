@@ -29,17 +29,17 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 public class CheckConfiguration {
-    
+
     @Bean
     public FilterRegistrationBean<ParamCheckerFilter> checkerFilterRegistration(ParamCheckerFilter checkerFilter) {
         FilterRegistrationBean<ParamCheckerFilter> registration = new FilterRegistrationBean<>();
         registration.setFilter(checkerFilter);
         registration.addUrlPatterns("/*");
-        registration.setName("requestContextFilter");
+        registration.setName("checkerFilter");
         registration.setOrder(8);
         return registration;
     }
-    
+
     @Bean
     public ParamCheckerFilter checkerFilter(ControllerMethodsCache methodsCache) {
         return new ParamCheckerFilter(methodsCache);

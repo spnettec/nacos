@@ -25,7 +25,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -33,24 +33,24 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class NamingRequestUtilTest {
-    
+
     @Mock
     HttpServletRequest request;
-    
+
     @Mock
     RequestMeta meta;
-    
+
     @BeforeEach
     void setUp() {
         RequestContextHolder.getContext().getBasicContext().getAddressContext().setRemoteIp("1.1.1.1");
         RequestContextHolder.getContext().getBasicContext().getAddressContext().setSourceIp("2.2.2.2");
     }
-    
+
     @AfterEach
     void tearDown() {
         RequestContextHolder.removeContext();
     }
-    
+
     @Test
     void testGetSourceIp() {
         assertEquals("2.2.2.2", NamingRequestUtil.getSourceIp());
@@ -59,7 +59,7 @@ class NamingRequestUtilTest {
         RequestContextHolder.getContext().getBasicContext().getAddressContext().setRemoteIp(null);
         assertNull(NamingRequestUtil.getSourceIp());
     }
-    
+
     @Test
     void getSourceIpForHttpRequest() {
         when(request.getRemoteAddr()).thenReturn("3.3.3.3");
@@ -69,7 +69,7 @@ class NamingRequestUtilTest {
         RequestContextHolder.getContext().getBasicContext().getAddressContext().setRemoteIp(null);
         assertEquals("3.3.3.3", NamingRequestUtil.getSourceIpForHttpRequest(request));
     }
-    
+
     @Test
     void getSourceIpForGrpcRequest() {
         when(meta.getClientIp()).thenReturn("3.3.3.3");

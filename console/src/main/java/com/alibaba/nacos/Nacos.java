@@ -35,15 +35,13 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  *
  * @author nacos
  */
-@SpringBootApplication
-@ComponentScan(basePackages = "com.alibaba.nacos", excludeFilters = {
-        @Filter(type = FilterType.CUSTOM, classes = {NacosTypeExcludeFilter.class}),
-        @Filter(type = FilterType.CUSTOM, classes = {TypeExcludeFilter.class}),
-        @Filter(type = FilterType.CUSTOM, classes = {AutoConfigurationExcludeFilter.class})})
+@SpringBootApplication(scanBasePackages = "com.alibaba.nacos")
+@ComponentScan(excludeFilters = {
+        @Filter(type = FilterType.CUSTOM, classes = {NacosTypeExcludeFilter.class})})
 @ServletComponentScan
 @EnableScheduling
 public class Nacos {
-    
+
     public static void main(String[] args) {
         SpringApplication.run(Nacos.class, args);
     }

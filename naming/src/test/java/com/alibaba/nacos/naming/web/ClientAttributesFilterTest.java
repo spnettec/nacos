@@ -31,14 +31,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockFilterChain;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.Servlet;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Optional;
 
@@ -50,25 +50,25 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ClientAttributesFilterTest {
-    
+
     @Mock
     ClientManager clientManager;
-    
+
     @Mock
     IpPortBasedClient client;
-    
+
     @Mock
     HttpServletRequest request;
-    
+
     @Mock
     HttpServletResponse response;
-    
+
     @Mock
     Servlet servlet;
-    
+
     @InjectMocks
     ClientAttributesFilter filter;
-    
+
     @BeforeEach
     void setUp() {
         RequestContextHolder.getContext().getBasicContext().setUserAgent("Nacos-Java-Client:v2.4.0");
@@ -76,12 +76,12 @@ class ClientAttributesFilterTest {
         RequestContextHolder.getContext().getBasicContext().getAddressContext().setRemoteIp("1.1.1.1");
         RequestContextHolder.getContext().getBasicContext().getAddressContext().setSourceIp("2.2.2.2");
     }
-    
+
     @AfterEach
     void tearDown() {
         RequestContextHolder.removeContext();
     }
-    
+
     @Test
     void testDoFilterForRegisterUri() throws IOException {
         when(request.getRequestURI()).thenReturn(
@@ -90,7 +90,7 @@ class ClientAttributesFilterTest {
         when(request.getMethod()).thenReturn("POST");
         filter.doFilter(request, response, new MockFilterChain(servlet, new MockRegisterFilter()));
     }
-    
+
     @Test
     void testDoFilterForBeatUri() throws IOException {
         when(request.getParameter("ip")).thenReturn("127.0.0.1");
@@ -104,9 +104,9 @@ class ClientAttributesFilterTest {
         filter.doFilter(request, response, new MockFilterChain());
         verify(client).setAttributes(any(ClientAttributes.class));
     }
-    
+
     private static class MockRegisterFilter implements Filter {
-        
+
         @Override
         public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
                 throws IOException, ServletException {
