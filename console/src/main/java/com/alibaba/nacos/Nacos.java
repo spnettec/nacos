@@ -35,9 +35,11 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  *
  * @author nacos
  */
-@SpringBootApplication(scanBasePackages = "com.alibaba.nacos")
-@ComponentScan(excludeFilters = {
-        @Filter(type = FilterType.CUSTOM, classes = {NacosTypeExcludeFilter.class})})
+@SpringBootApplication
+@ComponentScan(basePackages = "com.alibaba.nacos", excludeFilters = {
+        @Filter(type = FilterType.CUSTOM, classes = {NacosTypeExcludeFilter.class}),
+        @Filter(type = FilterType.CUSTOM, classes = {TypeExcludeFilter.class}),
+        @Filter(type = FilterType.CUSTOM, classes = {AutoConfigurationExcludeFilter.class})})
 @ServletComponentScan
 @EnableScheduling
 public class Nacos {
