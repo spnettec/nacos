@@ -134,6 +134,7 @@
         <log4j.version>2.23.1</log4j.version>
         <concurrentlinkedhashmap.version>1.4.2</concurrentlinkedhashmap.version>
         <mysql-connector-java.version>8.2.0</mysql-connector-java.version>
+        <derby.version>10.14.2.0</derby.version>
         <jackson-core.version>2.17.1</jackson-core.version>
         <jjwt.version>0.12.5</jjwt.version>
         <guava.version>33.1.0-jre</guava.version>
@@ -367,6 +368,7 @@
                         <exclude>**/filter-config.json</exclude>
                         <exclude>**/disk_cache_test/**</exclude>
                         <exclude>**/failover_test/**</exclude>
+                        <exclude>lefthook.yml</exclude>
                     </excludes>
                 </configuration>
                 <executions>
@@ -892,6 +894,12 @@
                 <version>${mysql-connector-java.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>org.apache.derby</groupId>
+                <artifactId>derby</artifactId>
+                <version>${derby.version}</version>
+            </dependency>
+
             <!-- JRaft -->
             <dependency>
                 <groupId>com.github.heyoulin.sofa-jraft</groupId>
@@ -967,6 +975,12 @@
                 <groupId>io.grpc</groupId>
                 <artifactId>grpc-stub</artifactId>
                 <version>${grpc-java.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.grpc</groupId>
+                <artifactId>grpc-util</artifactId>
+                <version>${grpc-java.version}</version>
+                <scope>compile</scope>
             </dependency>
             <dependency>
                 <groupId>io.grpc</groupId>
