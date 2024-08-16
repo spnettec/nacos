@@ -19,6 +19,9 @@ package com.alibaba.nacos.persistence.repository.embedded.operate;
 import com.alibaba.nacos.common.model.RestResult;
 import com.alibaba.nacos.persistence.repository.embedded.EmbeddedStorageContextHolder;
 import com.alibaba.nacos.persistence.repository.embedded.sql.ModifyRequest;
+import com.alibaba.nacos.sys.env.EnvUtil;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,6 +31,7 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.mock.env.MockEnvironment;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -73,11 +77,22 @@ class StandaloneDatabaseOperateImplTest {
     @Mock
     private TransactionTemplate transactionTemplate;
     
+    @BeforeAll
+    static void beforeAll() {
+        MockEnvironment environment = new MockEnvironment();
+        environment.setProperty("nacos.persistence.sql.derby.limit.enabled", "false");
+        EnvUtil.setEnvironment(environment);
+    }
+
     @BeforeEach
     void setUp() {
         ReflectionTestUtils.setField(operate, "jdbcTemplate", jdbcTemplate);
         ReflectionTestUtils.setField(operate, "transactionTemplate", transactionTemplate);
+    }
 
+    @AfterAll
+    static void afterAll() {
+        EnvUtil.setEnvironment(null);
     }
     
     @Test
@@ -207,12 +222,12 @@ class StandaloneDatabaseOperateImplTest {
         map1.put("id", 1);
         map1.put("data_id", "test");
         map1.put("group_id", "test");
-
+        
         final Map<String, Object> map2 = new HashMap<>();
         map1.put("id", 2);
         map1.put("data_id", "test");
         map1.put("group_id", "test");
-
+        
         resultList.add(map1);
         resultList.add(map2);
         
