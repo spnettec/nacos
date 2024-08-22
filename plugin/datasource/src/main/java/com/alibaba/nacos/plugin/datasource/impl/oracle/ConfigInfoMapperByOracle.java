@@ -212,7 +212,6 @@ public class ConfigInfoMapperByOracle extends ConfigInfoMapperByDerby {
         paramList.add(context.getUpdateParameter(FieldConstant.MD5));
         paramList.add(context.getUpdateParameter(FieldConstant.SRC_IP));
         paramList.add(context.getUpdateParameter(FieldConstant.SRC_USER));
-        paramList.add(context.getUpdateParameter(FieldConstant.GMT_MODIFIED));
         paramList.add(context.getUpdateParameter(FieldConstant.APP_NAME));
         paramList.add(context.getUpdateParameter(FieldConstant.C_DESC));
         paramList.add(context.getUpdateParameter(FieldConstant.C_USE));
@@ -222,16 +221,18 @@ public class ConfigInfoMapperByOracle extends ConfigInfoMapperByDerby {
         paramList.add(context.getUpdateParameter(FieldConstant.ENCRYPTED_DATA_KEY));
         paramList.add(context.getWhereParameter(FieldConstant.DATA_ID));
         paramList.add(context.getWhereParameter(FieldConstant.GROUP_ID));
-        String sql = "UPDATE config_info SET " + "content=?, md5 = ?, src_ip=?,src_user=?,gmt_modified=?,"
-                + " app_name=?,c_desc=?,c_use=?,effect=?,type=?,c_schema=?,encrypted_data_key=? "
+        String sql = "UPDATE config_info SET " + "content=?, md5=?, src_ip=?, src_user=?, gmt_modified="
+                + "(SELECT SYSTIMESTAMP FROM DUAL)"
+                + ", app_name=?, c_desc=?, c_use=?, effect=?, type=?, c_schema=?, encrypted_data_key=? "
                 + "WHERE data_id=? AND group_id=? AND tenant_id=? AND (md5=? OR md5 IS NULL OR md5='')";
         String tenantTmp = (String) context.getWhereParameter(FieldConstant.TENANT_ID);
         if(StringUtils.isNotBlank(tenantTmp)) {
             paramList.add(context.getWhereParameter(FieldConstant.TENANT_ID));
         } else{
-            sql = "UPDATE config_info SET " + "content=?, md5 = ?, src_ip=?,src_user=?,gmt_modified=?,"
-                    + " app_name=?,c_desc=?,c_use=?,effect=?,type=?,c_schema=?,encrypted_data_key=? "
-                    + "WHERE data_id=? AND group_id=? AND tenant_id is NULL AND (md5=? OR md5 IS NULL OR md5='')";
+            sql = "UPDATE config_info SET " + "content=?, md5=?, src_ip=?, src_user=?, gmt_modified="
+                    + "(SELECT SYSTIMESTAMP FROM DUAL)"
+                    + ", app_name=?, c_desc=?, c_use=?, effect=?, type=?, c_schema=?, encrypted_data_key=? "
+                    +  "WHERE data_id=? AND group_id=? AND tenant_id is NULL AND (md5=? OR md5 IS NULL OR md5='')";
         }
         paramList.add(context.getWhereParameter(FieldConstant.MD5));
 
