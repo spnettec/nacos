@@ -21,6 +21,7 @@ import com.alibaba.nacos.core.distributed.ProtocolManager;
 import com.alibaba.nacos.naming.constants.Constants;
 import com.alibaba.nacos.naming.misc.GlobalExecutor;
 import com.alibaba.nacos.naming.misc.SwitchDomain;
+import com.alibaba.nacos.sys.env.EnvUtil;
 import com.alipay.sofa.jraft.RouteTable;
 import org.springframework.stereotype.Service;
 
@@ -70,7 +71,13 @@ public class ServerStatusManager {
         if (protocolManager.getCpProtocol() == null) {
             return false;
         }
-        return null != RouteTable.getInstance().selectLeader(Constants.NAMING_PERSISTENT_SERVICE_GROUP);
+
+        boolean hasLeader = null != RouteTable.getInstance().selectLeader(Constants.NAMING_PERSISTENT_SERVICE_GROUP);
+        if (!hasLeader && EnvUtil.getStandaloneMode()) {
+            return true;
+        } else {
+            return hasLeader;
+        }
     }
 
     public ServerStatus getServerStatus() {
