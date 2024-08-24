@@ -260,14 +260,20 @@ public class JRaftServer {
             Node node = raftGroupService.start(false);
             machine.setNode(node);
             RouteTable.getInstance().updateConfiguration(groupName, configuration);
-            
-            RaftExecutor.executeByCommon(() -> registerSelfToCluster(groupName, localPeerId, configuration));
-            
-            // Turn on the leader auto refresh for this group
-            Random random = new Random();
-            long period = nodeOptions.getElectionTimeoutMs() + random.nextInt(5 * 1000);
-            RaftExecutor.scheduleRaftMemberRefreshJob(() -> refreshRouteTable(groupName),
-                    nodeOptions.getElectionTimeoutMs(), period, TimeUnit.MILLISECONDS);
+            if (!EnvUtil.getStandaloneMode()) {
+                RaftExecutor.scheduleAtFixedRateByCommon(() -> registerSelfToCluster(groupName, localPeerId, configuration),
+                        0, 1_000L);
+                // Turn on the leader auto refresh for this group
+                Random random = new Random();
+                long period = nodeOptions.getElectionTimeoutMs() + random.nextInt(5 * 1000);
+                RaftExecutor.scheduleRaftMemberRefreshJob(() -> refreshRouteTable(groupName),
+                        nodeOptions.getElectionTimeoutMs(), period, TimeUnit.MILLISECONDS);
+            } else{
+                registerSelfToCluster(groupName, localPeerId, configuration);
+                refreshRouteTable(groupName);
+            }
+
+
             multiRaftGroup.put(groupName, new RaftGroupTuple(node, processor, raftGroupService, machine));
         }
     }
@@ -348,22 +354,23 @@ public class JRaftServer {
      * @return join success
      */
     void registerSelfToCluster(String groupId, PeerId selfIp, Configuration conf) {
-        while (!isShutdown) {
-            try {
-                List<PeerId> peerIds = cliService.getPeers(groupId, conf);
-                if (peerIds.contains(selfIp)) {
-                    return;
-                }
-                Status status = cliService.addPeer(groupId, conf, selfIp);
-                if (status.isOk()) {
-                    return;
-                }
-                Loggers.RAFT.warn("Failed to join the cluster, retry...");
-            } catch (Exception e) {
-                Loggers.RAFT.error("Failed to join the cluster, retry...", e);
-            }
-            ThreadUtils.sleep(1_000L);
+        if (isShutdown) {
+            return;
         }
+        try {
+            List<PeerId> peerIds = cliService.getPeers(groupId, conf);
+            if (peerIds.contains(selfIp)) {
+                return;
+            }
+            Status status = cliService.addPeer(groupId, conf, selfIp);
+            if (status.isOk()) {
+                return;
+            }
+            Loggers.RAFT.warn("Failed to join the cluster, retry...");
+        } catch (Exception e) {
+            Loggers.RAFT.error("Failed to join the cluster, retry...", e);
+        }
+
     }
     
     protected PeerId getLeader(final String raftGroupId) {
