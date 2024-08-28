@@ -457,7 +457,7 @@ public class DistributedDatabaseOperateImpl extends RequestProcessor4CP implemen
             LOGGER.error("An timeout exception occurred during the update operation");
             throw new NacosRuntimeException(NacosException.SERVER_ERROR, e.toString());
         } catch (Throwable e) {
-            LOGGER.error("An exception occurred during the update operation : {}", e);
+            LOGGER.error("An exception occurred during the update operation", e);
             throw new NacosRuntimeException(NacosException.SERVER_ERROR, e.toString());
         }
     }
