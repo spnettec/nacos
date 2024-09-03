@@ -18,11 +18,10 @@ package com.alibaba.nacos.naming.cluster;
 
 import com.alibaba.nacos.common.utils.StringUtils;
 import com.alibaba.nacos.core.distributed.ProtocolManager;
-import com.alibaba.nacos.naming.constants.Constants;
+import com.alibaba.nacos.core.distributed.distro.DistroProtocol;
+import com.alibaba.nacos.naming.misc.GlobalConfig;
 import com.alibaba.nacos.naming.misc.GlobalExecutor;
 import com.alibaba.nacos.naming.misc.SwitchDomain;
-import com.alibaba.nacos.sys.env.EnvUtil;
-import com.alipay.sofa.jraft.RouteTable;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -37,13 +36,20 @@ import java.util.Optional;
 @Service
 public class ServerStatusManager {
     
+    private final GlobalConfig globalConfig;
+
+    private final DistroProtocol distroProtocol;
+
     private final ProtocolManager protocolManager;
     
     private final SwitchDomain switchDomain;
     
     private ServerStatus serverStatus = ServerStatus.STARTING;
     
-    public ServerStatusManager(ProtocolManager protocolManager, SwitchDomain switchDomain) {
+    public ServerStatusManager(GlobalConfig globalConfig, DistroProtocol distroProtocol,
+            ProtocolManager protocolManager, SwitchDomain switchDomain) {
+        this.globalConfig = globalConfig;
+        this.distroProtocol = distroProtocol;
         this.protocolManager = protocolManager;
         this.switchDomain = switchDomain;
     }
@@ -60,36 +66,37 @@ public class ServerStatusManager {
             return;
         }
         
-        if (hasLeader()) {
+        if (isReady()) {
             serverStatus = ServerStatus.UP;
         } else {
             serverStatus = ServerStatus.DOWN;
         }
     }
     
-    private boolean hasLeader() {
-        if (protocolManager.getCpProtocol() == null) {
+    private boolean isReady() {
+        if (!globalConfig.isDataWarmup()) {
+            return true;
+        }
+        if (!protocolManager.isCpInit() || protocolManager.getCpProtocol() == null) {
             return false;
         }
-
-        boolean hasLeader = null != RouteTable.getInstance().selectLeader(Constants.NAMING_PERSISTENT_SERVICE_GROUP);
-        if (!hasLeader && EnvUtil.getStandaloneMode()) {
-            return true;
-        } else {
-            return hasLeader;
-        }
+        return protocolManager.getCpProtocol().isReady() && distroProtocol.isInitialized();
     }
-
+    
     public ServerStatus getServerStatus() {
         return serverStatus;
     }
     
     public Optional<String> getErrorMsg() {
-        if (hasLeader()) {
+        if (isReady()) {
             return Optional.empty();
         }
-        return Optional.of("No leader for raft group " + Constants.NAMING_PERSISTENT_SERVICE_GROUP
-                + ", please see logs `alipay-jraft.log` or `naming-raft.log` to see details.");
+        if (!distroProtocol.isInitialized()) {
+            return Optional.of(
+                    "Distro snapshot load failed, please see logs `protocol-distro.log` or `naming-distro.log` to see details.");
+        }
+        return Optional.of(
+                "No leader for raft, please see logs `alipay-jraft.log` or `naming-raft.log` to see details.");
     }
     
     public class ServerStatusUpdater implements Runnable {
