@@ -124,7 +124,7 @@ public class ExternalPermissionPersistServiceImpl implements PermissionPersistSe
         try {
             jt.update(sql, role, resource, action);
         } catch (CannotGetJdbcConnectionException e) {
-            LogUtil.FATAL_LOG.error("[db-error] " + e.toString(), e);
+            LogUtil.FATAL_LOG.error("[db-error] ", e);
             throw e;
         }
     }
