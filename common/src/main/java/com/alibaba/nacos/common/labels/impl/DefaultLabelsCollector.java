@@ -43,9 +43,7 @@ public class DefaultLabelsCollector implements LabelsCollector {
     private final String customName = "defaultNacosLabelsCollector";
     
     private static final String UNDERSCORE = "_";
-    
-    private static final String ESCAPE = "\\";
-    
+
     /**
      * init labels.
      *
@@ -81,12 +79,12 @@ public class DefaultLabelsCollector implements LabelsCollector {
         
         //env
         LOGGER.info("default nacos collect env raw labels: {}",
-                System.getenv(Constants.APP_CONN_LABELS_KEY.replaceAll(ESCAPE + DOT, UNDERSCORE)));
+                System.getenv(Constants.APP_CONN_LABELS_KEY.replaceAll(DOT, UNDERSCORE)));
         Map<String, String> envLabels = ConnLabelsUtils.parseRawLabels(
-                System.getenv(Constants.APP_CONN_LABELS_KEY.replaceAll(ESCAPE + DOT, UNDERSCORE)));
-        if (System.getenv(Constants.CONFIG_GRAY_LABEL.replaceAll(ESCAPE + DOT, UNDERSCORE)) != null) {
+                System.getenv(Constants.APP_CONN_LABELS_KEY.replaceAll(DOT, UNDERSCORE)));
+        if (System.getenv(Constants.CONFIG_GRAY_LABEL.replaceAll(DOT, UNDERSCORE)) != null) {
             envLabels.put(Constants.CONFIG_GRAY_LABEL,
-                    System.getenv(Constants.CONFIG_GRAY_LABEL.replaceAll(ESCAPE + DOT, UNDERSCORE)));
+                    System.getenv(Constants.CONFIG_GRAY_LABEL.replaceAll(DOT, UNDERSCORE)));
         }
         LOGGER.info("default nacos collect env labels: {}", envLabels);
         

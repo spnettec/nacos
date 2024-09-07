@@ -22,6 +22,7 @@ import com.alibaba.nacos.common.utils.ConvertUtils;
 import com.alibaba.nacos.common.utils.InternetAddressUtil;
 import com.alibaba.nacos.common.utils.LoggerUtils;
 import com.alibaba.nacos.common.utils.StringUtils;
+import com.alibaba.nacos.common.utils.ThreadUtils;
 import com.alibaba.nacos.consistency.ProtoMessageUtil;
 import com.alibaba.nacos.consistency.RequestProcessor;
 import com.alibaba.nacos.consistency.SerializeFactory;
@@ -156,7 +157,7 @@ public class JRaftServer {
         RaftExecutor.init(config);
         
         final String self = config.getSelfMember();
-        String[] info = InternetAddressUtil.splitIPPortStr(self);
+        String[] info = InternetAddressUtil.splitIpPortStr(self);
         selfIp = info[0];
         selfPort = Integer.parseInt(info[1]);
         localPeerId = PeerId.parsePeer(self);

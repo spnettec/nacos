@@ -256,19 +256,15 @@ public abstract class GrpcClient extends RpcClient {
     
     private StreamObserver<Payload> bindRequestStream(final BiRequestStreamGrpc.BiRequestStreamStub streamStub,
             final GrpcConnection grpcConn) {
-        
-        return streamStub.requestBiStream(new StreamObserver<Payload>() {
-            
+        return streamStub.requestBiStream(new StreamObserver<>() {
             @Override
             public void onNext(Payload payload) {
-                
                 LoggerUtils.printIfDebugEnabled(LOGGER, "[{}]Stream server request receive, original info: {}",
                         grpcConn.getConnectionId(), payload.toString());
                 try {
                     Object parseBody = GrpcUtils.parse(payload);
                     final Request request = (Request) parseBody;
                     if (request != null) {
-                        
                         try {
                             if (request instanceof SetupAckRequest) {
                                 // there is no connection ready this time
@@ -283,7 +279,6 @@ public abstract class GrpcClient extends RpcClient {
                                 LOGGER.warn("[{}]Fail to process server request, ackId->{}", grpcConn.getConnectionId(),
                                         request.getRequestId());
                             }
-                            
                         } catch (Exception e) {
                             LoggerUtils.printIfErrorEnabled(LOGGER, "[{}]Handle server request exception: {}",
                                     grpcConn.getConnectionId(), payload.toString(), e.getMessage());
@@ -292,11 +287,8 @@ public abstract class GrpcClient extends RpcClient {
                             errResponse.setRequestId(request.getRequestId());
                             sendResponse(errResponse);
                         }
-                        
                     }
-                    
                 } catch (Exception e) {
-                    
                     LoggerUtils.printIfErrorEnabled(LOGGER, "[{}]Error to process server push response: {}",
                             grpcConn.getConnectionId(), payload.getBody().getValue().toStringUtf8());
                     // remove and notify
@@ -314,12 +306,10 @@ public abstract class GrpcClient extends RpcClient {
                     if (rpcClientStatus.compareAndSet(RpcClientStatus.RUNNING, RpcClientStatus.UNHEALTHY)) {
                         switchServerAsync();
                     }
-                    
                 } else {
                     LoggerUtils.printIfWarnEnabled(LOGGER, "[{}]Ignore error event,isRunning:{},isAbandon={}",
                             grpcConn.getConnectionId(), isRunning, isAbandon);
                 }
-                
             }
             
             @Override
@@ -332,12 +322,10 @@ public abstract class GrpcClient extends RpcClient {
                     if (rpcClientStatus.compareAndSet(RpcClientStatus.RUNNING, RpcClientStatus.UNHEALTHY)) {
                         switchServerAsync();
                     }
-                    
                 } else {
                     LoggerUtils.printIfInfoEnabled(LOGGER, "[{}]Ignore complete event,isRunning:{},isAbandon={}",
                             grpcConn.getConnectionId(), isRunning, isAbandon);
                 }
-                
             }
         });
     }
