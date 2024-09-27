@@ -44,11 +44,7 @@ public class DefaultParamChecker extends AbstractParamChecker {
     private Pattern ipPattern;
     
     private static final String CHECKER_TYPE = "default";
-    
-    private static final String MAX_METADATA_LENGTH_PROP_NAME = "nacos.naming.service.metadata.length";
-    
-    private static final String MAX_METADATA_LENGTH_ENV_NAME = "NACOS_NAMING_SERVICE_METADATA_LENGTH";
-    
+
     @Override
     public String getCheckerType() {
         return CHECKER_TYPE;

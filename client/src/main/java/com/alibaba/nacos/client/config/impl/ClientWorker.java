@@ -879,8 +879,9 @@ public class ClientWorker implements Closeable {
                 cacheData.setUseLocalConfigInfo(true);
                 cacheData.setLocalConfigInfoVersion(file.lastModified());
                 cacheData.setContent(content);
-                LOGGER.warn("[{}] [failover-change] failover file created. dataId={}, group={}, tenant={}, md5={}",
-                        envName, dataId, group, tenant, md5);
+                LOGGER.warn(
+                        "[{}] [failover-change] failover file created. dataId={}, group={}, tenant={}, md5={}, content={}",
+                        envName, dataId, group, tenant, md5, ContentUtils.truncateContent(content));
                 return;
             }
             

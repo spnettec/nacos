@@ -191,7 +191,7 @@ public class UserController {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "authorization failed!");
             return null;
         }
-    
+
         User user = userDetailsService.getUserFromDatabase(username);
         if (user == null) {
             throw new IllegalArgumentException("user " + username + " not exist!");
