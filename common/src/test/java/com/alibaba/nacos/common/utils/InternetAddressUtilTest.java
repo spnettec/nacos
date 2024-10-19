@@ -226,5 +226,4 @@ public class InternetAddressUtilTest {
             InternetAddressUtil.ipToInt("127.0.0.256");
         });
     }
-    
 }

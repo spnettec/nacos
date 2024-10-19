@@ -22,6 +22,8 @@ import com.alibaba.nacos.common.http.param.MediaType;
 import com.alibaba.nacos.common.http.param.Query;
 import com.alibaba.nacos.common.utils.JacksonUtils;
 import com.alibaba.nacos.common.utils.StringUtils;
+import com.alibaba.nacos.common.utils.UuidUtils;
+import com.alibaba.nacos.common.utils.VersionUtils;
 import org.apache.hc.client5.http.ConnectTimeoutException;
 import org.apache.hc.client5.http.classic.methods.HttpUriRequestBase;
 import org.apache.hc.client5.http.entity.UrlEncodedFormEntity;
@@ -59,9 +61,9 @@ import static com.alibaba.nacos.common.constant.RequestUrlConstants.HTTP_PREFIX;
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>
  */
 public final class HttpUtils {
-    
+
     private static final Pattern CONTEXT_PATH_MATCH = Pattern.compile("(\\/)\\1+");
-    
+
     /**
      * Init http header.
      *
@@ -75,7 +77,7 @@ public final class HttpUtils {
             requestBase.setHeader(entry.getKey(), entry.getValue());
         }
     }
-    
+
     /**
      * Init http entity.
      *
@@ -102,7 +104,7 @@ public final class HttpUtils {
             request.setEntity(entity);
         }
     }
-    
+
     /**
      * Init request from entity map.
      *
@@ -126,7 +128,7 @@ public final class HttpUtils {
             request.setEntity(entity);
         }
     }
-    
+
     /**
      * Build URL.
      *
@@ -169,7 +171,7 @@ public final class HttpUtils {
         }
         return sb.toString();
     }
-    
+
     /**
      * Translate parameter map.
      *
@@ -184,7 +186,7 @@ public final class HttpUtils {
         }
         return map;
     }
-    
+
     /**
      * Encoding parameters to url string.
      *
@@ -203,15 +205,15 @@ public final class HttpUtils {
             if (StringUtils.isEmpty(entry.getValue())) {
                 continue;
             }
-            
+
             sb.append(entry.getKey()).append('=');
             sb.append(URLEncoder.encode(entry.getValue(), encoding));
             sb.append('&');
         }
-        
+
         return sb.toString();
     }
-    
+
     /**
      * Encoding KV list to url string.
      *
@@ -225,7 +227,7 @@ public final class HttpUtils {
         if (null == paramValues) {
             return null;
         }
-        
+
         for (Iterator<String> iter = paramValues.iterator(); iter.hasNext(); ) {
             sb.append(iter.next()).append('=');
             sb.append(URLEncoder.encode(iter.next(), encoding));
@@ -235,11 +237,11 @@ public final class HttpUtils {
         }
         return sb.toString();
     }
-    
+
     public static String decode(String str, String encode) throws UnsupportedEncodingException {
         return innerDecode(null, str, encode);
     }
-    
+
     /**
      * build URI By url and query.
      *
@@ -253,7 +255,7 @@ public final class HttpUtils {
         }
         return new URI(url);
     }
-    
+
     /**
      * HTTP request exception is a timeout exception.
      *
@@ -264,7 +266,23 @@ public final class HttpUtils {
         return throwable instanceof SocketTimeoutException || throwable instanceof ConnectTimeoutException
                 || throwable instanceof TimeoutException || throwable.getCause() instanceof TimeoutException;
     }
-    
+
+    /**
+     * Build header.
+     *
+     * @return header
+     */
+    public static Header builderHeader(String module) {
+        Header header = Header.newInstance();
+        header.addParam(HttpHeaderConsts.CLIENT_VERSION_HEADER, VersionUtils.version);
+        header.addParam(HttpHeaderConsts.USER_AGENT_HEADER, VersionUtils.getFullClientVersion());
+        header.addParam(HttpHeaderConsts.ACCEPT_ENCODING, "gzip,deflate,sdch");
+        header.addParam(HttpHeaderConsts.CONNECTION, "Keep-Alive");
+        header.addParam(HttpHeaderConsts.REQUEST_ID, UuidUtils.generateUuid());
+        header.addParam(HttpHeaderConsts.REQUEST_MODULE, module);
+        return header;
+    }
+
     private static String innerDecode(String pre, String now, String encode) throws UnsupportedEncodingException {
         // Because the data may be encoded by the URL more than once,
         // it needs to be decoded recursively until it is fully successful
@@ -275,5 +293,5 @@ public final class HttpUtils {
         now = URLDecoder.decode(now, encode);
         return innerDecode(pre, now, encode);
     }
-    
+
 }
