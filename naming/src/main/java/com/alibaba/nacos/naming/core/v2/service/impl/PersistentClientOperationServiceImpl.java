@@ -82,25 +82,25 @@ import java.util.zip.Checksum;
  */
 @Component("persistentClientOperationServiceImpl")
 public class PersistentClientOperationServiceImpl extends RequestProcessor4CP implements ClientOperationService {
-    
+
     private final PersistentIpPortClientManager clientManager;
-    
+
     private final Serializer serializer = SerializeFactory.getDefault();
-    
+
     private final CPProtocol protocol;
-    
+
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-    
+
     private final ReentrantReadWriteLock.ReadLock readLock = lock.readLock();
-    
+
     private static final int INITIAL_CAPACITY = 128;
-    
+
     public PersistentClientOperationServiceImpl(final PersistentIpPortClientManager clientManager) {
         this.clientManager = clientManager;
         this.protocol = ApplicationUtils.getBean(ProtocolManager.class).getCpProtocol();
         this.protocol.addRequestProcessors(Collections.singletonList(this));
     }
-    
+
     @Override
     public void registerInstance(Service service, Instance instance, String clientId) {
         Service singleton = ServiceManager.getInstance().getSingleton(service);
@@ -116,7 +116,7 @@ public class PersistentClientOperationServiceImpl extends RequestProcessor4CP im
         final WriteRequest writeRequest = WriteRequest.newBuilder().setGroup(group())
                 .setData(ByteString.copyFrom(serializer.serialize(request))).setOperation(DataOperation.ADD.name())
                 .build();
-        
+
         try {
             protocol.write(writeRequest);
             Loggers.RAFT.info("Client registered. service={}, clientId={}, instance={}", service, clientId, instance);
@@ -124,7 +124,7 @@ public class PersistentClientOperationServiceImpl extends RequestProcessor4CP im
             throw new NacosRuntimeException(NacosException.SERVER_ERROR, e);
         }
     }
-    
+
     /**
      * update persistent instance.
      */
@@ -148,12 +148,12 @@ public class PersistentClientOperationServiceImpl extends RequestProcessor4CP im
             throw new NacosRuntimeException(NacosException.SERVER_ERROR, e);
         }
     }
-    
+
     @Override
     public void batchRegisterInstance(Service service, List<Instance> instances, String clientId) {
         //TODO PersistentClientOperationServiceImpl Nacos batchRegister
     }
-    
+
     @Override
     public void deregisterInstance(Service service, Instance instance, String clientId) {
         final InstanceStoreRequest request = new InstanceStoreRequest();
@@ -163,7 +163,7 @@ public class PersistentClientOperationServiceImpl extends RequestProcessor4CP im
         final WriteRequest writeRequest = WriteRequest.newBuilder().setGroup(group())
                 .setData(ByteString.copyFrom(serializer.serialize(request))).setOperation(DataOperation.DELETE.name())
                 .build();
-        
+
         try {
             protocol.write(writeRequest);
             Loggers.RAFT.info("Client unregistered. service={}, clientId={}, instance={}", service, clientId, instance);
@@ -171,22 +171,22 @@ public class PersistentClientOperationServiceImpl extends RequestProcessor4CP im
             throw new NacosRuntimeException(NacosException.SERVER_ERROR, e);
         }
     }
-    
+
     @Override
     public void subscribeService(Service service, Subscriber subscriber, String clientId) {
         throw new UnsupportedOperationException("No persistent subscribers");
     }
-    
+
     @Override
     public void unsubscribeService(Service service, Subscriber subscriber, String clientId) {
         throw new UnsupportedOperationException("No persistent subscribers");
     }
-    
+
     @Override
     public Response onRequest(ReadRequest request) {
         throw new UnsupportedOperationException("Temporary does not support");
     }
-    
+
     @Override
     public Response onApply(WriteRequest request) {
         final Lock lock = readLock;
@@ -221,12 +221,12 @@ public class PersistentClientOperationServiceImpl extends RequestProcessor4CP im
             lock.unlock();
         }
     }
-    
+
     private boolean instanceAndServiceExist(InstanceStoreRequest instanceRequest) {
         return clientManager.contains(instanceRequest.getClientId()) && clientManager
                 .getClient(instanceRequest.getClientId()).getAllPublishedService().contains(instanceRequest.service);
     }
-    
+
     private void onInstanceRegister(Service service, Instance instance, String clientId) {
         Service singleton = ServiceManager.getInstance().getSingleton(service);
         if (!clientManager.contains(clientId)) {
@@ -238,7 +238,7 @@ public class PersistentClientOperationServiceImpl extends RequestProcessor4CP im
         client.setLastUpdatedTime();
         NotifyCenter.publishEvent(new ClientOperationEvent.ClientRegisterServiceEvent(singleton, clientId));
     }
-    
+
     private void onInstanceDeregister(Service service, String clientId) {
         Service singleton = ServiceManager.getInstance().getSingleton(service);
         Client client = clientManager.getClient(clientId);
@@ -253,65 +253,65 @@ public class PersistentClientOperationServiceImpl extends RequestProcessor4CP im
         }
         NotifyCenter.publishEvent(new ClientOperationEvent.ClientDeregisterServiceEvent(singleton, clientId));
     }
-    
+
     @Override
     public List<SnapshotOperation> loadSnapshotOperate() {
         return Collections.singletonList(new PersistentInstanceSnapshotOperation(lock));
     }
-    
+
     @Override
     public String group() {
         return Constants.NAMING_PERSISTENT_SERVICE_GROUP_V2;
     }
-    
-    protected static class InstanceStoreRequest implements Serializable {
-        
+
+    public static class InstanceStoreRequest implements Serializable {
+
         private static final long serialVersionUID = -9077205657156890549L;
-        
+
         private Service service;
-        
+
         private Instance instance;
-        
+
         private String clientId;
-        
+
         public Service getService() {
             return service;
         }
-        
+
         public void setService(Service service) {
             this.service = service;
         }
-        
+
         public Instance getInstance() {
             return instance;
         }
-        
+
         public void setInstance(Instance instance) {
             this.instance = instance;
         }
-        
+
         public String getClientId() {
             return clientId;
         }
-        
+
         public void setClientId(String clientId) {
             this.clientId = clientId;
         }
-        
+
     }
-    
+
     private class PersistentInstanceSnapshotOperation extends AbstractSnapshotOperation {
-        
+
         private final String snapshotSaveTag = ClassUtils.getSimpleName(getClass()) + ".SAVE";
-        
+
         private final String snapshotLoadTag = ClassUtils.getSimpleName(getClass()) + ".LOAD";
-        
+
         private static final String SNAPSHOT_ARCHIVE = "persistent_instance.zip";
-        
+
         public PersistentInstanceSnapshotOperation(ReentrantReadWriteLock lock) {
             super(lock);
         }
-        
+
         @Override
         protected boolean writeSnapshot(Writer writer) throws IOException {
             final String writePath = writer.getPath();
@@ -324,7 +324,7 @@ public class PersistentClientOperationServiceImpl extends RequestProcessor4CP im
             meta.append(CHECK_SUM_KEY, Long.toHexString(checksum.getValue()));
             return writer.addFile(SNAPSHOT_ARCHIVE, meta);
         }
-        
+
         @Override
         protected boolean readSnapshot(Reader reader) throws Exception {
             final String readerPath = reader.getPath();
@@ -341,14 +341,14 @@ public class PersistentClientOperationServiceImpl extends RequestProcessor4CP im
             Loggers.RAFT.info("snapshot success to load from : {}", readerPath);
             return true;
         }
-        
+
         protected InputStream dumpSnapshot() {
             Map<String, IpPortBasedClient> clientMap = clientManager.showClients();
             ConcurrentHashMap<String, ClientSyncData> clone = new ConcurrentHashMap<>(INITIAL_CAPACITY);
             clientMap.forEach((clientId, client) -> clone.put(clientId, client.generateSyncData()));
             return new ByteArrayInputStream(serializer.serialize(clone));
         }
-        
+
         protected void loadSnapshot(byte[] snapshotBytes) {
             ConcurrentHashMap<String, ClientSyncData> newData = serializer.deserialize(snapshotBytes);
             Collection<String> oldClientIds = clientManager.allClientId();
@@ -455,7 +455,7 @@ public class PersistentClientOperationServiceImpl extends RequestProcessor4CP im
                 }
             }
         }
-        
+
         private void addSyncDataToClient(Map.Entry<String, ClientSyncData> entry, IpPortBasedClient client) {
             ClientSyncData data = entry.getValue();
             List<String> namespaces = data.getNamespaces();
@@ -476,16 +476,16 @@ public class PersistentClientOperationServiceImpl extends RequestProcessor4CP im
                 NotifyCenter.publishEvent(waitPublishEvent);
             }
         }
-        
+
         @Override
         protected String getSnapshotSaveTag() {
             return snapshotSaveTag;
         }
-        
+
         @Override
         protected String getSnapshotLoadTag() {
             return snapshotLoadTag;
         }
     }
-    
+
 }
