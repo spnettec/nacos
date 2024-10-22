@@ -56,25 +56,25 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ExternalDataSourceServiceImplTest {
-    
+
     @InjectMocks
     private ExternalDataSourceServiceImpl service;
-    
+
     @Mock
     private JdbcTemplate jt;
-    
+
     @Mock
     private DataSourceTransactionManager tm;
-    
+
     @Mock
     private TransactionTemplate tjt;
-    
+
     @Mock
     private JdbcTemplate testMasterJT;
-    
+
     @Mock
     private JdbcTemplate testMasterWritableJT;
-    
+
     @BeforeEach
     void setUp() {
         service = new ExternalDataSourceServiceImpl();
@@ -87,7 +87,7 @@ class ExternalDataSourceServiceImplTest {
         dataSourceList.add(new HikariDataSource());
         ReflectionTestUtils.setField(service, "dataSourceList", dataSourceList);
     }
-    
+
     @Test
     void testInit() {
         try {
@@ -100,7 +100,7 @@ class ExternalDataSourceServiceImplTest {
             environment.setProperty("db.url.1", "2.2.2.2");
             environment.setProperty("db.pool.config.driverClassName",
                     "com.alibaba.nacos.persistence.datasource.mock.MockDriver");
-            DatasourceConfiguration.setUseExternalDB(true);
+            DatasourceConfiguration.setUseExternalDb(true);
             ExternalDataSourceServiceImpl service1 = new ExternalDataSourceServiceImpl();
             assertDoesNotThrow(service1::init);
             assertEquals("", service1.getDataSourceType());
@@ -108,25 +108,25 @@ class ExternalDataSourceServiceImplTest {
             assertNotNull(service1.getJdbcTemplate());
             assertNotNull(service1.getTransactionTemplate());
         } finally {
-            DatasourceConfiguration.setUseExternalDB(false);
+            DatasourceConfiguration.setUseExternalDb(false);
             EnvUtil.setEnvironment(null);
         }
     }
-    
+
     @Test
     void testInitInvalidConfig() {
         try {
             MockEnvironment environment = new MockEnvironment();
             EnvUtil.setEnvironment(environment);
-            DatasourceConfiguration.setUseExternalDB(true);
+            DatasourceConfiguration.setUseExternalDb(true);
             ExternalDataSourceServiceImpl service1 = new ExternalDataSourceServiceImpl();
             assertThrows(RuntimeException.class, service1::init);
         } finally {
-            DatasourceConfiguration.setUseExternalDB(false);
+            DatasourceConfiguration.setUseExternalDb(false);
             EnvUtil.setEnvironment(null);
         }
     }
-    
+
     @Test
     void testReload() {
         try {
@@ -138,7 +138,7 @@ class ExternalDataSourceServiceImplTest {
             environment.setProperty("db.url.0", "1.1.1.1");
             environment.setProperty("db.pool.config.driverClassName",
                     "com.alibaba.nacos.persistence.datasource.mock.MockDriver");
-            DatasourceConfiguration.setUseExternalDB(true);
+            DatasourceConfiguration.setUseExternalDb(true);
             HikariDataSource dataSource = mock(HikariDataSource.class);
             JdbcTemplate oldJt = mock(JdbcTemplate.class);
             ReflectionTestUtils.setField(service, "testJtList", Collections.singletonList(oldJt));
@@ -148,30 +148,30 @@ class ExternalDataSourceServiceImplTest {
             verify(oldJt).setDataSource(null);
             verify(dataSource).close();
         } finally {
-            DatasourceConfiguration.setUseExternalDB(false);
+            DatasourceConfiguration.setUseExternalDb(false);
             EnvUtil.setEnvironment(null);
         }
     }
-    
+
     @Test
     void testCheckMasterWritable() {
         when(testMasterWritableJT.queryForObject(eq(" SELECT @@read_only "), eq(Integer.class))).thenReturn(0);
         assertTrue(service.checkMasterWritable());
     }
-    
+
     @Test
     void testCheckMasterWritableWithoutResult() {
         when(testMasterWritableJT.queryForObject(eq(" SELECT @@read_only "), eq(Integer.class))).thenReturn(null);
         assertFalse(service.checkMasterWritable());
     }
-    
+
     @Test
     void testCheckMasterWritableWithException() {
         when(testMasterWritableJT.queryForObject(eq(" SELECT @@read_only "), eq(Integer.class))).thenThrow(
                 new CannotGetJdbcConnectionException("test"));
         assertFalse(service.checkMasterWritable());
     }
-    
+
     @Test
     void testGetCurrentDbUrl() {
         HikariDataSource bds = new HikariDataSource();
@@ -179,19 +179,19 @@ class ExternalDataSourceServiceImplTest {
         when(jt.getDataSource()).thenReturn(bds);
         assertEquals("test.jdbc.url", service.getCurrentDbUrl());
     }
-    
+
     @Test
     void testGetCurrentDbUrlWithoutDatasource() {
         assertEquals("", service.getCurrentDbUrl());
     }
-    
+
     @Test
     void testGetHealth() {
         List<Boolean> isHealthList = new ArrayList<>();
         ReflectionTestUtils.setField(service, "isHealthList", isHealthList);
         assertEquals("UP", service.getHealth());
     }
-    
+
     @Test
     void testGetHealthWithMasterDown() {
         HikariDataSource dataSource = mock(HikariDataSource.class);
@@ -202,7 +202,7 @@ class ExternalDataSourceServiceImplTest {
         ReflectionTestUtils.setField(service, "isHealthList", isHealthList);
         assertEquals("DOWN:1.1.1.1", service.getHealth());
     }
-    
+
     @Test
     void testGetHealthWithSlaveDown() {
         HikariDataSource dataSource = mock(HikariDataSource.class);
@@ -217,73 +217,73 @@ class ExternalDataSourceServiceImplTest {
         ReflectionTestUtils.setField(service, "isHealthList", isHealthList);
         assertEquals("WARN:2.2.2.2", service.getHealth());
     }
-    
+
     @Test
     void testCheckDbHealthTaskRun() {
         List<JdbcTemplate> testJtList = new ArrayList<>();
         testJtList.add(jt);
         ReflectionTestUtils.setField(service, "testJtList", testJtList);
-        
+
         List<Boolean> isHealthList = new ArrayList<>();
         isHealthList.add(Boolean.FALSE);
         ReflectionTestUtils.setField(service, "isHealthList", isHealthList);
-        
+
         service.new CheckDbHealthTask().run();
         assertEquals(1, isHealthList.size());
         assertTrue(isHealthList.get(0));
     }
-    
+
     @Test
     void testCheckDbHealthTaskRunWhenEmptyResult() {
         List<JdbcTemplate> testJtList = new ArrayList<>();
         testJtList.add(jt);
         ReflectionTestUtils.setField(service, "testJtList", testJtList);
-        
+
         List<Boolean> isHealthList = new ArrayList<>();
         isHealthList.add(Boolean.FALSE);
         ReflectionTestUtils.setField(service, "isHealthList", isHealthList);
-        
+
         when(jt.queryForMap(anyString())).thenThrow(new EmptyResultDataAccessException("Expected exception", 1));
         service.new CheckDbHealthTask().run();
         assertEquals(1, isHealthList.size());
         assertTrue(isHealthList.get(0));
     }
-    
+
     @Test
     void testCheckDbHealthTaskRunWhenSqlException() {
         List<JdbcTemplate> testJtList = new ArrayList<>();
         testJtList.add(jt);
         ReflectionTestUtils.setField(service, "testJtList", testJtList);
-        
+
         List<Boolean> isHealthList = new ArrayList<>();
         isHealthList.add(Boolean.FALSE);
         ReflectionTestUtils.setField(service, "isHealthList", isHealthList);
-        
+
         when(jt.queryForMap(anyString())).thenThrow(
                 new UncategorizedSQLException("Expected exception", "", new SQLException()));
         service.new CheckDbHealthTask().run();
         assertEquals(1, isHealthList.size());
         assertFalse(isHealthList.get(0));
     }
-    
+
     @Test
     void testCheckDbHealthTaskRunWhenSqlExceptionForSlave() {
         List<JdbcTemplate> testJtList = new ArrayList<>();
         testJtList.add(jt);
         ReflectionTestUtils.setField(service, "testJtList", testJtList);
-        
+
         List<Boolean> isHealthList = new ArrayList<>();
         isHealthList.add(Boolean.FALSE);
         ReflectionTestUtils.setField(service, "isHealthList", isHealthList);
         ReflectionTestUtils.setField(service, "masterIndex", 1);
-        
+
         when(jt.queryForMap(anyString())).thenThrow(
                 new UncategorizedSQLException("Expected exception", "", new SQLException()));
         service.new CheckDbHealthTask().run();
         assertEquals(1, isHealthList.size());
         assertFalse(isHealthList.get(0));
     }
-    
+
     @Test
     void testMasterSelectWithException() {
         HikariDataSource dataSource = mock(HikariDataSource.class);

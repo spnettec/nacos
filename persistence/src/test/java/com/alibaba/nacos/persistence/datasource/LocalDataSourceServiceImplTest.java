@@ -47,36 +47,36 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class LocalDataSourceServiceImplTest {
-    
+
     @InjectMocks
     private LocalDataSourceServiceImpl service;
-    
+
     @Mock
     private JdbcTemplate jt;
-    
+
     @Mock
     private TransactionTemplate tjt;
-    
+
     @BeforeEach
     void setUp() {
-        DatasourceConfiguration.setUseExternalDB(false);
+        DatasourceConfiguration.setUseExternalDb(false);
         service = new LocalDataSourceServiceImpl();
         ReflectionTestUtils.setField(service, "jt", jt);
         ReflectionTestUtils.setField(service, "tjt", tjt);
     }
-    
+
     @Test
     void testInitWhenUseExternalDB() throws Exception {
         try {
-            DatasourceConfiguration.setUseExternalDB(true);
+            DatasourceConfiguration.setUseExternalDb(true);
             EnvUtil.setEnvironment(null);
             LocalDataSourceServiceImpl service1 = new LocalDataSourceServiceImpl();
             assertDoesNotThrow(service1::init);
         } finally {
-            DatasourceConfiguration.setUseExternalDB(false);
+            DatasourceConfiguration.setUseExternalDb(false);
         }
     }
-    
+
     @Test
     void testInit() throws Exception {
         try {
@@ -90,12 +90,12 @@ class LocalDataSourceServiceImplTest {
             EnvUtil.setEnvironment(null);
         }
     }
-    
+
     @Test
     void testReloadWithNullDatasource() {
         assertThrowsExactly(RuntimeException.class, service::reload, "datasource is null");
     }
-    
+
     @Test
     void testReloadWithException() throws SQLException {
         DataSource ds = mock(DataSource.class);
@@ -103,7 +103,7 @@ class LocalDataSourceServiceImplTest {
         when(ds.getConnection()).thenThrow(new SQLException());
         assertThrows(NacosRuntimeException.class, service::reload);
     }
-    
+
     @Test
     void testCleanAndReopen() throws Exception {
         try {
@@ -115,7 +115,7 @@ class LocalDataSourceServiceImplTest {
             EnvUtil.setEnvironment(null);
         }
     }
-    
+
     @Test
     void testRestoreDerby() throws Exception {
         try {
@@ -129,7 +129,7 @@ class LocalDataSourceServiceImplTest {
             EnvUtil.setEnvironment(null);
         }
     }
-    
+
     @Test
     void testGetDataSource() {
         HikariDataSource dataSource = new HikariDataSource();
@@ -137,17 +137,17 @@ class LocalDataSourceServiceImplTest {
         when(jt.getDataSource()).thenReturn(dataSource);
         assertEquals(dataSource.getJdbcUrl(), ((HikariDataSource) service.getDatasource()).getJdbcUrl());
     }
-    
+
     @Test
     void testCheckMasterWritable() {
         assertTrue(service.checkMasterWritable());
     }
-    
+
     @Test
     void testSetAndGetHealth() {
         service.setHealthStatus("DOWN");
         assertEquals("DOWN", service.getHealth());
-        
+
         service.setHealthStatus("UP");
         assertEquals("UP", service.getHealth());
     }

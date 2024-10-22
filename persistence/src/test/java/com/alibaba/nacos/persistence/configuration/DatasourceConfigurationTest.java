@@ -32,57 +32,57 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(MockitoExtension.class)
 class DatasourceConfigurationTest {
-    
+
     @Mock
     ConfigurableApplicationContext context;
-    
+
     DatasourceConfiguration datasourceConfiguration;
-    
+
     MockEnvironment environment;
-    
+
     @BeforeEach
     void setUp() {
         environment = new MockEnvironment();
         EnvUtil.setEnvironment(environment);
         datasourceConfiguration = new DatasourceConfiguration();
-        DatasourceConfiguration.useExternalDB = false;
+        DatasourceConfiguration.useExternalDb = false;
         DatasourceConfiguration.embeddedStorage = true;
     }
-    
+
     @AfterEach
     void tearDown() {
-        DatasourceConfiguration.useExternalDB = false;
+        DatasourceConfiguration.useExternalDb = false;
         DatasourceConfiguration.embeddedStorage = true;
         EnvUtil.setIsStandalone(true);
         EnvUtil.setEnvironment(null);
         System.clearProperty(PersistenceConstant.EMBEDDED_STORAGE);
     }
-    
+
     @Test
     void testInitializeForEmptyDatasourceForStandaloneMode() {
         datasourceConfiguration.initialize(context);
         assertTrue(DatasourceConfiguration.isEmbeddedStorage());
-        assertFalse(DatasourceConfiguration.isUseExternalDB());
+        assertFalse(DatasourceConfiguration.isUseExternalDb());
     }
-    
+
     @Test
     void testInitializeForEmptyDatasourceForClusterMode() {
         EnvUtil.setIsStandalone(false);
         DatasourceConfiguration.embeddedStorage = false;
         datasourceConfiguration.initialize(context);
         assertFalse(DatasourceConfiguration.isEmbeddedStorage());
-        assertTrue(DatasourceConfiguration.isUseExternalDB());
+        assertTrue(DatasourceConfiguration.isUseExternalDb());
     }
-    
+
     @Test
     void testInitializeForDerbyForStandaloneMode() {
         environment.setProperty(PersistenceConstant.DATASOURCE_PLATFORM_PROPERTY, PersistenceConstant.DERBY);
         System.setProperty(PersistenceConstant.EMBEDDED_STORAGE, "true");
         datasourceConfiguration.initialize(context);
         assertTrue(DatasourceConfiguration.isEmbeddedStorage());
-        assertFalse(DatasourceConfiguration.isUseExternalDB());
+        assertFalse(DatasourceConfiguration.isUseExternalDb());
     }
-    
+
     @Test
     void testInitializeForDerbyForClusterMode() {
         EnvUtil.setIsStandalone(false);
@@ -91,18 +91,18 @@ class DatasourceConfigurationTest {
         environment.setProperty(PersistenceConstant.DATASOURCE_PLATFORM_PROPERTY, PersistenceConstant.DERBY);
         datasourceConfiguration.initialize(context);
         assertTrue(DatasourceConfiguration.isEmbeddedStorage());
-        assertFalse(DatasourceConfiguration.isUseExternalDB());
+        assertFalse(DatasourceConfiguration.isUseExternalDb());
     }
-    
+
     @Test
     void testInitializeForMySqlForStandaloneMode() {
         environment.setProperty(PersistenceConstant.DATASOURCE_PLATFORM_PROPERTY, PersistenceConstant.MYSQL);
         datasourceConfiguration.initialize(context);
         assertFalse(DatasourceConfiguration.isEmbeddedStorage());
-        assertTrue(DatasourceConfiguration.isUseExternalDB());
-        
+        assertTrue(DatasourceConfiguration.isUseExternalDb());
+
     }
-    
+
     @Test
     void testInitializeForMySqlForClusterMode() {
         EnvUtil.setIsStandalone(false);
@@ -110,17 +110,17 @@ class DatasourceConfigurationTest {
         environment.setProperty(PersistenceConstant.DATASOURCE_PLATFORM_PROPERTY, PersistenceConstant.MYSQL);
         datasourceConfiguration.initialize(context);
         assertFalse(DatasourceConfiguration.isEmbeddedStorage());
-        assertTrue(DatasourceConfiguration.isUseExternalDB());
+        assertTrue(DatasourceConfiguration.isUseExternalDb());
     }
-    
+
     @Test
     void testInitializeForPgSqlForStandaloneMode() {
         environment.setProperty(PersistenceConstant.DATASOURCE_PLATFORM_PROPERTY, "postgresql");
         datasourceConfiguration.initialize(context);
         assertFalse(DatasourceConfiguration.isEmbeddedStorage());
-        assertTrue(DatasourceConfiguration.isUseExternalDB());
+        assertTrue(DatasourceConfiguration.isUseExternalDb());
     }
-    
+
     @Test
     void testInitializeForPgSqlForClusterMode() {
         EnvUtil.setIsStandalone(false);
@@ -128,6 +128,6 @@ class DatasourceConfigurationTest {
         environment.setProperty(PersistenceConstant.DATASOURCE_PLATFORM_PROPERTY, "postgresql");
         datasourceConfiguration.initialize(context);
         assertFalse(DatasourceConfiguration.isEmbeddedStorage());
-        assertTrue(DatasourceConfiguration.isUseExternalDB());
+        assertTrue(DatasourceConfiguration.isUseExternalDb());
     }
 }

@@ -33,54 +33,54 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ExtendWith(MockitoExtension.class)
 class DynamicDataSourceTest {
-    
+
     @InjectMocks
     private DynamicDataSource dataSource;
-    
+
     @Mock
     private LocalDataSourceServiceImpl localDataSourceService;
-    
+
     @Mock
     private ExternalDataSourceServiceImpl basicDataSourceService;
-    
+
     @BeforeEach
     void setUp() {
         EnvUtil.setEnvironment(new MockEnvironment());
         dataSource = DynamicDataSource.getInstance();
     }
-    
+
     @AfterEach
     void tearDown() {
         DatasourceConfiguration.setEmbeddedStorage(true);
-        DatasourceConfiguration.setUseExternalDB(false);
+        DatasourceConfiguration.setUseExternalDb(false);
         ReflectionTestUtils.setField(dataSource, "localDataSourceService", null);
         ReflectionTestUtils.setField(dataSource, "basicDataSourceService", null);
         EnvUtil.setEnvironment(null);
     }
-    
+
     @Test
     void testGetDataSourceWithAlreadyInitialized() {
         ReflectionTestUtils.setField(dataSource, "localDataSourceService", localDataSourceService);
         ReflectionTestUtils.setField(dataSource, "basicDataSourceService", basicDataSourceService);
         DatasourceConfiguration.setEmbeddedStorage(true);
         assertInstanceOf(LocalDataSourceServiceImpl.class, dataSource.getDataSource());
-        
+
         DatasourceConfiguration.setEmbeddedStorage(false);
         assertInstanceOf(ExternalDataSourceServiceImpl.class, dataSource.getDataSource());
     }
-    
+
     @Test
     void testInitWithEmbeddedStorage() {
         DatasourceConfiguration.setEmbeddedStorage(true);
         assertInstanceOf(LocalDataSourceServiceImpl.class, dataSource.getDataSource());
     }
-    
+
     @Test
     void testInitWithExternalStorage() {
         DatasourceConfiguration.setEmbeddedStorage(false);
         assertInstanceOf(ExternalDataSourceServiceImpl.class, dataSource.getDataSource());
     }
-    
+
     @Test
     void testInitWithException() {
         EnvUtil.setEnvironment(null);
