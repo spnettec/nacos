@@ -50,10 +50,10 @@ public class ConfigInfoTagsRelationMapperByDerby extends AbstractMapperByDerby i
         final String baseSql =
                 "SELECT a.id,a.data_id,a.group_id,a.tenant_id,a.app_name,a.content FROM config_info  a LEFT JOIN "
                         + "config_tags_relation b ON a.id=b.id";
-        
+
         where.append(" a.tenant_id=? ");
         paramList.add(tenantId);
-        
+
         if (StringUtils.isNotBlank(dataId)) {
             where.append(" AND a.data_id=? ");
             paramList.add(dataId);
@@ -83,7 +83,7 @@ public class ConfigInfoTagsRelationMapperByDerby extends AbstractMapperByDerby i
                 + " ROWS ONLY";
         return new MapperResult(sql, paramList);
     }
-    
+
     @Override
     public MapperResult findConfigInfoLike4PageFetchRows(MapperContext context) {
         final String appName = (String) context.getWhereParameter(FieldConstant.APP_NAME);
@@ -97,9 +97,9 @@ public class ConfigInfoTagsRelationMapperByDerby extends AbstractMapperByDerby i
         WhereBuilder where = new WhereBuilder(
                 "SELECT a.ID,a.data_id,a.group_id,a.tenant_id,a.app_name,a.content,a.type FROM config_info a LEFT JOIN "
                         + "config_tags_relation b ON a.id=b.id");
-        
+
         where.like("a.tenant_id", tenantId);
-        
+
         if (StringUtils.isNotBlank(dataId)) {
             where.and().like("a.data_id", dataId);
         }
@@ -122,7 +122,7 @@ public class ConfigInfoTagsRelationMapperByDerby extends AbstractMapperByDerby i
         where.offset(context.getStartRow(), context.getPageSize());
         return where.build();
     }
-    
+
     @Override
     public String getDataSource() {
         return DataSourceConstant.DERBY;

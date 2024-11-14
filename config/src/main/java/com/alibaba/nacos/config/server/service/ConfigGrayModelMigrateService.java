@@ -41,13 +41,13 @@ import static com.alibaba.nacos.config.server.utils.LogUtil.DEFAULT_LOG;
  */
 @Service
 public class ConfigGrayModelMigrateService {
-    
+
     ConfigInfoBetaPersistService configInfoBetaPersistService;
-    
+
     ConfigInfoTagPersistService configInfoTagPersistService;
-    
+
     ConfigInfoGrayPersistService configInfoGrayPersistService;
-    
+
     public ConfigGrayModelMigrateService(ConfigInfoBetaPersistService configInfoBetaPersistService,
             ConfigInfoTagPersistService configInfoTagPersistService,
             ConfigInfoGrayPersistService configInfoGrayPersistService) {
@@ -55,7 +55,7 @@ public class ConfigGrayModelMigrateService {
         this.configInfoGrayPersistService = configInfoGrayPersistService;
         this.configInfoTagPersistService = configInfoTagPersistService;
     }
-    
+
     /**
      * migrate beta&tag to gray .
      */
@@ -63,7 +63,7 @@ public class ConfigGrayModelMigrateService {
     public void migrate() {
         doCheckMigrate();
     }
-    
+
     /**
      * migrate single config beta.
      *
@@ -80,7 +80,7 @@ public class ConfigGrayModelMigrateService {
                 return;
             }
             configInfoGrayPersistService.removeConfigInfoGray(dataId, group, tenant, BetaGrayRule.TYPE_BETA,
-                    NetUtils.localIP(), "nacos_auto_migrate");
+                    NetUtils.localIp(), "nacos_auto_migrate");
             return;
         }
         ConfigInfoGrayWrapper configInfo4Gray = configInfoGrayPersistService.findConfigInfo4Gray(dataId, group, tenant,
@@ -92,12 +92,12 @@ public class ConfigGrayModelMigrateService {
             ConfigGrayPersistInfo localConfigGrayPersistInfo = new ConfigGrayPersistInfo(BetaGrayRule.TYPE_BETA,
                     BetaGrayRule.VERSION, configInfo4Beta.getBetaIps(), BetaGrayRule.PRIORITY);
             configInfoGrayPersistService.insertOrUpdateGray(configInfo4Beta, BetaGrayRule.TYPE_BETA,
-                    GrayRuleManager.serializeConfigGrayPersistInfo(localConfigGrayPersistInfo), NetUtils.localIP(),
+                    GrayRuleManager.serializeConfigGrayPersistInfo(localConfigGrayPersistInfo), NetUtils.localIp(),
                     "nacos_auto_migrate");
         }
-        
+
     }
-    
+
     /**
      * migrate single config tag.
      *
@@ -116,7 +116,7 @@ public class ConfigGrayModelMigrateService {
                 return;
             }
             configInfoGrayPersistService.removeConfigInfoGray(dataId, group, tenant, TagGrayRule.TYPE_TAG + "_" + tag,
-                    NetUtils.localIP(), "nacos_auto_migrate");
+                    NetUtils.localIp(), "nacos_auto_migrate");
             return;
         }
         ConfigInfoGrayWrapper configInfo4Gray = configInfoGrayPersistService.findConfigInfo4Gray(dataId, group, tenant,
@@ -128,11 +128,11 @@ public class ConfigGrayModelMigrateService {
             ConfigGrayPersistInfo localConfigGrayPersistInfo = new ConfigGrayPersistInfo(TagGrayRule.TYPE_TAG,
                     TagGrayRule.VERSION, configInfo4Tag.getTag(), TagGrayRule.PRIORITY);
             configInfoGrayPersistService.insertOrUpdateGray(configInfo4Tag, TagGrayRule.TYPE_TAG,
-                    GrayRuleManager.serializeConfigGrayPersistInfo(localConfigGrayPersistInfo), NetUtils.localIP(),
+                    GrayRuleManager.serializeConfigGrayPersistInfo(localConfigGrayPersistInfo), NetUtils.localIp(),
                     "nacos_auto_migrate");
         }
     }
-    
+
     private void doCheckMigrate() {
         int pageSize = 100;
         int rowCount = configInfoBetaPersistService.configInfoBetaCount();
@@ -143,7 +143,7 @@ public class ConfigGrayModelMigrateService {
                     pageSize);
             if (page != null) {
                 for (ConfigInfoBetaWrapper cf : page.getPageItems()) {
-                    
+
                     ConfigInfoGrayWrapper configInfo4Gray = configInfoGrayPersistService.findConfigInfo4Gray(
                             cf.getDataId(), cf.getGroup(), cf.getTenant(), BetaGrayRule.TYPE_BETA);
                     if (configInfo4Gray == null || configInfo4Gray.getLastModified() < cf.getLastModified()) {
@@ -153,14 +153,14 @@ public class ConfigGrayModelMigrateService {
                                 BetaGrayRule.TYPE_BETA, BetaGrayRule.VERSION, cf.getBetaIps(), BetaGrayRule.PRIORITY);
                         configInfoGrayPersistService.insertOrUpdateGray(cf, BetaGrayRule.TYPE_BETA,
                                 GrayRuleManager.serializeConfigGrayPersistInfo(localConfigGrayPersistInfo),
-                                NetUtils.localIP(), "nacos_auto_migrate");
+                                NetUtils.localIp(), "nacos_auto_migrate");
                     }
-                    
+
                 }
                 actualRowCount += page.getPageItems().size();
             }
         }
-        
+
         rowCount = configInfoTagPersistService.configInfoTagCount();
         pageCount = (int) Math.ceil(rowCount * 1.0 / pageSize);
         actualRowCount = 0;
@@ -178,14 +178,14 @@ public class ConfigGrayModelMigrateService {
                                 TagGrayRule.TYPE_TAG, TagGrayRule.VERSION, cf.getTag(), TagGrayRule.PRIORITY);
                         configInfoGrayPersistService.insertOrUpdateGray(cf, TagGrayRule.TYPE_TAG + "_" + cf.getTag(),
                                 GrayRuleManager.serializeConfigGrayPersistInfo(localConfigGrayPersistInfo),
-                                NetUtils.localIP(), "nacos_auto_migrate");
+                                NetUtils.localIp(), "nacos_auto_migrate");
                     }
                 }
-                
+
                 actualRowCount += page.getPageItems().size();
                 DEFAULT_LOG.info("[-tag] {} / {}", actualRowCount, rowCount);
             }
         }
     }
-    
+
 }

@@ -37,7 +37,7 @@ public class GroupCapacityMapperByDerby extends AbstractMapperByDerby implements
 
     @Override
     public MapperResult selectGroupInfoBySize(MapperContext context) {
-        String sql = "SELECT id, group_id FROM group_capacity WHERE id > ? order by id OFFSET 0 ROWS FETCH NEXT ? ROWS ONLY";
+        String sql = "SELECT id, group_id FROM group_capacity WHERE id > ? OFFSET 0 ROWS FETCH NEXT ? ROWS ONLY";
         return new MapperResult(sql,
                 CollectionUtils.list(context.getWhereParameter(FieldConstant.ID), context.getPageSize()));
     }
