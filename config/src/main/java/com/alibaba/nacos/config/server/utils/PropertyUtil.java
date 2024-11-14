@@ -56,6 +56,11 @@ public class PropertyUtil implements ApplicationContextInitializer<ConfigurableA
     private static boolean isManageCapacity = true;
 
     /**
+     * gray compatible model.
+     */
+    private static boolean grayCompatibleModel = true;
+
+    /**
      * Whether to enable the limit check function of capacity management, including the upper limit of configuration
      * number, configuration content size limit, etc.
      */
@@ -231,6 +236,18 @@ public class PropertyUtil implements ApplicationContextInitializer<ConfigurableA
 
     public static void setDefaultMaxAggrCount(int defaultMaxAggrCount) {
         PropertyUtil.defaultMaxAggrCount = defaultMaxAggrCount;
+    }
+
+    /**
+     * control whether persist beta and tag to old model.
+     * @return
+     */
+    public static boolean isGrayCompatibleModel() {
+        return grayCompatibleModel;
+    }
+
+    public static void setGrayCompatibleModel(boolean grayCompatibleModel) {
+        PropertyUtil.grayCompatibleModel = grayCompatibleModel;
     }
 
     public static int getDefaultMaxAggrSize() {
