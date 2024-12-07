@@ -71,10 +71,7 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -681,7 +678,7 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
                     configInfo.getGroup(), tenantTmp));
             List<Integer> argTypes = new ArrayList<>(Arrays.asList(Types.VARCHAR,Types.VARCHAR,Types.VARCHAR,Types.VARCHAR,
                     Types.TIMESTAMP,Types.VARCHAR, Types.VARCHAR,Types.VARCHAR,Types.VARCHAR,Types.VARCHAR,Types.VARCHAR,
-                    Types.VARCHAR,Types.VARCHAR,Types.VARCHAR,Types.VARCHAR));
+                    Types.VARCHAR,Types.VARCHAR,Types.VARCHAR, Types.VARCHAR));
             if (dataSourceService.getDataSourceType().equals(PropertiesConstant.ORACLE) && StringUtils.isBlank(tenantTmp)) {
                 updateSql = updateSql.replace("tenant_id = ?","tenant_id is NULL");
                 int index = parasList.size()-1;

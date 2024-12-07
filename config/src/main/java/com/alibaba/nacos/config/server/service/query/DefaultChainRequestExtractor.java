@@ -24,7 +24,7 @@ import com.alibaba.nacos.config.server.model.gray.TagGrayRule;
 import com.alibaba.nacos.config.server.service.query.model.ConfigQueryChainRequest;
 import com.alibaba.nacos.config.server.utils.RequestUtil;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,12 +36,12 @@ import static com.alibaba.nacos.api.common.Constants.VIPSERVER_TAG;
  * @author Nacos
  */
 public class DefaultChainRequestExtractor implements ConfigQueryChainRequestExtractor {
-    
+
     @Override
     public String getName() {
         return "nacos";
     }
-    
+
     @Override
     public ConfigQueryChainRequest extract(HttpServletRequest request) {
         final String dataId = request.getParameter("dataId");
@@ -53,7 +53,7 @@ public class DefaultChainRequestExtractor implements ConfigQueryChainRequestExtr
         String tag = request.getParameter("tag");
         String autoTag = request.getHeader(VIPSERVER_TAG);
         String clientIp = RequestUtil.getRemoteIp(request);
-        
+
         Map<String, String> appLabels = new HashMap<>(4);
         appLabels.put(BetaGrayRule.CLIENT_IP_LABEL, clientIp);
         if (StringUtils.isNotBlank(tag)) {
@@ -61,21 +61,21 @@ public class DefaultChainRequestExtractor implements ConfigQueryChainRequestExtr
         } else if (StringUtils.isNotBlank(autoTag)) {
             appLabels.put(TagGrayRule.VIP_SERVER_TAG_LABEL, autoTag);
         }
-        
+
         ConfigQueryChainRequest chainRequest = new ConfigQueryChainRequest();
         chainRequest.setDataId(dataId);
         chainRequest.setGroup(group);
         chainRequest.setTenant(tenant);
         chainRequest.setTag(tag);
         chainRequest.setAppLabels(appLabels);
-        
+
         return chainRequest;
     }
-    
+
     @Override
     public ConfigQueryChainRequest extract(ConfigQueryRequest request, RequestMeta requestMeta) {
         ConfigQueryChainRequest chainRequest = new ConfigQueryChainRequest();
-        
+
         String tag = request.getTag();
         Map<String, String> appLabels = new HashMap<>(4);
         appLabels.put(BetaGrayRule.CLIENT_IP_LABEL, requestMeta.getClientIp());
@@ -84,13 +84,13 @@ public class DefaultChainRequestExtractor implements ConfigQueryChainRequestExtr
         } else {
             appLabels.putAll(requestMeta.getAppLabels());
         }
-        
+
         chainRequest.setDataId(request.getDataId());
         chainRequest.setGroup(request.getGroup());
         chainRequest.setTenant(request.getTenant());
         chainRequest.setTag(request.getTag());
         chainRequest.setAppLabels(appLabels);
-        
+
         return chainRequest;
     }
 }
