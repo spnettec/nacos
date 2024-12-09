@@ -16,8 +16,8 @@
 
 package com.alibaba.nacos.config.server.utils;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
 import java.util.Map;
 
@@ -27,14 +27,14 @@ import java.util.Map;
  * @author Sunrisea
  */
 public interface Md5Comparator {
-    
+
     /**
      * Gets md 5 comparator name.
      *
      * @return the md 5 comparator name
      */
     public String getName();
-    
+
     /**
      * Compare md 5 list.
      *

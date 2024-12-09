@@ -25,8 +25,8 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.HashMap;
 import java.util.List;
 
@@ -39,75 +39,75 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class NacosMd5ComparatorTest {
-    
+
     MockedStatic<RequestUtil> mockRequestUtil;
-    
+
     MockedStatic<ConfigCacheService> configCacheServiceMockedStatic;
-    
+
     @Mock
     HttpServletRequest request;
-    
+
     @Mock
     HttpServletResponse response;
-    
+
     @BeforeEach
     void setUp() {
         mockRequestUtil = mockStatic(RequestUtil.class);
         configCacheServiceMockedStatic = mockStatic(ConfigCacheService.class);
     }
-    
+
     @AfterEach
     void tearDown() {
         mockRequestUtil.close();
         configCacheServiceMockedStatic.close();
     }
-    
+
     @Test
     void getName() {
         NacosMd5Comparator nacosMd5Comparator = new NacosMd5Comparator();
         assertEquals("nacos", nacosMd5Comparator.getName());
     }
-    
+
     @Test
     void compareMd5NoChange() {
         String ip = "127.0.0.1";
         String tag = "tag";
         when(request.getHeader(VIPSERVER_TAG)).thenReturn(tag);
         mockRequestUtil.when(() -> RequestUtil.getRemoteIp(request)).thenReturn(ip);
-        
+
         String groupKey1 = "groupKey1";
         String groupKey2 = "groupKey2";
         String clientMd5 = "clientMd5";
         HashMap<String, String> clientMd5Map = new HashMap<>();
         clientMd5Map.put(groupKey1, clientMd5);
         clientMd5Map.put(groupKey2, clientMd5);
-        
+
         NacosMd5Comparator nacosMd5Comparator = new NacosMd5Comparator();
         configCacheServiceMockedStatic.when(
                 () -> ConfigCacheService.isUptodate(anyString(), eq(clientMd5), eq(ip), eq(tag))).thenReturn(true);
-        
+
         List<String> changedGroupKeys = nacosMd5Comparator.compareMd5(request, response, clientMd5Map);
         assertEquals(0, changedGroupKeys.size());
     }
-    
+
     @Test
     void compareMd5Change() {
         String ip = "127.0.0.1";
         String tag = "tag";
         when(request.getHeader(VIPSERVER_TAG)).thenReturn(tag);
         mockRequestUtil.when(() -> RequestUtil.getRemoteIp(request)).thenReturn(ip);
-        
+
         String groupKey1 = "groupKey1";
         String groupKey2 = "groupKey2";
         String clientMd5 = "clientMd5";
         HashMap<String, String> clientMd5Map = new HashMap<>();
         clientMd5Map.put(groupKey1, clientMd5);
         clientMd5Map.put(groupKey2, clientMd5);
-        
+
         NacosMd5Comparator nacosMd5Comparator = new NacosMd5Comparator();
         configCacheServiceMockedStatic.when(
                 () -> ConfigCacheService.isUptodate(anyString(), eq(clientMd5), eq(ip), eq(tag))).thenReturn(false);
-        
+
         List<String> changedGroupKeys = nacosMd5Comparator.compareMd5(request, response, clientMd5Map);
         assertEquals(2, changedGroupKeys.size());
     }

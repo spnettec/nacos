@@ -22,8 +22,8 @@ import com.alibaba.nacos.sys.env.EnvUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -34,15 +34,15 @@ import java.util.Map;
  * @author Sunrisea
  */
 public class Md5ComparatorDelegate {
-    
+
     private static final Logger LOGGER = LoggerFactory.getLogger(Md5ComparatorDelegate.class);
-    
+
     private static final Md5ComparatorDelegate INSTANCE = new Md5ComparatorDelegate();
-    
+
     private String md5ComparatorType = EnvUtil.getProperty("nacos.config.cache.type", "nacos");
-    
+
     private Md5Comparator md5Comparator;
-    
+
     private Md5ComparatorDelegate() {
         Collection<Md5Comparator> md5Comparators = NacosServiceLoader.load(Md5Comparator.class);
         for (Md5Comparator each : md5Comparators) {
@@ -66,11 +66,11 @@ public class Md5ComparatorDelegate {
             md5Comparator = new NacosMd5Comparator();
         }
     }
-    
+
     public static Md5ComparatorDelegate getInstance() {
         return INSTANCE;
     }
-    
+
     public List<String> compareMd5(HttpServletRequest request, HttpServletResponse response,
             Map<String, String> clientMd5Map) {
         return md5Comparator.compareMd5(request, response, clientMd5Map);
