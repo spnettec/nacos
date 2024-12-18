@@ -60,6 +60,8 @@ public class PropertyUtil implements ApplicationContextInitializer<ConfigurableA
      */
     private static boolean grayCompatibleModel = true;
 
+    public static final ThreadLocal<Boolean> GRAY_MIGRATE_FLAG = ThreadLocal.withInitial(() -> false);
+
     /**
      * Whether to enable the limit check function of capacity management, including the upper limit of configuration
      * number, configuration content size limit, etc.
@@ -240,6 +242,7 @@ public class PropertyUtil implements ApplicationContextInitializer<ConfigurableA
 
     /**
      * control whether persist beta and tag to old model.
+     *
      * @return
      */
     public static boolean isGrayCompatibleModel() {
@@ -271,7 +274,7 @@ public class PropertyUtil implements ApplicationContextInitializer<ConfigurableA
     }
 
     private void setConfigRententionDays() {
-        String val =  getProperty(PropertiesConstant.CONFIG_RENTENTION_DAYS);
+        String val = getProperty(PropertiesConstant.CONFIG_RENTENTION_DAYS);
         if (null != val) {
             int tmp = 0;
             try {
@@ -322,6 +325,8 @@ public class PropertyUtil implements ApplicationContextInitializer<ConfigurableA
             setDumpChangeOn(getBoolean(PropertiesConstant.DUMP_CHANGE_ON, dumpChangeOn));
             setDumpChangeWorkerInterval(
                     getLong(PropertiesConstant.DUMP_CHANGE_WORKER_INTERVAL, dumpChangeWorkerInterval));
+            setGrayCompatibleModel(getBoolean(PropertiesConstant.GRAY_CAPATIBEL_MODEL, grayCompatibleModel));
+
         } catch (Exception e) {
             LOGGER.error("read application.properties failed", e);
             throw e;
