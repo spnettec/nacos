@@ -42,6 +42,6 @@ public class ConfigInfoGrayMapperByMssql extends AbstractMapperByMysql implement
 
     @Override
     public String getDataSource() {
-        return DataSourceConstant.MYSQL;
+        return DataSourceConstant.MSSQL;
     }
 }

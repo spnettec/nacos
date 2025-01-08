@@ -38,7 +38,7 @@ public class HistoryConfigInfoMapperByOracle extends HistoryConfigInfoMapperByDe
     @Override
     public MapperResult pageFindConfigHistoryFetchRows(MapperContext context) {
         String sql =
-                "SELECT nid,data_id,group_id,tenant_id,app_name,src_ip,src_user,op_type,gmt_create,gmt_modified FROM his_config_info "
+                "SELECT nid,data_id,group_id,tenant_id,app_name,src_ip,src_user,op_type,gray_name,ext_info,publish_type,gmt_create,gmt_modified FROM his_config_info "
                         + "WHERE data_id is NULL AND group_id is NULL AND tenant_id is NULL ORDER BY nid DESC  OFFSET "
                         + context.getStartRow() + " ROWS FETCH NEXT " + context.getPageSize() + " ROWS ONLY";
         List<Object> paraList = new ArrayList<>();

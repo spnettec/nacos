@@ -17,6 +17,7 @@
 package com.alibaba.nacos.plugin.auth.impl.persistence;
 
 import com.alibaba.nacos.common.utils.StringUtils;
+import com.alibaba.nacos.config.server.constant.PropertiesConstant;
 import com.alibaba.nacos.config.server.utils.LogUtil;
 import com.alibaba.nacos.persistence.configuration.condition.ConditionOnExternalStorage;
 import com.alibaba.nacos.persistence.datasource.DataSourceService;
@@ -43,27 +44,32 @@ import static com.alibaba.nacos.plugin.auth.impl.persistence.AuthRowMapperManage
 @Conditional(value = ConditionOnExternalStorage.class)
 @Component
 public class ExternalPermissionPersistServiceImpl implements PermissionPersistService {
-    
+
     private JdbcTemplate jt;
-    
+
+    private DataSourceService dataSourceService;
+
     private String dataSourceType = "";
-    
+
     private static final String PATTERN_STR = "*";
-    
+
     @PostConstruct
     protected void init() {
-        DataSourceService dataSource = DynamicDataSource.getInstance().getDataSource();
-        jt = dataSource.getJdbcTemplate();
-        dataSourceType = dataSource.getDataSourceType();
+        this.dataSourceService = DynamicDataSource.getInstance().getDataSource();
+        jt = this.dataSourceService.getJdbcTemplate();
+        dataSourceType = this.dataSourceService.getDataSourceType();
     }
-    
+
     @Override
     public Page<PermissionInfo> getPermissions(String role, int pageNo, int pageSize) {
         AuthPaginationHelper<PermissionInfo> helper = createPaginationHelper();
-        
+
         String sqlCountRows = "SELECT count(*) FROM permissions WHERE ";
         String sqlFetchRows = "SELECT role,resource,action FROM permissions WHERE ";
-        
+        if (dataSourceService.getDataSourceType().equals(PropertiesConstant.ORACLE)) {
+            sqlFetchRows = "SELECT role,\"RESOURCE\",action FROM permissions WHERE ";
+        }
+
         String where = " role= ? ";
         List<String> params = new ArrayList<>();
         if (StringUtils.isNotBlank(role)) {
@@ -71,25 +77,25 @@ public class ExternalPermissionPersistServiceImpl implements PermissionPersistSe
         } else {
             where = " 1=1 ";
         }
-        
+
         try {
             Page<PermissionInfo> pageInfo = helper.fetchPage(sqlCountRows + where, sqlFetchRows + where,
                     params.toArray(), pageNo, pageSize, PERMISSION_ROW_MAPPER);
-            
+
             if (pageInfo == null) {
                 pageInfo = new Page<>();
                 pageInfo.setTotalCount(0);
                 pageInfo.setPageItems(new ArrayList<>());
             }
-            
+
             return pageInfo;
-            
+
         } catch (CannotGetJdbcConnectionException e) {
-            LogUtil.FATAL_LOG.error("[db-error] " + e.toString(), e);
+            LogUtil.FATAL_LOG.error("[db-error] " + e, e);
             throw e;
         }
     }
-    
+
     /**
      * Execute add permission operation.
      *
@@ -99,9 +105,11 @@ public class ExternalPermissionPersistServiceImpl implements PermissionPersistSe
      */
     @Override
     public void addPermission(String role, String resource, String action) {
-        
+
         String sql = "INSERT INTO permissions (role, resource, action) VALUES (?, ?, ?)";
-        
+        if (dataSourceService.getDataSourceType().equals(PropertiesConstant.ORACLE)) {
+            sql = "INSERT INTO permissions (role, \"RESOURCE\", action) VALUES (?, ?, ?)";
+        }
         try {
             jt.update(sql, role, resource, action);
         } catch (CannotGetJdbcConnectionException e) {
@@ -109,7 +117,7 @@ public class ExternalPermissionPersistServiceImpl implements PermissionPersistSe
             throw e;
         }
     }
-    
+
     /**
      * Execute delete permission operation.
      *
@@ -119,8 +127,11 @@ public class ExternalPermissionPersistServiceImpl implements PermissionPersistSe
      */
     @Override
     public void deletePermission(String role, String resource, String action) {
-        
+
         String sql = "DELETE FROM permissions WHERE role=? AND resource=? AND action=?";
+        if (dataSourceService.getDataSourceType().equals(PropertiesConstant.ORACLE)) {
+            sql = "DELETE FROM permissions WHERE role=? AND \"RESOURCE\"=? AND action=?";
+        }
         try {
             jt.update(sql, role, resource, action);
         } catch (CannotGetJdbcConnectionException e) {
@@ -128,39 +139,42 @@ public class ExternalPermissionPersistServiceImpl implements PermissionPersistSe
             throw e;
         }
     }
-    
+
     @Override
     public Page<PermissionInfo> findPermissionsLike4Page(String role, int pageNo, int pageSize) {
         AuthPaginationHelper<PermissionInfo> helper = createPaginationHelper();
-        
+
         String sqlCountRows = "SELECT count(*) FROM permissions ";
         String sqlFetchRows = "SELECT role,resource,action FROM permissions ";
-        
+        if (dataSourceService.getDataSourceType().equals(PropertiesConstant.ORACLE)) {
+            sqlFetchRows = "SELECT role,\"RESOURCE\",action FROM permissions ";
+        }
+
         StringBuilder where = new StringBuilder(" WHERE 1=1");
         List<String> params = new ArrayList<>();
         if (StringUtils.isNotBlank(role)) {
             where.append(" AND role LIKE ?");
             params.add(generateLikeArgument(role));
         }
-        
+
         try {
             Page<PermissionInfo> pageInfo = helper.fetchPage(sqlCountRows + where, sqlFetchRows + where,
                     params.toArray(), pageNo, pageSize, PERMISSION_ROW_MAPPER);
-            
+
             if (pageInfo == null) {
                 pageInfo = new Page<>();
                 pageInfo.setTotalCount(0);
                 pageInfo.setPageItems(new ArrayList<>());
             }
-            
+
             return pageInfo;
-            
+
         } catch (CannotGetJdbcConnectionException e) {
             LogUtil.FATAL_LOG.error("[db-error] " + e.toString(), e);
             throw e;
         }
     }
-    
+
     @Override
     public String generateLikeArgument(String s) {
         String underscore = "_";
@@ -175,7 +189,7 @@ public class ExternalPermissionPersistServiceImpl implements PermissionPersistSe
             return s;
         }
     }
-    
+
     @Override
     public <E> AuthPaginationHelper<E> createPaginationHelper() {
         return new AuthExternalPaginationHelperImpl<E>(jt, dataSourceType);

@@ -118,8 +118,9 @@ public class HistoryService {
      */
     private void checkHistoryInfoPermission(ConfigHistoryInfo configHistoryInfo, String dataId, String group,
             String namespaceId) throws AccessException {
-        if (!Objects.equals(configHistoryInfo.getDataId(), dataId) || !Objects.equals(configHistoryInfo.getGroup(),
-                group) || !Objects.equals(configHistoryInfo.getTenant(), namespaceId)) {
+        if (!Objects.equals(configHistoryInfo.getDataId() == null? "":configHistoryInfo.getDataId(), dataId)
+                || !Objects.equals(configHistoryInfo.getGroup() == null? "":configHistoryInfo.getGroup(),
+                group) || !Objects.equals(configHistoryInfo.getTenant() == null? "":configHistoryInfo.getTenant(), namespaceId)) {
             throw new AccessException("Please check dataId, group or namespaceId.");
         }
     }

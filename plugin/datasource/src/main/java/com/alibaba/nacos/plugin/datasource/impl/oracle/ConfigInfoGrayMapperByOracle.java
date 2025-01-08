@@ -55,6 +55,6 @@ public class ConfigInfoGrayMapperByOracle extends AbstractMapperByDerby implemen
 
     @Override
     public String getDataSource() {
-        return DataSourceConstant.DERBY;
+        return DataSourceConstant.ORACLE;
     }
 }
