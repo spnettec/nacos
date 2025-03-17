@@ -48,7 +48,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 @SpringBootTest(classes = Nacos.class, properties = {
         "server.servlet.context-path=/nacos"}, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-class Unsubscribe_ITCase {
+class UnsubscribeNamingITCase {
 
     private NamingService naming;
 

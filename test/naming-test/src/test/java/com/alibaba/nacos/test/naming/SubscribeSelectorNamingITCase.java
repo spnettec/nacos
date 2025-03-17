@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2018 Alibaba Group Holding Ltd.
+ * Copyright 1999-2023 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,34 +23,31 @@ import com.alibaba.nacos.api.naming.listener.Event;
 import com.alibaba.nacos.api.naming.listener.EventListener;
 import com.alibaba.nacos.api.naming.listener.NamingEvent;
 import com.alibaba.nacos.api.naming.pojo.Instance;
+import com.alibaba.nacos.api.naming.selector.NamingSelector;
+import com.alibaba.nacos.client.naming.selector.DefaultNamingSelector;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static com.alibaba.nacos.test.naming.NamingBase.TEST_PORT;
-import static com.alibaba.nacos.test.naming.NamingBase.randomDomainName;
-import static com.alibaba.nacos.test.naming.NamingBase.verifyInstanceList;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
- * Created by wangtong.wt on 2018/6/20.
- *
- * @author wangtong.wt
- * @date 2018/6/20
+ * @author lideyou
  */
 @SpringBootTest(classes = Nacos.class, properties = {
         "server.servlet.context-path=/nacos"}, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-class SubscribeCluster_ITCase {
+class SubscribeSelectorNamingITCase extends NamingBase {
 
     private NamingService naming;
+
+    private NamingSelector selector = new DefaultNamingSelector(instance -> instance.getIp().startsWith("172.18.137"));
 
     @LocalServerPort
     private int port;
@@ -61,13 +58,12 @@ class SubscribeCluster_ITCase {
     void init() throws Exception {
         instances.clear();
         if (naming == null) {
-            //TimeUnit.SECONDS.sleep(10);
             naming = NamingFactory.createNamingService("127.0.0.1" + ":" + port);
         }
     }
 
     /**
-     * 添加IP，收到通知
+     * Add IP and receive notification.
      *
      * @throws Exception
      */
@@ -76,7 +72,7 @@ class SubscribeCluster_ITCase {
     void subscribeAdd() throws Exception {
         String serviceName = randomDomainName();
 
-        naming.subscribe(serviceName, Arrays.asList("c1"), new EventListener() {
+        naming.subscribe(serviceName, selector, new EventListener() {
             @Override
             public void onEvent(Event event) {
                 System.out.println(((NamingEvent) event).getServiceName());
@@ -85,7 +81,7 @@ class SubscribeCluster_ITCase {
             }
         });
 
-        naming.registerInstance(serviceName, "127.0.0.1", TEST_PORT, "c1");
+        naming.registerInstance(serviceName, "172.18.137.1", TEST_PORT);
 
         while (instances.isEmpty()) {
             Thread.sleep(1000L);
@@ -95,7 +91,7 @@ class SubscribeCluster_ITCase {
     }
 
     /**
-     * 删除IP，收到通知
+     * Delete IP and receive notification.
      *
      * @throws Exception
      */
@@ -103,28 +99,28 @@ class SubscribeCluster_ITCase {
     @Timeout(value = 10000L, unit = TimeUnit.MILLISECONDS)
     void subscribeDelete() throws Exception {
         String serviceName = randomDomainName();
-        naming.registerInstance(serviceName, "127.0.0.1", TEST_PORT, "c1");
+        naming.registerInstance(serviceName, "172.18.137.1", TEST_PORT, "c1");
 
         TimeUnit.SECONDS.sleep(3);
 
-        naming.subscribe(serviceName, Arrays.asList("c1"), new EventListener() {
+        naming.subscribe(serviceName, selector, new EventListener() {
             int index = 0;
 
             @Override
             public void onEvent(Event event) {
+                instances = ((NamingEvent) event).getInstances();
                 if (index == 0) {
                     index++;
                     return;
                 }
                 System.out.println(((NamingEvent) event).getServiceName());
                 System.out.println(((NamingEvent) event).getInstances());
-                instances = ((NamingEvent) event).getInstances();
             }
         });
 
         TimeUnit.SECONDS.sleep(1);
 
-        naming.deregisterInstance(serviceName, "127.0.0.1", TEST_PORT, "c1");
+        naming.deregisterInstance(serviceName, "172.18.137.1", TEST_PORT, "c1");
 
         while (!instances.isEmpty()) {
             Thread.sleep(1000L);
@@ -134,54 +130,26 @@ class SubscribeCluster_ITCase {
     }
 
     /**
-     * 添加不可用IP，收到通知
+     * Add non target IP and do not receive notification.
      *
      * @throws Exception
      */
     @Test
-    @Timeout(value = 10000L, unit = TimeUnit.MILLISECONDS)
-    void subscribeUnhealthy() throws Exception {
+    void subscribeOtherIp() throws Exception {
         String serviceName = randomDomainName();
 
-        naming.subscribe(serviceName, Arrays.asList("c1"), new EventListener() {
-            @Override
-            public void onEvent(Event event) {
-                System.out.println(((NamingEvent) event).getServiceName());
-                System.out.println(((NamingEvent) event).getInstances());
-                instances = ((NamingEvent) event).getInstances();
-            }
-        });
-
-        naming.registerInstance(serviceName, "1.1.1.1", TEST_PORT, "c1");
-
-        while (instances.isEmpty()) {
-            Thread.sleep(1000L);
-        }
-
-        assertTrue(verifyInstanceList(instances, naming.getAllInstances(serviceName)));
-    }
-
-    /**
-     * 新增其他cluster IP，不会收到通知
-     *
-     * @throws Exception
-     */
-    @Test
-    void subscribeOtherCluster() throws Exception {
-        String serviceName = randomDomainName();
-
-        naming.subscribe(serviceName, Arrays.asList("c2"), new EventListener() {
+        naming.subscribe(serviceName, selector, new EventListener() {
             int index = 0;
 
             @Override
             public void onEvent(Event event) {
+                instances = ((NamingEvent) event).getInstances();
                 if (index == 0) {
                     index++;
                     return;
                 }
                 System.out.println(((NamingEvent) event).getServiceName());
                 System.out.println(((NamingEvent) event).getInstances());
-                instances = ((NamingEvent) event).getInstances();
             }
         });
 
