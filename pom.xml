@@ -147,6 +147,10 @@
         <SnakeYaml.version>2.2</SnakeYaml.version>
         <junit5.version>5.10.2</junit5.version>
 
+        <jackson-core.version>2.17.2</jackson-core.version>
+        <concurrentlinkedhashmap.version>1.4.2</concurrentlinkedhashmap.version>
+        <mockito-core.version>5.2.0</mockito-core.version>
+
         <!-- native -->
         <native-maven-plugin.version>0.10.2</native-maven-plugin.version>
     </properties>
@@ -430,9 +434,9 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>com.github.spotbugs</groupId>
-                <artifactId>spotbugs-maven-plugin</artifactId>
-                <version>${soptbugs-maven-plugin.version}</version>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>findbugs-maven-plugin</artifactId>
+                <version>${findbugs-maven-plugin.version}</version>
             </plugin>
             <plugin>
                 <groupId>org.sonarsource.scanner.maven</groupId>
