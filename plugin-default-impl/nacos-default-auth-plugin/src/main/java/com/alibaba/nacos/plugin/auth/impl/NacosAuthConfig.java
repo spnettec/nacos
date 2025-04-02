@@ -42,6 +42,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -150,7 +151,8 @@ public class NacosAuthConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         if (StringUtils.isBlank(authConfigs.getNacosAuthSystemType())) {
             // switch this to springboot3 syntax
-            http.csrf(AbstractHttpConfigurer::disable)
+            http.securityMatcher("/**")
+                    .csrf(AbstractHttpConfigurer::disable)
                     // We don't need CSRF for JWT based authentication
                     .cors(AbstractHttpConfigurer::disable)
                     .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -162,7 +164,7 @@ public class NacosAuthConfig {
                     .exceptionHandling(exceptionHandlingCustomizer->
                             exceptionHandlingCustomizer.authenticationEntryPoint(new JwtAuthenticationEntryPoint()))
                     // disable cache
-                    .headers(headersCustomizer->headersCustomizer.cacheControl(withDefaults()))
+                    .headers(headersCustomizer->headersCustomizer.cacheControl(HeadersConfigurer.CacheControlConfig::disable))
 
                     .addFilterBefore(new JwtAuthenticationTokenFilter(tokenProvider), UsernamePasswordAuthenticationFilter.class);
         }
