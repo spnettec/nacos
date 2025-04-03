@@ -103,6 +103,8 @@
   }, {
     "pattern":"\\QMETA-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports\\E"
   }, {
+    "pattern":"\\QMETA-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.replacements\\E"
+  }, {
     "pattern":"\\Q\\E"
   }, {
     "pattern":"\\Qapplication.properties\\E"
@@ -117,7 +119,11 @@
   }, {
     "pattern":"\\Qcom/alibaba/nacos/api/annotation/NacosApi.class\\E"
   }, {
+    "pattern":"\\Qcom/alibaba/nacos/api/grpc/auto/BiRequestStreamGrpc$AsyncService.class\\E"
+  }, {
     "pattern":"\\Qcom/alibaba/nacos/api/grpc/auto/BiRequestStreamGrpc$BiRequestStreamImplBase.class\\E"
+  }, {
+    "pattern":"\\Qcom/alibaba/nacos/api/grpc/auto/RequestGrpc$AsyncService.class\\E"
   }, {
     "pattern":"\\Qcom/alibaba/nacos/api/grpc/auto/RequestGrpc$RequestImplBase.class\\E"
   }, {
@@ -148,6 +154,10 @@
     "pattern":"\\Qcom/alibaba/nacos/common/task/AbstractExecuteTask.class\\E"
   }, {
     "pattern":"\\Qcom/alibaba/nacos/common/task/NacosTask.class\\E"
+  }, {
+    "pattern":"\\Qcom/alibaba/nacos/config/server/aspect/CapacityManagementAspect$LimitType.class\\E"
+  }, {
+    "pattern":"\\Qcom/alibaba/nacos/config/server/aspect/CapacityManagementAspect.class\\E"
   }, {
     "pattern":"\\Qcom/alibaba/nacos/config/server/aspect/ConfigChangeAspect.class\\E"
   }, {
@@ -227,6 +237,8 @@
   }, {
     "pattern":"\\Qcom/alibaba/nacos/config/server/service/ConfigDetailService.class\\E"
   }, {
+    "pattern":"\\Qcom/alibaba/nacos/config/server/service/ConfigGrayModelMigrateService.class\\E"
+  }, {
     "pattern":"\\Qcom/alibaba/nacos/config/server/service/ConfigOperationService.class\\E"
   }, {
     "pattern":"\\Qcom/alibaba/nacos/config/server/service/ConfigReadinessCheckService.class\\E"
@@ -269,6 +281,8 @@
   }, {
     "pattern":"\\Qcom/alibaba/nacos/config/server/service/dump/DumpService$DumpAllBetaProcessorRunner.class\\E"
   }, {
+    "pattern":"\\Qcom/alibaba/nacos/config/server/service/dump/DumpService$DumpAllGrayProcessorRunner.class\\E"
+  }, {
     "pattern":"\\Qcom/alibaba/nacos/config/server/service/dump/DumpService$DumpAllProcessorRunner.class\\E"
   }, {
     "pattern":"\\Qcom/alibaba/nacos/config/server/service/dump/DumpService$DumpAllTagProcessorRunner.class\\E"
@@ -291,9 +305,13 @@
   }, {
     "pattern":"\\Qcom/alibaba/nacos/config/server/service/notify/AsyncNotifyService.class\\E"
   }, {
+    "pattern":"\\Qcom/alibaba/nacos/config/server/service/query/ConfigQueryChainService.class\\E"
+  }, {
     "pattern":"\\Qcom/alibaba/nacos/config/server/service/repository/ConfigInfoAggrPersistService.class\\E"
   }, {
     "pattern":"\\Qcom/alibaba/nacos/config/server/service/repository/ConfigInfoBetaPersistService.class\\E"
+  }, {
+    "pattern":"\\Qcom/alibaba/nacos/config/server/service/repository/ConfigInfoGrayPersistService.class\\E"
   }, {
     "pattern":"\\Qcom/alibaba/nacos/config/server/service/repository/ConfigInfoPersistService.class\\E"
   }, {
@@ -319,6 +337,8 @@
   }, {
     "pattern":"\\Qcom/alibaba/nacos/config/server/service/repository/ConfigRowMapperInjector$ConfigInfoChangedRowMapper.class\\E"
   }, {
+    "pattern":"\\Qcom/alibaba/nacos/config/server/service/repository/ConfigRowMapperInjector$ConfigInfoGrayWrapperRowMapper.class\\E"
+  }, {
     "pattern":"\\Qcom/alibaba/nacos/config/server/service/repository/ConfigRowMapperInjector$ConfigInfoRowMapper.class\\E"
   }, {
     "pattern":"\\Qcom/alibaba/nacos/config/server/service/repository/ConfigRowMapperInjector$ConfigInfoStateWrapperRowMapper.class\\E"
@@ -338,6 +358,8 @@
     "pattern":"\\Qcom/alibaba/nacos/config/server/service/repository/embedded/EmbeddedConfigInfoAggrPersistServiceImpl.class\\E"
   }, {
     "pattern":"\\Qcom/alibaba/nacos/config/server/service/repository/embedded/EmbeddedConfigInfoBetaPersistServiceImpl.class\\E"
+  }, {
+    "pattern":"\\Qcom/alibaba/nacos/config/server/service/repository/embedded/EmbeddedConfigInfoGrayPersistServiceImpl.class\\E"
   }, {
     "pattern":"\\Qcom/alibaba/nacos/config/server/service/repository/embedded/EmbeddedConfigInfoPersistServiceImpl.class\\E"
   }, {
@@ -526,6 +548,8 @@
     "pattern":"\\Qcom/alibaba/nacos/core/remote/grpc/GrpcRequestAcceptor.class\\E"
   }, {
     "pattern":"\\Qcom/alibaba/nacos/core/remote/grpc/GrpcSdkServer.class\\E"
+  }, {
+    "pattern":"\\Qcom/alibaba/nacos/core/remote/grpc/InvokeSource.class\\E"
   }, {
     "pattern":"\\Qcom/alibaba/nacos/core/remote/grpc/RemoteParamCheckFilter.class\\E"
   }, {
@@ -947,7 +971,13 @@
   }, {
     "pattern":"\\Qio/micrometer/prometheus/PrometheusMeterRegistry.class\\E"
   }, {
+    "pattern":"\\Qio/micrometer/prometheusmetrics/PrometheusConfig.class\\E"
+  }, {
+    "pattern":"\\Qio/micrometer/prometheusmetrics/PrometheusMeterRegistry.class\\E"
+  }, {
     "pattern":"\\Qio/prometheus/client/CollectorRegistry.class\\E"
+  }, {
+    "pattern":"\\Qio/prometheus/metrics/model/registry/PrometheusRegistry.class\\E"
   }, {
     "pattern":"\\Qjakarta/servlet/Filter.class\\E"
   }, {
@@ -960,6 +990,8 @@
     "pattern":"\\Qjava/lang/Iterable.class\\E"
   }, {
     "pattern":"\\Qjava/lang/Object.class\\E"
+  }, {
+    "pattern":"\\Qjava/lang/Record.class\\E"
   }, {
     "pattern":"\\Qjava/util/function/BiPredicate.class\\E"
   }, {
@@ -976,6 +1008,8 @@
     "pattern":"\\Qmozilla/public-suffix-list.txt\\E"
   }, {
     "pattern":"\\Qnacos-version.txt\\E"
+  }, {
+    "pattern":"\\Qnacos_default_application.properties\\E"
   }, {
     "pattern":"\\Qorg/aopalliance/intercept/MethodInterceptor.class\\E"
   }, {
@@ -1092,6 +1126,8 @@
     "pattern":"\\Qorg/springframework/boot/actuate/autoconfigure/context/properties/ConfigurationPropertiesReportEndpointProperties.class\\E"
   }, {
     "pattern":"\\Qorg/springframework/boot/actuate/autoconfigure/endpoint/EndpointAutoConfiguration.class\\E"
+  }, {
+    "pattern":"\\Qorg/springframework/boot/actuate/autoconfigure/endpoint/PropertiesEndpointAccessResolver.class\\E"
   }, {
     "pattern":"\\Qorg/springframework/boot/actuate/autoconfigure/endpoint/condition/ConditionalOnAvailableEndpoint.class\\E"
   }, {
@@ -1261,6 +1297,10 @@
   }, {
     "pattern":"\\Qorg/springframework/boot/actuate/autoconfigure/metrics/export/influx/InfluxMetricsExportAutoConfiguration.class\\E"
   }, {
+    "pattern":"\\Qorg/springframework/boot/actuate/autoconfigure/metrics/export/prometheus/PrometheusMetricsExportAutoConfiguration$PrometheusScrapeEndpointConfiguration.class\\E"
+  }, {
+    "pattern":"\\Qorg/springframework/boot/actuate/autoconfigure/metrics/export/prometheus/PrometheusMetricsExportAutoConfiguration.class\\E"
+  }, {
     "pattern":"\\Qorg/springframework/boot/actuate/autoconfigure/metrics/export/prometheus/PrometheusProperties.class\\E"
   }, {
     "pattern":"\\Qorg/springframework/boot/actuate/autoconfigure/metrics/export/prometheus/PrometheusSimpleclientMetricsExportAutoConfiguration$PrometheusPushGatewayConfiguration.class\\E"
@@ -1347,6 +1387,10 @@
   }, {
     "pattern":"\\Qorg/springframework/boot/actuate/autoconfigure/security/servlet/SecurityRequestMatchersManagementContextConfiguration.class\\E"
   }, {
+    "pattern":"\\Qorg/springframework/boot/actuate/autoconfigure/ssl/SslHealthContributorAutoConfiguration.class\\E"
+  }, {
+    "pattern":"\\Qorg/springframework/boot/actuate/autoconfigure/ssl/SslHealthIndicatorProperties.class\\E"
+  }, {
     "pattern":"\\Qorg/springframework/boot/actuate/autoconfigure/startup/StartupEndpointAutoConfiguration.class\\E"
   }, {
     "pattern":"\\Qorg/springframework/boot/actuate/autoconfigure/system/DiskSpaceHealthContributorAutoConfiguration.class\\E"
@@ -1414,6 +1458,8 @@
     "pattern":"\\Qorg/springframework/boot/actuate/context/properties/ConfigurationPropertiesReportEndpoint.class\\E"
   }, {
     "pattern":"\\Qorg/springframework/boot/actuate/context/properties/ConfigurationPropertiesReportEndpointWebExtension.class\\E"
+  }, {
+    "pattern":"\\Qorg/springframework/boot/actuate/endpoint/OperationFilter.class\\E"
   }, {
     "pattern":"\\Qorg/springframework/boot/actuate/endpoint/annotation/EndpointDiscoverer.class\\E"
   }, {
@@ -1520,6 +1566,8 @@
     "pattern":"\\Qorg/springframework/boot/actuate/sbom/SbomProperties.class\\E"
   }, {
     "pattern":"\\Qorg/springframework/boot/actuate/scheduling/ScheduledTasksEndpoint.class\\E"
+  }, {
+    "pattern":"\\Qorg/springframework/boot/actuate/ssl/SslHealthIndicator.class\\E"
   }, {
     "pattern":"\\Qorg/springframework/boot/actuate/system/DiskSpaceHealthIndicator.class\\E"
   }, {
@@ -1650,6 +1698,14 @@
     "pattern":"\\Qorg/springframework/boot/autoconfigure/http/JacksonHttpMessageConvertersConfiguration.class\\E"
   }, {
     "pattern":"\\Qorg/springframework/boot/autoconfigure/http/JsonbHttpMessageConvertersConfiguration.class\\E"
+  }, {
+    "pattern":"\\Qorg/springframework/boot/autoconfigure/http/client/HttpClientAutoConfiguration.class\\E"
+  }, {
+    "pattern":"\\Qorg/springframework/boot/autoconfigure/http/client/HttpClientProperties.class\\E"
+  }, {
+    "pattern":"\\Qorg/springframework/boot/autoconfigure/http/client/NotReactiveWebApplicationCondition$ReactiveWebApplication.class\\E"
+  }, {
+    "pattern":"\\Qorg/springframework/boot/autoconfigure/http/client/NotReactiveWebApplicationCondition.class\\E"
   }, {
     "pattern":"\\Qorg/springframework/boot/autoconfigure/info/ProjectInfoAutoConfiguration$GitResourceAvailableCondition.class\\E"
   }, {
@@ -2023,6 +2079,12 @@
   }, {
     "pattern":"\\Qorg/springframework/boot/context/properties/EnableConfigurationPropertiesRegistrar.class\\E"
   }, {
+    "pattern":"\\Qorg/springframework/boot/http/client/ClientHttpRequestFactoryBuilder.class\\E"
+  }, {
+    "pattern":"\\Qorg/springframework/boot/http/client/ClientHttpRequestFactorySettings.class\\E"
+  }, {
+    "pattern":"\\Qorg/springframework/boot/info/SslInfo.class\\E"
+  }, {
     "pattern":"\\Qorg/springframework/boot/jackson/JsonComponentModule.class\\E"
   }, {
     "pattern":"\\Qorg/springframework/boot/jackson/JsonMixinModule.class\\E"
@@ -2235,6 +2297,8 @@
   }, {
     "pattern":"\\Qorg/springframework/security/access/expression/SecurityExpressionHandler.class\\E"
   }, {
+    "pattern":"\\Qorg/springframework/security/aot/hint/SecurityHintsRegistrar.class\\E"
+  }, {
     "pattern":"\\Qorg/springframework/security/authentication/AnonymousAuthenticationProvider.class\\E"
   }, {
     "pattern":"\\Qorg/springframework/security/authentication/AuthenticationManager.class\\E"
@@ -2252,6 +2316,8 @@
     "pattern":"\\Qorg/springframework/security/authorization/method/AuthorizationAdvisorProxyFactory.class\\E"
   }, {
     "pattern":"\\Qorg/springframework/security/authorization/method/AuthorizeReturnObjectMethodInterceptor.class\\E"
+  }, {
+    "pattern":"\\Qorg/springframework/security/config/ObjectPostProcessor.class\\E"
   }, {
     "pattern":"\\Qorg/springframework/security/config/annotation/AbstractConfiguredSecurityBuilder.class\\E"
   }, {
@@ -2285,7 +2351,13 @@
   }, {
     "pattern":"\\Qorg/springframework/security/config/annotation/method/configuration/AuthorizationProxyConfiguration.class\\E"
   }, {
+    "pattern":"\\Qorg/springframework/security/config/annotation/method/configuration/DeferringMethodInterceptor.class\\E"
+  }, {
     "pattern":"\\Qorg/springframework/security/config/annotation/method/configuration/EnableMethodSecurity.class\\E"
+  }, {
+    "pattern":"\\Qorg/springframework/security/config/annotation/method/configuration/MethodObservationConfiguration.class\\E"
+  }, {
+    "pattern":"\\Qorg/springframework/security/config/annotation/method/configuration/MethodSecurityAdvisorRegistrar$AdvisorWrapper.class\\E"
   }, {
     "pattern":"\\Qorg/springframework/security/config/annotation/method/configuration/MethodSecurityAdvisorRegistrar.class\\E"
   }, {
@@ -2308,6 +2380,10 @@
     "pattern":"\\Qorg/springframework/security/config/annotation/web/configuration/HttpSecurityConfiguration.class\\E"
   }, {
     "pattern":"\\Qorg/springframework/security/config/annotation/web/configuration/OAuth2ImportSelector.class\\E"
+  }, {
+    "pattern":"\\Qorg/springframework/security/config/annotation/web/configuration/ObservationConfiguration.class\\E"
+  }, {
+    "pattern":"\\Qorg/springframework/security/config/annotation/web/configuration/ObservationImportSelector.class\\E"
   }, {
     "pattern":"\\Qorg/springframework/security/config/annotation/web/configuration/SpringWebMvcImportSelector.class\\E"
   }, {
@@ -2334,6 +2410,10 @@
     "pattern":"\\Qorg/springframework/security/crypto/bcrypt/BCryptPasswordEncoder.class\\E"
   }, {
     "pattern":"\\Qorg/springframework/security/crypto/password/PasswordEncoder.class\\E"
+  }, {
+    "pattern":"\\Qorg/springframework/security/default-ui.css\\E"
+  }, {
+    "pattern":"\\Qorg/springframework/security/spring-security-webauthn.js\\E"
   }, {
     "pattern":"\\Qorg/springframework/security/web/AuthenticationEntryPoint.class\\E"
   }, {
@@ -2633,6 +2713,8 @@
   }, {
     "pattern":"java.base:\\Qjava/lang/Object.class\\E"
   }, {
+    "pattern":"java.base:\\Qjava/lang/Record.class\\E"
+  }, {
     "pattern":"java.base:\\Qjava/util/function/BiPredicate.class\\E"
   }, {
     "pattern":"java.base:\\Qjdk/internal/icu/impl/data/icudt67b/nfc.nrm\\E"
@@ -2656,7 +2738,7 @@
     "locales":["und"]
   }, {
     "name":"org.apache.catalina.authenticator.LocalStrings",
-    "locales":["und"]
+    "locales":["", "und"]
   }, {
     "name":"org.apache.catalina.authenticator.jaspic.LocalStrings",
     "locales":["und"]
@@ -2692,10 +2774,10 @@
     "locales":["und"]
   }, {
     "name":"org.apache.catalina.util.LocalStrings",
-    "locales":["und"]
+    "locales":["", "und"]
   }, {
     "name":"org.apache.catalina.valves.LocalStrings",
-    "locales":["und"]
+    "locales":["", "und"]
   }, {
     "name":"org.apache.catalina.webresources.LocalStrings",
     "locales":["und"]
@@ -2770,7 +2852,7 @@
     "locales":["und"]
   }, {
     "name":"org.apache.tomcat.util.http.LocalStrings",
-    "locales":["und"]
+    "locales":["", "und"]
   }, {
     "name":"org.apache.tomcat.util.http.parser.LocalStrings",
     "locales":["und"]

@@ -22,6 +22,9 @@
       "name":"ch.qos.logback.core.model.ComponentModel"
     },
     {
+      "name":"ch.qos.logback.core.model.ConversionRuleModel"
+    },
+    {
       "name":"ch.qos.logback.core.model.ImplicitModel"
     },
     {
@@ -38,6 +41,9 @@
     },
     {
       "name":"ch.qos.logback.core.model.PropertyModel"
+    },
+    {
+      "name":"ch.qos.logback.core.model.ResourceModel"
     },
     {
       "name":"ch.qos.logback.core.model.StatusListenerModel"
