@@ -17,7 +17,7 @@
 package com.alibaba.nacos.plugin.auth.impl;
 
 import com.alibaba.nacos.plugin.auth.impl.constant.AuthConstants;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -29,34 +29,34 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author linuwmingshi
  */
 public class SafeBcryptPasswordEncoderTest {
-    
+
     /**
      * SafeBCryptPasswordEncoder.
      */
     private static final SafeBcryptPasswordEncoder ENCODER = new SafeBcryptPasswordEncoder();
-    
+
     @Test
     void testValidPasswordLength() {
         String rawPassword =  StringUtils.repeat("A", AuthConstants.MAX_PASSWORD_LENGTH);
         String encodedPassword = ENCODER.encode(rawPassword);
-        
+
         assertTrue(ENCODER.matches(rawPassword, encodedPassword), "72-character rawPassword should match");
     }
-    
+
     @Test
     void testExcessivePasswordLength() {
         String rawPassword = StringUtils.repeat("A", AuthConstants.MAX_PASSWORD_LENGTH + 1);
         String encodedPassword = ENCODER.encode(rawPassword.substring(0, AuthConstants.MAX_PASSWORD_LENGTH));
-        
+
         assertFalse(ENCODER.matches(rawPassword, encodedPassword), "73-character rawPassword should be rejected");
     }
-    
+
     @Test
     void testEdgeCase() {
         String rawPassword72 = StringUtils.repeat("A", AuthConstants.MAX_PASSWORD_LENGTH);
         String rawPassword73 = rawPassword72 + "A";
         String encodedPassword = ENCODER.encode(rawPassword72);
-        
+
         assertTrue(ENCODER.matches(rawPassword72, encodedPassword), "72-character password must pass");
         assertFalse(ENCODER.matches(rawPassword73, encodedPassword), "73-character password must fail");
     }
