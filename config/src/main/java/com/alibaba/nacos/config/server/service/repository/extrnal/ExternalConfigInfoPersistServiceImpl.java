@@ -828,7 +828,7 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
         MapperContext context = new MapperContext();
         context.putWhereParameter(FieldConstant.TENANT_ID, tenant);
         MapperResult mapperResult = configInfoMapper.configInfoLikeTenantCount(context);
-        Integer result = jt.queryForObject(mapperResult.getSql(), Integer.class, mapperResult.getParamList().toArray());
+        Integer result = jt.queryForObject(mapperResult.getSql(), mapperResult.getParamList().toArray(), Integer.class);
         if (result == null) {
             throw new IllegalArgumentException("configInfoCount error");
         }
@@ -850,7 +850,7 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
                 TableConstant.CONFIG_INFO);
         int from = (page - 1) * pageSize;
         MapperResult mapperResult = configInfoMapper.getGroupIdList(new MapperContext(from, pageSize));
-        return jt.queryForList(mapperResult.getSql(), String.class, mapperResult.getParamList().toArray());
+        return jt.queryForList(mapperResult.getSql(), mapperResult.getParamList().toArray(), String.class);
     }
 
     @Override
@@ -991,7 +991,7 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
         MapperResult mapperResult = configInfoMapper.findConfigInfosByIds(context);
 
         try {
-            return this.jt.query(mapperResult.getSql(), CONFIG_INFO_ROW_MAPPER, mapperResult.getParamList().toArray());
+            return this.jt.query(mapperResult.getSql(), mapperResult.getParamList().toArray(), CONFIG_INFO_ROW_MAPPER);
         } catch (EmptyResultDataAccessException e) { // Indicates that the data does not exist, returns null
             return null;
         } catch (CannotGetJdbcConnectionException e) {
@@ -1117,7 +1117,28 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
         }
         MapperResult mapperResult = configInfoMapper.findAllConfigInfo4Export(context);
         try {
-            return this.jt.query(mapperResult.getSql(), CONFIG_ALL_INFO_ROW_MAPPER, mapperResult.getParamList().toArray());
+            List<ConfigAllInfo> configAllInfos = jt.query(mapperResult.getSql(),
+                    CONFIG_ALL_INFO_ROW_MAPPER, mapperResult.getParamList().toArray());
+
+            if (CollectionUtils.isEmpty(configAllInfos)) {
+                return configAllInfos;
+            }
+            for (ConfigAllInfo configAllInfo : configAllInfos) {
+                List<String> configTagList = selectTagByConfig(configAllInfo.getDataId(), configAllInfo.getGroup(), configAllInfo.getTenant());
+                if (CollectionUtils.isNotEmpty(configTagList)) {
+                    StringBuilder configTags = new StringBuilder();
+                    for (String configTag : configTagList) {
+                        if (configTags.isEmpty()) {
+                            configTags.append(configTag);
+                        } else {
+                            configTags.append(',').append(configTag);
+                        }
+                    }
+                    configAllInfo.setConfigTags(configTags.toString());
+                }
+            }
+
+            return configAllInfos;
         } catch (CannotGetJdbcConnectionException e) {
             LogUtil.FATAL_LOG.error("[db-error] " + e, e);
             throw e;
