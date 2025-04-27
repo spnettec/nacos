@@ -22,7 +22,6 @@ import com.alibaba.nacos.core.context.RequestContext;
 import com.alibaba.nacos.core.context.RequestContextHolder;
 import com.alibaba.nacos.core.context.addition.BasicContext;
 import com.alibaba.nacos.core.utils.WebUtils;
-import org.apache.http.HttpHeaders;
 
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
@@ -30,6 +29,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import org.apache.hc.core5.http.HttpHeaders;
+
 import java.io.IOException;
 
 import static com.alibaba.nacos.api.common.Constants.CLIENT_APPNAME_HEADER;
