@@ -28,7 +28,7 @@ import com.alibaba.nacos.config.server.utils.LogUtil;
 import com.alibaba.nacos.persistence.configuration.condition.ConditionOnExternalStorage;
 import com.alibaba.nacos.persistence.datasource.DataSourceService;
 import com.alibaba.nacos.persistence.datasource.DynamicDataSource;
-import com.alibaba.nacos.persistence.model.Page;
+import com.alibaba.nacos.api.model.Page;
 import com.alibaba.nacos.persistence.repository.PaginationHelper;
 import com.alibaba.nacos.persistence.repository.extrnal.ExternalStoragePaginationHelperImpl;
 import com.alibaba.nacos.plugin.datasource.MapperManager;
@@ -61,15 +61,15 @@ import static com.alibaba.nacos.config.server.service.repository.ConfigRowMapper
 @Conditional(value = ConditionOnExternalStorage.class)
 @Service("externalConfigInfoBetaPersistServiceImpl")
 public class ExternalConfigInfoBetaPersistServiceImpl implements ConfigInfoBetaPersistService {
-    
+
     private DataSourceService dataSourceService;
-    
+
     protected JdbcTemplate jt;
-    
+
     protected TransactionTemplate tjt;
-    
+
     private MapperManager mapperManager;
-    
+
     public ExternalConfigInfoBetaPersistServiceImpl() {
         this.dataSourceService = DynamicDataSource.getInstance().getDataSource();
         this.jt = dataSourceService.getJdbcTemplate();
@@ -78,12 +78,12 @@ public class ExternalConfigInfoBetaPersistServiceImpl implements ConfigInfoBetaP
                 false);
         this.mapperManager = MapperManager.instance(isDataSourceLogEnable);
     }
-    
+
     @Override
     public <E> PaginationHelper<E> createPaginationHelper() {
         return new ExternalStoragePaginationHelperImpl<>(jt);
     }
-    
+
     @Override
     public ConfigOperateResult addConfigInfo4Beta(ConfigInfo configInfo, String betaIps, String srcIp, String srcUser) {
         String appNameTmp = StringUtils.defaultEmptyIfBlank(configInfo.getAppName());
@@ -93,34 +93,34 @@ public class ExternalConfigInfoBetaPersistServiceImpl implements ConfigInfoBetaP
         try {
             ConfigInfoBetaMapper configInfoBetaMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                     TableConstant.CONFIG_INFO_BETA);
-            
+
             jt.update(configInfoBetaMapper.insert(
                             Arrays.asList("data_id", "group_id", "tenant_id", "app_name", "content", "md5", "beta_ips",
                                     "src_ip", "src_user", "gmt_create@NOW()", "gmt_modified@NOW()", "encrypted_data_key")),
                     configInfo.getDataId(), configInfo.getGroup(), tenantTmp, appNameTmp, configInfo.getContent(), md5,
                     betaIps, srcIp, srcUser, encryptedDataKey);
             return getBetaOperateResult(configInfo.getDataId(), configInfo.getGroup(), tenantTmp);
-            
+
         } catch (CannotGetJdbcConnectionException e) {
             LogUtil.FATAL_LOG.error("[db-error] " + e, e);
             throw e;
         }
     }
-    
+
     @Override
     public ConfigOperateResult insertOrUpdateBeta(final ConfigInfo configInfo, final String betaIps, final String srcIp,
             final String srcUser) {
-        
+
         ConfigInfoStateWrapper configInfo4BetaState = this.findConfigInfo4BetaState(configInfo.getDataId(),
                 configInfo.getGroup(), configInfo.getTenant());
         if (configInfo4BetaState == null) {
             return addConfigInfo4Beta(configInfo, betaIps, srcIp, srcUser);
-            
+
         } else {
             return updateConfigInfo4Beta(configInfo, betaIps, srcIp, srcUser);
         }
     }
-    
+
     @Override
     public ConfigOperateResult insertOrUpdateBetaCas(final ConfigInfo configInfo, final String betaIps,
             final String srcIp, final String srcUser) {
@@ -132,7 +132,7 @@ public class ExternalConfigInfoBetaPersistServiceImpl implements ConfigInfoBetaP
             return updateConfigInfo4BetaCas(configInfo, betaIps, srcIp, srcUser);
         }
     }
-    
+
     @Override
     public void removeConfigInfo4Beta(final String dataId, final String group, final String tenant) {
         final String tenantTmp = StringUtils.isBlank(tenant) ? StringUtils.EMPTY : tenant;
@@ -152,7 +152,7 @@ public class ExternalConfigInfoBetaPersistServiceImpl implements ConfigInfoBetaP
             return Boolean.TRUE;
         });
     }
-    
+
     @Override
     public ConfigOperateResult updateConfigInfo4Beta(ConfigInfo configInfo, String betaIps, String srcIp,
             String srcUser) {
@@ -170,13 +170,13 @@ public class ExternalConfigInfoBetaPersistServiceImpl implements ConfigInfoBetaP
                     configInfo.getContent(), md5, betaIps, srcIp, srcUser, appNameTmp, encryptedDataKey,
                     configInfo.getDataId(), configInfo.getGroup(), tenantTmp);
             return getBetaOperateResult(configInfo.getDataId(), configInfo.getGroup(), tenantTmp);
-            
+
         } catch (CannotGetJdbcConnectionException e) {
             LogUtil.FATAL_LOG.error("[db-error] " + e, e);
             throw e;
         }
     }
-    
+
     @Override
     public ConfigInfoStateWrapper findConfigInfo4BetaState(final String dataId, final String group,
             final String tenant) {
@@ -184,7 +184,8 @@ public class ExternalConfigInfoBetaPersistServiceImpl implements ConfigInfoBetaP
         try {
             return this.jt.queryForObject(
                     "SELECT id,data_id,group_id,tenant_id,gmt_modified FROM config_info_beta WHERE data_id=? AND group_id=? AND tenant_id=? ",
-                    new Object[] {dataId, group, tenantTmp}, CONFIG_INFO_STATE_WRAPPER_ROW_MAPPER);
+                    CONFIG_INFO_STATE_WRAPPER_ROW_MAPPER,
+                    dataId, group, tenantTmp);
         } catch (EmptyResultDataAccessException e) { // Indicates that the data does not exist, returns null.
             return null;
         } catch (CannotGetJdbcConnectionException e) {
@@ -192,16 +193,16 @@ public class ExternalConfigInfoBetaPersistServiceImpl implements ConfigInfoBetaP
             throw e;
         }
     }
-    
+
     private ConfigOperateResult getBetaOperateResult(String dataId, String group, String tenant) {
         ConfigInfoStateWrapper configInfo4Beta = this.findConfigInfo4BetaState(dataId, group, tenant);
         if (configInfo4Beta == null) {
             return new ConfigOperateResult(false);
         }
         return new ConfigOperateResult(configInfo4Beta.getId(), configInfo4Beta.getLastModified());
-        
+
     }
-    
+
     @Override
     public ConfigOperateResult updateConfigInfo4BetaCas(ConfigInfo configInfo, String betaIps, String srcIp,
             String srcUser) {
@@ -219,7 +220,7 @@ public class ExternalConfigInfoBetaPersistServiceImpl implements ConfigInfoBetaP
             context.putUpdateParameter(FieldConstant.SRC_IP, srcIp);
             context.putUpdateParameter(FieldConstant.SRC_USER, srcUser);
             context.putUpdateParameter(FieldConstant.APP_NAME, appNameTmp);
-            
+
             context.putWhereParameter(FieldConstant.DATA_ID, configInfo.getDataId());
             context.putWhereParameter(FieldConstant.GROUP_ID, configInfo.getGroup());
             context.putWhereParameter(FieldConstant.TENANT_ID, tenantTmp);
@@ -228,7 +229,7 @@ public class ExternalConfigInfoBetaPersistServiceImpl implements ConfigInfoBetaP
             final String sql = mapperResult.getSql();
             List<Object> paramList = mapperResult.getParamList();
             final Object[] args = paramList.toArray();
-            
+
             boolean result = jt.update(sql, args) > 0;
             if (result) {
                 return getBetaOperateResult(configInfo.getDataId(), configInfo.getGroup(), tenantTmp);
@@ -240,7 +241,7 @@ public class ExternalConfigInfoBetaPersistServiceImpl implements ConfigInfoBetaP
             throw e;
         }
     }
-    
+
     @Override
     public ConfigInfoBetaWrapper findConfigInfo4Beta(final String dataId, final String group, final String tenant) {
         String tenantTmp = StringUtils.isBlank(tenant) ? StringUtils.EMPTY : tenant;
@@ -250,7 +251,7 @@ public class ExternalConfigInfoBetaPersistServiceImpl implements ConfigInfoBetaP
             return this.jt.queryForObject(configInfoBetaMapper.select(
                             Arrays.asList("id", "data_id", "group_id", "tenant_id", "app_name", "content", "beta_ips",
                                     "encrypted_data_key", "gmt_modified"), Arrays.asList("data_id", "group_id", "tenant_id")),
-                    new Object[] {dataId, group, tenantTmp}, CONFIG_INFO_BETA_WRAPPER_ROW_MAPPER);
+                    CONFIG_INFO_BETA_WRAPPER_ROW_MAPPER, dataId, group, tenantTmp);
         } catch (EmptyResultDataAccessException e) { // Indicates that the data does not exist, returns null.
             return null;
         } catch (CannotGetJdbcConnectionException e) {
@@ -258,36 +259,36 @@ public class ExternalConfigInfoBetaPersistServiceImpl implements ConfigInfoBetaP
             throw e;
         }
     }
-    
+
     @Override
     public int configInfoBetaCount() {
         ConfigInfoBetaMapper configInfoBetaMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                 TableConstant.CONFIG_INFO_BETA);
         String sql = configInfoBetaMapper.count(null);
         Integer result = jt.queryForObject(sql, Integer.class);
-        
+
         return result.intValue();
     }
-    
+
     @Override
     public Page<ConfigInfoBetaWrapper> findAllConfigInfoBetaForDumpAll(final int pageNo, final int pageSize) {
         final int startRow = (pageNo - 1) * pageSize;
         ConfigInfoBetaMapper configInfoBetaMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                 TableConstant.CONFIG_INFO_BETA);
         String sqlCountRows = configInfoBetaMapper.count(null);
-        
+
         MapperContext context = new MapperContext();
         context.setStartRow(startRow);
         context.setPageSize(pageSize);
-        
+
         MapperResult mapperResult = configInfoBetaMapper.findAllConfigInfoBetaForDumpAllFetchRows(context);
-        
+
         String sqlFetchRows = mapperResult.getSql();
         PaginationHelper<ConfigInfoBetaWrapper> helper = createPaginationHelper();
         try {
             return helper.fetchPageLimit(sqlCountRows, sqlFetchRows, new Object[] {}, pageNo, pageSize,
                     CONFIG_INFO_BETA_WRAPPER_ROW_MAPPER);
-            
+
         } catch (CannotGetJdbcConnectionException e) {
             LogUtil.FATAL_LOG.error("[db-error] " + e, e);
             throw e;

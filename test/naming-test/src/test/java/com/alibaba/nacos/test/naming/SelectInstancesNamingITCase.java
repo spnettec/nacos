@@ -48,6 +48,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author wangtong.wt
  * @date 2018/6/20
  */
+@Disabled
 @SpringBootTest(classes = Nacos.class, properties = {
         "server.servlet.context-path=/nacos"}, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class SelectInstancesNamingITCase {

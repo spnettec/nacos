@@ -52,7 +52,7 @@
             <artifactId>nacos-auth</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.github.heyoulin.nacos</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>nacos-trace-plugin</artifactId>
         </dependency>
 
@@ -76,20 +76,10 @@
         </dependency>
 
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.junit.vintage</groupId>
-                    <artifactId>junit-vintage-engine</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
             <groupId>com.googlecode.concurrentlinkedhashmap</groupId>
             <artifactId>concurrentlinkedhashmap-lru</artifactId>
         </dependency>
+
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-test</artifactId>
@@ -99,6 +89,11 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-test-autoconfigure</artifactId>
             <scope>test</scope>
         </dependency>
 
@@ -127,6 +122,12 @@
             <artifactId>rpc-grpc-impl</artifactId>
         </dependency>
         <!-- JRaft dependency end -->
+
+        <!-- issue#12028 upgrade org.apache.httpcomponents:httpasyncclient to org.apache.httpcomponents.client5:httpclient5 -->
+        <dependency>
+            <groupId>org.apache.httpcomponents.client5</groupId>
+            <artifactId>httpclient5</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -172,5 +173,6 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-webmvc</artifactId>
         </dependency>
+
     </dependencies>
 </project>

@@ -65,33 +65,33 @@ import static org.mockito.Mockito.when;
 // todo remove this
 @MockitoSettings(strictness = Strictness.LENIENT)
 class GrpcConnectionTest {
-    
+
     @Mock
     ListenableFuture<Payload> future;
-    
+
     Payload responsePayload;
-    
+
     Payload errorResponsePayload;
-    
+
     GrpcConnection connection;
-    
+
     @Mock
     private Executor executor;
-    
+
     @Mock
     private ManagedChannel channel;
-    
+
     @Mock
     private StreamObserver<Payload> payloadStreamObserver;
-    
+
     @Mock
     private RequestGrpc.RequestFutureStub requestFutureStub;
-    
+
     @BeforeAll
     static void setUpBeforeClass() {
         PayloadRegistry.init();
     }
-    
+
     @BeforeEach
     void setUp() throws Exception {
         connection = new GrpcConnection(new RpcClient.ServerInfo(), executor);
@@ -105,31 +105,31 @@ class GrpcConnectionTest {
         when(future.get(100L, TimeUnit.MILLISECONDS)).thenReturn(responsePayload);
         when(future.isDone()).thenReturn(true);
     }
-    
+
     @AfterEach
     void tearDown() throws Exception {
         connection.close();
     }
-    
+
     @Test
     void testGetAll() {
         assertEquals(channel, connection.getChannel());
         assertEquals(payloadStreamObserver, connection.getPayloadStreamObserver());
         assertEquals(requestFutureStub, connection.getGrpcFutureServiceStub());
     }
-    
+
     @Test
     void testRequestSuccessSync() throws NacosException {
         Response response = connection.request(new HealthCheckRequest(), -1);
         assertTrue(response instanceof HealthCheckResponse);
     }
-    
+
     @Test
     void testRequestSuccessAsync() throws NacosException {
         Response response = connection.request(new HealthCheckRequest(), 100);
         assertTrue(response instanceof HealthCheckResponse);
     }
-    
+
     @Test
     void testRequestTimeout() throws InterruptedException, ExecutionException, TimeoutException, NacosException {
         assertThrows(NacosException.class, () -> {
@@ -137,7 +137,7 @@ class GrpcConnectionTest {
             connection.request(new HealthCheckRequest(), 100);
         });
     }
-    
+
     @Test
     void testRequestFuture() throws Exception {
         RequestFuture requestFuture = connection.requestFuture(new HealthCheckRequest());
@@ -145,7 +145,7 @@ class GrpcConnectionTest {
         Response response = requestFuture.get();
         assertTrue(response instanceof HealthCheckResponse);
     }
-    
+
     @Test
     void testRequestFutureWithTimeout() throws Exception {
         RequestFuture requestFuture = connection.requestFuture(new HealthCheckRequest());
@@ -153,7 +153,7 @@ class GrpcConnectionTest {
         Response response = requestFuture.get(100L);
         assertTrue(response instanceof HealthCheckResponse);
     }
-    
+
     @Test
     void testRequestFutureFailure() throws Exception {
         assertThrows(NacosException.class, () -> {
@@ -163,7 +163,7 @@ class GrpcConnectionTest {
             requestFuture.get();
         });
     }
-    
+
     @Test
     void testRequestFutureWithTimeoutFailure() throws Exception {
         assertThrows(NacosException.class, () -> {
@@ -173,19 +173,19 @@ class GrpcConnectionTest {
             requestFuture.get(100L);
         });
     }
-    
+
     @Test
     void testSendResponse() {
         connection.sendResponse(new HealthCheckResponse());
         verify(payloadStreamObserver).onNext(any(Payload.class));
     }
-    
+
     @Test
     void testSendRequest() {
         connection.sendRequest(new HealthCheckRequest());
         verify(payloadStreamObserver).onNext(any(Payload.class));
     }
-    
+
     @Test
     void testAsyncRequestSuccess() throws NacosException {
         doAnswer(invocationOnMock -> {
@@ -196,7 +196,7 @@ class GrpcConnectionTest {
         connection.asyncRequest(new HealthCheckRequest(), requestCallBack);
         verify(requestCallBack).onResponse(any(HealthCheckResponse.class));
     }
-    
+
     @Test
     void testAsyncRequestError() throws NacosException, ExecutionException, InterruptedException {
         when(future.get()).thenReturn(errorResponsePayload);
@@ -208,7 +208,7 @@ class GrpcConnectionTest {
         connection.asyncRequest(new HealthCheckRequest(), requestCallBack);
         verify(requestCallBack).onException(any(NacosException.class));
     }
-    
+
     @Test
     void testAsyncRequestNullResponse() throws NacosException, ExecutionException, InterruptedException {
         byte[] jsonBytes = JacksonUtils.toJsonBytes(null);
@@ -225,7 +225,7 @@ class GrpcConnectionTest {
         connection.asyncRequest(new HealthCheckRequest(), requestCallBack);
         verify(requestCallBack).onException(any(NacosException.class));
     }
-    
+
     @Test
     void testAsyncRequestWithCancelException() throws NacosException, ExecutionException, InterruptedException {
         when(future.get()).thenThrow(new CancellationException("test"));
@@ -237,7 +237,7 @@ class GrpcConnectionTest {
         connection.asyncRequest(new HealthCheckRequest(), requestCallBack);
         verify(requestCallBack).onException(any(TimeoutException.class));
     }
-    
+
     @Test
     void testAsyncRequestWithOtherException() throws NacosException, ExecutionException, InterruptedException {
         when(future.get()).thenThrow(new RuntimeException("test"));
@@ -249,7 +249,7 @@ class GrpcConnectionTest {
         connection.asyncRequest(new HealthCheckRequest(), requestCallBack);
         verify(requestCallBack).onException(any(RuntimeException.class));
     }
-    
+
     @Test
     void testCloseWithException() {
         doThrow(new RuntimeException("test")).when(payloadStreamObserver).onCompleted();

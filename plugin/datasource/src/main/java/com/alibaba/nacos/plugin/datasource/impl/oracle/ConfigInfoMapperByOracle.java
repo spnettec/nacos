@@ -80,7 +80,7 @@ public class ConfigInfoMapperByOracle extends ConfigInfoMapperByDerby {
 
         List<Object> paramList = new ArrayList<>();
 
-        final String sql = "SELECT id,data_id,group_id,tenant_id,app_name,content,type FROM config_info";
+        final String sql = "SELECT id,data_id,group_id,tenant_id,app_name,content,md5,type FROM config_info";
         StringBuilder where = new StringBuilder(" WHERE ");
         if (StringUtils.isNotBlank(dataId)) {
             where.append(" tenant_id=? ");
@@ -158,7 +158,7 @@ public class ConfigInfoMapperByOracle extends ConfigInfoMapperByDerby {
 
         List<Object> paramList = new ArrayList<>();
 
-        final String sqlFetchRows = "SELECT id,data_id,group_id,tenant_id,app_name,content,encrypted_data_key FROM config_info";
+        final String sqlFetchRows = "SELECT id,data_id,group_id,tenant_id,app_name,content,md5,encrypted_data_key FROM config_info";
         StringBuilder where = new StringBuilder(" WHERE ");
         if (StringUtils.isNotBlank(dataId)) {
             where.append(" tenant_id=? ");

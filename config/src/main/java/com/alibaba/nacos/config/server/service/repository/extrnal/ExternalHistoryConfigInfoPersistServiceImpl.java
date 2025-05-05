@@ -29,7 +29,7 @@ import com.alibaba.nacos.config.server.utils.SystemConfig;
 import com.alibaba.nacos.persistence.configuration.condition.ConditionOnExternalStorage;
 import com.alibaba.nacos.persistence.datasource.DataSourceService;
 import com.alibaba.nacos.persistence.datasource.DynamicDataSource;
-import com.alibaba.nacos.persistence.model.Page;
+import com.alibaba.nacos.api.model.Page;
 import com.alibaba.nacos.persistence.repository.PaginationHelper;
 import com.alibaba.nacos.persistence.repository.extrnal.ExternalStoragePaginationHelperImpl;
 import com.alibaba.nacos.plugin.datasource.MapperManager;
@@ -146,8 +146,8 @@ public class ExternalHistoryConfigInfoPersistServiceImpl implements HistoryConfi
             context.putWhereParameter(FieldConstant.PUBLISH_TYPE, publishType);
 
             MapperResult mapperResult = historyConfigInfoMapper.findDeletedConfig(context);
-            List<ConfigHistoryInfo> configHistoryInfos = jt.query(mapperResult.getSql(),
-                    mapperResult.getParamList().toArray(), HISTORY_DETAIL_ROW_MAPPER);
+            List<ConfigHistoryInfo> configHistoryInfos = jt.query(mapperResult.getSql(), HISTORY_DETAIL_ROW_MAPPER,
+                    mapperResult.getParamList().toArray());
 
             List<ConfigInfoStateWrapper> configInfoStateWrappers = new ArrayList<>();
             for (ConfigHistoryInfo configHistoryInfo : configHistoryInfos) {
@@ -217,8 +217,7 @@ public class ExternalHistoryConfigInfoPersistServiceImpl implements HistoryConfi
                         "src_ip", "op_type", "gmt_create", "gmt_modified", "publish_type", "gray_name", "ext_info",
                         "encrypted_data_key"), Collections.singletonList("nid"));
         try {
-            ConfigHistoryInfo historyInfo = jt.queryForObject(sqlFetchRows, new Object[] {nid},
-                    HISTORY_DETAIL_ROW_MAPPER);
+            ConfigHistoryInfo historyInfo = jt.queryForObject(sqlFetchRows, HISTORY_DETAIL_ROW_MAPPER, nid);
             return historyInfo;
         } catch (EmptyResultDataAccessException emptyResultDataAccessException) {
             return null;
@@ -237,8 +236,8 @@ public class ExternalHistoryConfigInfoPersistServiceImpl implements HistoryConfi
         context.putWhereParameter(FieldConstant.ID, id);
         MapperResult sqlFetchRows = historyConfigInfoMapper.detailPreviousConfigHistory(context);
         try {
-            ConfigHistoryInfo historyInfo = jt.queryForObject(sqlFetchRows.getSql(),
-                    sqlFetchRows.getParamList().toArray(), HISTORY_DETAIL_ROW_MAPPER);
+            ConfigHistoryInfo historyInfo = jt.queryForObject(sqlFetchRows.getSql(), HISTORY_DETAIL_ROW_MAPPER,
+                    sqlFetchRows.getParamList().toArray());
             return historyInfo;
         } catch (EmptyResultDataAccessException emptyResultDataAccessException) {
             return null;
@@ -256,7 +255,7 @@ public class ExternalHistoryConfigInfoPersistServiceImpl implements HistoryConfi
         context.putWhereParameter(FieldConstant.START_TIME, startTime);
 
         MapperResult mapperResult = historyConfigInfoMapper.findConfigHistoryCountByTime(context);
-        Integer result = jt.queryForObject(mapperResult.getSql(), mapperResult.getParamList().toArray(), Integer.class);
+        Integer result = jt.queryForObject(mapperResult.getSql(), Integer.class, mapperResult.getParamList().toArray());
         if (result == null) {
             throw new IllegalArgumentException("findConfigHistoryCountByTime error");
         }
@@ -277,8 +276,8 @@ public class ExternalHistoryConfigInfoPersistServiceImpl implements HistoryConfi
         context.putWhereParameter(FieldConstant.GRAY_NAME, grayName);
         MapperResult sqlFetchRows = historyConfigInfoMapper.getNextHistoryInfo(context);
         try {
-            ConfigHistoryInfo historyInfo = jt.queryForObject(sqlFetchRows.getSql(),
-                    sqlFetchRows.getParamList().toArray(), HISTORY_DETAIL_ROW_MAPPER);
+            ConfigHistoryInfo historyInfo = jt.queryForObject(sqlFetchRows.getSql(), HISTORY_DETAIL_ROW_MAPPER,
+                    sqlFetchRows.getParamList().toArray());
             return historyInfo;
         } catch (EmptyResultDataAccessException emptyResultDataAccessException) {
             return null;

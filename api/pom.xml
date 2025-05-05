@@ -21,38 +21,20 @@
         <artifactId>nacos-all</artifactId>
         <version>${revision}</version>
     </parent>
-    
+
     <modelVersion>4.0.0</modelVersion>
-    
+
     <artifactId>nacos-api</artifactId>
     <packaging>jar</packaging>
-    
+
     <name>nacos-api ${project.version}</name>
     <url>https://nacos.io</url>
     <description>Nacos api pom.xml file</description>
-    <build>
-        <plugins>
-            <!--  reuse when you need to update grpc model  -->
-             <plugin>
-                 <groupId>org.xolstice.maven.plugins</groupId>
-                 <artifactId>protobuf-maven-plugin</artifactId>
-                 <version>0.6.1</version>
-                 <configuration>
-                     <pluginId>grpc-java</pluginId>
-                    <protocArtifact>com.google.protobuf:protoc:${protobuf-java.version}:exe:${os.detected.classifier}</protocArtifact>
-                    <pluginArtifact>io.grpc:protoc-gen-grpc-java:${protoc-gen-grpc-java.version}:exe:${os.detected.classifier}</pluginArtifact>
-                 </configuration>
-                 <executions>
-                     <execution>
-                         <goals>
-                             <goal>compile</goal>
-                             <goal>compile-custom</goal>
-                         </goals>
-                     </execution>
-                 </executions>
-             </plugin>
-        </plugins>
-    </build>
+
+    <properties>
+        <maven.compiler.source>${client.java.version}</maven.compiler.source>
+        <maven.compiler.target>${client.java.version}</maven.compiler.target>
+    </properties>
 
     <dependencies>
         <dependency>
@@ -74,10 +56,6 @@
         </dependency>
         <dependency>
             <groupId>io.grpc</groupId>
-            <artifactId>grpc-netty</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.grpc</groupId>
             <artifactId>grpc-protobuf</artifactId>
         </dependency>
         <dependency>
@@ -87,6 +65,10 @@
         <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-util</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-inprocess</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.api.grpc</groupId>
@@ -100,6 +82,57 @@
             <groupId>javax.annotation</groupId>
             <artifactId>javax.annotation-api</artifactId>
         </dependency>
-    
     </dependencies>
+
+    <build>
+        <extensions>
+            <extension>
+                <groupId>kr.motd.maven</groupId>
+                <artifactId>os-maven-plugin</artifactId>
+                <version>1.7.0</version>
+            </extension>
+        </extensions>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>${maven-compiler-plugin.version}</version>
+                    <configuration>
+                        <source>${client.java.version}</source>
+                        <target>${client.java.version}</target>
+                        <compilerVersion>${client.java.version}</compilerVersion>
+                        <showDeprecation>true</showDeprecation>
+                        <showWarnings>true</showWarnings>
+                        <compilerArgs>
+                            <arg>-parameters</arg>
+                        </compilerArgs>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+            <!--  reuse when you need to update grpc model  -->
+            <plugin>
+                <groupId>org.xolstice.maven.plugins</groupId>
+                <artifactId>protobuf-maven-plugin</artifactId>
+                <version>0.6.1</version>
+                <configuration>
+                    <pluginId>grpc-java</pluginId>
+                    <protocArtifact>com.google.protobuf:protoc:${protobuf-java.version}:exe:${os.detected.classifier}</protocArtifact>
+                    <pluginArtifact>io.grpc:protoc-gen-grpc-java:${protoc-gen-grpc-java.version}:exe:${os.detected.classifier}</pluginArtifact>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>compile</goal>
+                            <goal>compile-custom</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

@@ -76,16 +76,16 @@ import static org.mockito.Mockito.when;
 // todo remove this
 @MockitoSettings(strictness = Strictness.LENIENT)
 class GrpcClientTest {
-    
+
     protected GrpcClient grpcClient;
-    
+
     protected RpcClient.ServerInfo serverInfo;
-    
+
     protected GrpcClientConfig clientConfig;
-    
+
     @Mock
     RpcClientTlsConfig tlsConfig;
-    
+
     @BeforeEach
     void setUp() throws Exception {
         clientConfig = DefaultGrpcClientConfig.newBuilder().setServerCheckTimeOut(100L).setCapabilityNegotiationTimeout(100L)
@@ -97,7 +97,7 @@ class GrpcClientTest {
             protected AbilityMode abilityMode() {
                 return AbilityMode.SDK_CLIENT;
             }
-            
+
             @Override
             public int rpcPortOffset() {
                 return 0;
@@ -105,28 +105,28 @@ class GrpcClientTest {
         });
         serverInfo = new RpcClient.ServerInfo("10.10.10.10", 8848);
     }
-    
+
     @AfterEach
     void tearDown() throws NacosException {
         grpcClient.shutdown();
     }
-    
+
     @Test
     void testGetConnectionType() {
         assertEquals(ConnectionType.GRPC, grpcClient.getConnectionType());
     }
-    
+
     @Test
     void testConnectToServerFailed() {
         assertNull(grpcClient.connectToServer(serverInfo));
     }
-    
+
     @Test
     void testConnectToServerException() {
         doThrow(new RuntimeException("test")).when(grpcClient).createNewChannelStub(any(ManagedChannel.class));
         assertNull(grpcClient.connectToServer(serverInfo));
     }
-    
+
     @Test
     void testConnectToServerMockSuccess() throws ExecutionException, InterruptedException, TimeoutException {
         RequestGrpc.RequestFutureStub stub = mockStub(new ServerCheckResponse(), null);
@@ -136,7 +136,7 @@ class GrpcClientTest {
         assertTrue(connection instanceof GrpcConnection);
         assertEquals(stub, ((GrpcConnection) connection).getGrpcFutureServiceStub());
     }
-    
+
     @Test
     void testConnectToServerMockSuccessWithAbility() throws ExecutionException, InterruptedException, TimeoutException {
         ServerCheckResponse response = new ServerCheckResponse();
@@ -146,7 +146,7 @@ class GrpcClientTest {
         Connection connection = grpcClient.connectToServer(serverInfo);
         assertNull(connection);
     }
-    
+
     @Test
     void testConnectToServerMockHealthCheckFailed() throws ExecutionException, InterruptedException, TimeoutException {
         RequestGrpc.RequestFutureStub stub = mockStub(null, new RuntimeException("test"));
@@ -154,7 +154,7 @@ class GrpcClientTest {
         Connection connection = grpcClient.connectToServer(serverInfo);
         assertNull(connection);
     }
-    
+
     private RequestGrpc.RequestFutureStub mockStub(ServerCheckResponse response, Throwable throwable)
             throws InterruptedException, ExecutionException, TimeoutException {
         RequestGrpc.RequestFutureStub stub = mock(RequestGrpc.RequestFutureStub.class);
@@ -171,7 +171,7 @@ class GrpcClientTest {
         when(channel.newCall(any(), any())).thenReturn(mockCall);
         return stub;
     }
-    
+
     @Test
     void testBindRequestStreamOnNextSetupAckRequest()
             throws NoSuchFieldException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
@@ -185,7 +185,7 @@ class GrpcClientTest {
         invokeBindRequestStream(grpcClient, stub, grpcConnection);
         verify(grpcConnection, never()).sendResponse(any(Response.class));
     }
-    
+
     @Test
     void testBindRequestStreamOnNextOtherRequest()
             throws NoSuchFieldException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
@@ -205,7 +205,7 @@ class GrpcClientTest {
         invokeBindRequestStream(grpcClient, stub, grpcConnection);
         verify(grpcConnection).sendResponse(any(ConnectResetResponse.class));
     }
-    
+
     @Test
     void testBindRequestStreamOnNextNoRequest()
             throws NoSuchFieldException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
@@ -220,7 +220,7 @@ class GrpcClientTest {
         invokeBindRequestStream(grpcClient, stub, grpcConnection);
         verify(grpcConnection, never()).sendResponse(any(Response.class));
     }
-    
+
     @Test
     void testBindRequestStreamOnNextHandleException()
             throws NoSuchFieldException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
@@ -237,7 +237,7 @@ class GrpcClientTest {
         invokeBindRequestStream(grpcClient, stub, grpcConnection);
         verify(grpcConnection).sendResponse(any(ErrorResponse.class));
     }
-    
+
     @Test
     void testBindRequestStreamOnNextParseException()
             throws NoSuchFieldException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
@@ -251,7 +251,7 @@ class GrpcClientTest {
         invokeBindRequestStream(grpcClient, stub, grpcConnection);
         verify(grpcConnection, never()).sendResponse(any(ErrorResponse.class));
     }
-    
+
     @Test
     void testBindRequestStreamOnErrorFromRunning()
             throws NoSuchFieldException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
@@ -267,7 +267,7 @@ class GrpcClientTest {
         invokeBindRequestStream(grpcClient, stub, grpcConnection);
         assertFalse(grpcClient.isRunning());
     }
-    
+
     @Test
     void testBindRequestStreamOnErrorFromNotRunning()
             throws NoSuchFieldException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
@@ -285,7 +285,7 @@ class GrpcClientTest {
         assertFalse(grpcClient.isRunning());
         assertTrue(grpcClient.isWaitInitiated());
     }
-    
+
     @Test
     void testBindRequestStreamOnCompletedFromRunning()
             throws NoSuchFieldException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
@@ -301,7 +301,7 @@ class GrpcClientTest {
         invokeBindRequestStream(grpcClient, stub, grpcConnection);
         assertFalse(grpcClient.isRunning());
     }
-    
+
     @Test
     void testBindRequestStreamOnCompletedFromNotRunning()
             throws NoSuchFieldException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
@@ -319,7 +319,7 @@ class GrpcClientTest {
         assertFalse(grpcClient.isRunning());
         assertTrue(grpcClient.isWaitInitiated());
     }
-    
+
     private void invokeBindRequestStream(GrpcClient grpcClient, BiRequestStreamGrpc.BiRequestStreamStub stub,
             GrpcConnection grpcConnection) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         Method bindRequestStreamMethod = GrpcClient.class.getDeclaredMethod("bindRequestStream",
@@ -327,20 +327,20 @@ class GrpcClientTest {
         bindRequestStreamMethod.setAccessible(true);
         bindRequestStreamMethod.invoke(grpcClient, stub, grpcConnection);
     }
-    
+
     private void setCurrentConnection(GrpcConnection connection, GrpcClient client)
             throws NoSuchFieldException, IllegalAccessException {
         Field connectionField = RpcClient.class.getDeclaredField("currentConnection");
         connectionField.setAccessible(true);
         connectionField.set(client, connection);
     }
-    
+
     private void setStatus(GrpcClient grpcClient, RpcClientStatus status) throws IllegalAccessException, NoSuchFieldException {
         Field statusField = RpcClient.class.getDeclaredField("rpcClientStatus");
         statusField.setAccessible(true);
         statusField.set(grpcClient, new AtomicReference<>(status));
     }
-    
+
     @Test
     void testAfterReset() throws NoSuchFieldException, IllegalAccessException {
         Field recAbilityContextField = GrpcClient.class.getDeclaredField("recAbilityContext");
@@ -350,7 +350,7 @@ class GrpcClientTest {
         grpcClient.afterReset(new ConnectResetRequest());
         verify(context).release(null);
     }
-    
+
     @Test
     void testAppendRecAbilityContext() {
         GrpcClient.RecAbilityContext context = new GrpcClient.RecAbilityContext(null);
@@ -364,7 +364,7 @@ class GrpcClientTest {
         when(connection.isAbilitiesSet()).thenReturn(true);
         assertTrue(context.check(connection));
     }
-    
+
     @Test
     void testSendResponseWithException()
             throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, NoSuchFieldException {
@@ -376,7 +376,7 @@ class GrpcClientTest {
         sendResponseMethod.invoke(grpcClient, new ConnectResetResponse());
         // don't throw any exception.
     }
-    
+
     @Test
     void testConstructorWithServerListFactory() {
         ServerListFactory serverListFactory = mock(ServerListFactory.class);
@@ -385,7 +385,7 @@ class GrpcClientTest {
             protected AbilityMode abilityMode() {
                 return null;
             }
-            
+
             @Override
             public int rpcPortOffset() {
                 return 0;
@@ -393,7 +393,7 @@ class GrpcClientTest {
         };
         assertFalse(grpcClient.isWaitInitiated());
     }
-    
+
     @Test
     void testConstructorWithoutServerListFactory() {
         GrpcClient grpcClient = new GrpcClient("testNoFactory", 2, 2, Collections.emptyMap()) {
@@ -401,7 +401,7 @@ class GrpcClientTest {
             protected AbilityMode abilityMode() {
                 return null;
             }
-            
+
             @Override
             public int rpcPortOffset() {
                 return 0;

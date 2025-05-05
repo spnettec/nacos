@@ -22,7 +22,7 @@ import com.alibaba.nacos.common.notify.listener.Subscriber;
 import com.alibaba.nacos.core.cluster.Member;
 import com.alibaba.nacos.core.cluster.MemberUtil;
 import com.alibaba.nacos.core.cluster.MembersChangeEvent;
-import com.alibaba.nacos.core.cluster.NodeState;
+import com.alibaba.nacos.api.common.NodeState;
 import com.alibaba.nacos.core.cluster.ServerMemberManager;
 import com.alibaba.nacos.sys.env.Constants;
 import com.alibaba.nacos.sys.env.EnvUtil;
@@ -34,7 +34,6 @@ import org.junit.jupiter.api.MethodOrderer.MethodName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.core.env.StandardEnvironment;
-import org.springframework.mock.web.MockServletContext;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -61,9 +60,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
 @TestMethodOrder(MethodName.class)
 class ServerMemberManagerCoreITCase {
-    
+
     private ServerMemberManager memberManager;
-    
+
     @BeforeAll
     static void initClass() throws Exception {
         System.setProperty(Constants.NACOS_SERVER_IP, "127.0.0.1");
@@ -71,75 +70,75 @@ class ServerMemberManagerCoreITCase {
         EnvUtil.setIsStandalone(true);
         EnvUtil.setEnvironment(new StandardEnvironment());
     }
-    
+
     @AfterAll
     static void destroyClass() {
         System.clearProperty(Constants.NACOS_SERVER_IP);
         System.clearProperty("server.port");
     }
-    
+
     @BeforeEach
     void before() throws Exception {
-        memberManager = new ServerMemberManager(new MockServletContext());
+        memberManager = new ServerMemberManager();
     }
-    
+
     @AfterEach
     void after() throws Exception {
         memberManager.shutdown();
     }
-    
+
     @Test
     void testKisFirst() {
         String firstIp = "127.0.0.1:8847";
         String secondIp = "127.0.0.1:8848";
         String thirdIp = "127.0.0.1:8849";
-        
+
         Map<String, Member> map = new HashMap<>(4);
         map.put(firstIp, Member.builder().ip("127.0.0.1").port(8847).state(NodeState.UP).build());
         map.put(secondIp, Member.builder().ip("127.0.0.1").port(8848).state(NodeState.UP).build());
         map.put(thirdIp, Member.builder().ip("127.0.0.1").port(8849).state(NodeState.UP).build());
-        
+
         List<Member> members = new ArrayList<Member>(map.values());
         Collections.sort(members);
         List<String> ss = MemberUtil.simpleMembers(members);
-        
+
         assertEquals(ss.get(0), members.get(0).getAddress());
     }
-    
+
     @Test
     void testMemberChange() throws Exception {
-        
+
         AtomicInteger integer = new AtomicInteger(0);
         CountDownLatch latch = new CountDownLatch(1);
-        
+
         NotifyCenter.registerSubscriber(new Subscriber<MembersChangeEvent>() {
             @Override
             public void onEvent(MembersChangeEvent event) {
                 integer.incrementAndGet();
                 latch.countDown();
             }
-            
+
             @Override
             public Class<? extends Event> subscribeType() {
                 return MembersChangeEvent.class;
             }
         });
         Collection<Member> members = memberManager.allMembers();
-        
+
         System.out.println(members);
-        
+
         memberManager.memberJoin(members);
-        
+
         members.add(Member.builder().ip("115.159.3.213").port(8848).build());
-        
+
         boolean changed = memberManager.memberJoin(members);
         assertTrue(changed);
-        
+
         latch.await(10_000L, TimeUnit.MILLISECONDS);
-        
+
         assertEquals(1, integer.get());
     }
-    
+
     @Test
     void testMemberHealthCheck() throws Exception {
         AtomicReference<Collection<Member>> healthMembers = new AtomicReference<>();
@@ -159,40 +158,40 @@ class ServerMemberManagerCoreITCase {
                     second.countDown();
                 }
             }
-            
+
             @Override
             public Class<? extends Event> subscribeType() {
                 return MembersChangeEvent.class;
             }
         });
-        
+
         String firstIp = "127.0.0.1:8847";
         String secondIp = "127.0.0.1:8848";
         String thirdIp = "127.0.0.1:8849";
-        
+
         Map<String, Member> map = new HashMap<>(4);
         map.put(firstIp, Member.builder().ip("127.0.0.1").port(8847).state(NodeState.UP).build());
         map.put(secondIp, Member.builder().ip("127.0.0.1").port(8848).state(NodeState.UP).build());
         map.put(thirdIp, Member.builder().ip("127.0.0.1").port(8849).state(NodeState.UP).build());
-        
+
         Set<Member> firstMemberList = new HashSet<>(map.values());
-        
+
         memberManager.memberJoin(map.values());
-        
+
         first.await(); //fix blocking
         Set<Member> copy = new HashSet<>(firstMemberList);
         copy.removeAll(healthMembers.get());
         assertEquals(2, copy.size());
-        
+
         Member member = map.get(firstIp);
         member.setState(NodeState.DOWN);
         assertTrue(memberManager.update(member));
-        
+
         second.await(); //fix blocking
         copy = new HashSet<>(firstMemberList);
         copy.removeAll(healthMembers.get());
         assertEquals(3, copy.size());
         assertTrue(copy.contains(map.get(firstIp)));
     }
-    
+
 }

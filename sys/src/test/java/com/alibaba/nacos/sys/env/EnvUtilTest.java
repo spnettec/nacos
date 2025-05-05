@@ -20,6 +20,7 @@ import com.alibaba.nacos.common.utils.ThreadUtils;
 import com.alibaba.nacos.plugin.environment.CustomEnvironmentPluginManager;
 import com.alibaba.nacos.plugin.environment.spi.CustomEnvironmentPluginService;
 import com.alibaba.nacos.sys.utils.DiskUtils;
+import com.alibaba.nacos.sys.utils.InetUtils;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -64,18 +65,18 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class EnvUtilTest {
-    
+
     MockedStatic<OperatingSystemBeanManager> systemBeanManagerMocked;
-    
+
     MockEnvironment environment;
-    
+
     @BeforeEach
     void before() {
         systemBeanManagerMocked = Mockito.mockStatic(OperatingSystemBeanManager.class);
         environment = new MockEnvironment();
         EnvUtil.setEnvironment(environment);
     }
-    
+
     @AfterEach
     void after() {
         if (!systemBeanManagerMocked.isClosed()) {
@@ -83,7 +84,7 @@ class EnvUtilTest {
         }
         EnvUtil.setEnvironment(null);
     }
-    
+
     @Test
     void testCustomEnvironment() {
         environment.setProperty("nacos.custom.environment.enabled", "true");
@@ -94,17 +95,17 @@ class EnvUtilTest {
             public Map<String, Object> customValue(Map<String, Object> property) {
                 return Collections.emptyMap();
             }
-            
+
             @Override
             public Set<String> propertyKey() {
                 return Collections.singleton("nacos.custom.environment.enabled");
             }
-            
+
             @Override
             public Integer order() {
                 return 0;
             }
-            
+
             @Override
             public String pluginName() {
                 return "";
@@ -115,40 +116,40 @@ class EnvUtilTest {
         EnvUtil.customEnvironment();
         verify(mock).addFirst(any(MapPropertySource.class));
     }
-    
+
     @Test
     void testGetEnvironment() {
         assertEquals(environment, EnvUtil.getEnvironment());
     }
-    
+
     @Test
     void testContainsProperty() {
         assertFalse(EnvUtil.containsProperty("nacos.custom.environment.enabled"));
         environment.setProperty("nacos.custom.environment.enabled", "true");
         assertTrue(EnvUtil.containsProperty("nacos.custom.environment.enabled"));
     }
-    
+
     @Test
     void testGetProperty() {
         assertNull(EnvUtil.getProperty("nacos.custom.environment.enabled"));
         environment.setProperty("nacos.custom.environment.enabled", "true");
         assertEquals("true", EnvUtil.getProperty("nacos.custom.environment.enabled"));
     }
-    
+
     @Test
     void testGetPropertyWithDefault() {
         assertEquals("false", EnvUtil.getProperty("nacos.custom.environment.enabled", "false"));
         environment.setProperty("nacos.custom.environment.enabled", "true");
         assertEquals("true", EnvUtil.getProperty("nacos.custom.environment.enabled"));
     }
-    
+
     @Test
     void testGetPropertyWithType() {
         assertNull(EnvUtil.getProperty("nacos.custom.environment.enabled", Boolean.class));
         environment.setProperty("nacos.custom.environment.enabled", "true");
         assertTrue(EnvUtil.getProperty("nacos.custom.environment.enabled", Boolean.class));
     }
-    
+
     @Test
     void testGetRequiredProperty() {
         assertThrows(IllegalStateException.class,
@@ -156,13 +157,13 @@ class EnvUtilTest {
         environment.setProperty("nacos.custom.environment.enabled", "true");
         assertEquals("true", EnvUtil.getRequiredProperty("nacos.custom.environment.enabled"));
     }
-    
+
     @Test
     void testGetRequiredPropertyWithType() {
         environment.setProperty("nacos.custom.environment.enabled", "true");
         assertTrue(EnvUtil.getRequiredProperty("nacos.custom.environment.enabled", Boolean.class));
     }
-    
+
     @Test
     void testGetProperties() {
         environment.setProperty("nacos.custom.environment.enabled", "true");
@@ -170,13 +171,13 @@ class EnvUtilTest {
         assertEquals(1, properties.size());
         assertEquals("true", properties.getProperty("nacos.custom.environment.enabled"));
     }
-    
+
     @Test
     void testResolvePlaceholders() {
         environment.setProperty("nacos.custom.environment.enabled", "true");
         assertEquals("true", EnvUtil.resolvePlaceholders("${nacos.custom.environment.enabled}"));
     }
-    
+
     @Test
     void testResolveRequiredPlaceholders() {
         assertThrows(IllegalArgumentException.class,
@@ -184,19 +185,21 @@ class EnvUtilTest {
         environment.setProperty("nacos.custom.environment.enabled", "true");
         assertEquals("true", EnvUtil.resolvePlaceholders("${nacos.custom.environment.enabled}"));
     }
-    
+
     @Test
     void testGetPropertyList() {
         environment.setProperty("nacos.properties[0]", "value1");
         environment.setProperty("nacos.properties[1]", "value2");
         assertEquals(Arrays.asList("value1", "value2"), EnvUtil.getPropertyList("nacos.properties"));
     }
-    
+
     @Test
     void testGetLocalAddress() {
         System.setProperty(NACOS_SERVER_IP, "1.1.1.1");
         System.setProperty(Constants.AUTO_REFRESH_TIME, "100");
         try {
+            EnvUtil.setLocalAddress(null);
+            assertEquals(InetUtils.getSelfIP() + ":8848", EnvUtil.getLocalAddress());
             EnvUtil.setLocalAddress("testLocalAddress:8848");
             assertEquals("testLocalAddress:8848", EnvUtil.getLocalAddress());
         } finally {
@@ -204,14 +207,14 @@ class EnvUtilTest {
             System.clearProperty(Constants.AUTO_REFRESH_TIME);
         }
     }
-    
+
     @Test
     void testGetPort() {
         assertEquals(8848, EnvUtil.getPort());
         EnvUtil.setPort(3306);
         assertEquals(3306, EnvUtil.getPort());
     }
-    
+
     @Test
     void testGetContextPath() {
         EnvUtil.setContextPath(null);
@@ -223,7 +226,7 @@ class EnvUtilTest {
         environment.setProperty(Constants.WEB_CONTEXT_PATH, "/other");
         assertEquals("/other", EnvUtil.getContextPath());
     }
-    
+
     @Test
     void testGetStandaloneMode() {
         EnvUtil.setIsStandalone(false);
@@ -231,7 +234,7 @@ class EnvUtilTest {
         EnvUtil.setIsStandalone(true);
         assertTrue(EnvUtil.getStandaloneMode());
     }
-    
+
     @Test
     void testGetFunctionMode() {
         try {
@@ -243,12 +246,12 @@ class EnvUtilTest {
             ReflectionTestUtils.setField(EnvUtil.class, "functionModeType", null);
         }
     }
-    
+
     @Test
     void testGetNacosTmpDir() {
         assertEquals(EnvUtil.getNacosHome() + "/data/tmp", EnvUtil.getNacosTmpDir());
     }
-    
+
     @Test
     void testGetNacosHome() {
         try {
@@ -262,12 +265,12 @@ class EnvUtilTest {
             System.clearProperty(EnvUtil.NACOS_HOME_KEY);
         }
     }
-    
+
     @Test
     void testGetSystemEnv() {
         assertDoesNotThrow(() -> EnvUtil.getSystemEnv("test"));
     }
-    
+
     @Test
     void testGetLoad() {
         OperatingSystemMXBean operatingSystemMxBean = mock(OperatingSystemMXBean.class);
@@ -276,23 +279,23 @@ class EnvUtilTest {
         when(operatingSystemMxBean.getSystemLoadAverage()).thenReturn(100.0d);
         assertEquals(100d, EnvUtil.getLoad());
     }
-    
+
     @Test
     void testGetCpu() {
         systemBeanManagerMocked.when(OperatingSystemBeanManager::getSystemCpuUsage).thenReturn(50.0d);
         assertEquals(50.0d, EnvUtil.getCpu());
     }
-    
+
     @Test
     public void testGetMem() {
         systemBeanManagerMocked.when(OperatingSystemBeanManager::getFreePhysicalMem).thenReturn(123L);
         systemBeanManagerMocked.when(OperatingSystemBeanManager::getTotalPhysicalMem).thenReturn(2048L);
         assertEquals(EnvUtil.getMem(), 1 - ((double) 123L / (double) 2048L));
-        
+
         systemBeanManagerMocked.when(OperatingSystemBeanManager::getFreePhysicalMem).thenReturn(0L);
         assertEquals(EnvUtil.getMem(), 1 - ((double) 0L / (double) 2048L));
     }
-    
+
     @Test
     void testGetConfPath() {
         try {
@@ -303,12 +306,12 @@ class EnvUtilTest {
             EnvUtil.setConfPath(null);
         }
     }
-    
+
     @Test
     void testGetClusterConfFilePath() {
         assertEquals(EnvUtil.getNacosHome() + "/conf/cluster.conf", EnvUtil.getClusterConfFilePath());
     }
-    
+
     @Test
     void testReadClusterConfFromFile() throws URISyntaxException, IOException {
         try {
@@ -323,7 +326,7 @@ class EnvUtilTest {
             EnvUtil.setNacosHomePath(null);
         }
     }
-    
+
     @Test
     void testReadClusterConfFromProperties() throws IOException {
         try {
@@ -334,7 +337,7 @@ class EnvUtilTest {
             EnvUtil.setNacosHomePath(null);
         }
     }
-    
+
     @Test
     void testReadClusterConfFromSystem() throws IOException {
         try {
@@ -346,7 +349,7 @@ class EnvUtilTest {
             EnvUtil.setNacosHomePath(null);
         }
     }
-    
+
     @Test
     void testWriteClusterConf() throws IOException {
         DiskUtils.forceMkdir(EnvUtil.getNacosHome() + "/conf");
@@ -355,21 +358,21 @@ class EnvUtilTest {
         assertTrue(file.exists());
         assertEquals("127.0.0.1", FileUtils.readFileToString(file, "UTF-8"));
     }
-    
+
     @Test
     void testLoadProperties() throws IOException {
         String path = "test-properties.properties";
         Map<String, ?> actual = EnvUtil.loadProperties(new ClassPathResource(path));
         assertFalse(actual.isEmpty());
     }
-    
+
     @Test
     void testGetApplicationConfFileResourceDefault() throws IOException {
         Resource resource = EnvUtil.getApplicationConfFileResource();
         assertNotNull(resource);
         assertInstanceOf(BufferedInputStream.class, resource.getInputStream());
     }
-    
+
     @Test
     void testGetApplicationConfFileResourceCustom() throws IOException {
         String path = new ClassPathResource("test-properties.properties").getFile().getParentFile().getAbsolutePath();
@@ -379,7 +382,7 @@ class EnvUtilTest {
         assertNotNull(resource);
         assertInstanceOf(FileInputStream.class, resource.getInputStream());
     }
-    
+
     @Test
     void testGetApplicationConfFileResourceCustomButFileNotExist() throws IOException {
         environment.setProperty("spring.config.additional-location",
@@ -388,7 +391,7 @@ class EnvUtilTest {
         assertNotNull(resource);
         assertInstanceOf(BufferedInputStream.class, resource.getInputStream());
     }
-    
+
     @Test
     void testGetAvailableProcessorsDefaultMultiple() {
         assertEquals(ThreadUtils.getSuitableThreadCount(1), EnvUtil.getAvailableProcessors());
@@ -397,7 +400,7 @@ class EnvUtilTest {
         environment.setProperty(Constants.AVAILABLE_PROCESSORS_BASIC, "2");
         assertEquals(2, EnvUtil.getAvailableProcessors());
     }
-    
+
     @Test
     void testGetAvailableProcessorsWithMultiple() {
         assertThrows(IllegalArgumentException.class, () -> EnvUtil.getAvailableProcessors(0));
@@ -407,7 +410,7 @@ class EnvUtilTest {
         environment.setProperty(Constants.AVAILABLE_PROCESSORS_BASIC, "2");
         assertEquals(4, EnvUtil.getAvailableProcessors(2));
     }
-    
+
     @Test
     void testGetAvailableProcessorsWithScale() {
         assertThrows(IllegalArgumentException.class, () -> EnvUtil.getAvailableProcessors(-1.0d));

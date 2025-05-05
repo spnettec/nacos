@@ -31,7 +31,7 @@ public class ReflectUtils {
 
     private ReflectUtils() {
     }
-    
+
     /**
      * get filed value of  obj.
      *
@@ -48,7 +48,7 @@ public class ReflectUtils {
             throw new RuntimeException(e);
         }
     }
-    
+
     /**
      * get filed value of  obj.
      *
@@ -85,7 +85,7 @@ public class ReflectUtils {
         }
         throw new IllegalStateException("Should never get here");
     }
-    
+
     /**
      * Handle the given reflection exception.
      *
@@ -113,7 +113,7 @@ public class ReflectUtils {
         }
         throw new UndeclaredThrowableException(ex);
     }
-    
+
     /**
      * Handle the given invocation target exception. Should only be called if no checked exception is expected to be
      * thrown by the target method.
@@ -126,7 +126,7 @@ public class ReflectUtils {
     public static void handleInvocationTargetException(InvocationTargetException ex) {
         rethrowRuntimeException(ex.getTargetException());
     }
-    
+
     /**
      * Rethrow the given {@link Throwable exception}, which is presumably the
      * <em>target exception</em> of an {@link InvocationTargetException}.
@@ -147,7 +147,7 @@ public class ReflectUtils {
         }
         throw new UndeclaredThrowableException(ex);
     }
-    
+
     /**
      * Invoke the specified {@link Method} against the supplied target object with the supplied arguments. The target
      * object can be {@code null} when invoking a static {@link Method}.
@@ -168,32 +168,4 @@ public class ReflectUtils {
         throw new IllegalStateException("Should never get here");
     }
 
-    public static Field getModifiersField() throws IllegalAccessException, NoSuchFieldException {
-        Field modifiersField = null;
-        try {
-            modifiersField = Field.class.getDeclaredField("modifiers");
-        } catch (NoSuchFieldException e) {
-            try {
-                Method getDeclaredFields0 = Class.class.getDeclaredMethod("getDeclaredFields0", boolean.class);
-                boolean accessibleBeforeSet = getDeclaredFields0.canAccess(Class.class);
-                getDeclaredFields0.setAccessible(true);
-                Field[] fields = (Field[]) getDeclaredFields0.invoke(Field.class, false);
-                getDeclaredFields0.setAccessible(accessibleBeforeSet);
-                for (Field field : fields) {
-                    if ("modifiers".equals(field.getName())) {
-                        modifiersField = field;
-                        break;
-                    }
-                }
-                if (modifiersField == null) {
-                    throw e;
-                }
-
-            } catch (NoSuchMethodException | InvocationTargetException ex) {
-                e.addSuppressed(ex);
-                throw e;
-            }
-        }
-        return modifiersField;
-    }
 }

@@ -34,7 +34,6 @@ import org.junit.jupiter.api.MethodOrderer.MethodName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.core.env.StandardEnvironment;
-import org.springframework.mock.web.MockServletContext;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
@@ -55,20 +54,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
 @TestMethodOrder(MethodName.class)
 class MemberLookupCoreITCase {
-    
+
     private final String path = Paths.get(System.getProperty("user.home"), "/member_look").toString();
-    
+
     private final String name = "cluster.conf";
-    
+
     ServerMemberManager memberManager;
-    
+
     @BeforeEach
     void before() throws Exception {
         System.setProperty("nacos.home", path);
         EnvUtil.setEnvironment(new StandardEnvironment());
         EnvUtil.setIsStandalone(false);
         System.out.println(EnvUtil.getStandaloneMode());
-        
+
         System.out.println(Arrays.toString(LookupFactory.LookupType.values()));
         DiskUtils.forceMkdir(path);
         DiskUtils.forceMkdir(Paths.get(path, "conf").toString());
@@ -77,14 +76,14 @@ class MemberLookupCoreITCase {
         String ip = InetUtils.getSelfIP();
         DiskUtils.writeFile(file, (ip + ":8848," + ip + ":8847," + ip + ":8849").getBytes(StandardCharsets.UTF_8),
                 false);
-        
+
         try {
-            memberManager = new ServerMemberManager(new MockServletContext());
+            memberManager = new ServerMemberManager();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-    
+
     @AfterEach
     void after() throws Exception {
         try {
@@ -94,7 +93,7 @@ class MemberLookupCoreITCase {
         }
         DiskUtils.deleteDirectory(path);
     }
-    
+
     @Test
     void testLookupFileConfig() throws Exception {
         try {
@@ -106,14 +105,14 @@ class MemberLookupCoreITCase {
         assertInstanceOf(FileConfigMemberLookup.class, lookup);
         func(lookup);
     }
-    
+
     @Test
     void testLookupStandalone() throws Exception {
         EnvUtil.setIsStandalone(true);
         try {
             LookupFactory.createLookUp(memberManager);
         } catch (Throwable ignore) {
-        
+
         } finally {
             EnvUtil.setIsStandalone(false);
         }
@@ -121,7 +120,7 @@ class MemberLookupCoreITCase {
         System.out.println(lookup);
         assertInstanceOf(StandaloneMemberLookup.class, lookup);
     }
-    
+
     @Test
     void testLookupAddressServer() throws Exception {
         EnvUtil.setIsStandalone(false);
@@ -142,16 +141,16 @@ class MemberLookupCoreITCase {
             assertTrue(StringUtils.containsIgnoreCase(e.getErrMsg(), "jmenv.tbsite.net"));
         }
     }
-    
+
     private void func(MemberLookup lookup) throws Exception {
         func(lookup, 3);
     }
-    
+
     private void func(MemberLookup lookup, int expectSize) throws Exception {
         lookup.start();
         Map<String, Member> tmp = memberManager.getServerList();
         System.out.println(lookup + " : " + tmp);
         assertEquals(expectSize, tmp.size());
     }
-    
+
 }

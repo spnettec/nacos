@@ -375,7 +375,7 @@ public class PersistentClientOperationServiceImpl extends RequestProcessor4CP im
             // remove dead client
             removeDeadClient(newData.keySet(), oldClientIds);
         }
-        
+
         /**
          * update instance info for client.
          *
@@ -430,7 +430,7 @@ public class PersistentClientOperationServiceImpl extends RequestProcessor4CP im
                 }
             }
         }
-        
+
         /**
          * remove certain client which has dead.
          *

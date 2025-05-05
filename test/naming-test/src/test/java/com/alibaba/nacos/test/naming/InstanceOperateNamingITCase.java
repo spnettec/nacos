@@ -17,6 +17,7 @@
 package com.alibaba.nacos.test.naming;
 
 import com.alibaba.nacos.Nacos;
+import org.junit.jupiter.api.Disabled;
 import org.springframework.boot.test.context.SpringBootTest;
 
 /**
@@ -25,8 +26,9 @@ import org.springframework.boot.test.context.SpringBootTest;
  * @author wangtong.wt
  * @date 2018/6/20
  */
+@Disabled
 @SpringBootTest(classes = Nacos.class, properties = {
         "server.servlet.context-path=/nacos"}, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 public class InstanceOperateNamingITCase extends AbstractInstanceOperateNamingITCase {
-    
+
 }

@@ -35,10 +35,9 @@ public class AddressServerSecurityConfiguration {
     @Bean
     @Order(99)
     public SecurityFilterChain addressServerSecurityFilterChain(HttpSecurity http) throws Exception {
-        http.securityMatcher("/nacos/v1/as/**")
-                .authorizeHttpRequests(
+        http.authorizeHttpRequests(
                 requestMatcherRegistry -> requestMatcherRegistry
-                        .anyRequest().authenticated())
+                        .requestMatchers("/nacos/v1/as/**").authenticated())
                 .csrf(AbstractHttpConfigurer::disable)
                 .httpBasic(Customizer.withDefaults());
         return http.build();

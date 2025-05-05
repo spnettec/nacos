@@ -54,43 +54,44 @@ import java.util.concurrent.TimeUnit;
  */
 @Service
 public class GrpcRequestAcceptor extends RequestGrpc.RequestImplBase {
-    
+
     @Autowired
     RequestHandlerRegistry requestHandlerRegistry;
-    
+
     @Autowired
     private ConnectionManager connectionManager;
-    
+
     private void traceIfNecessary(Payload grpcRequest, boolean receive) {
         String clientIp = grpcRequest.getMetadata().getClientIp();
         String connectionId = GrpcServerConstants.CONTEXT_KEY_CONN_ID.get();
         try {
             if (connectionManager.traced(clientIp)) {
-                Loggers.REMOTE_DIGEST.info("[{}]Payload {},meta={},body={}", connectionId, receive ? "receive" : "send",
+                Loggers.REMOTE_DIGEST.info("[{}] Payload {}, meta={}, body={}", connectionId, receive ? "receive" : "send",
                         grpcRequest.getMetadata().toByteString().toStringUtf8(),
                         grpcRequest.getBody().toByteString().toStringUtf8());
             }
         } catch (Throwable throwable) {
-            Loggers.REMOTE_DIGEST.error("[{}]Monitor request error,payload={},error={}", connectionId, clientIp,
+            Loggers.REMOTE_DIGEST.error("[{}] Monitor request error, payload={}, error={}", connectionId, clientIp,
                     grpcRequest.toByteString().toStringUtf8());
         }
-        
+
     }
-    
+
     @Override
+    @SuppressWarnings("PMD.MethodTooLongRule")
     public void request(Payload grpcRequest, StreamObserver<Payload> responseObserver) {
-        
+
         traceIfNecessary(grpcRequest, true);
         String type = grpcRequest.getMetadata().getType();
         long startTime = System.nanoTime();
-        
+
         //server is on starting.
         if (!ApplicationUtils.isStarted()) {
             Payload payloadResponse = GrpcUtils.convert(
                     ErrorResponse.build(NacosException.INVALID_SERVER_STATUS, "Server is starting,please try later."));
             traceIfNecessary(payloadResponse, false);
             responseObserver.onNext(payloadResponse);
-            
+
             responseObserver.onCompleted();
             MetricsMonitor.recordGrpcRequestEvent(type, false,
                     NacosException.INVALID_SERVER_STATUS, null, null, System.nanoTime() - startTime);
@@ -107,7 +108,7 @@ public class GrpcRequestAcceptor extends RequestGrpc.RequestImplBase {
                     0, null, null, System.nanoTime() - startTime);
             return;
         }
-        
+
         RequestHandler requestHandler = requestHandlerRegistry.getByRequestType(type);
         //no handler found.
         if (requestHandler == null) {
@@ -121,7 +122,7 @@ public class GrpcRequestAcceptor extends RequestGrpc.RequestImplBase {
                     NacosException.NO_HANDLER, null, null, System.nanoTime() - startTime);
             return;
         }
-        
+
         //check connection status.
         String connectionId = GrpcServerConstants.CONTEXT_KEY_CONN_ID.get();
         boolean requestValid = connectionManager.checkValid(connectionId);
@@ -137,7 +138,7 @@ public class GrpcRequestAcceptor extends RequestGrpc.RequestImplBase {
                     NacosException.UN_REGISTER, null, null, System.nanoTime() - startTime);
             return;
         }
-        
+
         Object parseObj = null;
         try {
             parseObj = GrpcUtils.parse(grpcRequest);
@@ -152,7 +153,7 @@ public class GrpcRequestAcceptor extends RequestGrpc.RequestImplBase {
                     NacosException.BAD_GATEWAY, e.getClass().getSimpleName(), null, System.nanoTime() - startTime);
             return;
         }
-        
+
         if (parseObj == null) {
             Loggers.REMOTE_DIGEST.warn("[{}] Invalid request receive  ,parse request is null", connectionId);
             Payload payloadResponse = GrpcUtils
@@ -165,7 +166,7 @@ public class GrpcRequestAcceptor extends RequestGrpc.RequestImplBase {
                     NacosException.BAD_GATEWAY, null, null, System.nanoTime() - startTime);
             return;
         }
-        
+
         if (!(parseObj instanceof Request)) {
             Loggers.REMOTE_DIGEST
                     .warn("[{}] Invalid request receive  ,parsed payload is not a request,parseObj={}", connectionId,
@@ -180,7 +181,7 @@ public class GrpcRequestAcceptor extends RequestGrpc.RequestImplBase {
                     NacosException.BAD_GATEWAY, null, null, System.nanoTime() - startTime);
             return;
         }
-        
+
         Request request = (Request) parseObj;
         try {
             Connection connection = connectionManager.getConnection(GrpcServerConstants.CONTEXT_KEY_CONN_ID.get());
@@ -210,7 +211,7 @@ public class GrpcRequestAcceptor extends RequestGrpc.RequestImplBase {
                     response.getErrorCode(), null, request.getModule(), System.nanoTime() - startTime);
         } catch (Throwable e) {
             Loggers.REMOTE_DIGEST
-                    .error("[{}] Fail to handle request from connection [{}] ,error message :{}", "grpc", connectionId,
+                    .error("[{}] Fail to handle request from connection [{}], error message :{}", "grpc", connectionId,
                             e);
             Payload payloadResponse = GrpcUtils.convert(ErrorResponse.build(e));
             traceIfNecessary(payloadResponse, false);
@@ -221,9 +222,9 @@ public class GrpcRequestAcceptor extends RequestGrpc.RequestImplBase {
         } finally {
             RequestContextHolder.removeContext();
         }
-        
+
     }
-    
+
     private void prepareRequestContext(Request request, RequestMeta requestMeta, Connection connection) {
         RequestContext requestContext = RequestContextHolder.getContext();
         requestContext.setRequestId(request.getRequestId());
@@ -239,5 +240,5 @@ public class GrpcRequestAcceptor extends RequestGrpc.RequestImplBase {
         requestContext.getBasicContext().getAddressContext().setRemotePort(connection.getMetaInfo().getRemotePort());
         requestContext.getBasicContext().getAddressContext().setSourceIp(connection.getMetaInfo().getClientIp());
     }
-    
+
 }

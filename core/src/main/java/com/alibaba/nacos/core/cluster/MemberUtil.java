@@ -16,6 +16,7 @@
 
 package com.alibaba.nacos.core.cluster;
 
+import com.alibaba.nacos.api.common.NodeState;
 import com.alibaba.nacos.common.utils.ExceptionUtil;
 import com.alibaba.nacos.common.utils.InternetAddressUtil;
 import com.alibaba.nacos.common.utils.StringUtils;
@@ -43,7 +44,7 @@ public class MemberUtil {
     
     protected static final String TARGET_MEMBER_CONNECT_REFUSE_ERRMSG = "Connection refused";
     
-    private static final String SERVER_PORT_PROPERTY = "server.port";
+    private static final String SERVER_PORT_PROPERTY = "nacos.server.main.port";
     
     private static final int DEFAULT_SERVER_PORT = 8848;
     

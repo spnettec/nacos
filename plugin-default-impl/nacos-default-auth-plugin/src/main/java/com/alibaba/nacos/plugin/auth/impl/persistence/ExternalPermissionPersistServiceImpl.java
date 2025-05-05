@@ -16,18 +16,15 @@
 
 package com.alibaba.nacos.plugin.auth.impl.persistence;
 
+import com.alibaba.nacos.api.model.Page;
 import com.alibaba.nacos.common.utils.StringUtils;
-import com.alibaba.nacos.config.server.constant.PropertiesConstant;
-import com.alibaba.nacos.config.server.utils.LogUtil;
-import com.alibaba.nacos.persistence.configuration.condition.ConditionOnExternalStorage;
 import com.alibaba.nacos.persistence.datasource.DataSourceService;
 import com.alibaba.nacos.persistence.datasource.DynamicDataSource;
-import com.alibaba.nacos.persistence.model.Page;
 import com.alibaba.nacos.plugin.auth.impl.persistence.extrnal.AuthExternalPaginationHelperImpl;
-import org.springframework.context.annotation.Conditional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
@@ -41,13 +38,11 @@ import static com.alibaba.nacos.plugin.auth.impl.persistence.AuthRowMapperManage
  *
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>
  */
-@Conditional(value = ConditionOnExternalStorage.class)
-@Component
 public class ExternalPermissionPersistServiceImpl implements PermissionPersistService {
 
-    private JdbcTemplate jt;
+    private static final Logger LOGGER = LoggerFactory.getLogger("com.alibaba.nacos.persistence");
 
-    private DataSourceService dataSourceService;
+    private JdbcTemplate jt;
 
     private String dataSourceType = "";
 
@@ -55,9 +50,9 @@ public class ExternalPermissionPersistServiceImpl implements PermissionPersistSe
 
     @PostConstruct
     protected void init() {
-        this.dataSourceService = DynamicDataSource.getInstance().getDataSource();
-        jt = this.dataSourceService.getJdbcTemplate();
-        dataSourceType = this.dataSourceService.getDataSourceType();
+        DataSourceService dataSource = DynamicDataSource.getInstance().getDataSource();
+        jt = dataSource.getJdbcTemplate();
+        dataSourceType = dataSource.getDataSourceType();
     }
 
     @Override
@@ -66,9 +61,6 @@ public class ExternalPermissionPersistServiceImpl implements PermissionPersistSe
 
         String sqlCountRows = "SELECT count(*) FROM permissions WHERE ";
         String sqlFetchRows = "SELECT role,resource,action FROM permissions WHERE ";
-        if (dataSourceService.getDataSourceType().equals(PropertiesConstant.ORACLE)) {
-            sqlFetchRows = "SELECT role,\"RESOURCE\",action FROM permissions WHERE ";
-        }
 
         String where = " role= ? ";
         List<String> params = new ArrayList<>();
@@ -91,7 +83,7 @@ public class ExternalPermissionPersistServiceImpl implements PermissionPersistSe
             return pageInfo;
 
         } catch (CannotGetJdbcConnectionException e) {
-            LogUtil.FATAL_LOG.error("[db-error] " + e, e);
+            LOGGER.error("[db-error] " + e.toString(), e);
             throw e;
         }
     }
@@ -107,13 +99,11 @@ public class ExternalPermissionPersistServiceImpl implements PermissionPersistSe
     public void addPermission(String role, String resource, String action) {
 
         String sql = "INSERT INTO permissions (role, resource, action) VALUES (?, ?, ?)";
-        if (dataSourceService.getDataSourceType().equals(PropertiesConstant.ORACLE)) {
-            sql = "INSERT INTO permissions (role, \"RESOURCE\", action) VALUES (?, ?, ?)";
-        }
+
         try {
             jt.update(sql, role, resource, action);
         } catch (CannotGetJdbcConnectionException e) {
-            LogUtil.FATAL_LOG.error("[db-error] " + e, e);
+            LOGGER.error("[db-error] " + e.toString(), e);
             throw e;
         }
     }
@@ -129,13 +119,10 @@ public class ExternalPermissionPersistServiceImpl implements PermissionPersistSe
     public void deletePermission(String role, String resource, String action) {
 
         String sql = "DELETE FROM permissions WHERE role=? AND resource=? AND action=?";
-        if (dataSourceService.getDataSourceType().equals(PropertiesConstant.ORACLE)) {
-            sql = "DELETE FROM permissions WHERE role=? AND \"RESOURCE\"=? AND action=?";
-        }
         try {
             jt.update(sql, role, resource, action);
         } catch (CannotGetJdbcConnectionException e) {
-            LogUtil.FATAL_LOG.error("[db-error] ", e);
+            LOGGER.error("[db-error] " + e.toString(), e);
             throw e;
         }
     }
@@ -146,9 +133,6 @@ public class ExternalPermissionPersistServiceImpl implements PermissionPersistSe
 
         String sqlCountRows = "SELECT count(*) FROM permissions ";
         String sqlFetchRows = "SELECT role,resource,action FROM permissions ";
-        if (dataSourceService.getDataSourceType().equals(PropertiesConstant.ORACLE)) {
-            sqlFetchRows = "SELECT role,\"RESOURCE\",action FROM permissions ";
-        }
 
         StringBuilder where = new StringBuilder(" WHERE 1=1");
         List<String> params = new ArrayList<>();
@@ -170,7 +154,7 @@ public class ExternalPermissionPersistServiceImpl implements PermissionPersistSe
             return pageInfo;
 
         } catch (CannotGetJdbcConnectionException e) {
-            LogUtil.FATAL_LOG.error("[db-error] " + e.toString(), e);
+            LOGGER.error("[db-error] " + e.toString(), e);
             throw e;
         }
     }

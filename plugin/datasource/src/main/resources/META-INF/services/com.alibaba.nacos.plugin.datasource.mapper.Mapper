@@ -23,6 +23,7 @@ com.alibaba.nacos.plugin.datasource.impl.mysql.HistoryConfigInfoMapperByMySql
 com.alibaba.nacos.plugin.datasource.impl.mysql.TenantInfoMapperByMySql
 com.alibaba.nacos.plugin.datasource.impl.mysql.TenantCapacityMapperByMySql
 com.alibaba.nacos.plugin.datasource.impl.mysql.GroupCapacityMapperByMysql
+com.alibaba.nacos.plugin.datasource.impl.mysql.ConfigMigrateMapperByMysql
 
 com.alibaba.nacos.plugin.datasource.impl.derby.ConfigInfoBetaMapperByDerby
 com.alibaba.nacos.plugin.datasource.impl.derby.ConfigInfoMapperByDerby
@@ -33,6 +34,7 @@ com.alibaba.nacos.plugin.datasource.impl.derby.HistoryConfigInfoMapperByDerby
 com.alibaba.nacos.plugin.datasource.impl.derby.TenantInfoMapperByDerby
 com.alibaba.nacos.plugin.datasource.impl.derby.TenantCapacityMapperByDerby
 com.alibaba.nacos.plugin.datasource.impl.derby.GroupCapacityMapperByDerby
+com.alibaba.nacos.plugin.datasource.impl.derby.ConfigMigrateMapperByDerby
 
 com.alibaba.nacos.plugin.datasource.impl.oracle.ConfigInfoBetaMapperByOracle
 com.alibaba.nacos.plugin.datasource.impl.oracle.ConfigInfoMapperByOracle
@@ -43,6 +45,7 @@ com.alibaba.nacos.plugin.datasource.impl.oracle.HistoryConfigInfoMapperByOracle
 com.alibaba.nacos.plugin.datasource.impl.oracle.TenantInfoMapperByOracle
 com.alibaba.nacos.plugin.datasource.impl.oracle.TenantCapacityMapperByOracle
 com.alibaba.nacos.plugin.datasource.impl.oracle.GroupCapacityMapperByOracle
+com.alibaba.nacos.plugin.datasource.impl.oracle.ConfigMigrateMapperByOracle
 
 com.alibaba.nacos.plugin.datasource.impl.postgresql.ConfigInfoBetaMapperByPostgreSql
 com.alibaba.nacos.plugin.datasource.impl.postgresql.ConfigInfoMapperByPostgreSql
@@ -53,6 +56,7 @@ com.alibaba.nacos.plugin.datasource.impl.postgresql.HistoryConfigInfoMapperByPos
 com.alibaba.nacos.plugin.datasource.impl.postgresql.TenantInfoMapperByPostgreSql
 com.alibaba.nacos.plugin.datasource.impl.postgresql.TenantCapacityMapperByPostgreSql
 com.alibaba.nacos.plugin.datasource.impl.postgresql.GroupCapacityMapperByPostgreSql
+com.alibaba.nacos.plugin.datasource.impl.postgresql.ConfigMigrateMapperByPostgreSql
 
 com.alibaba.nacos.plugin.datasource.impl.mssql.ConfigInfoBetaMapperByMssql
 com.alibaba.nacos.plugin.datasource.impl.mssql.ConfigInfoMapperByMssql
@@ -63,3 +67,4 @@ com.alibaba.nacos.plugin.datasource.impl.mssql.HistoryConfigInfoMapperByMssql
 com.alibaba.nacos.plugin.datasource.impl.mssql.TenantInfoMapperByMssql
 com.alibaba.nacos.plugin.datasource.impl.mssql.TenantCapacityMapperByMssql
 com.alibaba.nacos.plugin.datasource.impl.mssql.GroupCapacityMapperByMssql
+com.alibaba.nacos.plugin.datasource.impl.mssql.ConfigMigrateMapperByMssql

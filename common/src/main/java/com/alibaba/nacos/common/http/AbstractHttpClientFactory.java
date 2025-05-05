@@ -58,25 +58,25 @@ import java.security.NoSuchAlgorithmException;
  * @author mai.jh
  */
 public abstract class AbstractHttpClientFactory implements HttpClientFactory {
-    
+
     private static final String ASYNC_THREAD_NAME = "nacos-http-async-client";
-    
+
     private static final String ASYNC_IO_REACTOR_NAME = ASYNC_THREAD_NAME + "#I/O Reactor";
-    
+
     @Override
     public NacosRestTemplate createNacosRestTemplate() {
         HttpClientConfig httpClientConfig = buildHttpClientConfig();
         final JdkHttpClientRequest clientRequest = new JdkHttpClientRequest(httpClientConfig);
-        
+
         // enable ssl
         initTls((sslContext, hostnameVerifier) -> {
             clientRequest.setSslContext(loadSslContext());
             clientRequest.replaceSslHostnameVerifier(hostnameVerifier);
         }, filePath -> clientRequest.setSslContext(loadSslContext()));
-        
+
         return new NacosRestTemplate(assignLogger(), clientRequest);
     }
-    
+
     @Override
     public NacosAsyncRestTemplate createNacosAsyncRestTemplate() {
         final IOReactorConfig ioReactorConfig = getIoReactorConfig();
@@ -103,7 +103,7 @@ public abstract class AbstractHttpClientFactory implements HttpClientFactory {
                 ioreactor, defaultConfig)
         );
     }
-    
+
     private DefaultConnectingIOReactor getIoReactor(String threadName) {
         return new DefaultConnectingIOReactor(
                 (session, ojb) -> new IOEventHandler() {
@@ -155,7 +155,7 @@ public abstract class AbstractHttpClientFactory implements HttpClientFactory {
                 null
         );
     }
-    
+
     /**
      * create the {@link AsyncClientConnectionManager}, the code mainly from {@link PoolingAsyncClientConnectionManagerBuilder#build()}. we
      * add the {@link Callback} to handle the {@link IOException} and {@link RuntimeException} thrown
@@ -185,12 +185,12 @@ public abstract class AbstractHttpClientFactory implements HttpClientFactory {
             throw new RuntimeException(e);
         }
     }
-    
+
     protected IOReactorConfig getIoReactorConfig() {
         HttpClientConfig httpClientConfig = buildHttpClientConfig();
         return IOReactorConfig.custom().setIoThreadCount(httpClientConfig.getIoThreadCount()).build();
     }
-    
+
     protected RequestConfig getRequestConfig() {
         HttpClientConfig httpClientConfig = buildHttpClientConfig();
         return RequestConfig
@@ -201,18 +201,18 @@ public abstract class AbstractHttpClientFactory implements HttpClientFactory {
                 .setContentCompressionEnabled(httpClientConfig.getContentCompressionEnabled())
                 .setMaxRedirects(httpClientConfig.getMaxRedirects()).build();
     }
-    
+
     protected void initTls(BiConsumer<SSLContext, HostnameVerifier> initTlsBiFunc,
             TlsFileWatcher.FileChangeListener tlsChangeListener) {
         if (!TlsSystemConfig.tlsEnable) {
             return;
         }
-        
+
         final HostnameVerifier hv = HttpsURLConnection.getDefaultHostnameVerifier();
         final SelfHostnameVerifier selfHostnameVerifier = new SelfHostnameVerifier(hv);
-        
+
         initTlsBiFunc.accept(loadSslContext(), selfHostnameVerifier);
-        
+
         if (tlsChangeListener != null) {
             try {
                 TlsFileWatcher.getInstance()
@@ -223,7 +223,7 @@ public abstract class AbstractHttpClientFactory implements HttpClientFactory {
             }
         }
     }
-    
+
     @SuppressWarnings("checkstyle:abbreviationaswordinname")
     protected synchronized SSLContext loadSslContext() {
         try {
@@ -233,21 +233,21 @@ public abstract class AbstractHttpClientFactory implements HttpClientFactory {
         }
         return null;
     }
-    
+
     /**
      * build http client config.
      *
      * @return HttpClientConfig
      */
     protected abstract HttpClientConfig buildHttpClientConfig();
-    
+
     /**
      * assign Logger.
      *
      * @return Logger
      */
     protected abstract Logger assignLogger();
-    
+
     /**
      * add some monitor and do some extension. default empty implementation, implemented by subclass
      */

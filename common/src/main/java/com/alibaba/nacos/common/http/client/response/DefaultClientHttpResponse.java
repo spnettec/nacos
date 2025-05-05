@@ -22,7 +22,6 @@ import org.apache.hc.client5.http.async.methods.SimpleHttpResponse;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.util.Objects;
 
 /**
  * ApacheClientHttpResponse implementation {@link HttpClientResponse}.
@@ -30,27 +29,27 @@ import java.util.Objects;
  * @author mai.jh
  */
 public class DefaultClientHttpResponse implements HttpClientResponse {
-    
+
     private SimpleHttpResponse response;
 
     private InputStream responseStream;
-    
+
     private Header responseHeader;
-    
+
     public DefaultClientHttpResponse(SimpleHttpResponse response) {
         this.response = response;
     }
-    
+
     @Override
     public int getStatusCode() {
         return this.response.getCode();
     }
-    
+
     @Override
     public String getStatusText() {
         return this.response.getReasonPhrase();
     }
-    
+
     @Override
     public Header getHeaders() {
         if (this.responseHeader == null) {
@@ -62,14 +61,18 @@ public class DefaultClientHttpResponse implements HttpClientResponse {
         }
         return this.responseHeader;
     }
-    
+
     @Override
     public InputStream getBody() {
         byte[] bodyBytes = response.getBody().getBodyBytes();
-        this.responseStream = new ByteArrayInputStream(Objects.requireNonNullElseGet(bodyBytes, () -> new byte[0]));
+        if (bodyBytes != null) {
+            this.responseStream = new ByteArrayInputStream(bodyBytes);
+        } else {
+            this.responseStream = new ByteArrayInputStream(new byte[0]);
+        }
         return this.responseStream;
     }
-    
+
     @Override
     public void close() {
         IoUtils.closeQuietly(this.responseStream);

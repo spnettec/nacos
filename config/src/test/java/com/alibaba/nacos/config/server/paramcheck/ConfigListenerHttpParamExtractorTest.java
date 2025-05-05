@@ -30,17 +30,17 @@ import java.util.List;
 
 import static com.alibaba.nacos.api.common.Constants.LINE_SEPARATOR;
 import static com.alibaba.nacos.api.common.Constants.WORD_SEPARATOR;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.eq;
 
 @ExtendWith(MockitoExtension.class)
 class ConfigListenerHttpParamExtractorTest {
-    
+
     ConfigListenerHttpParamExtractor configListenerHttpParamExtractor;
-    
+
     @Mock
     HttpServletRequest httpServletRequest;
-    
+
     @Test
     void testNormal() {
         String listenerConfigsString = getListenerConfigsString();
@@ -48,7 +48,7 @@ class ConfigListenerHttpParamExtractorTest {
         configListenerHttpParamExtractor = new ConfigListenerHttpParamExtractor();
         configListenerHttpParamExtractor.extractParam(httpServletRequest);
     }
-    
+
     @Test
     void testError() {
         String listenerConfigsString = getErrorListenerConfigsString();
@@ -56,13 +56,13 @@ class ConfigListenerHttpParamExtractorTest {
         configListenerHttpParamExtractor = new ConfigListenerHttpParamExtractor();
         try {
             configListenerHttpParamExtractor.extractParam(httpServletRequest);
-            assertTrue(false);
+            fail();
         } catch (Throwable throwable) {
             throwable.printStackTrace();
-            assertTrue(throwable instanceof IllegalArgumentException);
+            assertInstanceOf(IllegalArgumentException.class, throwable);
         }
     }
-    
+
     private String getListenerConfigsString() {
         ConfigInfo configInfo1 = new ConfigInfo();
         configInfo1.setDataId("2345678901");
@@ -96,22 +96,22 @@ class ConfigListenerHttpParamExtractorTest {
                 sb.append(configInfo.getTenant()).append(LINE_SEPARATOR);
             }
         }
-        
+
         return sb.toString();
-        
+
     }
-    
+
     private String getErrorListenerConfigsString() {
         ConfigInfo configInfo1 = new ConfigInfo();
         configInfo1.setDataId("2345678901");
-        
+
         List<ConfigInfo> configInfoList = Arrays.asList(configInfo1);
         StringBuilder sb = new StringBuilder();
         for (ConfigInfo configInfo : configInfoList) {
             sb.append(configInfo.getDataId()).append(WORD_SEPARATOR);
         }
-        
+
         return sb.toString();
-        
+
     }
 }

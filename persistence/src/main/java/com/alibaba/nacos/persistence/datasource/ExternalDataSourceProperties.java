@@ -18,6 +18,7 @@ package com.alibaba.nacos.persistence.datasource;
 
 import com.alibaba.nacos.common.utils.CollectionUtils;
 import com.alibaba.nacos.common.utils.Preconditions;
+import com.alibaba.nacos.common.utils.StringUtils;
 import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.boot.context.properties.bind.Bindable;
 import org.springframework.boot.context.properties.bind.Binder;
@@ -36,15 +37,15 @@ import static com.alibaba.nacos.common.utils.CollectionUtils.getOrDefault;
  * @author Nacos
  */
 public class ExternalDataSourceProperties {
-    
+
     private static final String JDBC_DRIVER_NAME = "com.mysql.cj.jdbc.Driver";
-    
+
     private static final String TEST_QUERY = "SELECT 1";
-    
+
     private Integer num;
-    
+
     private List<String> url = new ArrayList<>();
-    
+
     private List<String> user = new ArrayList<>();
 
     private String driverName;
@@ -52,19 +53,19 @@ public class ExternalDataSourceProperties {
     private String testQuery;
 
     private List<String> password = new ArrayList<>();
-    
+
     public void setNum(Integer num) {
         this.num = num;
     }
-    
+
     public void setUrl(List<String> url) {
         this.url = url;
     }
-    
+
     public void setUser(List<String> user) {
         this.user = user;
     }
-    
+
     public void setPassword(List<String> password) {
         this.password = password;
     }
@@ -80,8 +81,10 @@ public class ExternalDataSourceProperties {
     /**
      * Build serveral HikariDataSource.
      *
-     * @param environment {@link Environment}
-     * @param callback    Callback function when constructing data source
+     * @param environment
+     *         {@link Environment}
+     * @param callback
+     *         Callback function when constructing data source
      * @return List of {@link HikariDataSource}
      */
     List<HikariDataSource> build(Environment environment, Callback<HikariDataSource> callback) {
@@ -94,25 +97,31 @@ public class ExternalDataSourceProperties {
             int currentSize = index + 1;
             Preconditions.checkArgument(url.size() >= currentSize, "db.url.%s is null", index);
             DataSourcePoolProperties poolProperties = DataSourcePoolProperties.build(environment);
-            poolProperties.setDriverClassName(ObjectUtils.isEmpty(driverName) ? JDBC_DRIVER_NAME : driverName);
-            poolProperties.setTestQuery(ObjectUtils.isEmpty(testQuery) ? TEST_QUERY : testQuery);
+            if (StringUtils.isEmpty(poolProperties.getDataSource().getDriverClassName())) {
+                poolProperties.setDriverClassName(ObjectUtils.isEmpty(driverName) ? JDBC_DRIVER_NAME : driverName);
+            }
             poolProperties.setJdbcUrl(url.get(index).trim());
             poolProperties.setUsername(getOrDefault(user, index, user.get(0)).trim());
             poolProperties.setPassword(getOrDefault(password, index, password.get(0)).trim());
             HikariDataSource ds = poolProperties.getDataSource();
+            if (StringUtils.isEmpty(ds.getConnectionTestQuery())) {
+                poolProperties.setTestQuery(ObjectUtils.isEmpty(testQuery) ? TEST_QUERY : testQuery);
+            }
+
             dataSources.add(ds);
             callback.accept(ds);
         }
         Preconditions.checkArgument(CollectionUtils.isNotEmpty(dataSources), "no datasource available");
         return dataSources;
     }
-    
+
     interface Callback<D> {
-        
+
         /**
          * Perform custom logic.
          *
-         * @param datasource dataSource.
+         * @param datasource
+         *         dataSource.
          */
         void accept(D datasource);
     }

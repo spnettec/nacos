@@ -19,7 +19,6 @@ package com.alibaba.nacos.config.server.service.query;
 import com.alibaba.nacos.api.config.remote.request.ConfigQueryRequest;
 import com.alibaba.nacos.api.remote.request.RequestMeta;
 import com.alibaba.nacos.config.server.service.query.model.ConfigQueryChainRequest;
-
 import jakarta.servlet.http.HttpServletRequest;
 
 /**
