@@ -27,14 +27,14 @@ import jakarta.servlet.http.HttpServletRequest;
  * @author Nacos
  */
 public interface ConfigQueryChainRequestExtractor {
-
+    
     /**
      * Gets the name of the current implementation.
      *
      * @return the name of the current implementation
      */
     String getName();
-
+    
     /**
      * Extracts a configuration query chain request from an HTTP request.
      *
@@ -42,7 +42,7 @@ public interface ConfigQueryChainRequestExtractor {
      * @return the extracted configuration query chain request
      */
     ConfigQueryChainRequest extract(HttpServletRequest request);
-
+    
     /**
      * Extracts a configuration query chain request from a configuration query request object.
      *

@@ -448,4 +448,31 @@ public class DefaultParamChecker extends AbstractParamChecker {
         paramCheckResponse.setSuccess(true);
         return paramCheckResponse;
     }
+    
+    /**
+     * Check data id format.
+     *
+     * @param mcpName the mcp name
+     * @return the param check response
+     */
+    public ParamCheckResponse checkMcpNameFormat(String mcpName) {
+        ParamCheckResponse paramCheckResponse = new ParamCheckResponse();
+        if (StringUtils.isBlank(mcpName)) {
+            paramCheckResponse.setSuccess(true);
+            return paramCheckResponse;
+        }
+        if (mcpName.length() > paramCheckRule.maxDataIdLength) {
+            paramCheckResponse.setSuccess(false);
+            paramCheckResponse.setMessage(
+                    String.format("Param 'mcpName' is illegal, the param length should not exceed %d.", paramCheckRule.maxDataIdLength));
+            return paramCheckResponse;
+        }
+        if (!mcpNamePattern.matcher(mcpName).matches()) {
+            paramCheckResponse.setSuccess(false);
+            paramCheckResponse.setMessage("Param 'mcpName' is illegal, illegal characters should not appear in the param.");
+            return paramCheckResponse;
+        }
+        paramCheckResponse.setSuccess(true);
+        return paramCheckResponse;
+    }
 }
