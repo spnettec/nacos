@@ -88,7 +88,7 @@ class ConsoleWebConfigTest {
 
     @Test
     void authFilterRegistration() {
-        FilterRegistrationBean<NacosConsoleAuthFilter> registration = consoleWebConfig.authFilterRegistration(
+        FilterRegistrationBean<NacosConsoleAuthFilter> registration = consoleWebConfig.consoleAuthFilterRegistration(
                 consoleWebConfig.consoleAuthFilter(methodsCache));
         assertInstanceOf(NacosConsoleAuthFilter.class, registration.getFilter());
         assertEquals("consoleAuthFilter", registration.getFilterName());
@@ -144,7 +144,7 @@ class ConsoleWebConfigTest {
         AuthorizeHttpRequestsConfigurer.AuthorizedUrl mockAuthorizedUrl = Mockito.mock(
                 AuthorizeHttpRequestsConfigurer.AuthorizedUrl.class);
         when(mockRegistry.requestMatchers("/**")).thenReturn(mockAuthorizedUrl);
-        SecurityFilterChain result = consoleWebConfig.securityFilterChain(mockHttpSecurity);
+        SecurityFilterChain result = consoleWebConfig.consoleSecurityFilterChain(mockHttpSecurity);
         assertEquals(mockSecurityFilterChai, result);
         verify(mockAuthorizedUrl).permitAll();
     }
