@@ -915,7 +915,6 @@
                 <version>${concurrentlinkedhashmap.version}</version>
             </dependency>
             <!-- hessian -->
-
             <dependency>
                 <groupId>com.caucho</groupId>
                 <artifactId>hessian</artifactId>

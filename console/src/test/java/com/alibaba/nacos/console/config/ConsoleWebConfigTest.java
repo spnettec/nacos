@@ -19,6 +19,7 @@ package com.alibaba.nacos.console.config;
 import com.alibaba.nacos.console.filter.NacosConsoleAuthFilter;
 import com.alibaba.nacos.core.code.ControllerMethodsCache;
 import com.alibaba.nacos.core.controller.compatibility.ApiCompatibilityFilter;
+import com.alibaba.nacos.core.exception.NacosApiExceptionHandler;
 import com.alibaba.nacos.core.paramcheck.ParamCheckerFilter;
 import com.alibaba.nacos.plugin.auth.constant.Constants;
 import com.alibaba.nacos.sys.env.EnvUtil;
@@ -87,7 +88,7 @@ class ConsoleWebConfigTest {
 
     @Test
     void authFilterRegistration() {
-        FilterRegistrationBean<NacosConsoleAuthFilter> registration = consoleWebConfig.consoleAuthFilterRegistration(
+        FilterRegistrationBean<NacosConsoleAuthFilter> registration = consoleWebConfig.authFilterRegistration(
                 consoleWebConfig.consoleAuthFilter(methodsCache));
         assertInstanceOf(NacosConsoleAuthFilter.class, registration.getFilter());
         assertEquals("consoleAuthFilter", registration.getFilterName());
@@ -143,8 +144,13 @@ class ConsoleWebConfigTest {
         AuthorizeHttpRequestsConfigurer.AuthorizedUrl mockAuthorizedUrl = Mockito.mock(
                 AuthorizeHttpRequestsConfigurer.AuthorizedUrl.class);
         when(mockRegistry.requestMatchers("/**")).thenReturn(mockAuthorizedUrl);
-        SecurityFilterChain result = consoleWebConfig.consoleSecurityFilterChain(mockHttpSecurity);
+        SecurityFilterChain result = consoleWebConfig.securityFilterChain(mockHttpSecurity);
         assertEquals(mockSecurityFilterChai, result);
         verify(mockAuthorizedUrl).permitAll();
+    }
+
+    @Test
+    void nacosApiExceptionHandler() {
+        assertInstanceOf(NacosApiExceptionHandler.class, consoleWebConfig.nacosApiExceptionHandler());
     }
 }
