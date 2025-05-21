@@ -669,6 +669,7 @@
         <module>maintainer-client</module>
         <module>client-basic</module>
         <module>ai</module>
+        <module>mcp-registry-adaptor</module>
     </modules>
 
     <!-- Default dependencies in all subprojects -->
@@ -774,7 +775,6 @@
                 <artifactId>nacos-logback-adapter-12</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <!--
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>logback-adapter</artifactId>
@@ -900,6 +900,11 @@
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>nacos-client-basic</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>nacos-mcp-regsitry-adaptor</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

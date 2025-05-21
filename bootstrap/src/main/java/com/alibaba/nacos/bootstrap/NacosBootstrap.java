@@ -16,6 +16,7 @@
 
 package com.alibaba.nacos.bootstrap;
 
+import com.alibaba.nacos.mcpregistry.NacosMcpRegistry;
 import com.alibaba.nacos.NacosServerBasicApplication;
 import com.alibaba.nacos.NacosServerWebApplication;
 import com.alibaba.nacos.console.NacosConsole;
@@ -47,7 +48,6 @@ public class NacosBootstrap {
     public static void main(String[] args) {
         String type = System.getProperty(Constants.NACOS_DEPLOYMENT_TYPE, Constants.NACOS_DEPLOYMENT_TYPE_MERGED);
         DeploymentType deploymentType = DeploymentType.getType(type);
-        EnvUtil.setIsStandalone(true);
         EnvUtil.setDeploymentType(deploymentType);
         switch (deploymentType) {
             case MERGED:
@@ -75,6 +75,9 @@ public class NacosBootstrap {
         ConfigurableApplicationContext coreContext = startCoreContext(args);
         prepareCoreContext(coreContext);
         ConfigurableApplicationContext webContext = startServerWebContext(args, coreContext);
+        if (isEnabledMcpRegistryApi(coreContext)) {
+            ConfigurableApplicationContext mcpRegistryContext = startMcpRegistryContext(args, coreContext);
+        }
     }
 
     private static void startWithConsole(String[] args) {
@@ -82,6 +85,9 @@ public class NacosBootstrap {
         prepareCoreContext(coreContext);
         ConfigurableApplicationContext serverWebContext = startServerWebContext(args, coreContext);
         ConfigurableApplicationContext consoleContext = startConsoleContext(args, coreContext);
+        if (isEnabledMcpRegistryApi(coreContext)) {
+            ConfigurableApplicationContext mcpRegistryContext = startMcpRegistryContext(args, coreContext);
+        }
     }
 
     private static ConfigurableApplicationContext startCoreContext(String[] args) {
@@ -104,6 +110,13 @@ public class NacosBootstrap {
                 .banner(getBanner("nacos-console-banner.txt")).run(args);
     }
 
+    private static ConfigurableApplicationContext startMcpRegistryContext(String[] args,
+                                                                          ConfigurableApplicationContext coreContext) {
+        NacosStartUpManager.start(NacosStartUp.MCP_REGISTRY_START_UP_PHASE);
+        return new SpringApplicationBuilder(NacosMcpRegistry.class).parent(coreContext)
+                .banner(getBanner("nacos-mcp-registry-banner.txt")).run(args);
+    }
+
     private static void startOnlyConsole(String[] args) {
         NacosStartUpManager.start(NacosStartUp.CONSOLE_START_UP_PHASE);
         ConfigurableApplicationContext consoleContext = new SpringApplicationBuilder(NacosConsole.class).banner(
@@ -112,5 +125,9 @@ public class NacosBootstrap {
 
     private static Banner getBanner(String bannerFileName) {
         return new ResourceBanner(new ClassPathResource(bannerFileName));
+    }
+
+    private static boolean isEnabledMcpRegistryApi(ConfigurableApplicationContext coreContext) {
+        return coreContext.getEnvironment().getProperty("nacos.ai.mcp.registry.enabled", Boolean.class, false);
     }
 }
