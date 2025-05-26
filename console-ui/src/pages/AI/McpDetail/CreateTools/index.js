@@ -63,6 +63,9 @@ const CreateTools = React.forwardRef((props, ref) => {
   // }, [visible]);
 
   const convertPropertiesToTreeData = (properties, prefix) => {
+    if (properties == null) {
+      return [];
+    }
     const keys = Object.keys(properties);
     let result = [];
     for (let index = 0; index < keys.length; index++) {
@@ -82,6 +85,7 @@ const CreateTools = React.forwardRef((props, ref) => {
       const node = {
         label: element,
         type: arg.type,
+        arg: arg,
         description: arg.description ? arg.description : '',
         children,
         key: `${prefix}@@${element}`,
@@ -144,6 +148,7 @@ const CreateTools = React.forwardRef((props, ref) => {
       name,
       description,
       toolParams: inputSchema?.properties ? inputSchema?.properties : {},
+      required: inputSchema?.required,
       invokeContext: _invokeContext,
       templates: templatesStr,
       enabled: toolsMeta?.enabled,
@@ -199,7 +204,10 @@ const CreateTools = React.forwardRef((props, ref) => {
 
       const templates = {};
 
-      if (values.protocol === 'http') {
+      if (
+        (records.protocol === 'http' || records.protocol === 'https') &&
+        values?.templates?.length > 0
+      ) {
         const jsonGoTemplate = JSON.parse(values?.templates);
         if (Object.keys(jsonGoTemplate).length > 0) {
           templates['json-go-template'] = jsonGoTemplate;
@@ -227,6 +235,7 @@ const CreateTools = React.forwardRef((props, ref) => {
         inputSchema: {
           type: 'object',
           properties,
+          required: values?.required,
         },
       };
       const _toolsMetaitem = {
@@ -401,9 +410,12 @@ const CreateTools = React.forwardRef((props, ref) => {
     for (let index = 0; index < rawData.length; index++) {
       const element = rawData[index];
       let arg = {
+        ...element.arg,
         type: element.type,
-        description: element.description,
       };
+
+      arg.description = element.description;
+      arg.type = element.type;
       if (element.type === 'object' && element.children.length > 0) {
         arg.properties = rawDataToFiledValue(element.children);
       } else if (element.type === 'array') {
@@ -479,7 +491,7 @@ const CreateTools = React.forwardRef((props, ref) => {
           onClose={closeDialog}
           style={{ width: '70%' }}
         >
-          <Form field={field} {...formitemLayout} isPreview={isPreview}>
+          <Form field={field} {...formitemLayout}>
             {/* 名称 */}
             <Form.Item label={locale.toolName} required isPreview={!!type}>
               <Input
@@ -507,7 +519,6 @@ const CreateTools = React.forwardRef((props, ref) => {
             {/* 描述 */}
             <Form.Item label={locale.toolDescription} required>
               <Input.TextArea
-                isPreview={onlyEditRuntimeInfo}
                 placeholder={locale.toolDescription}
                 {...init('description', {
                   rules: [{ required: true, message: locale.toolDescriptionRequired }],
