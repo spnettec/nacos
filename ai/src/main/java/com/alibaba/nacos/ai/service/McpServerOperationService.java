@@ -227,7 +227,7 @@ public class McpServerOperationService {
         return result;
     }
     
-    public McpServerVersionInfo getMcpServerVersionInfo(String namespaceId, 
+    private McpServerVersionInfo getMcpServerVersionInfo(String namespaceId,
                                                         String mcpServerId) throws NacosApiException {
         if (StringUtils.isEmpty(namespaceId)) {
             McpServerIndexData indexData = mcpServerIndex.getMcpServerById(mcpServerId);
@@ -464,7 +464,7 @@ public class McpServerOperationService {
             serverSpecification.setToolsDescriptionRef(toolSpecDataId);
         }
         if (null != endpointSpecification) {
-            Service service = endpointOperationService.createMcpServerEndpointServiceIfNecessary(namespaceId, mcpServerId,
+            Service service = endpointOperationService.createMcpServerEndpointServiceIfNecessary(namespaceId, serverSpecification.getName(),
                     endpointSpecification);
             McpServiceRef serviceRef = new McpServiceRef();
             serviceRef.setNamespaceId(service.getNamespace());
