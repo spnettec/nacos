@@ -19,7 +19,6 @@ package com.alibaba.nacos.plugin.datasource.impl.oracle;
 import com.alibaba.nacos.common.utils.CollectionUtils;
 import com.alibaba.nacos.plugin.datasource.constants.DataSourceConstant;
 import com.alibaba.nacos.plugin.datasource.constants.FieldConstant;
-import com.alibaba.nacos.plugin.datasource.impl.derby.AbstractMapperByDerby;
 import com.alibaba.nacos.plugin.datasource.mapper.ConfigInfoGrayMapper;
 import com.alibaba.nacos.plugin.datasource.model.MapperContext;
 import com.alibaba.nacos.plugin.datasource.model.MapperResult;
@@ -32,7 +31,7 @@ import java.util.Collections;
  * @author rong
  **/
 
-public class ConfigInfoGrayMapperByOracle extends AbstractMapperByDerby implements ConfigInfoGrayMapper {
+public class ConfigInfoGrayMapperByOracle extends AbstractMapperByOracle implements ConfigInfoGrayMapper {
 
     @Override
     public MapperResult findAllConfigInfoGrayForDumpAllFetchRows(MapperContext context) {

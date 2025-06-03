@@ -31,7 +31,7 @@ import java.util.ArrayList;
  * @author Sunrisea
  */
 public class ConfigMigrateMapperByDerby extends AbstractMapperByDerby implements ConfigMigrateMapper {
-    
+
     @Override
     public MapperResult findConfigIdNeedInsertMigrate(MapperContext context) {
         String sql = "SELECT ci.id FROM config_info ci WHERE ci.tenant_id = '' AND NOT EXISTS "
@@ -40,7 +40,7 @@ public class ConfigMigrateMapperByDerby extends AbstractMapperByDerby implements
         return new MapperResult(sql, CollectionUtils.list(context.getWhereParameter(FieldConstant.ID),
                 context.getPageSize()));
     }
-    
+
     @Override
     public MapperResult findConfigNeedUpdateMigrate(MapperContext context) {
         String sql = "SELECT ci.id, ci.data_id, ci.group_id, ci.tenant_id"
@@ -57,7 +57,7 @@ public class ConfigMigrateMapperByDerby extends AbstractMapperByDerby implements
                         context.getWhereParameter(FieldConstant.SRC_USER), context.getWhereParameter(FieldConstant.ID),
                         context.getPageSize()));
     }
-    
+
     @Override
     public MapperResult findConfigGrayIdNeedInsertMigrate(MapperContext context) {
         String sql = "SELECT ci.id FROM config_info_gray ci WHERE ci.tenant_id = '' AND NOT EXISTS "
@@ -67,7 +67,7 @@ public class ConfigMigrateMapperByDerby extends AbstractMapperByDerby implements
         return new MapperResult(sql, CollectionUtils.list(context.getWhereParameter(FieldConstant.ID),
                 context.getPageSize()));
     }
-    
+
     @Override
     public MapperResult findConfigGrayNeedUpdateMigrate(MapperContext context) {
         String sql = "SELECT ci.id, ci.data_id, ci.group_id, ci.tenant_id, ci.gray_name "
@@ -84,38 +84,10 @@ public class ConfigMigrateMapperByDerby extends AbstractMapperByDerby implements
                         context.getWhereParameter(FieldConstant.SRC_USER), context.getWhereParameter(FieldConstant.ID),
                         context.getPageSize()));
     }
-    
-    @Override
-    public MapperResult migrateConfigInsertByIds(MapperContext context) {
-        ArrayList<Object> paramList = new ArrayList<>();
-        paramList.add(context.getWhereParameter(FieldConstant.ID));
-        paramList.add(context.getWhereParameter(FieldConstant.SRC_USER));
-        paramList.add(context.getWhereParameter(FieldConstant.TARGET_ID));
-        StringBuilder sql = new StringBuilder(
-                "INSERT INTO config_info (id, data_id, group_id, content, md5, src_user, src_ip, "
-                        + "app_name, tenant_id, c_desc, type, encrypted_data_key) "
-                        + "select ?, data_id, group_id, content, md5, ?, src_ip, "
-                        + "app_name, 'public', c_desc, type, encrypted_data_key from config_info WHERE id = ? ");
-        return new MapperResult(sql.toString(), paramList);
-    }
-    
-    @Override
-    public MapperResult migrateConfigGrayInsertByIds(MapperContext context) {
-        ArrayList<Object> paramList = new ArrayList<>();
-        paramList.add(context.getWhereParameter(FieldConstant.ID));
-        paramList.add(context.getWhereParameter(FieldConstant.SRC_USER));
-        paramList.add(context.getWhereParameter(FieldConstant.TARGET_ID));
-        StringBuilder sql = new StringBuilder(
-                "INSERT INTO config_info_gray (id, data_id, group_id, content, md5, src_user, src_ip, "
-                        + "app_name, tenant_id, gray_name, gray_rule, encrypted_data_key) "
-                        + "select ?, data_id, group_id, content, md5, ?, src_ip, "
-                        + "app_name, 'public', gray_name, gray_rule, encrypted_data_key from config_info_gray WHERE id = ?");
-        return new MapperResult(sql.toString(), paramList);
-    }
-    
+
     @Override
     public String getDataSource() {
         return DataSourceConstant.DERBY;
     }
-    
+
 }

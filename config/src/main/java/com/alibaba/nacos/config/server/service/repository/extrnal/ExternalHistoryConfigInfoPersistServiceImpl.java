@@ -18,6 +18,7 @@ package com.alibaba.nacos.config.server.service.repository.extrnal;
 
 import com.alibaba.nacos.common.utils.MD5Utils;
 import com.alibaba.nacos.common.utils.StringUtils;
+import com.alibaba.nacos.common.utils.UuidUtils;
 import com.alibaba.nacos.config.server.constant.Constants;
 import com.alibaba.nacos.config.server.constant.PropertiesConstant;
 import com.alibaba.nacos.config.server.model.ConfigHistoryInfo;
@@ -25,7 +26,6 @@ import com.alibaba.nacos.config.server.model.ConfigInfo;
 import com.alibaba.nacos.config.server.model.ConfigInfoStateWrapper;
 import com.alibaba.nacos.config.server.service.repository.HistoryConfigInfoPersistService;
 import com.alibaba.nacos.config.server.utils.LogUtil;
-import com.alibaba.nacos.config.server.utils.SystemConfig;
 import com.alibaba.nacos.persistence.configuration.condition.ConditionOnExternalStorage;
 import com.alibaba.nacos.persistence.datasource.DataSourceService;
 import com.alibaba.nacos.persistence.datasource.DynamicDataSource;
@@ -111,7 +111,7 @@ public class ExternalHistoryConfigInfoPersistServiceImpl implements HistoryConfi
 
             if (dataSourceService.getDataSourceType().equals(PropertiesConstant.ORACLE)) {
                 insertList.add("nid");
-                parasList.add(SystemConfig.nextId());
+                parasList.add(UuidUtils.nextId());
             }
             jt.update(historyConfigInfoMapper.insert(
                             insertList), parasList.toArray());

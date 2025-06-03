@@ -87,34 +87,6 @@ public class ConfigMigrateMapperByPostgreSql extends AbstractMapperByDerby imple
     }
 
     @Override
-    public MapperResult migrateConfigInsertByIds(MapperContext context) {
-        ArrayList<Object> paramList = new ArrayList<>();
-        paramList.add(context.getWhereParameter(FieldConstant.ID));
-        paramList.add(context.getWhereParameter(FieldConstant.SRC_USER));
-        paramList.add(context.getWhereParameter(FieldConstant.TARGET_ID));
-        StringBuilder sql = new StringBuilder(
-                "INSERT INTO config_info (id, data_id, group_id, content, md5, src_user, src_ip, "
-                        + "app_name, tenant_id, c_desc, type, encrypted_data_key) "
-                        + "select ?, data_id, group_id, content, md5, ?, src_ip, "
-                        + "app_name, 'public', c_desc, type, encrypted_data_key from config_info WHERE id = ? ");
-        return new MapperResult(sql.toString(), paramList);
-    }
-
-    @Override
-    public MapperResult migrateConfigGrayInsertByIds(MapperContext context) {
-        ArrayList<Object> paramList = new ArrayList<>();
-        paramList.add(context.getWhereParameter(FieldConstant.ID));
-        paramList.add(context.getWhereParameter(FieldConstant.SRC_USER));
-        paramList.add(context.getWhereParameter(FieldConstant.TARGET_ID));
-        StringBuilder sql = new StringBuilder(
-                "INSERT INTO config_info_gray (id, data_id, group_id, content, md5, src_user, src_ip, "
-                        + "app_name, tenant_id, gray_name, gray_rule, encrypted_data_key) "
-                        + "select ?, data_id, group_id, content, md5, ?, src_ip, "
-                        + "app_name, 'public', gray_name, gray_rule, encrypted_data_key from config_info_gray WHERE id = ?");
-        return new MapperResult(sql.toString(), paramList);
-    }
-
-    @Override
     public String getDataSource() {
         return DataSourceConstant.POSTGRESQL;
     }

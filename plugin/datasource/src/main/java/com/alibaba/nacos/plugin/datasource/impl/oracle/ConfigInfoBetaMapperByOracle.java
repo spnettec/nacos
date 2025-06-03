@@ -17,7 +17,12 @@
 package com.alibaba.nacos.plugin.datasource.impl.oracle;
 
 import com.alibaba.nacos.plugin.datasource.constants.DataSourceConstant;
-import com.alibaba.nacos.plugin.datasource.impl.derby.ConfigInfoBetaMapperByDerby;
+import com.alibaba.nacos.plugin.datasource.mapper.ConfigInfoBetaMapper;
+import com.alibaba.nacos.plugin.datasource.model.MapperContext;
+import com.alibaba.nacos.plugin.datasource.model.MapperResult;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The mysql implementation of ConfigInfoBetaMapper.
@@ -25,7 +30,23 @@ import com.alibaba.nacos.plugin.datasource.impl.derby.ConfigInfoBetaMapperByDerb
  * @author hyx
  **/
 
-public class ConfigInfoBetaMapperByOracle extends ConfigInfoBetaMapperByDerby {
+public class ConfigInfoBetaMapperByOracle extends AbstractMapperByOracle implements ConfigInfoBetaMapper {
+
+    @Override
+    public MapperResult findAllConfigInfoBetaForDumpAllFetchRows(MapperContext context) {
+        Integer startRow = context.getStartRow();
+        int pageSize = context.getPageSize();
+
+        String sql = "SELECT t.id,data_id,group_id,tenant_id,app_name,content,md5,gmt_modified,beta_ips "
+                + " FROM (  SELECT id FROM config_info_beta ORDER BY id OFFSET " + startRow + " ROWS FETCH NEXT "
+                + pageSize + " ROWS ONLY  )" + " g, config_info_beta t WHERE g.id = t.id";
+
+        List<Object> paramList = new ArrayList<>();
+        paramList.add(startRow);
+        paramList.add(pageSize);
+
+        return new MapperResult(sql, paramList);
+    }
 
     @Override
     public String getDataSource() {

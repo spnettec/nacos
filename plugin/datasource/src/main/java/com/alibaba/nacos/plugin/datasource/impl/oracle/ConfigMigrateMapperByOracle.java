@@ -19,19 +19,19 @@ package com.alibaba.nacos.plugin.datasource.impl.oracle;
 import com.alibaba.nacos.common.utils.CollectionUtils;
 import com.alibaba.nacos.plugin.datasource.constants.DataSourceConstant;
 import com.alibaba.nacos.plugin.datasource.constants.FieldConstant;
-import com.alibaba.nacos.plugin.datasource.impl.derby.AbstractMapperByDerby;
 import com.alibaba.nacos.plugin.datasource.mapper.ConfigMigrateMapper;
 import com.alibaba.nacos.plugin.datasource.model.MapperContext;
 import com.alibaba.nacos.plugin.datasource.model.MapperResult;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The type Config migrate mapper by derby.
  *
  * @author Sunrisea
  */
-public class ConfigMigrateMapperByOracle extends AbstractMapperByDerby implements ConfigMigrateMapper {
+public class ConfigMigrateMapperByOracle extends AbstractMapperByOracle implements ConfigMigrateMapper {
 
     @Override
     public MapperResult findConfigIdNeedInsertMigrate(MapperContext context) {
@@ -89,28 +89,44 @@ public class ConfigMigrateMapperByOracle extends AbstractMapperByDerby implement
     @Override
     public MapperResult migrateConfigInsertByIds(MapperContext context) {
         ArrayList<Object> paramList = new ArrayList<>();
-        paramList.add(context.getWhereParameter(FieldConstant.ID));
-        paramList.add(context.getWhereParameter(FieldConstant.SRC_USER));
-        paramList.add(context.getWhereParameter(FieldConstant.TARGET_ID));
         StringBuilder sql = new StringBuilder(
                 "INSERT INTO config_info (id, data_id, group_id, content, md5, src_user, src_ip, "
                         + "app_name, tenant_id, c_desc, type, encrypted_data_key) "
-                        + "select ?, data_id, group_id, content, md5, ?, src_ip, "
-                        + "app_name, 'public', c_desc, type, encrypted_data_key from config_info WHERE id = ? ");
+                        + "select id, data_id, group_id, content, md5, ?, src_ip, "
+                        + "app_name, 'public', c_desc, type, encrypted_data_key from config_info WHERE ");
+        sql.append("id IN (");
+        List<Long> ids = (List<Long>) context.getWhereParameter(FieldConstant.IDS);
+        paramList.add(context.getWhereParameter(FieldConstant.SRC_USER));
+        for (int i = 0; i < ids.size(); i++) {
+            sql.append("? ");
+            if (i < ids.size() - 1) {
+                sql.append(", ");
+            }
+            paramList.add(ids.get(i));
+        }
+        sql.append(") ");
         return new MapperResult(sql.toString(), paramList);
     }
 
     @Override
     public MapperResult migrateConfigGrayInsertByIds(MapperContext context) {
-        ArrayList<Object> paramList = new ArrayList<>();
-        paramList.add(context.getWhereParameter(FieldConstant.ID));
-        paramList.add(context.getWhereParameter(FieldConstant.SRC_USER));
-        paramList.add(context.getWhereParameter(FieldConstant.TARGET_ID));
         StringBuilder sql = new StringBuilder(
                 "INSERT INTO config_info_gray (id, data_id, group_id, content, md5, src_user, src_ip, "
                         + "app_name, tenant_id, gray_name, gray_rule, encrypted_data_key) "
-                        + "select ?, data_id, group_id, content, md5, ?, src_ip, "
-                        + "app_name, 'public', gray_name, gray_rule, encrypted_data_key from config_info_gray WHERE id = ?");
+                        + "select id, data_id, group_id, content, md5, ?, src_ip, "
+                        + "app_name, 'public', gray_name, gray_rule, encrypted_data_key from config_info_gray WHERE ");
+        sql.append("id IN (");
+        ArrayList<Object> paramList = new ArrayList<>();
+        List<Long> ids = (List<Long>) context.getWhereParameter(FieldConstant.IDS);
+        paramList.add(context.getWhereParameter(FieldConstant.SRC_USER));
+        for (int i = 0; i < ids.size(); i++) {
+            sql.append("? ");
+            if (i < ids.size() - 1) {
+                sql.append(", ");
+            }
+            paramList.add(ids.get(i));
+        }
+        sql.append(") ");
         return new MapperResult(sql.toString(), paramList);
     }
 

@@ -20,7 +20,7 @@ import com.alibaba.nacos.common.utils.CollectionUtils;
 import com.alibaba.nacos.common.utils.StringUtils;
 import com.alibaba.nacos.plugin.datasource.constants.DataSourceConstant;
 import com.alibaba.nacos.plugin.datasource.constants.FieldConstant;
-import com.alibaba.nacos.plugin.datasource.impl.derby.HistoryConfigInfoMapperByDerby;
+import com.alibaba.nacos.plugin.datasource.mapper.HistoryConfigInfoMapper;
 import com.alibaba.nacos.plugin.datasource.model.MapperContext;
 import com.alibaba.nacos.plugin.datasource.model.MapperResult;
 
@@ -33,8 +33,27 @@ import java.util.List;
  * @author hyx
  **/
 
-public class HistoryConfigInfoMapperByOracle extends HistoryConfigInfoMapperByDerby {
+public class HistoryConfigInfoMapperByOracle extends AbstractMapperByOracle implements HistoryConfigInfoMapper {
 
+    @Override
+    public MapperResult removeConfigHistory(MapperContext context) {
+        String sql = "DELETE FROM his_config_info WHERE nid IN( "
+                + "SELECT nid FROM his_config_info WHERE gmt_modified < ? OFFSET 0 ROWS FETCH NEXT ? ROWS ONLY)";
+        return new MapperResult(sql, CollectionUtils.list(context.getWhereParameter(FieldConstant.START_TIME),
+                context.getWhereParameter(FieldConstant.LIMIT_SIZE)));
+    }
+
+    @Override
+    public MapperResult findDeletedConfig(MapperContext context) {
+        return new MapperResult(
+                "SELECT id, nid, data_id, group_id, app_name, content, md5, gmt_create, gmt_modified, src_user, src_ip, op_type, tenant_id, "
+                        + "publish_type,gray_name, ext_info, encrypted_data_key FROM his_config_info WHERE op_type = 'D' AND "
+                        + "publish_type = ? and gmt_modified >= ? and nid > ? order by nid OFFSET 0 ROWS FETCH NEXT ? ROWS ONLY",
+                CollectionUtils.list(context.getWhereParameter(FieldConstant.PUBLISH_TYPE),
+                        context.getWhereParameter(FieldConstant.START_TIME),
+                        context.getWhereParameter(FieldConstant.LAST_MAX_ID),
+                        context.getWhereParameter(FieldConstant.PAGE_SIZE)));
+    }
     @Override
     public MapperResult pageFindConfigHistoryFetchRows(MapperContext context) {
         String sql =
@@ -59,6 +78,7 @@ public class HistoryConfigInfoMapperByOracle extends HistoryConfigInfoMapperByDe
         }
         return new MapperResult(sql, paraList);
     }
+
     @Override
     public String getDataSource() {
         return DataSourceConstant.ORACLE;

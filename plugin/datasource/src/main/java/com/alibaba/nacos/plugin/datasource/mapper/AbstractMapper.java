@@ -34,7 +34,7 @@ public abstract class AbstractMapper implements Mapper {
         StringBuilder sql = new StringBuilder();
         String method = "SELECT ";
         sql.append(method);
-        sql.append(columns.stream().collect(Collectors.joining(",")));
+        sql.append(String.join(",", columns));
         sql.append(" FROM ");
         sql.append(getTableName());
 

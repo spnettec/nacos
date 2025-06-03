@@ -1,4 +1,4 @@
-package com.alibaba.nacos.config.server.utils;
+package com.alibaba.nacos.common.utils;
 /*
  * Copyright 1999-2018 Alibaba Group Holding Ltd.
  *
