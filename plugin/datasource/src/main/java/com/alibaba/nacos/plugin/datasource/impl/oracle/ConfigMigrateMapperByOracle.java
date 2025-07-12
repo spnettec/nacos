@@ -91,9 +91,10 @@ public class ConfigMigrateMapperByOracle extends AbstractMapperByOracle implemen
         ArrayList<Object> paramList = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "INSERT INTO config_info (id, data_id, group_id, content, md5, src_user, src_ip, "
-                        + "app_name, tenant_id, c_desc, type, encrypted_data_key) "
-                        + "select id, data_id, group_id, content, md5, ?, src_ip, "
-                        + "app_name, 'public', c_desc, type, encrypted_data_key from config_info WHERE ");
+                        + "app_name, tenant_id, c_desc, type, encrypted_data_key, gmt_create, gmt_modified) "
+                        + "select trunc(dbms_random.value(0,999999999999999999)), "
+                        + "data_id, group_id, content, md5, ?, src_ip, "
+                        + "app_name, 'public', c_desc, type, encrypted_data_key, sysdate, sysdate from config_info WHERE ");
         sql.append("id IN (");
         List<Long> ids = (List<Long>) context.getWhereParameter(FieldConstant.IDS);
         paramList.add(context.getWhereParameter(FieldConstant.SRC_USER));
@@ -112,9 +113,11 @@ public class ConfigMigrateMapperByOracle extends AbstractMapperByOracle implemen
     public MapperResult migrateConfigGrayInsertByIds(MapperContext context) {
         StringBuilder sql = new StringBuilder(
                 "INSERT INTO config_info_gray (id, data_id, group_id, content, md5, src_user, src_ip, "
-                        + "app_name, tenant_id, gray_name, gray_rule, encrypted_data_key) "
-                        + "select id, data_id, group_id, content, md5, ?, src_ip, "
-                        + "app_name, 'public', gray_name, gray_rule, encrypted_data_key from config_info_gray WHERE ");
+                        + "app_name, tenant_id, gray_name, gray_rule, encrypted_data_key, gmt_create, gmt_modified) "
+                        + "select trunc(dbms_random.value(0,999999999999999999)), "
+                        + "data_id, group_id, "
+                        + "content, md5, ?, src_ip, "
+                        + "app_name, 'public', gray_name, gray_rule, encrypted_data_key, sysdate, sysdate from config_info_gray WHERE ");
         sql.append("id IN (");
         ArrayList<Object> paramList = new ArrayList<>();
         List<Long> ids = (List<Long>) context.getWhereParameter(FieldConstant.IDS);

@@ -23,10 +23,8 @@ import com.alibaba.nacos.common.constant.Symbols;
 import com.alibaba.nacos.common.utils.MD5Utils;
 import com.alibaba.nacos.common.utils.Pair;
 import com.alibaba.nacos.common.utils.StringUtils;
-import com.alibaba.nacos.common.utils.UuidUtils;
 import com.alibaba.nacos.config.server.constant.Constants;
 import com.alibaba.nacos.config.server.constant.ParametersField;
-import com.alibaba.nacos.config.server.constant.PropertiesConstant;
 import com.alibaba.nacos.config.server.enums.FileTypeEnum;
 import com.alibaba.nacos.config.server.model.ConfigAdvanceInfo;
 import com.alibaba.nacos.config.server.model.ConfigAllInfo;
@@ -71,7 +69,10 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -253,14 +254,11 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
         final String encryptedDataKey =
                 configInfo.getEncryptedDataKey() == null ? StringUtils.EMPTY : configInfo.getEncryptedDataKey();
         final String md5Tmp = MD5Utils.md5Hex(configInfo.getContent(), Constants.ENCODE);
-        List<String> insertList = new ArrayList<>(Arrays.asList("data_id", "group_id", "tenant_id", "app_name", "content", "md5", "src_ip", "src_user",
-                "gmt_create@NOW()", "gmt_modified@NOW()", "c_desc", "c_use", "effect", "type", "c_schema",
-                "encrypted_data_key"));
 
-        if (dataSourceService.getDataSourceType().equals(PropertiesConstant.ORACLE)) {
-            insertList.add("id");
-        }
-        String insertSql = configInfoMapper.insert(insertList);
+        String insertSql = configInfoMapper.insert(
+                Arrays.asList("data_id", "group_id", "tenant_id", "app_name", "content", "md5", "src_ip", "src_user",
+                        "gmt_create@NOW()", "gmt_modified@NOW()", "c_desc", "c_use", "effect", "type", "c_schema",
+                        "encrypted_data_key"));
         PreparedStatement ps = connection.prepareStatement(insertSql, configInfoMapper.getPrimaryKeyGeneratedKeys());
         ps.setString(1, configInfo.getDataId());
         ps.setString(2, configInfo.getGroup());
@@ -276,10 +274,6 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
         ps.setString(12, type);
         ps.setString(13, schema);
         ps.setString(14, encryptedDataKey);
-        if (dataSourceService.getDataSourceType().equals(PropertiesConstant.ORACLE)) {
-            final long generatedId = UuidUtils.nextId();
-            ps.setLong(15, generatedId);
-        }
         return ps;
     }
 

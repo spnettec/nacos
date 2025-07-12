@@ -16,9 +16,12 @@
 
 package com.alibaba.nacos.plugin.datasource.impl.oracle;
 
+import com.alibaba.nacos.common.utils.UuidUtils;
 import com.alibaba.nacos.plugin.datasource.enums.derby.TrustedDerbylFunctionEnum;
 import com.alibaba.nacos.plugin.datasource.enums.oracle.TrustedOracleFunctionEnum;
 import com.alibaba.nacos.plugin.datasource.mapper.AbstractMapper;
+
+import java.util.List;
 
 /**
  * The abstract derby mapper contains CRUD methods.
@@ -30,6 +33,38 @@ public abstract class AbstractMapperByOracle extends AbstractMapper {
     @Override
     public String getFunction(String functionName) {
         return TrustedOracleFunctionEnum.getFunctionByName(functionName);
+    }
+
+    @Override
+    public String insert(List<String> columns) {
+        StringBuilder sql = new StringBuilder();
+        String method = "INSERT INTO ";
+        sql.append(method);
+        sql.append(getTableName());
+
+        int size = columns.size();
+        sql.append("(");
+        for (int i = 0; i < size; i++) {
+            sql.append(columns.get(i).split("@")[0]);
+            sql.append(", ");
+        }
+        sql.append("id");
+        sql.append(") ");
+
+        sql.append("VALUES");
+        sql.append("(");
+        for (int i = 0; i < size; i++) {
+            String[] parts = columns.get(i).split("@");
+            if (parts.length == 2) {
+                sql.append(getFunction(parts[1]));
+            } else {
+                sql.append("?");
+            }
+            sql.append(",");
+        }
+        sql.append(UuidUtils.nextId());
+        sql.append(")");
+        return sql.toString();
     }
 
 }

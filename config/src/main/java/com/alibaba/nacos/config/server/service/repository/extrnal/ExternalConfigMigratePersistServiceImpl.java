@@ -37,6 +37,7 @@ import com.alibaba.nacos.plugin.datasource.constants.FieldConstant;
 import com.alibaba.nacos.plugin.datasource.constants.TableConstant;
 import com.alibaba.nacos.plugin.datasource.mapper.ConfigInfoGrayMapper;
 import com.alibaba.nacos.plugin.datasource.mapper.ConfigMigrateMapper;
+import com.alibaba.nacos.plugin.datasource.mapper.Mapper;
 import com.alibaba.nacos.plugin.datasource.model.MapperContext;
 import com.alibaba.nacos.plugin.datasource.model.MapperResult;
 import com.alibaba.nacos.sys.env.EnvUtil;
@@ -47,8 +48,11 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.alibaba.nacos.config.server.service.repository.ConfigRowMapperInjector.CONFIG_INFO_GRAY_WRAPPER_ROW_MAPPER;
 import static com.alibaba.nacos.config.server.service.repository.ConfigRowMapperInjector.CONFIG_INFO_ROW_MAPPER;
@@ -187,34 +191,71 @@ public class ExternalConfigMigratePersistServiceImpl implements ConfigMigratePer
 
     @Override
     public void migrateConfigInsertByIds(List<Long> ids, String srcUser) {
-        ConfigMigrateMapper configMigrateMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
-                TableConstant.MIGRATE_CONFIG);
-        MapperContext context = new MapperContext();
-        context.putWhereParameter(FieldConstant.IDS, ids);
-        context.putWhereParameter(FieldConstant.SRC_USER, srcUser);
-        MapperResult mapperResult = configMigrateMapper.migrateConfigInsertByIds(context);
-        try {
-            jt.update(mapperResult.getSql(), mapperResult.getParamList().toArray());
-        } catch (CannotGetJdbcConnectionException e) {
-            LogUtil.FATAL_LOG.error("[db-error] migrateConfigInsertByIds" + e, e);
-            throw e;
+        Mapper mapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
+                TableConstant.CONFIG_INFO);
+        StringBuilder sql = new StringBuilder(
+                "select data_id, group_id, content, md5, ?, src_ip, "
+                        + "app_name, 'public', c_desc, type, encrypted_data_key from config_info WHERE ");
+        sql.append("id IN (");
+        ArrayList<Object> paramList = new ArrayList<>();
+        paramList.add(srcUser);
+        for (int i = 0; i < ids.size(); i++) {
+            sql.append("? ");
+            if (i < ids.size() - 1) {
+                sql.append(", ");
+            }
+            paramList.add(ids.get(i));
         }
+        sql.append(") ");
+        List<Object[]> obs = jt.queryForList(sql.toString(), paramList.toArray()).stream().
+                map(map->map.values().toArray()).toList();
+        obs.forEach(item->{
+            String batchInsertMapSql = mapper.insert(Arrays.asList("data_id","group_id","content","md5","src_user",
+                    "src_ip","app_name","tenant_id","c_desc","type",
+                    "encrypted_data_key","gmt_create@NOW()","gmt_modified@NOW()"));
+            try {
+                jt.update(batchInsertMapSql, item);
+            } catch (CannotGetJdbcConnectionException e) {
+                LogUtil.FATAL_LOG.error("[db-error] migrateConfigInsertByIds" + e, e);
+                throw e;
+            }
+        });
+
     }
 
     @Override
     public void migrateConfigGrayInsertByIds(List<Long> ids, String srcUser) {
-        ConfigMigrateMapper configMigrateMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
-                TableConstant.MIGRATE_CONFIG);
-        MapperContext context = new MapperContext();
-        context.putWhereParameter(FieldConstant.IDS, ids);
-        context.putWhereParameter(FieldConstant.SRC_USER, srcUser);
-        MapperResult mapperResult = configMigrateMapper.migrateConfigGrayInsertByIds(context);
-        try {
-            jt.update(mapperResult.getSql(), mapperResult.getParamList().toArray());
-        } catch (CannotGetJdbcConnectionException e) {
-            LogUtil.FATAL_LOG.error("[db-error] migrateConfigGrayInsertByIds" + e, e);
-            throw e;
+        Mapper mapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
+                TableConstant.CONFIG_INFO_GRAY);
+
+        StringBuilder sql = new StringBuilder(
+                "select data_id, group_id, content, md5, ?, src_ip, "
+                        + "app_name, 'public', gray_name, gray_rule, encrypted_data_key from config_info WHERE ");
+        sql.append("id IN (");
+        ArrayList<Object> paramList = new ArrayList<>();
+        paramList.add(srcUser);
+        for (int i = 0; i < ids.size(); i++) {
+            sql.append("? ");
+            if (i < ids.size() - 1) {
+                sql.append(", ");
+            }
+            paramList.add(ids.get(i));
         }
+        sql.append(") ");
+        List<Object[]> obs = jt.queryForList(sql.toString(), paramList.toArray()).stream().
+                map(map->map.values().toArray()).toList();
+        obs.forEach(item->{
+            String batchInsertMapSql = mapper.insert(Arrays.asList("data_id","group_id","content","md5","src_user",
+                    "src_ip","app_name","tenant_id","gray_name","gray_rule",
+                    "encrypted_data_key","gmt_create@NOW()","gmt_modified@NOW()"));
+            try {
+                jt.update(batchInsertMapSql, item);
+            } catch (CannotGetJdbcConnectionException e) {
+                LogUtil.FATAL_LOG.error("[db-error] migrateConfigGrayInsertByIds" + e, e);
+                throw e;
+            }
+        });
+
     }
 
     @Override

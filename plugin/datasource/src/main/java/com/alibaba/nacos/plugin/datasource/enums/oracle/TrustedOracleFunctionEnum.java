@@ -31,7 +31,7 @@ public enum TrustedOracleFunctionEnum {
     /**
      * NOW().
      */
-    NOW("NOW()", "SYSTEMDATE");
+    NOW("NOW()", "sysdate");
 
     private static final Map<String, TrustedOracleFunctionEnum> LOOKUP_MAP = new HashMap<>();
 
