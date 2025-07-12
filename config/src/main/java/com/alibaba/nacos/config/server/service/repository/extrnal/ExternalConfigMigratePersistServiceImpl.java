@@ -36,8 +36,8 @@ import com.alibaba.nacos.plugin.datasource.constants.CommonConstant;
 import com.alibaba.nacos.plugin.datasource.constants.FieldConstant;
 import com.alibaba.nacos.plugin.datasource.constants.TableConstant;
 import com.alibaba.nacos.plugin.datasource.mapper.ConfigInfoGrayMapper;
+import com.alibaba.nacos.plugin.datasource.mapper.ConfigInfoMapper;
 import com.alibaba.nacos.plugin.datasource.mapper.ConfigMigrateMapper;
-import com.alibaba.nacos.plugin.datasource.mapper.Mapper;
 import com.alibaba.nacos.plugin.datasource.model.MapperContext;
 import com.alibaba.nacos.plugin.datasource.model.MapperResult;
 import com.alibaba.nacos.sys.env.EnvUtil;
@@ -48,11 +48,10 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import java.util.ArrayList;
+import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static com.alibaba.nacos.config.server.service.repository.ConfigRowMapperInjector.CONFIG_INFO_GRAY_WRAPPER_ROW_MAPPER;
 import static com.alibaba.nacos.config.server.service.repository.ConfigRowMapperInjector.CONFIG_INFO_ROW_MAPPER;
@@ -169,8 +168,8 @@ public class ExternalConfigMigratePersistServiceImpl implements ConfigMigratePer
         context.putWhereParameter(FieldConstant.TARGET_TENANT, targetTenant);
         context.setPageSize(pageSize);
         MapperResult mapperResult = configMigrateMapper.findConfigNeedUpdateMigrate(context);
-        return jt.query(mapperResult.getSql(),
-                CONFIG_INFO_ROW_MAPPER, mapperResult.getParamList().toArray());
+        return jt.query(mapperResult.getSql(), mapperResult.getParamList().toArray(),
+                CONFIG_INFO_ROW_MAPPER);
     }
 
     @Override
@@ -185,77 +184,40 @@ public class ExternalConfigMigratePersistServiceImpl implements ConfigMigratePer
         context.putWhereParameter(FieldConstant.TARGET_TENANT, targetTenant);
         context.setPageSize(pageSize);
         MapperResult mapperResult = configMigrateMapper.findConfigGrayNeedUpdateMigrate(context);
-        return jt.query(mapperResult.getSql(),
-                CONFIG_INFO_GRAY_WRAPPER_ROW_MAPPER, mapperResult.getParamList().toArray());
+        return jt.query(mapperResult.getSql(),CONFIG_INFO_GRAY_WRAPPER_ROW_MAPPER,
+                mapperResult.getParamList().toArray());
     }
 
     @Override
     public void migrateConfigInsertByIds(List<Long> ids, String srcUser) {
-        Mapper mapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
-                TableConstant.CONFIG_INFO);
-        StringBuilder sql = new StringBuilder(
-                "select data_id, group_id, content, md5, ?, src_ip, "
-                        + "app_name, 'public', c_desc, type, encrypted_data_key from config_info WHERE ");
-        sql.append("id IN (");
-        ArrayList<Object> paramList = new ArrayList<>();
-        paramList.add(srcUser);
-        for (int i = 0; i < ids.size(); i++) {
-            sql.append("? ");
-            if (i < ids.size() - 1) {
-                sql.append(", ");
-            }
-            paramList.add(ids.get(i));
+        ConfigMigrateMapper configMigrateMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
+                TableConstant.MIGRATE_CONFIG);
+        MapperContext context = new MapperContext();
+        context.putWhereParameter(FieldConstant.IDS, ids);
+        context.putWhereParameter(FieldConstant.SRC_USER, srcUser);
+        MapperResult mapperResult = configMigrateMapper.migrateConfigInsertByIds(context);
+        try {
+            jt.update(mapperResult.getSql(), mapperResult.getParamList().toArray());
+        } catch (CannotGetJdbcConnectionException e) {
+            LogUtil.FATAL_LOG.error("[db-error] migrateConfigInsertByIds" + e, e);
+            throw e;
         }
-        sql.append(") ");
-        List<Object[]> obs = jt.queryForList(sql.toString(), paramList.toArray()).stream().
-                map(map->map.values().toArray()).toList();
-        obs.forEach(item->{
-            String batchInsertMapSql = mapper.insert(Arrays.asList("data_id","group_id","content","md5","src_user",
-                    "src_ip","app_name","tenant_id","c_desc","type",
-                    "encrypted_data_key","gmt_create@NOW()","gmt_modified@NOW()"));
-            try {
-                jt.update(batchInsertMapSql, item);
-            } catch (CannotGetJdbcConnectionException e) {
-                LogUtil.FATAL_LOG.error("[db-error] migrateConfigInsertByIds" + e, e);
-                throw e;
-            }
-        });
-
     }
 
     @Override
     public void migrateConfigGrayInsertByIds(List<Long> ids, String srcUser) {
-        Mapper mapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
-                TableConstant.CONFIG_INFO_GRAY);
-
-        StringBuilder sql = new StringBuilder(
-                "select data_id, group_id, content, md5, ?, src_ip, "
-                        + "app_name, 'public', gray_name, gray_rule, encrypted_data_key from config_info WHERE ");
-        sql.append("id IN (");
-        ArrayList<Object> paramList = new ArrayList<>();
-        paramList.add(srcUser);
-        for (int i = 0; i < ids.size(); i++) {
-            sql.append("? ");
-            if (i < ids.size() - 1) {
-                sql.append(", ");
-            }
-            paramList.add(ids.get(i));
+        ConfigMigrateMapper configMigrateMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
+                TableConstant.MIGRATE_CONFIG);
+        MapperContext context = new MapperContext();
+        context.putWhereParameter(FieldConstant.IDS, ids);
+        context.putWhereParameter(FieldConstant.SRC_USER, srcUser);
+        MapperResult mapperResult = configMigrateMapper.migrateConfigGrayInsertByIds(context);
+        try {
+            jt.update(mapperResult.getSql(), mapperResult.getParamList().toArray());
+        } catch (CannotGetJdbcConnectionException e) {
+            LogUtil.FATAL_LOG.error("[db-error] migrateConfigGrayInsertByIds" + e, e);
+            throw e;
         }
-        sql.append(") ");
-        List<Object[]> obs = jt.queryForList(sql.toString(), paramList.toArray()).stream().
-                map(map->map.values().toArray()).toList();
-        obs.forEach(item->{
-            String batchInsertMapSql = mapper.insert(Arrays.asList("data_id","group_id","content","md5","src_user",
-                    "src_ip","app_name","tenant_id","gray_name","gray_rule",
-                    "encrypted_data_key","gmt_create@NOW()","gmt_modified@NOW()"));
-            try {
-                jt.update(batchInsertMapSql, item);
-            } catch (CannotGetJdbcConnectionException e) {
-                LogUtil.FATAL_LOG.error("[db-error] migrateConfigGrayInsertByIds" + e, e);
-                throw e;
-            }
-        });
-
     }
 
     @Override
@@ -291,11 +253,11 @@ public class ExternalConfigMigratePersistServiceImpl implements ConfigMigratePer
                                             + ",tenant=" + tenant + ",grayName=" + grayName);
                         }
                     } else if (sourceConfigInfoGrayWrapper.getLastModified()
-                            > targetConfigInfoGrayWrapper.getLastModified()) {
+                            >= targetConfigInfoGrayWrapper.getLastModified()) {
                         sourceConfigInfoGrayWrapper.setTenant(targetTenant);
                         updateConfigInfo4GrayWithoutHistory(sourceConfigInfoGrayWrapper,
                                 sourceConfigInfoGrayWrapper.getGrayName(), sourceConfigInfoGrayWrapper.getGrayRule(),
-                                null, srcUser);
+                                null, srcUser, targetConfigInfoGrayWrapper.getLastModified(), targetConfigInfoGrayWrapper.getMd5());
                         ConfigInfoGrayWrapper configInfoGrayWrapper = configInfoGrayPersistService.findConfigInfo4Gray(
                                 dataId, group, tenant, grayName);
                         if (!StringUtils.equals(configInfoGrayWrapper.getMd5(), sourceConfigInfoGrayWrapper.getMd5())
@@ -350,20 +312,21 @@ public class ExternalConfigMigratePersistServiceImpl implements ConfigMigratePer
      * @param srcUser    the src user
      */
     public void updateConfigInfo4GrayWithoutHistory(ConfigInfo configInfo, String grayName, String grayRule,
-            String srcIp, String srcUser) {
+            String srcIp, String srcUser, long lastModified, final String targetMd5) {
         String appNameTmp = StringUtils.defaultEmptyIfBlank(configInfo.getAppName());
         String tenantTmp = StringUtils.defaultEmptyIfBlank(configInfo.getTenant());
         String grayNameTmp = StringUtils.isBlank(grayName) ? StringUtils.EMPTY : grayName.trim();
         String grayRuleTmp = StringUtils.isBlank(grayRule) ? StringUtils.EMPTY : grayRule.trim();
+        Timestamp modifiedTime = new Timestamp(lastModified);
         try {
             String md5 = MD5Utils.md5Hex(configInfo.getContent(), Constants.ENCODE);
             ConfigInfoGrayMapper configInfoGrayMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                     TableConstant.CONFIG_INFO_GRAY);
             jt.update(configInfoGrayMapper.update(
                             Arrays.asList("content", "encrypted_data_key", "md5", "src_ip", "src_user", "gmt_modified@NOW()",
-                                    "app_name", "gray_rule"), Arrays.asList("data_id", "group_id", "tenant_id", "gray_name")),
+                                    "app_name", "gray_rule"), Arrays.asList("data_id", "group_id", "tenant_id", "gray_name", "gmt_modified", "md5")),
                     configInfo.getContent(), configInfo.getEncryptedDataKey(), md5, srcIp, srcUser, appNameTmp,
-                    grayRuleTmp, configInfo.getDataId(), configInfo.getGroup(), tenantTmp, grayNameTmp);
+                    grayRuleTmp, configInfo.getDataId(), configInfo.getGroup(), tenantTmp, grayNameTmp, modifiedTime, targetMd5);
         } catch (CannotGetJdbcConnectionException e) {
             LogUtil.FATAL_LOG.error("[db-error] " + e, e);
             throw e;
@@ -404,9 +367,10 @@ public class ExternalConfigMigratePersistServiceImpl implements ConfigMigratePer
                                     "syncConfig failed, sourceConfigInfo has been updated,dataId=" + dataId + ",group="
                                             + group + ",tenant=" + tenant);
                         }
-                    } else if (sourceConfigInfoWrapper.getLastModified() > targetConfigInfoWrapper.getLastModified()) {
+                    } else if (sourceConfigInfoWrapper.getLastModified() >= targetConfigInfoWrapper.getLastModified()) {
                         sourceConfigInfoWrapper.setTenant(targetTenant);
-                        configInfoPersistService.updateConfigInfoAtomic(sourceConfigInfoWrapper, null, srcUser, null);
+                        updateConfigInfoAtomic(sourceConfigInfoWrapper, null, srcUser, null, targetConfigInfoWrapper.getLastModified(),
+                                 targetConfigInfoWrapper.getMd5());
                         ConfigInfoWrapper configInfoWrapper = configInfoPersistService.findConfigInfo(dataId, group,
                                 tenant);
                         if (!StringUtils.equals(configInfoWrapper.getMd5(), sourceConfigInfoWrapper.getMd5())) {
@@ -425,5 +389,42 @@ public class ExternalConfigMigratePersistServiceImpl implements ConfigMigratePer
             }
             return null;
         });
+    }
+
+    /**
+     * Update config info atomic.
+     *
+     * @param configInfo        the config info
+     * @param srcIp             the src ip
+     * @param srcUser           the src user
+     * @param configAdvanceInfo the config advance info
+     * @param lastModified      the last modified
+     */
+    public void updateConfigInfoAtomic(final ConfigInfo configInfo, final String srcIp, final String srcUser,
+            Map<String, Object> configAdvanceInfo, long lastModified, final String targetMd5) {
+        String appNameTmp = StringUtils.defaultEmptyIfBlank(configInfo.getAppName());
+        String tenantTmp = StringUtils.defaultEmptyIfBlank(configInfo.getTenant());
+        final String md5Tmp = MD5Utils.md5Hex(configInfo.getContent(), Constants.ENCODE);
+        String desc = configAdvanceInfo == null ? null : (String) configAdvanceInfo.get("desc");
+        String use = configAdvanceInfo == null ? null : (String) configAdvanceInfo.get("use");
+        String effect = configAdvanceInfo == null ? null : (String) configAdvanceInfo.get("effect");
+        String type = configAdvanceInfo == null ? null : (String) configAdvanceInfo.get("type");
+        String schema = configAdvanceInfo == null ? null : (String) configAdvanceInfo.get("schema");
+        Timestamp modifiedTime = new Timestamp(lastModified);
+        final String encryptedDataKey =
+                configInfo.getEncryptedDataKey() == null ? StringUtils.EMPTY : configInfo.getEncryptedDataKey();
+        try {
+            ConfigInfoMapper configInfoMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
+                    TableConstant.CONFIG_INFO);
+            jt.update(configInfoMapper.update(
+                            Arrays.asList("content", "md5", "src_ip", "src_user", "gmt_modified@NOW()", "app_name", "c_desc",
+                                    "c_use", "effect", "type", "c_schema", "encrypted_data_key"),
+                            Arrays.asList("data_id", "group_id", "tenant_id", "gmt_modified", "md5")), configInfo.getContent(), md5Tmp, srcIp,
+                    srcUser, appNameTmp, desc, use, effect, type, schema, encryptedDataKey, configInfo.getDataId(),
+                    configInfo.getGroup(), tenantTmp, modifiedTime, targetMd5);
+        } catch (CannotGetJdbcConnectionException e) {
+            LogUtil.FATAL_LOG.error("[db-error] " + e, e);
+            throw e;
+        }
     }
 }

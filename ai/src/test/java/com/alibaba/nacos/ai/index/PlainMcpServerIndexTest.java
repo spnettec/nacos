@@ -77,11 +77,21 @@ class PlainMcpServerIndexTest {
     }
     
     @Test
-    void searchMcpServerByNameWithNamespaceIdByAccurate() {
-        Page<ConfigInfo> countPage = mockConfigInfo(1, 1, AiConstants.Mcp.MCP_DEFAULT_NAMESPACE);
-        when(configDetailService.findConfigInfoPage(eq(Constants.MCP_LIST_SEARCH_ACCURATE), eq(1), eq(1), isNull(),
+    void searchMcpServerByNameWithNamespaceIdByAccurateNotFound() {
+        Page<ConfigInfo> searchPage = mockConfigInfo(0, 0, AiConstants.Mcp.MCP_DEFAULT_NAMESPACE);
+        when(configDetailService.findConfigInfoPage(eq(Constants.MCP_LIST_SEARCH_ACCURATE), eq(1), eq(10), isNull(),
                 eq(Constants.MCP_SERVER_VERSIONS_GROUP), eq(AiConstants.Mcp.MCP_DEFAULT_NAMESPACE),
-                anyMap())).thenReturn(countPage);
+                anyMap())).thenReturn(searchPage);
+        Page<McpServerIndexData> result = plainMcpServerIndex.searchMcpServerByName(
+                AiConstants.Mcp.MCP_DEFAULT_NAMESPACE, "mcpName", Constants.MCP_LIST_SEARCH_ACCURATE, 0, 10);
+        assertEquals(0, result.getTotalCount());
+        assertEquals(1, result.getPageNumber());
+        assertEquals(0, result.getPagesAvailable());
+        assertEquals(0, result.getPageItems().size());
+    }
+    
+    @Test
+    void searchMcpServerByNameWithNamespaceIdByAccurate() {
         Page<ConfigInfo> searchPage = mockConfigInfo(1, 1, AiConstants.Mcp.MCP_DEFAULT_NAMESPACE);
         when(configDetailService.findConfigInfoPage(eq(Constants.MCP_LIST_SEARCH_ACCURATE), eq(1), eq(10), isNull(),
                 eq(Constants.MCP_SERVER_VERSIONS_GROUP), eq(AiConstants.Mcp.MCP_DEFAULT_NAMESPACE),
@@ -95,36 +105,7 @@ class PlainMcpServerIndexTest {
     }
     
     @Test
-    void searchMcpServerByNameWithMultiNamespaceIdByAccurate() {
-        when(namespaceOperationService.getNamespaceList()).thenReturn(mockNamespaceList(2, true));
-        Page<ConfigInfo> countNs1Page = mockConfigInfo(1, 1, AiConstants.Mcp.MCP_DEFAULT_NAMESPACE);
-        Page<ConfigInfo> countNs2Page = mockConfigInfo(1, 1, "namespaceId-0");
-        when(configDetailService.findConfigInfoPage(eq(Constants.MCP_LIST_SEARCH_ACCURATE), eq(1), eq(1), isNull(),
-                eq(Constants.MCP_SERVER_VERSIONS_GROUP), eq(AiConstants.Mcp.MCP_DEFAULT_NAMESPACE),
-                anyMap())).thenReturn(countNs1Page);
-        when(configDetailService.findConfigInfoPage(eq(Constants.MCP_LIST_SEARCH_ACCURATE), eq(1), eq(1), isNull(),
-                eq(Constants.MCP_SERVER_VERSIONS_GROUP), eq("namespaceId-0"), anyMap())).thenReturn(countNs2Page);
-        Page<ConfigInfo> searchNs1Page = mockConfigInfo(1, 1, AiConstants.Mcp.MCP_DEFAULT_NAMESPACE);
-        when(configDetailService.findConfigInfoPage(eq(Constants.MCP_LIST_SEARCH_ACCURATE), eq(1), eq(9), isNull(),
-                eq(Constants.MCP_SERVER_VERSIONS_GROUP), eq(AiConstants.Mcp.MCP_DEFAULT_NAMESPACE),
-                anyMap())).thenReturn(searchNs1Page);
-        Page<ConfigInfo> searchNs2Page = mockConfigInfo(1, 1, "namespaceId-0");
-        when(configDetailService.findConfigInfoPage(eq(Constants.MCP_LIST_SEARCH_ACCURATE), eq(1), eq(10), isNull(),
-                eq(Constants.MCP_SERVER_VERSIONS_GROUP), eq("namespaceId-0"), anyMap())).thenReturn(searchNs2Page);
-        Page<McpServerIndexData> result = plainMcpServerIndex.searchMcpServerByName(null, "mcpName",
-                Constants.MCP_LIST_SEARCH_ACCURATE, 0, 10);
-        assertEquals(2, result.getTotalCount());
-        assertEquals(1, result.getPageNumber());
-        assertEquals(1, result.getPagesAvailable());
-        assertEquals(2, result.getPageItems().size());
-    }
-    
-    @Test
     void searchMcpServerByNameWithNamespaceIdByBlur() {
-        Page<ConfigInfo> countPage = mockConfigInfo(10, 1, AiConstants.Mcp.MCP_DEFAULT_NAMESPACE);
-        when(configDetailService.findConfigInfoPage(eq(Constants.MCP_LIST_SEARCH_BLUR), eq(1), eq(1), eq("*"),
-                eq(Constants.MCP_SERVER_VERSIONS_GROUP), eq(AiConstants.Mcp.MCP_DEFAULT_NAMESPACE),
-                anyMap())).thenReturn(countPage);
         Page<ConfigInfo> searchPage = mockConfigInfo(10, 10, AiConstants.Mcp.MCP_DEFAULT_NAMESPACE);
         when(configDetailService.findConfigInfoPage(eq(Constants.MCP_LIST_SEARCH_BLUR), eq(1), eq(10), eq("*"),
                 eq(Constants.MCP_SERVER_VERSIONS_GROUP), eq(AiConstants.Mcp.MCP_DEFAULT_NAMESPACE),
@@ -138,92 +119,51 @@ class PlainMcpServerIndexTest {
     }
     
     @Test
-    void searchMcpServerByNameWithMultiNamespaceIdByBlur() {
-        when(namespaceOperationService.getNamespaceList()).thenReturn(mockNamespaceList(2, true));
-        Page<ConfigInfo> countNs1Page = mockConfigInfo(2, 1, AiConstants.Mcp.MCP_DEFAULT_NAMESPACE);
-        Page<ConfigInfo> countNs2Page = mockConfigInfo(2, 1, "namespaceId-0");
-        when(configDetailService.findConfigInfoPage(eq(Constants.MCP_LIST_SEARCH_BLUR), eq(1), eq(1), eq("*"),
-                eq(Constants.MCP_SERVER_VERSIONS_GROUP), eq(AiConstants.Mcp.MCP_DEFAULT_NAMESPACE),
-                anyMap())).thenReturn(countNs1Page);
-        when(configDetailService.findConfigInfoPage(eq(Constants.MCP_LIST_SEARCH_BLUR), eq(1), eq(1), eq("*"),
-                eq(Constants.MCP_SERVER_VERSIONS_GROUP), eq("namespaceId-0"), anyMap())).thenReturn(countNs2Page);
-        Page<ConfigInfo> searchNs1Page = mockConfigInfo(2, 2, AiConstants.Mcp.MCP_DEFAULT_NAMESPACE);
-        when(configDetailService.findConfigInfoPage(eq(Constants.MCP_LIST_SEARCH_BLUR), eq(1), eq(8), eq("*"),
-                eq(Constants.MCP_SERVER_VERSIONS_GROUP), eq(AiConstants.Mcp.MCP_DEFAULT_NAMESPACE),
-                anyMap())).thenReturn(searchNs1Page);
-        Page<ConfigInfo> searchNs2Page = mockConfigInfo(2, 2, "namespaceId-0");
+    void searchMcpServerByNameWithMultiplePagesFirstPage() {
+        Page<ConfigInfo> searchPage = mockConfigInfoWithPagination(25, 10, 1, AiConstants.Mcp.MCP_DEFAULT_NAMESPACE);
         when(configDetailService.findConfigInfoPage(eq(Constants.MCP_LIST_SEARCH_BLUR), eq(1), eq(10), eq("*"),
-                eq(Constants.MCP_SERVER_VERSIONS_GROUP), eq("namespaceId-0"), anyMap())).thenReturn(searchNs2Page);
-        Page<McpServerIndexData> result = plainMcpServerIndex.searchMcpServerByName(null, "mcpName",
-                Constants.MCP_LIST_SEARCH_BLUR, 0, 10);
-        assertEquals(4, result.getTotalCount());
+                eq(Constants.MCP_SERVER_VERSIONS_GROUP), eq(AiConstants.Mcp.MCP_DEFAULT_NAMESPACE),
+                anyMap())).thenReturn(searchPage);
+        
+        Page<McpServerIndexData> result = plainMcpServerIndex.searchMcpServerByName(
+                AiConstants.Mcp.MCP_DEFAULT_NAMESPACE, null, Constants.MCP_LIST_SEARCH_BLUR, 0, 10);
+        
+        assertEquals(25, result.getTotalCount());
         assertEquals(1, result.getPageNumber());
-        assertEquals(1, result.getPagesAvailable());
-        assertEquals(4, result.getPageItems().size());
+        assertEquals(3, result.getPagesAvailable());
+        assertEquals(10, result.getPageItems().size());
     }
     
     @Test
-    void searchMcpServerByNameWithMultiNamespaceIdByBlurLimit() {
-        when(namespaceOperationService.getNamespaceList()).thenReturn(mockNamespaceList(2, true));
-        Page<ConfigInfo> countNs1Page = mockConfigInfo(2, 1, AiConstants.Mcp.MCP_DEFAULT_NAMESPACE);
-        Page<ConfigInfo> countNs2Page = mockConfigInfo(2, 1, "namespaceId-0");
-        when(configDetailService.findConfigInfoPage(eq(Constants.MCP_LIST_SEARCH_BLUR), eq(1), eq(1), eq("*"),
+    void searchMcpServerByNameWithMultiplePagesSecondPage() {
+        Page<ConfigInfo> searchPage = mockConfigInfoWithPagination(25, 10, 2, AiConstants.Mcp.MCP_DEFAULT_NAMESPACE);
+        when(configDetailService.findConfigInfoPage(eq(Constants.MCP_LIST_SEARCH_BLUR), eq(2), eq(10), eq("*"),
                 eq(Constants.MCP_SERVER_VERSIONS_GROUP), eq(AiConstants.Mcp.MCP_DEFAULT_NAMESPACE),
-                anyMap())).thenReturn(countNs1Page);
-        when(configDetailService.findConfigInfoPage(eq(Constants.MCP_LIST_SEARCH_BLUR), eq(1), eq(1), eq("*"),
-                eq(Constants.MCP_SERVER_VERSIONS_GROUP), eq("namespaceId-0"), anyMap())).thenReturn(countNs2Page);
-        Page<ConfigInfo> searchNs2Page = mockConfigInfo(2, 2, "namespaceId-0");
-        when(configDetailService.findConfigInfoPage(eq(Constants.MCP_LIST_SEARCH_BLUR), eq(1), eq(2), eq("*"),
-                eq(Constants.MCP_SERVER_VERSIONS_GROUP), eq("namespaceId-0"), anyMap())).thenReturn(searchNs2Page);
-        Page<McpServerIndexData> result = plainMcpServerIndex.searchMcpServerByName(null, "mcpName",
-                Constants.MCP_LIST_SEARCH_BLUR, 0, 2);
-        assertEquals(4, result.getTotalCount());
-        assertEquals(1, result.getPageNumber());
-        assertEquals(2, result.getPagesAvailable());
-        assertEquals(2, result.getPageItems().size());
-    }
-    
-    @Test
-    void searchMcpServerByNameWithMultiNamespaceIdByBlurOffsetLimit() {
-        when(namespaceOperationService.getNamespaceList()).thenReturn(mockNamespaceList(2, true));
-        Page<ConfigInfo> countNs1Page = mockConfigInfo(2, 1, AiConstants.Mcp.MCP_DEFAULT_NAMESPACE);
-        Page<ConfigInfo> countNs2Page = mockConfigInfo(2, 1, "namespaceId-0");
-        when(configDetailService.findConfigInfoPage(eq(Constants.MCP_LIST_SEARCH_BLUR), eq(1), eq(1), eq("*"),
-                eq(Constants.MCP_SERVER_VERSIONS_GROUP), eq(AiConstants.Mcp.MCP_DEFAULT_NAMESPACE),
-                anyMap())).thenReturn(countNs1Page);
-        when(configDetailService.findConfigInfoPage(eq(Constants.MCP_LIST_SEARCH_BLUR), eq(1), eq(1), eq("*"),
-                eq(Constants.MCP_SERVER_VERSIONS_GROUP), eq("namespaceId-0"), anyMap())).thenReturn(countNs2Page);
-        Page<ConfigInfo> searchNs1Page = mockConfigInfo(2, 2, AiConstants.Mcp.MCP_DEFAULT_NAMESPACE);
-        when(configDetailService.findConfigInfoPage(eq(Constants.MCP_LIST_SEARCH_BLUR), eq(1), eq(2), eq("*"),
-                eq(Constants.MCP_SERVER_VERSIONS_GROUP), eq(AiConstants.Mcp.MCP_DEFAULT_NAMESPACE),
-                anyMap())).thenReturn(searchNs1Page);
-        Page<ConfigInfo> searchNs2Page = mockConfigInfo(2, 2, "namespaceId-0");
-        when(configDetailService.findConfigInfoPage(eq(Constants.MCP_LIST_SEARCH_BLUR), eq(1), eq(4), eq("*"),
-                eq(Constants.MCP_SERVER_VERSIONS_GROUP), eq("namespaceId-0"), anyMap())).thenReturn(searchNs2Page);
-        Page<McpServerIndexData> result = plainMcpServerIndex.searchMcpServerByName(null, "mcpName",
-                Constants.MCP_LIST_SEARCH_BLUR, 2, 2);
-        assertEquals(4, result.getTotalCount());
+                anyMap())).thenReturn(searchPage);
+        
+        Page<McpServerIndexData> result = plainMcpServerIndex.searchMcpServerByName(
+                AiConstants.Mcp.MCP_DEFAULT_NAMESPACE, null, Constants.MCP_LIST_SEARCH_BLUR, 10, 10);
+        
+        assertEquals(25, result.getTotalCount());
         assertEquals(2, result.getPageNumber());
-        assertEquals(2, result.getPagesAvailable());
-        assertEquals(2, result.getPageItems().size());
+        assertEquals(3, result.getPagesAvailable());
+        assertEquals(10, result.getPageItems().size());
     }
     
     @Test
-    void searchMcpServerByNameWithMultiNamespaceIdByBlurLargeOffset() {
-        when(namespaceOperationService.getNamespaceList()).thenReturn(mockNamespaceList(2, true));
-        Page<ConfigInfo> countNs1Page = mockConfigInfo(2, 1, AiConstants.Mcp.MCP_DEFAULT_NAMESPACE);
-        Page<ConfigInfo> countNs2Page = mockConfigInfo(2, 1, "namespaceId-0");
-        when(configDetailService.findConfigInfoPage(eq(Constants.MCP_LIST_SEARCH_BLUR), eq(1), eq(1), eq("*"),
+    void searchMcpServerByNameWithMultiplePagesLastPage() {
+        Page<ConfigInfo> searchPage = mockConfigInfoWithPagination(25, 5, 3, AiConstants.Mcp.MCP_DEFAULT_NAMESPACE);
+        when(configDetailService.findConfigInfoPage(eq(Constants.MCP_LIST_SEARCH_BLUR), eq(3), eq(10), eq("*"),
                 eq(Constants.MCP_SERVER_VERSIONS_GROUP), eq(AiConstants.Mcp.MCP_DEFAULT_NAMESPACE),
-                anyMap())).thenReturn(countNs1Page);
-        when(configDetailService.findConfigInfoPage(eq(Constants.MCP_LIST_SEARCH_BLUR), eq(1), eq(1), eq("*"),
-                eq(Constants.MCP_SERVER_VERSIONS_GROUP), eq("namespaceId-0"), anyMap())).thenReturn(countNs2Page);
-        Page<McpServerIndexData> result = plainMcpServerIndex.searchMcpServerByName(null, "mcpName",
-                Constants.MCP_LIST_SEARCH_BLUR, 100, 2);
-        assertEquals(4, result.getTotalCount());
-        assertEquals(51, result.getPageNumber());
-        assertEquals(2, result.getPagesAvailable());
-        assertEquals(0, result.getPageItems().size());
+                anyMap())).thenReturn(searchPage);
+        
+        Page<McpServerIndexData> result = plainMcpServerIndex.searchMcpServerByName(
+                AiConstants.Mcp.MCP_DEFAULT_NAMESPACE, null, Constants.MCP_LIST_SEARCH_BLUR, 20, 10);
+        
+        assertEquals(25, result.getTotalCount());
+        assertEquals(3, result.getPageNumber());
+        assertEquals(3, result.getPagesAvailable());
+        assertEquals(5, result.getPageItems().size());
     }
     
     @Test
@@ -310,6 +250,24 @@ class PlainMcpServerIndexTest {
         mockConfigInfo.setPageNumber(1);
         List<ConfigInfo> list = new LinkedList<>();
         for (int i = 0; i < size; i++) {
+            ConfigInfo configInfo = new ConfigInfo();
+            configInfo.setTenant(namespaceId);
+            configInfo.setContent(JacksonUtils.toJson(mockServerVersionInfo(UUID.randomUUID().toString())));
+            list.add(configInfo);
+        }
+        mockConfigInfo.setPageItems(list);
+        return mockConfigInfo;
+    }
+    
+    private Page<ConfigInfo> mockConfigInfoWithPagination(int total, int currentPageSize, int pageNumber,
+            String namespaceId) {
+        Page<ConfigInfo> mockConfigInfo = new Page<>();
+        mockConfigInfo.setTotalCount(total);
+        mockConfigInfo.setPageNumber(pageNumber);
+        mockConfigInfo.setPagesAvailable((int) Math.ceil((double) total / (double) currentPageSize));
+        
+        List<ConfigInfo> list = new LinkedList<>();
+        for (int i = 0; i < currentPageSize; i++) {
             ConfigInfo configInfo = new ConfigInfo();
             configInfo.setTenant(namespaceId);
             configInfo.setContent(JacksonUtils.toJson(mockServerVersionInfo(UUID.randomUUID().toString())));

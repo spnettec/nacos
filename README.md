@@ -122,8 +122,17 @@ Contributors are welcomed to join Nacos project. Please check [CONTRIBUTING](./C
      * commits-nacos@googlegroups.com: Commits notice, very high frequency.
 * Join us from DingDing(Group 1: 21708933(full), Group 2: 30438813(full), Group 3: 31222241(full), Group 4: 12810027056). 
 
+### DingDing Group QR Code
 
-<img src="https://img.alicdn.com/imgextra/i4/O1CN01MI7re41xTrZNdB7Yv_!!6000000006445-0-tps-974-1228.jpg" width="500">
+![](https://cdn.nlark.com/yuque/0/2025/png/1577777/1750054497446-f834cba6-fa83-4421-b202-a0dc1d5cc28b.png)
+
+### DingDing MCP Group QR Code
+
+![](https://cdn.nlark.com/yuque/0/2025/png/1577777/1750054500395-e271cbe4-2dd8-4723-8cd0-bd8a731b812a.png)
+
+### WeChat Group QR Code
+
+![](https://cdn.nlark.com/yuque/0/2025/png/1577777/1750054421702-a7d1421a-ab8e-42da-bc59-01b5d287b290.png)
 
 ## Enterprise Service
 If you need Nacos enterprise service support, or purchase cloud product services, you can join the discussion by scanning the following DingTalk group. It can also be directly activated and used through the microservice engine (MSE) provided by Alibaba Cloud.
@@ -165,7 +174,7 @@ These are only part of the companies using Nacos, for reference only. If you are
 ![联采科技](http://www.lckjep.com:80//theme/img/logoTop.png)
 ![南京28研究所](https://img.alicdn.com/tfs/TB1G216EsbpK1RjSZFyXXX_qFXa-325-53.jpg)
 ![凤凰网-汽车](https://p1.ifengimg.com/auto/image/2017/0922/auto_logo.png)
-![中化信息](http://www.sinochem.com/Portals/0/xinlogo.png)
+![中化信息](http://www.sinochemitech.com/zhxx/lib/images/-logo.png)
 ![一点车](https://img.alicdn.com/tfs/TB1DXerNgDqK1RjSZSyXXaxEVXa-333-103.png)
 ![明传无线](https://img.alicdn.com/tfs/TB1VfOANgHqK1RjSZFPXXcwapXa-313-40.png)
 ![妙优车](https://img.alicdn.com/tfs/TB1lvCyNhTpK1RjSZFMXXbG_VXa-130-60.png)
