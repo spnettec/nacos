@@ -22,6 +22,7 @@ import com.alibaba.nacos.plugin.datasource.enums.oracle.TrustedOracleFunctionEnu
 import com.alibaba.nacos.plugin.datasource.mapper.AbstractMapper;
 
 import java.util.List;
+import java.util.StringJoiner;
 
 /**
  * The abstract derby mapper contains CRUD methods.
@@ -29,7 +30,7 @@ import java.util.List;
  * @author blake.qiu
  **/
 public abstract class AbstractMapperByOracle extends AbstractMapper {
-
+    private static final String COLUMN_SEPARATOR = "@";
     @Override
     public String getFunction(String functionName) {
         return TrustedOracleFunctionEnum.getFunctionByName(functionName);
@@ -37,34 +38,21 @@ public abstract class AbstractMapperByOracle extends AbstractMapper {
 
     @Override
     public String insert(List<String> columns) {
-        StringBuilder sql = new StringBuilder();
-        String method = "INSERT INTO ";
-        sql.append(method);
-        sql.append(getTableName());
+        StringJoiner columnJoiner = new StringJoiner(", ", "(", ")");
+        StringJoiner valueJoiner = new StringJoiner(",", "(", ")");
 
-        int size = columns.size();
-        sql.append("(");
-        for (int i = 0; i < size; i++) {
-            sql.append(columns.get(i).split("@")[0]);
-            sql.append(", ");
+        for (String col : columns) {
+            String[] parts = col.split(COLUMN_SEPARATOR, 2);
+            columnJoiner.add(parts[0]);
+            valueJoiner.add(parts.length > 1 ? getFunction(parts[1]) : "?");
         }
-        sql.append("id");
-        sql.append(") ");
 
-        sql.append("VALUES");
-        sql.append("(");
-        for (int i = 0; i < size; i++) {
-            String[] parts = columns.get(i).split("@");
-            if (parts.length == 2) {
-                sql.append(getFunction(parts[1]));
-            } else {
-                sql.append("?");
-            }
-            sql.append(",");
+        if(!columns.contains("id")) {
+            columnJoiner.add("id");
+            valueJoiner.add(String.valueOf(UuidUtils.nextId()));
         }
-        sql.append(UuidUtils.nextId());
-        sql.append(")");
-        return sql.toString();
+
+        return "INSERT INTO " + getTableName() + columnJoiner + " VALUES" + valueJoiner;
     }
 
 }
