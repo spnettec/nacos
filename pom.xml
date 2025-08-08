@@ -170,7 +170,6 @@
         <pluginManagement>
             <plugins>
                 <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-jar-plugin</artifactId>
                     <version>${maven-jar-plugin.version}</version>
                 </plugin>
@@ -944,6 +943,7 @@
                 <artifactId>mcp</artifactId>
                 <version>${mcp.version}</version>
             </dependency>
+
             <!-- hessian -->
             <dependency>
                 <groupId>com.caucho</groupId>
