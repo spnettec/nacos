@@ -384,6 +384,7 @@
                         <exclude>**/disk_cache_test/**</exclude>
                         <exclude>**/failover_test/**</exclude>
                         <exclude>lefthook.yml</exclude>
+                        <exclude>.vscode/**</exclude>
                     </excludes>
                 </configuration>
                 <executions>
