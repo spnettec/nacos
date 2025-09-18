@@ -170,6 +170,38 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
         });
     }
 
+    @Override
+    public ConfigOperateResult updateConfigInfoMetadata(final String dataId, final String group, final String tenant,
+            String configTags, String description) throws NacosException {
+        ConfigInfoWrapper configInfoWrapper = findConfigInfo(dataId, group, tenant);
+        if (configInfoWrapper == null) {
+            throw new NacosException(NacosException.NOT_FOUND,
+                    "config is not found for dataId=" + dataId + ", group=" + group);
+        }
+        return tjt.execute(status -> {
+            try {
+                Long configId = configInfoWrapper.getId();
+                if (description != null) {
+                    ConfigInfoMapper configInfoMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
+                            TableConstant.CONFIG_INFO);
+                    jt.update(
+                            configInfoMapper.update(Arrays.asList("gmt_modified@NOW()", "c_desc"), Arrays.asList("id")),
+                            description, configId);
+                }
+                if (configTags != null) {
+                    removeTagByIdAtomic(configId);
+                    addConfigTagsRelation(configId, configTags, dataId, group, tenant);
+                }
+                return new ConfigOperateResult(true);
+
+            } catch (CannotGetJdbcConnectionException e) {
+                LogUtil.FATAL_LOG.error("[db-error] " + e, e);
+                throw e;
+            }
+        });
+    }
+
+
     /**
      * insert or update config.
      *
@@ -294,8 +326,8 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
     public void addConfigTagsRelation(long configId, String configTags, String dataId, String group, String tenant) {
         if (StringUtils.isNotBlank(configTags)) {
             String[] tagArr = configTags.split(",");
-            for (String s : tagArr) {
-                addConfigTagRelationAtomic(configId, s, dataId, group, tenant);
+            for (int i = 0; i < tagArr.length; i++) {
+                addConfigTagRelationAtomic(configId, tagArr[i], dataId, group, tenant);
             }
         }
     }
@@ -713,7 +745,7 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
                     TableConstant.CONFIG_INFO);
             return this.jt.queryForObject(configInfoMapper.select(
                     Arrays.asList("id", "data_id", "group_id", "tenant_id", "app_name", "content"),
-                    Collections.singletonList("id")), CONFIG_INFO_ROW_MAPPER, id);
+                    Collections.singletonList("id")), CONFIG_INFO_ROW_MAPPER, new Object[] {id});
         } catch (EmptyResultDataAccessException e) { // Indicates that the data does not exist, returns null.
             return null;
         } catch (CannotGetJdbcConnectionException e) {
@@ -1123,7 +1155,8 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
                 return configAllInfos;
             }
             for (ConfigAllInfo configAllInfo : configAllInfos) {
-                List<String> configTagList = selectTagByConfig(configAllInfo.getDataId(), configAllInfo.getGroup(), configAllInfo.getTenant());
+                List<String> configTagList = selectTagByConfig(configAllInfo.getDataId(), configAllInfo.getGroup(),
+                        configAllInfo.getTenant());
                 if (CollectionUtils.isNotEmpty(configTagList)) {
                     StringBuilder configTags = new StringBuilder();
                     for (String configTag : configTagList) {
