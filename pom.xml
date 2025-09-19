@@ -929,7 +929,7 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>nacos-mcp-regsitry-adaptor</artifactId>
+                <artifactId>nacos-mcp-registry-adaptor</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
