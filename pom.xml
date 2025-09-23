@@ -1024,7 +1024,7 @@
 
             <!-- JRaft -->
             <dependency>
-                <groupId>com.github.heyoulin.sofa-jraft</groupId>
+                <groupId>com.alipay.sofa</groupId>
                 <artifactId>jraft-core</artifactId>
                 <version>${jraft-core.version}</version>
             </dependency>
