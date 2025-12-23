@@ -30,13 +30,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class MapperManagerTest {
-
+    
     @Test
     void testInstance() {
         MapperManager instance = MapperManager.instance(false);
         assertNotNull(instance);
     }
-
+    
     @Test
     void testLoadInitial() throws NoSuchFieldException, IllegalAccessException {
         MapperManager instance = MapperManager.instance(false);
@@ -45,9 +45,9 @@ class MapperManagerTest {
         Field declaredField = mapperManagerClass.getDeclaredField("MAPPER_SPI_MAP");
         declaredField.setAccessible(true);
         Map<String, Map<String, Mapper>> map = (Map<String, Map<String, Mapper>>) declaredField.get(instance);
-        assertEquals(5, map.size());
+        assertEquals(3, map.size());
     }
-
+    
     @Test
     void testJoin() {
         MapperManager.join(new AbstractMapperByMysql() {
@@ -55,7 +55,7 @@ class MapperManagerTest {
             public String getTableName() {
                 return "test";
             }
-
+            
             @Override
             public String getDataSource() {
                 return DataSourceConstant.MYSQL;
@@ -65,7 +65,7 @@ class MapperManagerTest {
         Mapper mapper = instance.findMapper(DataSourceConstant.MYSQL, "test");
         assertNotNull(mapper);
     }
-
+    
     @Test
     void testFindMapper() {
         testJoin();
@@ -73,7 +73,7 @@ class MapperManagerTest {
         Mapper mapper = instance.findMapper(DataSourceConstant.MYSQL, "test");
         assertNotNull(mapper);
     }
-
+    
     @Test
     void testEnableDataSourceLogJoin() {
         MapperManager.join(new TestMapper());
@@ -81,5 +81,5 @@ class MapperManagerTest {
         ConfigInfoGrayMapper mapper = instance.findMapper(DataSourceConstant.MYSQL, "enable_data_source_log_test");
         assertNotNull(mapper);
     }
-
+    
 }

@@ -35,7 +35,7 @@ import java.util.List;
  **/
 
 public class ConfigInfoTagsRelationMapperByDerby extends AbstractMapperByDerby implements ConfigTagsRelationMapper {
-
+    
     @Override
     public MapperResult findConfigInfo4PageFetchRows(MapperContext context) {
         final String appName = (String) context.getWhereParameter(FieldConstant.APP_NAME);
@@ -44,16 +44,18 @@ public class ConfigInfoTagsRelationMapperByDerby extends AbstractMapperByDerby i
         final String content = (String) context.getWhereParameter(FieldConstant.CONTENT);
         final String tenantId = (String) context.getWhereParameter(FieldConstant.TENANT_ID);
         final String[] tagArr = (String[]) context.getWhereParameter(FieldConstant.TAG_ARR);
-
+        
         List<Object> paramList = new ArrayList<>();
         StringBuilder where = new StringBuilder(" WHERE ");
+        // 增强 SELECT 子句，包含 desc 字段，但不包含 configTags（Derby 不支持 GROUP_CONCAT）
         final String baseSql =
-                "SELECT a.id,a.data_id,a.group_id,a.tenant_id,a.app_name,a.content FROM config_info  a LEFT JOIN "
+                "SELECT a.id,a.data_id,a.group_id,a.tenant_id,a.app_name,a.content,a.md5,a.type,a.encrypted_data_key,a.c_desc "
+                        + "FROM config_info  a LEFT JOIN "
                         + "config_tags_relation b ON a.id=b.id";
-
+        
         where.append(" a.tenant_id=? ");
         paramList.add(tenantId);
-
+        
         if (StringUtils.isNotBlank(dataId)) {
             where.append(" AND a.data_id=? ");
             paramList.add(dataId);
@@ -83,7 +85,7 @@ public class ConfigInfoTagsRelationMapperByDerby extends AbstractMapperByDerby i
                 + " ROWS ONLY";
         return new MapperResult(sql, paramList);
     }
-
+    
     @Override
     public MapperResult findConfigInfoLike4PageFetchRows(MapperContext context) {
         final String appName = (String) context.getWhereParameter(FieldConstant.APP_NAME);
@@ -94,12 +96,14 @@ public class ConfigInfoTagsRelationMapperByDerby extends AbstractMapperByDerby i
         final String[] tagArr = (String[]) context.getWhereParameter(FieldConstant.TAG_ARR);
         final String[] types = (String[]) context.getWhereParameter(FieldConstant.TYPE);
 
+        // 增强 SELECT 子句，包含 desc 字段，但不包含 configTags（Derby 不支持 GROUP_CONCAT）
         WhereBuilder where = new WhereBuilder(
-                "SELECT a.ID,a.data_id,a.group_id,a.tenant_id,a.app_name,a.content,a.type FROM config_info a LEFT JOIN "
+                "SELECT a.ID,a.data_id,a.group_id,a.tenant_id,a.app_name,a.content,a.md5,a.encrypted_data_key,a.type,a.c_desc "
+                        + "FROM config_info a LEFT JOIN "
                         + "config_tags_relation b ON a.id=b.id");
-
+        
         where.like("a.tenant_id", tenantId);
-
+        
         if (StringUtils.isNotBlank(dataId)) {
             where.and().like("a.data_id", dataId);
         }
@@ -125,11 +129,11 @@ public class ConfigInfoTagsRelationMapperByDerby extends AbstractMapperByDerby i
         if (!ArrayUtils.isEmpty(types)) {
             where.and().in("a.type", types);
         }
-
+        
         where.offset(context.getStartRow(), context.getPageSize());
         return where.build();
     }
-
+    
     @Override
     public String getDataSource() {
         return DataSourceConstant.DERBY;

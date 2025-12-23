@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2024 Alibaba Group Holding Ltd.
+ * Copyright 1999-2022 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,17 +14,21 @@
  * limitations under the License.
  */
 
-package com.alibaba.nacos.ai.utils;
+package com.alibaba.nacos.plugin.datasource.impl.postgresql;
 
-import com.alibaba.nacos.ai.constant.Constants;
+import com.alibaba.nacos.plugin.datasource.constants.DatabaseTypeConstant;
+import com.alibaba.nacos.plugin.datasource.impl.base.BaseTenantInfoMapper;
 
 /**
- * Mcp protocol related utils.
- * @author xinluo 
- */
-public class McpProtocolUtils {
+ * The postgresql implementation of ConfigInfoAggrMapper.
+ *
+ * @author Long Yu
+ **/
+public class TenantInfoMapperByPostgresql extends BaseTenantInfoMapper {
     
-    public static boolean isProtocolNeedTranslator(String protocol) {
-        return Constants.PROTOCOL_TYPE_HTTP.equals(protocol) || Constants.PROTOCOL_TYPE_HTTPS.equals(protocol);
+    @Override
+    public String getDataSource() {
+        return DatabaseTypeConstant.POSTGRESQL;
     }
+    
 }
