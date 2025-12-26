@@ -58,6 +58,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -374,8 +375,8 @@ class ConfigControllerV3Test {
             map.put("test", "test");
             when(configInfoPersistService.batchInsertOrUpdate(anyList(), anyString(), anyString(), any(),
                     any())).thenReturn(map);
-            
-            MockHttpServletRequestBuilder builder = MockMvcRequestBuilders.multipart(
+
+            MockMultipartHttpServletRequestBuilder builder = MockMvcRequestBuilders.multipart(
                             Constants.CONFIG_ADMIN_V3_PATH + "/import").file(file).param("src_user", "test")
                     .param("namespace", "public").param("policy", "ABORT");
             

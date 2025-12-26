@@ -51,6 +51,10 @@
             <artifactId>nacos-default-plugin-all</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-ldap</artifactId>
+        </dependency>
     </dependencies>
 
 </project>

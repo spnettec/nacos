@@ -42,6 +42,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -136,7 +137,7 @@ class ConfigOpsControllerTest {
         applicationUtilsMockedStatic.when(() -> ApplicationUtils.getBean(DatabaseOperate.class))
                 .thenReturn(Mockito.mock(DatabaseOperate.class));
         MockMultipartFile file = new MockMultipartFile("file", "test.zip", "application/zip", "test".getBytes());
-        MockHttpServletRequestBuilder builder = MockMvcRequestBuilders.multipart(Constants.OPS_CONTROLLER_PATH + "/data/removal")
+        MockMultipartHttpServletRequestBuilder builder = MockMvcRequestBuilders.multipart(Constants.OPS_CONTROLLER_PATH + "/data/removal")
                 .file(file);
         int actualValue = mockMvc.perform(builder).andReturn().getResponse().getStatus();
         assertEquals(200, actualValue);

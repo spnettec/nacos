@@ -58,6 +58,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -431,7 +432,7 @@ class ConfigControllerTest {
             when(namespacePersistService.tenantInfoCountByTenantId("public")).thenReturn(1);
             when(configOperationService.publishConfig(any(), any(), anyString())).thenReturn(true);
 
-            MockHttpServletRequestBuilder builder = MockMvcRequestBuilders.multipart(Constants.CONFIG_CONTROLLER_PATH)
+            MockMultipartHttpServletRequestBuilder builder = MockMvcRequestBuilders.multipart(Constants.CONFIG_CONTROLLER_PATH)
                     .file(file).param("import", "true").param("src_user", "test").param("namespace", "public")
                     .param("policy", "ABORT");
 
@@ -469,7 +470,7 @@ class ConfigControllerTest {
             when(namespacePersistService.tenantInfoCountByTenantId("public")).thenReturn(1);
             when(configOperationService.publishConfig(any(), any(), anyString())).thenReturn(true);
 
-            MockHttpServletRequestBuilder builder = MockMvcRequestBuilders.multipart(Constants.CONFIG_CONTROLLER_PATH)
+            MockMultipartHttpServletRequestBuilder builder = MockMvcRequestBuilders.multipart(Constants.CONFIG_CONTROLLER_PATH)
                     .file(file).param("import", "true").param("src_user", "test").param("namespace", "public")
                     .param("policy", "ABORT");
 

@@ -25,10 +25,10 @@ import org.junit.platform.suite.api.SelectClasses;
 import org.junit.platform.suite.api.Suite;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.net.URL;
 import java.util.concurrent.TimeUnit;
@@ -49,7 +49,7 @@ class LdapAuthCoreITCase {
 
         private String filterPrefix = "uid";
 
-        @MockBean
+        @MockitoBean
         private LdapTemplate ldapTemplate;
 
         @BeforeEach

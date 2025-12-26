@@ -17,7 +17,7 @@
 package com.alibaba.nacos.test.base;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -46,7 +46,7 @@ public class HttpClient4Test {
         
         HttpEntity<?> entity = new HttpEntity<T>(headers);
         
-        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(this.base.toString() + path).queryParams(params);
+        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(this.base.toString() + path).queryParams(params);
         
         return this.restTemplate.exchange(builder.toUriString(), HttpMethod.GET, entity, clazz);
     }
@@ -57,7 +57,7 @@ public class HttpClient4Test {
         
         HttpEntity<?> entity = new HttpEntity<T>(headers);
         
-        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(this.base.toString() + path).queryParams(params);
+        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(this.base.toString() + path).queryParams(params);
         
         return this.restTemplate.exchange(builder.toUriString(), httpMethod, entity, clazz);
     }

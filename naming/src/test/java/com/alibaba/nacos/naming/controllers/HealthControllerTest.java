@@ -58,7 +58,7 @@ class HealthControllerTest {
     @Test
     void testServer() {
         ResponseEntity responseEntity = healthController.server();
-        assertEquals(200, responseEntity.getStatusCodeValue());
+        assertEquals(200, responseEntity.getStatusCode().value());
     }
     
     @Test
@@ -71,7 +71,7 @@ class HealthControllerTest {
         
         try {
             ResponseEntity responseEntity = healthController.update(servletRequest);
-            assertEquals(200, responseEntity.getStatusCodeValue());
+            assertEquals(200, responseEntity.getStatusCode().value());
         } catch (NacosException e) {
             e.printStackTrace();
             fail(e.getMessage());
@@ -81,6 +81,6 @@ class HealthControllerTest {
     @Test
     void testCheckers() {
         ResponseEntity responseEntity = healthController.checkers();
-        assertEquals(200, responseEntity.getStatusCodeValue());
+        assertEquals(200, responseEntity.getStatusCode().value());
     }
 }

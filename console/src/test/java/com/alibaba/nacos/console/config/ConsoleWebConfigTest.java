@@ -39,9 +39,11 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer;
 import org.springframework.security.web.DefaultSecurityFilterChain;
 import org.springframework.security.web.SecurityFilterChain;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.time.ZoneId;
 import java.util.Iterator;
+import java.util.TimeZone;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -139,9 +141,9 @@ class ConsoleWebConfigTest {
     @Test
     void jacksonObjectMapperCustomization() {
         assertNotNull(consoleWebConfig.jacksonObjectMapperCustomization());
-        Jackson2ObjectMapperBuilder builder = Mockito.mock(Jackson2ObjectMapperBuilder.class);
+        JsonMapper.Builder builder = Mockito.mock(JsonMapper.Builder.class);
         consoleWebConfig.jacksonObjectMapperCustomization().customize(builder);
-        verify(builder).timeZone(ZoneId.systemDefault().toString());
+        verify(builder).defaultTimeZone(TimeZone.getDefault());
     }
 
     @Test

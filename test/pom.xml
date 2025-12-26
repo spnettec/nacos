@@ -94,6 +94,11 @@
             <artifactId>spring-boot-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-resttestclient</artifactId>
+            <scope>test</scope>
+        </dependency>
 
         <!-- issue#12028 upgrade org.apache.httpcomponents:httpasyncclient to org.apache.httpcomponents.client5:httpclient5 -->
         <dependency>

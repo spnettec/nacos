@@ -67,7 +67,7 @@ class HealthControllerTest {
     @Test
     void testLiveness() throws Exception {
         ResponseEntity<String> response = healthController.liveness();
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(200, response.getStatusCode().value());
     }
 
     @Test
@@ -76,7 +76,7 @@ class HealthControllerTest {
         Mockito.when(configInfoPersistService.configInfoCount(any(String.class))).thenReturn(0);
         Mockito.when(serverStatusManager.getServerStatus()).thenReturn(ServerStatus.UP);
         ResponseEntity<String> response = healthController.readiness(null);
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(200, response.getStatusCode().value());
         assertEquals("OK", response.getBody());
     }
 
@@ -87,7 +87,7 @@ class HealthControllerTest {
                 .thenThrow(new RuntimeException("HealthControllerTest.testReadiness"));
         Mockito.when(serverStatusManager.getServerStatus()).thenThrow(new RuntimeException("HealthControllerTest.testReadiness"));
         ResponseEntity<String> response = healthController.readiness(null);
-        assertEquals(500, response.getStatusCodeValue());
+        assertEquals(500, response.getStatusCode().value());
         assertEquals("naming and config not in readiness", response.getBody());
     }
 
@@ -98,7 +98,7 @@ class HealthControllerTest {
                 .thenThrow(new RuntimeException("HealthControllerTest.testReadiness"));
         Mockito.when(serverStatusManager.getServerStatus()).thenReturn(ServerStatus.UP);
         ResponseEntity<String> response = healthController.readiness(null);
-        assertEquals(500, response.getStatusCodeValue());
+        assertEquals(500, response.getStatusCode().value());
         assertEquals("config not in readiness", response.getBody());
     }
 
@@ -108,7 +108,7 @@ class HealthControllerTest {
         Mockito.when(configInfoPersistService.configInfoCount(any(String.class))).thenReturn(0);
         Mockito.when(serverStatusManager.getServerStatus()).thenThrow(new RuntimeException("HealthControllerTest.testReadiness"));
         ResponseEntity<String> response = healthController.readiness(null);
-        assertEquals(500, response.getStatusCodeValue());
+        assertEquals(500, response.getStatusCode().value());
         assertEquals("naming not in readiness", response.getBody());
     }
 
