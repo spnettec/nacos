@@ -33,8 +33,8 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import io.grpc.ManagedChannel;
 import io.grpc.stub.StreamObserver;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
+import javax.annotation.Nullable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;

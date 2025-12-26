@@ -138,9 +138,9 @@
         <mysql-connector-java.version>8.2.0</mysql-connector-java.version>
         <derby.version>10.14.2.0</derby.version>
         <jjwt.version>0.12.6</jjwt.version>
-        <grpc-java.version>1.75.0</grpc-java.version>
-        <proto-google-common-protos.version>2.59.2</proto-google-common-protos.version>
-        <protobuf-java.version>4.31.1</protobuf-java.version>
+        <grpc-java.version>1.78.0</grpc-java.version>
+        <proto-google-common-protos.version>2.63.2</proto-google-common-protos.version>
+        <protobuf-java.version>4.33.2</protobuf-java.version>
         <protoc-gen-grpc-java.version>${grpc-java.version}</protoc-gen-grpc-java.version>
         <hessian.version>4.0.66</hessian.version>
         <mockito.version>4.11.0</mockito.version>
