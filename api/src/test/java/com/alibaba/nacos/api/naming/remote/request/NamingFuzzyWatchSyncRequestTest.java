@@ -18,16 +18,18 @@ package com.alibaba.nacos.api.naming.remote.request;
 
 import com.alibaba.nacos.api.naming.remote.request.NamingFuzzyWatchSyncRequest.Context;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.HashSet;
 import java.util.Set;
 
 import static com.alibaba.nacos.api.common.Constants.Naming.NAMING_MODULE;
+import static java.lang.Compiler.disable;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -45,13 +47,15 @@ class NamingFuzzyWatchSyncRequestTest {
     
     @BeforeAll
     static void setUp() throws Exception {
-        mapper = new ObjectMapper();
-        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        mapper = JsonMapper.builder()
+                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                .changeDefaultPropertyInclusion(incl -> incl.withValueInclusion(JsonInclude.Include.NON_NULL))
+                .changeDefaultPropertyInclusion(incl -> incl.withContentInclusion(JsonInclude.Include.NON_NULL))
+                .build();
     }
     
     @Test
-    void testSerialize() throws JsonProcessingException {
+    void testSerialize() throws JacksonException {
         Set<Context> contexts = new HashSet<>();
         Context context = Context.build(SERVICE_KEY, CHANGED_TYPE);
         contexts.add(context);
@@ -72,7 +76,7 @@ class NamingFuzzyWatchSyncRequestTest {
     }
     
     @Test
-    void testDeserialize() throws JsonProcessingException {
+    void testDeserialize() throws JacksonException {
         String json = "{\"headers\":{},\"groupKeyPattern\":\"groupKeyPattern\",\"contexts\":[{\"serviceKey\":\"serviceKey\","
                 + "\"changedType\":\"changedType\"}],\"totalBatch\":2,\"currentBatch\":1,\"syncType\":\"syncType\",\"module\":\"naming\"}";
         NamingFuzzyWatchSyncRequest actual = mapper.readValue(json, NamingFuzzyWatchSyncRequest.class);

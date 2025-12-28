@@ -17,8 +17,8 @@
 package com.alibaba.nacos.api.ai.model.mcp.registry;
 
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
 
 import java.util.Arrays;
 
@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class TransportTest extends BasicRequestTest {
     
     @Test
-    void testStdioTransportSerialize() throws JsonProcessingException {
+    void testStdioTransportSerialize() throws JacksonException {
         StdioTransport transport = new StdioTransport();
         String json = mapper.writeValueAsString(transport);
         
@@ -38,7 +38,7 @@ class TransportTest extends BasicRequestTest {
     }
     
     @Test
-    void testStdioTransportDeserialize() throws JsonProcessingException {
+    void testStdioTransportDeserialize() throws JacksonException {
         String json = "{\"type\":\"stdio\"}";
         StdioTransport transport = mapper.readValue(json, StdioTransport.class);
         
@@ -47,7 +47,7 @@ class TransportTest extends BasicRequestTest {
     }
     
     @Test
-    void testStreamableHttpTransportSerialize() throws JsonProcessingException {
+    void testStreamableHttpTransportSerialize() throws JacksonException {
         StreamableHttpTransport transport = new StreamableHttpTransport();
         transport.setUrl("http://localhost:8080/api");
         
@@ -70,7 +70,7 @@ class TransportTest extends BasicRequestTest {
     }
     
     @Test
-    void testStreamableHttpTransportDeserialize() throws JsonProcessingException {
+    void testStreamableHttpTransportDeserialize() throws JacksonException {
         String json = "{\"type\":\"streamable-http\",\"url\":\"http://localhost:8080/api\","
                 + "\"headers\":[{\"name\":\"Authorization\",\"value\":\"Bearer token123\"}]}";
         StreamableHttpTransport transport = mapper.readValue(json, StreamableHttpTransport.class);
@@ -84,7 +84,7 @@ class TransportTest extends BasicRequestTest {
     }
     
     @Test
-    void testSseTransportSerialize() throws JsonProcessingException {
+    void testSseTransportSerialize() throws JacksonException {
         SseTransport transport = new SseTransport();
         transport.setUrl("https://example.com/sse");
         
@@ -100,7 +100,7 @@ class TransportTest extends BasicRequestTest {
     }
     
     @Test
-    void testSseTransportDeserialize() throws JsonProcessingException {
+    void testSseTransportDeserialize() throws JacksonException {
         String json = "{\"type\":\"sse\",\"url\":\"https://example.com/sse\"}";
         SseTransport transport = mapper.readValue(json, SseTransport.class);
         
@@ -110,7 +110,7 @@ class TransportTest extends BasicRequestTest {
     }
     
     @Test
-    void testTransportTypeDetection() throws JsonProcessingException {
+    void testTransportTypeDetection() throws JacksonException {
         // Test polymorphic deserialization with @JsonTypeInfo
         String stdioJson = "{\"type\":\"stdio\"}";
         String httpJson = "{\"type\":\"streamable-http\",\"url\":\"http://localhost:8080\"}";

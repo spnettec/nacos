@@ -17,8 +17,8 @@
 package com.alibaba.nacos.api.ai.model.mcp;
 
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class McpServerImportValidationResultTest extends BasicRequestTest {
     
     @Test
-    void testSerializeValidResult() throws JsonProcessingException {
+    void testSerializeValidResult() throws JacksonException {
         McpServerImportValidationResult result = new McpServerImportValidationResult();
         result.setValid(true);
         result.setTotalCount(3);
@@ -75,7 +75,7 @@ class McpServerImportValidationResultTest extends BasicRequestTest {
     }
     
     @Test
-    void testSerializeInvalidResult() throws JsonProcessingException {
+    void testSerializeInvalidResult() throws JacksonException {
         McpServerImportValidationResult result = new McpServerImportValidationResult();
         result.setValid(false);
         result.setTotalCount(2);
@@ -116,7 +116,7 @@ class McpServerImportValidationResultTest extends BasicRequestTest {
     }
     
     @Test
-    void testSerializeDuplicateResult() throws JsonProcessingException {
+    void testSerializeDuplicateResult() throws JacksonException {
         McpServerImportValidationResult result = new McpServerImportValidationResult();
         result.setValid(true);
         result.setTotalCount(2);
@@ -146,7 +146,7 @@ class McpServerImportValidationResultTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserializeValidResult() throws JsonProcessingException {
+    void testDeserializeValidResult() throws JacksonException {
         String json = "{\"valid\":true,\"totalCount\":3,\"validCount\":3,\"invalidCount\":0,\"duplicateCount\":0,"
                 + "\"servers\":[{\"serverName\":\"server1\",\"serverId\":\"id1\",\"status\":\"valid\",\"selected\":true,\"exists\":false},"
                 + "{\"serverName\":\"server2\",\"serverId\":\"id2\",\"status\":\"valid\",\"selected\":false,\"exists\":false}],"
@@ -184,7 +184,7 @@ class McpServerImportValidationResultTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserializeInvalidResult() throws JsonProcessingException {
+    void testDeserializeInvalidResult() throws JacksonException {
         String json = "{\"valid\":false,\"totalCount\":2,\"validCount\":1,\"invalidCount\":1,\"duplicateCount\":0,"
                 + "\"servers\":[{\"serverName\":\"valid-server\",\"status\":\"valid\",\"exists\":false},"
                 + "{\"serverName\":\"invalid-server\",\"status\":\"invalid\",\"errors\":[\"Missing protocol\",\"Invalid port\"]}],"
@@ -224,7 +224,7 @@ class McpServerImportValidationResultTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserializeDuplicateResult() throws JsonProcessingException {
+    void testDeserializeDuplicateResult() throws JacksonException {
         String json = "{\"valid\":true,\"totalCount\":2,\"validCount\":1,\"invalidCount\":0,\"duplicateCount\":1,"
                 + "\"servers\":[{\"serverName\":\"existing-server\",\"serverId\":\"existing-id\",\"status\":\"duplicate\",\"exists\":true}],"
                 + "\"errors\":[],\"nextCursor\":\"next_cursor_789\",\"hasMore\":true}";
@@ -253,7 +253,7 @@ class McpServerImportValidationResultTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserializeMinimalResult() throws JsonProcessingException {
+    void testDeserializeMinimalResult() throws JacksonException {
         String json = "{\"valid\":false,\"totalCount\":0,\"validCount\":0,\"invalidCount\":0,\"duplicateCount\":0}";
         
         McpServerImportValidationResult result = mapper.readValue(json, McpServerImportValidationResult.class);

@@ -17,9 +17,9 @@
 package com.alibaba.nacos.api.config.remote.request;
 
 import com.alibaba.nacos.api.common.Constants;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -46,7 +46,7 @@ class ConfigPublishRequestTest extends BasedConfigRequestTest {
     
     @Override
     @Test
-    public void testSerialize() throws JsonProcessingException {
+    public void testSerialize() throws JacksonException {
         String json = mapper.writeValueAsString(configPublishRequest);
         assertTrue(json.contains("\"module\":\"" + Constants.Config.CONFIG_MODULE));
         assertTrue(json.contains("\"dataId\":\"" + DATA_ID));
@@ -59,7 +59,7 @@ class ConfigPublishRequestTest extends BasedConfigRequestTest {
     
     @Override
     @Test
-    public void testDeserialize() throws JsonProcessingException {
+    public void testDeserialize() throws JacksonException {
         String json = "{\"headers\":{\"header1\":\"test_header1\"},\"dataId\":\"test_data\",\"group\":\"group\","
                 + "\"tenant\":\"test_tenant\",\"content\":\"content\",\"casMd5\":\"test_MD5\","
                 + "\"additionMap\":{\"appName\":\"appName\",\"tag\":\"tag\"},\"module\":\"config\"}";

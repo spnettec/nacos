@@ -18,8 +18,8 @@ package com.alibaba.nacos.api.ai.model.mcp;
 
 import com.alibaba.nacos.api.ai.model.mcp.registry.ServerVersionDetail;
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
 
 import java.util.Collections;
 import java.util.UUID;
@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class McpServerVersionInfoTest extends BasicRequestTest {
     
     @Test
-    void testSerialize() throws JsonProcessingException {
+    void testSerialize() throws JacksonException {
         McpServerVersionInfo mcpServerVersionInfo = new McpServerVersionInfo();
         mcpServerVersionInfo.setId(UUID.randomUUID().toString());
         mcpServerVersionInfo.setName("testVersionInfo");
@@ -55,7 +55,7 @@ class McpServerVersionInfoTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserialize() throws JsonProcessingException {
+    void testDeserialize() throws JacksonException {
         String json = "{\"id\":\"b646506e-901b-41a1-8790-a4378d11055e\",\"name\":\"testVersionInfo\",\"versionDetail\":"
                 + "{\"version\":\"1.0.0\",\"release_date\":\"2023-07-01T00:00:00Z\",\"is_latest\":true},\"enabled\":true,"
                 + "\"latestPublishedVersion\":\"1.0.0\",\"versionDetails\":[{\"version\":\"1.0.0\",\"release_date\":"

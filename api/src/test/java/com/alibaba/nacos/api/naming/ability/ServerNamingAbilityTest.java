@@ -17,11 +17,12 @@
 package com.alibaba.nacos.api.naming.ability;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -33,20 +34,22 @@ class ServerNamingAbilityTest {
     
     @BeforeAll
     static void setUpClass() throws Exception {
-        jacksonMapper = new ObjectMapper();
-        jacksonMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-        jacksonMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        jacksonMapper = JsonMapper.builder()
+                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                .changeDefaultPropertyInclusion(incl -> incl.withValueInclusion(JsonInclude.Include.NON_NULL))
+                .changeDefaultPropertyInclusion(incl -> incl.withContentInclusion(JsonInclude.Include.NON_NULL))
+                .build();
     }
     
     @Test
-    void testDeserializeServerNamingAbilityForNonExistItem() throws JsonProcessingException {
+    void testDeserializeServerNamingAbilityForNonExistItem() throws JacksonException {
         String nonExistItemJson = "{\"exampleAbility\":false}";
         ServerNamingAbility actual = jacksonMapper.readValue(nonExistItemJson, ServerNamingAbility.class);
         assertFalse(actual.isSupportJraft());
     }
     
     @Test
-    void testEquals() throws JsonProcessingException {
+    void testEquals() throws JacksonException {
         ServerNamingAbility expected = new ServerNamingAbility();
         expected.setSupportJraft(true);
         String serializeJson = jacksonMapper.writeValueAsString(expected);
@@ -71,7 +74,7 @@ class ServerNamingAbilityTest {
     }
     
     @Test
-    void testHashCode() throws JsonProcessingException {
+    void testHashCode() throws JacksonException {
         ServerNamingAbility expected = new ServerNamingAbility();
         expected.setSupportJraft(true);
         String serializeJson = jacksonMapper.writeValueAsString(expected);

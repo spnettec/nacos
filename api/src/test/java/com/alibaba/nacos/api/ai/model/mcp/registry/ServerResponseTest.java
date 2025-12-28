@@ -17,8 +17,8 @@
 package com.alibaba.nacos.api.ai.model.mcp.registry;
 
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class ServerResponseTest extends BasicRequestTest {
     
     @Test
-    void testSerializeServerResponseBasic() throws JsonProcessingException {
+    void testSerializeServerResponseBasic() throws JacksonException {
         ServerResponse response = new ServerResponse();
         
         McpRegistryServerDetail server = new McpRegistryServerDetail();
@@ -61,7 +61,7 @@ class ServerResponseTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserializeServerResponseBasic() throws JsonProcessingException {
+    void testDeserializeServerResponseBasic() throws JacksonException {
         String json = "{\"server\":{\"name\":\"TestServer\",\"version\":\"1.0.0\"},"
                 + "\"_meta\":{\"io.modelcontextprotocol.registry/official\":"
                 + "{\"publishedAt\":\"2025-01-01T00:00:00Z\",\"isLatest\":true}}}";
@@ -79,7 +79,7 @@ class ServerResponseTest extends BasicRequestTest {
     }
     
     @Test
-    void testServerResponseWithMetadataExtensions() throws JsonProcessingException {
+    void testServerResponseWithMetadataExtensions() throws JacksonException {
         Map<String, Object> extensionData = new HashMap<>();
         extensionData.put("customField", "customValue");
         extensionData.put("metadata", new HashMap<String, Object>() {
@@ -102,7 +102,7 @@ class ServerResponseTest extends BasicRequestTest {
     }
     
     @Test
-    void testServerResponseMinimal() throws JsonProcessingException {
+    void testServerResponseMinimal() throws JacksonException {
         ServerResponse response = new ServerResponse();
         McpRegistryServerDetail server = new McpRegistryServerDetail();
         server.setName("MinimalServer");
@@ -115,7 +115,7 @@ class ServerResponseTest extends BasicRequestTest {
     }
     
     @Test
-    void testServerResponseMetaNullSafe() throws JsonProcessingException {
+    void testServerResponseMetaNullSafe() throws JacksonException {
         ServerResponse response = new ServerResponse();
         McpRegistryServerDetail server = new McpRegistryServerDetail();
         server.setName("TestServer");
@@ -128,7 +128,7 @@ class ServerResponseTest extends BasicRequestTest {
     }
     
     @Test
-    void testServerResponseMetaOfficialNested() throws JsonProcessingException {
+    void testServerResponseMetaOfficialNested() throws JacksonException {
         String json = "{"
                 + "\"server\":{\"name\":\"NestedServer\"},"
                 + "\"_meta\":{"

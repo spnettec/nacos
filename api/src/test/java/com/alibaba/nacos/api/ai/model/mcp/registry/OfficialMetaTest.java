@@ -17,8 +17,8 @@
 package com.alibaba.nacos.api.ai.model.mcp.registry;
 
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class OfficialMetaTest extends BasicRequestTest {
     
     @Test
-    void testSerialize() throws JsonProcessingException {
+    void testSerialize() throws JacksonException {
         OfficialMeta officialMeta = new OfficialMeta();
         officialMeta.setPublishedAt("2022-01-01T00:00:00Z");
         officialMeta.setUpdatedAt("2022-01-02T00:00:00Z");
@@ -41,7 +41,7 @@ class OfficialMetaTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserialize() throws JsonProcessingException {
+    void testDeserialize() throws JacksonException {
         String json = "{\"serverId\":\"server1\",\"versionId\":\"version1\","
                 + "\"publishedAt\":\"2022-01-01T00:00:00Z\",\"updatedAt\":\"2022-01-02T00:00:00Z\","
                 + "\"isLatest\":true}";

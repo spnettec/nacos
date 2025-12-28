@@ -21,7 +21,7 @@ import com.alibaba.nacos.api.naming.pojo.maintainer.ClientPublisherInfo;
 import com.alibaba.nacos.api.naming.pojo.maintainer.ClientServiceInfo;
 import com.alibaba.nacos.api.naming.pojo.maintainer.ClientSubscriberInfo;
 import com.alibaba.nacos.api.naming.pojo.maintainer.ClientSummaryInfo;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.ObjectNode;
 
 import java.util.List;
 

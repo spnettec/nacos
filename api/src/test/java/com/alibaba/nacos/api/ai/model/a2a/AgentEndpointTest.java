@@ -17,8 +17,8 @@
 package com.alibaba.nacos.api.ai.model.a2a;
 
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 class AgentEndpointTest extends BasicRequestTest {
     
     @Test
-    void testSerialize() throws JsonProcessingException {
+    void testSerialize() throws JacksonException {
         AgentEndpoint agentEndpoint = new AgentEndpoint();
         agentEndpoint.setAddress("127.0.0.1");
         agentEndpoint.setPort(8080);
@@ -53,7 +53,7 @@ class AgentEndpointTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserialize() throws JsonProcessingException {
+    void testDeserialize() throws JacksonException {
         String json = "{\"address\":\"127.0.0.1\",\"port\":8080,\"transport\":\"JSONRPC\","
                 + "\"path\":\"/test\",\"supportTls\":true,\"version\":\"1.0.0\",\"protocol\":\"HTTP\",\"query\":\"param1=value1&param2=value2\"}";
         

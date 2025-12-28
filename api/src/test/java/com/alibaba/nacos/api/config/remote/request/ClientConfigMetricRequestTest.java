@@ -17,8 +17,8 @@
 package com.alibaba.nacos.api.config.remote.request;
 
 import com.alibaba.nacos.api.common.Constants;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
 
 import java.util.Objects;
 
@@ -32,7 +32,7 @@ class ClientConfigMetricRequestTest extends BasedConfigRequestTest {
     
     @Override
     @Test
-    public void testSerialize() throws JsonProcessingException {
+    public void testSerialize() throws JacksonException {
         ClientConfigMetricRequest clientMetrics = new ClientConfigMetricRequest();
         clientMetrics.putAllHeader(HEADERS);
         clientMetrics.getMetricsKeys()
@@ -50,7 +50,7 @@ class ClientConfigMetricRequestTest extends BasedConfigRequestTest {
     
     @Override
     @Test
-    public void testDeserialize() throws JsonProcessingException {
+    public void testDeserialize() throws JacksonException {
         String json =
                 "{\"headers\":{\"header1\":\"test_header1\"}," + "\"metricsKeys\":[{\"type\":\"cacheData\",\"key\":"
                         + "\"test_data+group+test_tenant\"},{\"type\":\"snapshotData\","

@@ -19,11 +19,12 @@ package com.alibaba.nacos.api.naming.pojo;
 import com.alibaba.nacos.api.naming.pojo.healthcheck.impl.Http;
 import com.alibaba.nacos.api.naming.pojo.healthcheck.impl.Tcp;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.Collections;
 
@@ -38,9 +39,11 @@ class ClusterTest {
     
     @BeforeAll
     static void setUp() throws Exception {
-        mapper = new ObjectMapper();
-        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        mapper = JsonMapper.builder()
+                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                .changeDefaultPropertyInclusion(incl -> incl.withValueInclusion(JsonInclude.Include.NON_NULL))
+                .changeDefaultPropertyInclusion(incl -> incl.withContentInclusion(JsonInclude.Include.NON_NULL))
+                .build();
     }
     
     @Test
@@ -72,7 +75,7 @@ class ClusterTest {
     }
     
     @Test
-    void testJsonSerialize() throws JsonProcessingException {
+    void testJsonSerialize() throws JacksonException {
         Cluster actual = new Cluster("cluster");
         actual.setServiceName("group@@service");
         actual.setHealthChecker(new Http());
@@ -91,7 +94,7 @@ class ClusterTest {
     }
     
     @Test
-    void testJsonDeserialize() throws JsonProcessingException {
+    void testJsonDeserialize() throws JacksonException {
         String json = "{\"serviceName\":\"group@@service\",\"name\":\"cluster\","
                 + "\"healthChecker\":{\"type\":\"HTTP\",\"path\":\"\",\"headers\":\"\",\"expectedResponseCode\":200},"
                 + "\"defaultPort\":81,\"defaultCheckPort\":82,\"useIpPort4Check\":false,\"metadata\":{\"a\":\"a\"}}";

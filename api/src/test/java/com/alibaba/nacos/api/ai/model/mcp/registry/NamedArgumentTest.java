@@ -17,8 +17,8 @@
 package com.alibaba.nacos.api.ai.model.mcp.registry;
 
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class NamedArgumentTest extends BasicRequestTest {
     
     @Test
-    void testSerialize() throws JsonProcessingException {
+    void testSerialize() throws JacksonException {
         NamedArgument namedArgument = new NamedArgument();
         namedArgument.setType("named");
         namedArgument.setName("testArg");
@@ -47,7 +47,7 @@ class NamedArgumentTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserialize() throws JsonProcessingException {
+    void testDeserialize() throws JacksonException {
         String json = "{\"type\":\"named\",\"name\":\"testArg\",\"value\":\"testValue\","
                 + "\"description\":\"test description\",\"isRequired\":true,\"isRepeated\":false}";
         

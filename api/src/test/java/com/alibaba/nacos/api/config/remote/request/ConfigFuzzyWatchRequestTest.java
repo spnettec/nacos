@@ -17,8 +17,8 @@
 package com.alibaba.nacos.api.config.remote.request;
 
 import com.alibaba.nacos.api.common.Constants;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -34,7 +34,7 @@ class ConfigFuzzyWatchRequestTest extends BasedConfigRequestTest {
     
     @Override
     @Test
-    public void testSerialize() throws JsonProcessingException {
+    public void testSerialize() throws JacksonException {
         ConfigFuzzyWatchRequest configFuzzyWatchRequest = new ConfigFuzzyWatchRequest();
         configFuzzyWatchRequest.putAllHeader(HEADERS);
         configFuzzyWatchRequest.setGroupKeyPattern(GROUP_KEY_PATTERN);
@@ -60,7 +60,7 @@ class ConfigFuzzyWatchRequestTest extends BasedConfigRequestTest {
     
     @Override
     @Test
-    public void testDeserialize() throws JsonProcessingException {
+    public void testDeserialize() throws JacksonException {
         String json = "{\"headers\":{\"header1\":\"test_header1\"},\"groupKeyPattern\":\"test.*\","
                 + "\"watchType\":\"FUZZY\",\"initializing\":true,"
                 + "\"receivedGroupKeys\":[\"test-group-key-1\",\"test-group-key-2\"],\"module\":\"config\"}";

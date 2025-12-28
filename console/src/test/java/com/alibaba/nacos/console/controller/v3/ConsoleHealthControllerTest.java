@@ -19,8 +19,8 @@ package com.alibaba.nacos.console.controller.v3;
 
 import com.alibaba.nacos.api.model.v2.Result;
 import com.alibaba.nacos.console.proxy.HealthProxy;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

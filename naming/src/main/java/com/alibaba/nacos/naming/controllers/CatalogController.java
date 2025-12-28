@@ -34,12 +34,12 @@ import com.alibaba.nacos.naming.paramcheck.NamingDefaultHttpParamExtractor;
 import com.alibaba.nacos.naming.utils.ServiceUtil;
 import com.alibaba.nacos.plugin.auth.constant.ActionTypes;
 import com.alibaba.nacos.plugin.auth.constant.ApiType;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import tools.jackson.databind.node.ObjectNode;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -92,8 +92,8 @@ public class CatalogController {
     @RequestMapping(value = "/instances")
     @Compatibility(apiType = ApiType.CONSOLE_API, alternatives = "GET ${contextPath:nacos}/v3/console/ns/instance/list")
     public ObjectNode instanceList(@RequestParam(defaultValue = Constants.DEFAULT_NAMESPACE_ID) String namespaceId,
-            @RequestParam String serviceName, @RequestParam String clusterName, @RequestParam(name = "pageNo") int page,
-            @RequestParam int pageSize) throws NacosException {
+                                   @RequestParam String serviceName, @RequestParam String clusterName, @RequestParam(name = "pageNo") int page,
+                                   @RequestParam int pageSize) throws NacosException {
         String serviceNameWithoutGroup = NamingUtils.getServiceName(serviceName);
         String groupName = NamingUtils.getGroupName(serviceName);
         List<? extends Instance> instances = judgeCatalogService().listInstances(namespaceId, groupName,

@@ -16,12 +16,14 @@
 
 package com.alibaba.nacos.api.naming.pojo.healthcheck;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.jsontype.NamedType;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.jsontype.NamedType;
 
 import java.io.IOException;
 
@@ -30,16 +32,18 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AbstractHealthCheckerTest {
     
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private ObjectMapper objectMapper;
     
     @BeforeEach
     void setUp() {
-        objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-        objectMapper.registerSubtypes(new NamedType(TestChecker.class, TestChecker.TYPE));
+        objectMapper = JsonMapper.builder()
+                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                .registerSubtypes(new NamedType(TestChecker.class, TestChecker.TYPE))
+                .build();
     }
     
     @Test
-    void testSerialize() throws JsonProcessingException {
+    void testSerialize() throws JacksonException {
         TestChecker testChecker = new TestChecker();
         testChecker.setTestValue("");
         String actual = objectMapper.writeValueAsString(testChecker);

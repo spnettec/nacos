@@ -17,8 +17,8 @@
 package com.alibaba.nacos.api.ai.model.mcp.registry;
 
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class PackageTest extends BasicRequestTest {
     
     @Test
-    void testSerialize() throws JsonProcessingException {
+    void testSerialize() throws JacksonException {
         Package pkg = new Package();
         pkg.setRegistryType("maven");
         pkg.setRegistryBaseUrl("https://repo.maven.apache.org/maven2/");
@@ -69,7 +69,7 @@ class PackageTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserialize() throws JsonProcessingException {
+    void testDeserialize() throws JacksonException {
         String json = "{"
                 + "\"registryType\":\"maven\","
                 + "\"registryBaseUrl\":\"https://repo.maven.apache.org/maven2/\","

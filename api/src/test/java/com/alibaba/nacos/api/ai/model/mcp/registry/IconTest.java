@@ -17,8 +17,8 @@
 package com.alibaba.nacos.api.ai.model.mcp.registry;
 
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
 
 import java.util.Arrays;
 
@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class IconTest extends BasicRequestTest {
     
     @Test
-    void testSerializePngIcon() throws JsonProcessingException {
+    void testSerializePngIcon() throws JacksonException {
         Icon icon = new Icon();
         icon.setSrc("https://example.com/icon.png");
         icon.setMimeType(Icon.MimeType.IMAGE_PNG);
@@ -45,7 +45,7 @@ class IconTest extends BasicRequestTest {
     }
     
     @Test
-    void testSerializeSvgIcon() throws JsonProcessingException {
+    void testSerializeSvgIcon() throws JacksonException {
         Icon icon = new Icon();
         icon.setSrc("https://example.com/icon.svg");
         icon.setMimeType(Icon.MimeType.IMAGE_SVG_XML);
@@ -57,7 +57,7 @@ class IconTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserializeIcon() throws JsonProcessingException {
+    void testDeserializeIcon() throws JacksonException {
         String json = "{\"src\":\"https://example.com/icon.png\",\"mimeType\":\"image/png\","
                 + "\"sizes\":[\"16x16\",\"32x32\"],\"theme\":\"light\"}";
         Icon icon = mapper.readValue(json, Icon.class);
@@ -106,7 +106,7 @@ class IconTest extends BasicRequestTest {
     }
     
     @Test
-    void testIconMinimalRequired() throws JsonProcessingException {
+    void testIconMinimalRequired() throws JacksonException {
         Icon icon = new Icon();
         icon.setSrc("https://example.com/required.png");
         

@@ -17,9 +17,9 @@
 package com.alibaba.nacos.api.config.remote.response;
 
 import com.alibaba.nacos.api.remote.response.ResponseCode;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -35,7 +35,7 @@ class ConfigPublishResponseTest extends BasedConfigResponseTest {
     
     @Override
     @Test
-    public void testSerializeSuccessResponse() throws JsonProcessingException {
+    public void testSerializeSuccessResponse() throws JacksonException {
         String json = mapper.writeValueAsString(configPublishResponse);
         assertTrue(json.contains("\"success\":" + Boolean.TRUE));
         assertTrue(json.contains("\"requestId\":\"" + requestId));
@@ -45,7 +45,7 @@ class ConfigPublishResponseTest extends BasedConfigResponseTest {
     
     @Override
     @Test
-    public void testSerializeFailResponse() throws JsonProcessingException {
+    public void testSerializeFailResponse() throws JacksonException {
         ConfigPublishResponse configPublishResponse = ConfigPublishResponse.buildFailResponse(500, "Fail");
         String json = mapper.writeValueAsString(configPublishResponse);
         assertTrue(json.contains("\"resultCode\":" + ResponseCode.FAIL.getCode()));

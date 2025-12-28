@@ -21,9 +21,9 @@ import com.alibaba.nacos.api.ai.model.mcp.registry.Package;
 import com.alibaba.nacos.api.ai.model.mcp.registry.Repository;
 import com.alibaba.nacos.api.ai.model.mcp.registry.ServerVersionDetail;
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.SerializationFeature;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -37,8 +37,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class McpServerBasicInfoTest extends BasicRequestTest {
     
     @Test
-    void testSerializeForStdio() throws JsonProcessingException {
-        mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
+    void testSerializeForStdio() throws JacksonException {
+        mapper = mapper.rebuild().disable(SerializationFeature.FAIL_ON_EMPTY_BEANS).build();
         
         McpServerBasicInfo serverBasicInfo = new McpServerBasicInfo();
         String id = UUID.randomUUID().toString();
@@ -80,7 +80,7 @@ class McpServerBasicInfoTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserializeForStdio() throws JsonProcessingException {
+    void testDeserializeForStdio() throws JacksonException {
         String json = "{\"id\":\"3a2c535c-d0a8-44a4-8913-0cef98904ebd\",\"name\":\"stdioServer\","
                 + "\"protocol\":\"stdio\",\"frontProtocol\":\"stdio\",\"description\":\"test stdio server\","
                 + "\"repository\":{},\"versionDetail\":{\"version\":\"1.0.0\",\"is_latest\":true},"
@@ -111,8 +111,7 @@ class McpServerBasicInfoTest extends BasicRequestTest {
     }
     
     @Test
-    void testSerializeForSse() throws JsonProcessingException {
-        mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
+    void testSerializeForSse() throws JacksonException {
         
         McpServerBasicInfo serverBasicInfo = new McpServerBasicInfo();
         String id = UUID.randomUUID().toString();
@@ -156,7 +155,7 @@ class McpServerBasicInfoTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserializeForSse() throws JsonProcessingException {
+    void testDeserializeForSse() throws JacksonException {
         String json = "{\"id\":\"c769b89b-edb5-4912-8e39-71bf5dc31eab\",\"name\":\"sseServer\","
                 + "\"protocol\":\"mcp-sse\",\"frontProtocol\":\"mcp-sse\",\"description\":\"test sse server\","
                 + "\"repository\":{},\"versionDetail\":{\"version\":\"1.0.0\",\"is_latest\":false},"

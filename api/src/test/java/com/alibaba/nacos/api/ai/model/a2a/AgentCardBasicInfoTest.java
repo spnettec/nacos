@@ -17,8 +17,8 @@
 package com.alibaba.nacos.api.ai.model.a2a;
 
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
 
 import java.util.Arrays;
 
@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class AgentCardBasicInfoTest extends BasicRequestTest {
     
     @Test
-    void testSerialize() throws JsonProcessingException {
+    void testSerialize() throws JacksonException {
         AgentCardBasicInfo agentCardBasicInfo = new AgentCardBasicInfo();
         agentCardBasicInfo.setProtocolVersion("1.0");
         agentCardBasicInfo.setName("test agent");
@@ -61,7 +61,7 @@ class AgentCardBasicInfoTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserialize() throws JsonProcessingException {
+    void testDeserialize() throws JacksonException {
         String json = "{\"protocolVersion\":\"1.0\",\"name\":\"test agent\",\"description\":\"test description\","
                 + "\"version\":\"1.0.0\",\"iconUrl\":\"http://test.com/icon.png\","
                 + "\"capabilities\":{\"streaming\":true},"

@@ -17,8 +17,8 @@
 package com.alibaba.nacos.api.ai.model.mcp;
 
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class McpServerImportResultTest extends BasicRequestTest {
     
     @Test
-    void testSerializeSuccessResult() throws JsonProcessingException {
+    void testSerializeSuccessResult() throws JacksonException {
         McpServerImportResult result = new McpServerImportResult();
         result.setServerName("test-server");
         result.setServerId("server-123");
@@ -41,7 +41,7 @@ class McpServerImportResultTest extends BasicRequestTest {
     }
     
     @Test
-    void testSerializeFailedResult() throws JsonProcessingException {
+    void testSerializeFailedResult() throws JacksonException {
         McpServerImportResult result = new McpServerImportResult();
         result.setServerName("failed-server");
         result.setStatus("failed");
@@ -54,7 +54,7 @@ class McpServerImportResultTest extends BasicRequestTest {
     }
     
     @Test
-    void testSerializeSkippedResult() throws JsonProcessingException {
+    void testSerializeSkippedResult() throws JacksonException {
         McpServerImportResult result = new McpServerImportResult();
         result.setServerName("existing-server");
         result.setStatus("skipped");
@@ -67,7 +67,7 @@ class McpServerImportResultTest extends BasicRequestTest {
     }
     
     @Test
-    void testSerializeCompleteResult() throws JsonProcessingException {
+    void testSerializeCompleteResult() throws JacksonException {
         McpServerImportResult result = new McpServerImportResult();
         result.setServerName("complete-server");
         result.setServerId("server-456");
@@ -84,7 +84,7 @@ class McpServerImportResultTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserializeSuccessResult() throws JsonProcessingException {
+    void testDeserializeSuccessResult() throws JacksonException {
         String json = "{\"serverName\":\"test-server\",\"serverId\":\"server-123\",\"status\":\"success\"}";
         
         McpServerImportResult result = mapper.readValue(json, McpServerImportResult.class);
@@ -97,7 +97,7 @@ class McpServerImportResultTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserializeFailedResult() throws JsonProcessingException {
+    void testDeserializeFailedResult() throws JacksonException {
         String json = "{\"serverName\":\"failed-server\",\"status\":\"failed\",\"errorMessage\":\"Connection timeout\"}";
         
         McpServerImportResult result = mapper.readValue(json, McpServerImportResult.class);
@@ -110,7 +110,7 @@ class McpServerImportResultTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserializeSkippedResult() throws JsonProcessingException {
+    void testDeserializeSkippedResult() throws JacksonException {
         String json = "{\"serverName\":\"existing-server\",\"status\":\"skipped\",\"conflictType\":\"duplicate_name\"}";
         
         McpServerImportResult result = mapper.readValue(json, McpServerImportResult.class);
@@ -123,7 +123,7 @@ class McpServerImportResultTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserializeCompleteResult() throws JsonProcessingException {
+    void testDeserializeCompleteResult() throws JacksonException {
         String json = "{\"serverName\":\"complete-server\",\"serverId\":\"server-456\",\"status\":\"success\","
                 + "\"errorMessage\":\"Warning: deprecated config\",\"conflictType\":\"version_conflict\"}";
         
@@ -137,7 +137,7 @@ class McpServerImportResultTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserializeMinimalResult() throws JsonProcessingException {
+    void testDeserializeMinimalResult() throws JacksonException {
         String json = "{\"serverName\":\"minimal-server\",\"status\":\"unknown\"}";
         
         McpServerImportResult result = mapper.readValue(json, McpServerImportResult.class);

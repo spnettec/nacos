@@ -17,11 +17,12 @@
 package com.alibaba.nacos.api.cmdb.pojo;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.Collections;
 
@@ -30,16 +31,19 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class LabelTest {
     
-    ObjectMapper mapper = new ObjectMapper();
+    ObjectMapper mapper;
     
     @BeforeEach
     void setUp() throws Exception {
-        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        mapper = JsonMapper.builder()
+                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                .changeDefaultPropertyInclusion(incl -> incl.withValueInclusion(JsonInclude.Include.NON_NULL))
+                .changeDefaultPropertyInclusion(incl -> incl.withContentInclusion(JsonInclude.Include.NON_NULL))
+                .build();
     }
     
     @Test
-    void testSerialization() throws JsonProcessingException {
+    void testSerialization() throws JacksonException {
         Label label = new Label();
         label.setName("test-label");
         label.setDescription("CMDB description");
@@ -52,7 +56,7 @@ class LabelTest {
     }
     
     @Test
-    void testDeserialization() throws JsonProcessingException {
+    void testDeserialization() throws JacksonException {
         String json = "{\"values\":[\"test-value\"],\"name\":\"test-label\",\"description\":\"CMDB description\"}";
         Label label = mapper.readValue(json, Label.class);
         assertEquals("test-label", label.getName());

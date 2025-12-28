@@ -17,8 +17,8 @@
 package com.alibaba.nacos.api.naming.remote.request;
 
 import com.alibaba.nacos.api.common.Constants;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class ServiceQueryRequestTest extends BasedNamingRequestTest {
     
     @Test
-    void testSerialize() throws JsonProcessingException {
+    void testSerialize() throws JacksonException {
         ServiceQueryRequest request = new ServiceQueryRequest(NAMESPACE, SERVICE, GROUP);
         request.setCluster(Constants.DEFAULT_CLUSTER_NAME);
         String json = mapper.writeValueAsString(request);
@@ -37,7 +37,7 @@ class ServiceQueryRequestTest extends BasedNamingRequestTest {
     }
     
     @Test
-    void testDeserialize() throws JsonProcessingException {
+    void testDeserialize() throws JacksonException {
         String json = "{\"headers\":{},\"namespace\":\"namespace\",\"serviceName\":\"service\",\"groupName\":\"group\","
                 + "\"cluster\":\"DEFAULT\",\"healthyOnly\":true,\"udpPort\":0,\"module\":\"naming\"}";
         ServiceQueryRequest actual = mapper.readValue(json, ServiceQueryRequest.class);

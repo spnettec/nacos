@@ -18,8 +18,8 @@ package com.alibaba.nacos.naming.push;
 
 import com.alibaba.nacos.common.utils.StringUtils;
 import com.alibaba.nacos.naming.misc.UtilsAndCommons;
-import com.fasterxml.jackson.core.Version;
-import com.fasterxml.jackson.core.util.VersionUtil;
+import tools.jackson.core.Version;
+import tools.jackson.core.util.VersionUtil;
 
 /**
  * Client info.

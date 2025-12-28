@@ -18,53 +18,54 @@ package com.alibaba.nacos.api.remote.ability;
 
 import com.alibaba.nacos.api.ability.ClientAbilities;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.MapperFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.MapperFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ServerRemoteAbilityTest {
-    
+
     private static ObjectMapper mapper;
-    
+
     private ServerRemoteAbility serverAbilities;
-    
+
     @BeforeAll
     static void setUpBeforeClass() throws Exception {
-        mapper = new ObjectMapper();
-        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-        mapper.enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY);
+        mapper = JsonMapper.builder().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                .changeDefaultPropertyInclusion(incl -> incl.withValueInclusion(JsonInclude.Include.NON_NULL))
+                .changeDefaultPropertyInclusion(incl -> incl.withContentInclusion(JsonInclude.Include.NON_NULL))
+                .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY).build();
     }
-    
+
     @BeforeEach
     void setUp() throws Exception {
         serverAbilities = new ServerRemoteAbility();
     }
-    
+
     @Test
-    void testSerialize() throws JsonProcessingException {
+    void testSerialize() throws JacksonException {
         serverAbilities = new ServerRemoteAbility();
         String json = mapper.writeValueAsString(serverAbilities);
         assertTrue(json.contains("\"supportRemoteConnection\":false"));
         assertTrue(json.contains("\"grpcReportEnabled\":true"));
     }
-    
+
     @Test
-    void testDeserialize() throws JsonProcessingException {
+    void testDeserialize() throws JacksonException {
         String json = "{\"supportRemoteConnection\":true,\"grpcReportEnabled\":true}";
         ServerRemoteAbility abilities = mapper.readValue(json, ServerRemoteAbility.class);
         assertTrue(abilities.isSupportRemoteConnection());
         assertTrue(abilities.isGrpcReportEnabled());
     }
-    
+
     @Test
     void testEqualsAndHashCode() {
         assertEquals(serverAbilities, serverAbilities);

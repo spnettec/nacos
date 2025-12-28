@@ -17,8 +17,8 @@
 package com.alibaba.nacos.api.ai.model.a2a;
 
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class SecuritySchemeTest extends BasicRequestTest {
     
     @Test
-    void testSerialize() throws JsonProcessingException {
+    void testSerialize() throws JacksonException {
         SecurityScheme securityScheme = new SecurityScheme();
         securityScheme.put("type", "apiKey");
         securityScheme.put("name", "Authorization");
@@ -41,7 +41,7 @@ class SecuritySchemeTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserialize() throws JsonProcessingException {
+    void testDeserialize() throws JacksonException {
         String json = "{\"type\":\"apiKey\",\"name\":\"Authorization\",\"in\":\"header\"}";
         
         SecurityScheme securityScheme = mapper.readValue(json, SecurityScheme.class);

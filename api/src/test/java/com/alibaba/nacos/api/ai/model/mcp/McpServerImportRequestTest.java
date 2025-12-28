@@ -17,8 +17,8 @@
 package com.alibaba.nacos.api.ai.model.mcp;
 
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class McpServerImportRequestTest extends BasicRequestTest {
     
     @Test
-    void testSerializeJsonImport() throws JsonProcessingException {
+    void testSerializeJsonImport() throws JacksonException {
         McpServerImportRequest request = new McpServerImportRequest();
         request.setImportType("json");
         request.setData("{\"servers\":[{\"name\":\"test-server\"}]}");
@@ -53,7 +53,7 @@ class McpServerImportRequestTest extends BasicRequestTest {
     }
     
     @Test
-    void testSerializeFileImport() throws JsonProcessingException {
+    void testSerializeFileImport() throws JacksonException {
         McpServerImportRequest request = new McpServerImportRequest();
         request.setImportType("file");
         request.setData("/path/to/import/file.json");
@@ -76,7 +76,7 @@ class McpServerImportRequestTest extends BasicRequestTest {
     }
     
     @Test
-    void testSerializeUrlImport() throws JsonProcessingException {
+    void testSerializeUrlImport() throws JacksonException {
         McpServerImportRequest request = new McpServerImportRequest();
         request.setImportType("url");
         request.setData("https://example.com/mcp-servers.json");
@@ -99,7 +99,7 @@ class McpServerImportRequestTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserializeJsonImport() throws JsonProcessingException {
+    void testDeserializeJsonImport() throws JacksonException {
         String json = "{\"importType\":\"json\",\"data\":\"{\\\"servers\\\":[{\\\"name\\\":\\\"test-server\\\"}]}\","
                 + "\"overrideExisting\":true,\"validateOnly\":false,\"selectedServers\":[\"server1\",\"server2\"],"
                 + "\"cursor\":\"cursor123\",\"limit\":10,\"search\":\"test\",\"skipInvalid\":true}";
@@ -121,7 +121,7 @@ class McpServerImportRequestTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserializeFileImport() throws JsonProcessingException {
+    void testDeserializeFileImport() throws JacksonException {
         String json = "{\"importType\":\"file\",\"data\":\"/path/to/import/file.json\","
                 + "\"overrideExisting\":false,\"validateOnly\":true,"
                 + "\"cursor\":\"cursor456\",\"limit\":20,\"search\":\"demo\",\"skipInvalid\":false}";
@@ -139,7 +139,7 @@ class McpServerImportRequestTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserializeUrlImport() throws JsonProcessingException {
+    void testDeserializeUrlImport() throws JacksonException {
         String json = "{\"importType\":\"url\",\"data\":\"https://example.com/mcp-servers.json\","
                 + "\"overrideExisting\":false,\"validateOnly\":false,"
                 + "\"cursor\":\"cursor789\",\"limit\":30,\"search\":\"prod\",\"skipInvalid\":true}";
@@ -157,7 +157,7 @@ class McpServerImportRequestTest extends BasicRequestTest {
     }
     
     @Test
-    void testDefaultValues() throws JsonProcessingException {
+    void testDefaultValues() throws JacksonException {
         String json = "{\"importType\":\"json\",\"data\":\"{}\"}";
         
         McpServerImportRequest result = mapper.readValue(json, McpServerImportRequest.class);

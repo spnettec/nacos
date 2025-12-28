@@ -16,10 +16,11 @@
 
 package com.alibaba.nacos.api.naming.pojo.healthcheck.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.io.IOException;
 
@@ -39,11 +40,11 @@ class MysqlTest {
         mysql.setUser("user");
         mysql.setPwd("pwd");
         mysql.setCmd("cmd");
-        objectMapper = new ObjectMapper();
+        objectMapper = JsonMapper.builder().build();
     }
     
     @Test
-    void testSerialize() throws JsonProcessingException {
+    void testSerialize() throws JacksonException {
         String actual = objectMapper.writeValueAsString(mysql);
         assertTrue(actual.contains("\"user\":\"user\""));
         assertTrue(actual.contains("\"type\":\"MYSQL\""));

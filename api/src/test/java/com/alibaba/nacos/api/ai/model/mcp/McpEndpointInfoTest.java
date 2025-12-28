@@ -18,8 +18,8 @@ package com.alibaba.nacos.api.ai.model.mcp;
 
 import com.alibaba.nacos.api.ai.model.mcp.registry.KeyValueInput;
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class McpEndpointInfoTest extends BasicRequestTest {
     
     @Test
-    void testSerialize() throws JsonProcessingException {
+    void testSerialize() throws JacksonException {
         McpEndpointInfo endpointInfo = new McpEndpointInfo();
         endpointInfo.setProtocol("https");
         endpointInfo.setAddress("127.0.0.1");
@@ -54,7 +54,7 @@ class McpEndpointInfoTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserialize() throws JsonProcessingException {
+    void testDeserialize() throws JacksonException {
         String json = "{\"protocol\":\"https\",\"address\":\"127.0.0.1\",\"port\":8080,\"path\":\"/api/mcp\","
                 + "\"headers\":[{\"name\":\"Content-Type\",\"value\":\"application/json\"}]}";
         

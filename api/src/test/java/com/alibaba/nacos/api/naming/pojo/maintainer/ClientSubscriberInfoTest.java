@@ -16,11 +16,13 @@
 
 package com.alibaba.nacos.api.naming.pojo.maintainer;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.io.IOException;
 
@@ -35,8 +37,8 @@ class ClientSubscriberInfoTest {
     
     @BeforeEach
     void setUp() throws Exception {
-        mapper = new ObjectMapper();
-        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        mapper = JsonMapper.builder().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                .build();
         clientSubscriberInfo = new ClientSubscriberInfo();
         clientSubscriberInfo.setClientId("clientId");
         clientSubscriberInfo.setAppName("appName");
@@ -45,7 +47,7 @@ class ClientSubscriberInfoTest {
     }
     
     @Test
-    void testSerialize() throws JsonProcessingException {
+    void testSerialize() throws JacksonException {
         String json = mapper.writeValueAsString(clientSubscriberInfo);
         assertTrue(json.contains("\"clientId\":\"clientId\""));
         assertTrue(json.contains("\"appName\":\"appName\""));

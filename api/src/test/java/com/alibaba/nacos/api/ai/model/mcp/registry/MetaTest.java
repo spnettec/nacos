@@ -17,8 +17,8 @@
 package com.alibaba.nacos.api.ai.model.mcp.registry;
 
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class MetaTest extends BasicRequestTest {
     
     @Test
-    void testSerialize() throws JsonProcessingException {
+    void testSerialize() throws JacksonException {
         McpRegistryServerDetail.Meta meta = new McpRegistryServerDetail.Meta();
         
         Map<String, Object> publisherProvided = new HashMap<>();
@@ -44,7 +44,7 @@ class MetaTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserialize() throws JsonProcessingException {
+    void testDeserialize() throws JacksonException {
         String json = "{\"io.modelcontextprotocol.registry/publisher-provided\":{\"key1\":\"value1\"}}";
         
         McpRegistryServerDetail.Meta meta = mapper.readValue(json, McpRegistryServerDetail.Meta.class);

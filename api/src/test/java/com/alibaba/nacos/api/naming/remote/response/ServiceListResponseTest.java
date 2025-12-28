@@ -17,11 +17,12 @@
 package com.alibaba.nacos.api.naming.remote.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.Collections;
 
@@ -34,13 +35,15 @@ class ServiceListResponseTest {
     
     @BeforeAll
     static void setUp() throws Exception {
-        mapper = new ObjectMapper();
-        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        mapper = JsonMapper.builder()
+                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                .changeDefaultPropertyInclusion(incl -> incl.withValueInclusion(JsonInclude.Include.NON_NULL))
+                .changeDefaultPropertyInclusion(incl -> incl.withContentInclusion(JsonInclude.Include.NON_NULL))
+                .build();
     }
     
     @Test
-    void testSerializeSuccessResponse() throws JsonProcessingException {
+    void testSerializeSuccessResponse() throws JacksonException {
         ServiceListResponse response = ServiceListResponse.buildSuccessResponse(10, Collections.singletonList("a"));
         String json = mapper.writeValueAsString(response);
         assertTrue(json.contains("\"count\":10"));
@@ -51,7 +54,7 @@ class ServiceListResponseTest {
     }
     
     @Test
-    void testSerializeFailResponse() throws JsonProcessingException {
+    void testSerializeFailResponse() throws JacksonException {
         ServiceListResponse response = ServiceListResponse.buildFailResponse("test");
         String json = mapper.writeValueAsString(response);
         assertTrue(json.contains("\"resultCode\":500"));
@@ -61,7 +64,7 @@ class ServiceListResponseTest {
     }
     
     @Test
-    void testDeserialize() throws JsonProcessingException {
+    void testDeserialize() throws JacksonException {
         String json = "{\"resultCode\":200,\"errorCode\":0,\"count\":10,\"serviceNames\":[\"a\"],\"success\":true}";
         ServiceListResponse response = mapper.readValue(json, ServiceListResponse.class);
         assertEquals(10, response.getCount());

@@ -18,8 +18,8 @@ package com.alibaba.nacos.api.ai.model.mcp;
 
 import com.alibaba.nacos.api.ai.constant.AiConstants;
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class McpEndpointSpecTest extends BasicRequestTest {
     
     @Test
-    void testSerialize() throws JsonProcessingException {
+    void testSerialize() throws JacksonException {
         McpEndpointSpec mcpEndpointSpec = new McpEndpointSpec();
         mcpEndpointSpec.setType(AiConstants.Mcp.MCP_ENDPOINT_TYPE_DIRECT);
         mcpEndpointSpec.getData().put("address", "127.0.0.1");
@@ -40,7 +40,7 @@ class McpEndpointSpecTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserialize() throws JsonProcessingException {
+    void testDeserialize() throws JacksonException {
         String json = "{\"type\":\"DIRECT\",\"data\":{\"address\":\"127.0.0.1\",\"port\":\"8080\"}}";
         McpEndpointSpec mcpEndpointSpec = mapper.readValue(json, McpEndpointSpec.class);
         assertEquals(AiConstants.Mcp.MCP_ENDPOINT_TYPE_DIRECT, mcpEndpointSpec.getType());

@@ -17,11 +17,12 @@
 package com.alibaba.nacos.api.remote.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -38,8 +39,11 @@ class EmptyContentResponseTest {
     
     @BeforeEach
     void setUp() throws Exception {
-        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        mapper = JsonMapper.builder()
+                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                .changeDefaultPropertyInclusion(incl -> incl.withValueInclusion(JsonInclude.Include.NON_NULL))
+                .changeDefaultPropertyInclusion(incl -> incl.withContentInclusion(JsonInclude.Include.NON_NULL))
+                .build();
     }
     
     @Test
@@ -53,7 +57,7 @@ class EmptyContentResponseTest {
     }
     
     @Test
-    void testClientDetectionResponse() throws JsonProcessingException {
+    void testClientDetectionResponse() throws JacksonException {
         ClientDetectionResponse response = new ClientDetectionResponse();
         response.setRequestId("1");
         String actual = mapper.writeValueAsString(response);
@@ -63,7 +67,7 @@ class EmptyContentResponseTest {
     }
     
     @Test
-    void testConnectResetResponse() throws JsonProcessingException {
+    void testConnectResetResponse() throws JacksonException {
         ConnectResetResponse response = new ConnectResetResponse();
         response.setRequestId("1");
         String actual = mapper.writeValueAsString(response);
@@ -73,7 +77,7 @@ class EmptyContentResponseTest {
     }
     
     @Test
-    void testHealthCheckResponse() throws JsonProcessingException {
+    void testHealthCheckResponse() throws JacksonException {
         HealthCheckResponse response = new HealthCheckResponse();
         response.setRequestId("1");
         String actual = mapper.writeValueAsString(response);
@@ -83,7 +87,7 @@ class EmptyContentResponseTest {
     }
     
     @Test
-    void testServerReloadResponse() throws JsonProcessingException {
+    void testServerReloadResponse() throws JacksonException {
         ServerReloadResponse response = new ServerReloadResponse();
         response.setRequestId("1");
         String actual = mapper.writeValueAsString(response);
@@ -93,7 +97,7 @@ class EmptyContentResponseTest {
     }
     
     @Test
-    void testSetupAckResponse() throws JsonProcessingException {
+    void testSetupAckResponse() throws JacksonException {
         SetupAckResponse response = new SetupAckResponse();
         response.setRequestId("1");
         String actual = mapper.writeValueAsString(response);

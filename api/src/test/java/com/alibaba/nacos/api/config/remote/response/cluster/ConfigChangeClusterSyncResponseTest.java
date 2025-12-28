@@ -18,9 +18,9 @@ package com.alibaba.nacos.api.config.remote.response.cluster;
 
 import com.alibaba.nacos.api.config.remote.response.BasedConfigResponseTest;
 import com.alibaba.nacos.api.remote.response.ResponseCode;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -36,7 +36,7 @@ public class ConfigChangeClusterSyncResponseTest extends BasedConfigResponseTest
     
     @Override
     @Test
-    public void testSerializeSuccessResponse() throws JsonProcessingException {
+    public void testSerializeSuccessResponse() throws JacksonException {
         String json = mapper.writeValueAsString(configChangeClusterSyncResponse);
         assertTrue(json.contains("\"success\":" + Boolean.TRUE));
         assertTrue(json.contains("\"requestId\":\"" + requestId));
@@ -45,7 +45,7 @@ public class ConfigChangeClusterSyncResponseTest extends BasedConfigResponseTest
     }
     
     @Override
-    public void testSerializeFailResponse() throws JsonProcessingException {
+    public void testSerializeFailResponse() throws JacksonException {
     
     }
 }

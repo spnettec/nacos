@@ -17,8 +17,8 @@
 package com.alibaba.nacos.api.ai.model.mcp.registry;
 
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class McpErrorResponseTest extends BasicRequestTest {
     
     @Test
-    void testSerialize() throws JsonProcessingException {
+    void testSerialize() throws JacksonException {
         McpErrorResponse errorResponse = new McpErrorResponse();
         errorResponse.setError("test error");
         String json = mapper.writeValueAsString(errorResponse);
@@ -34,7 +34,7 @@ class McpErrorResponseTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserialize() throws JsonProcessingException {
+    void testDeserialize() throws JacksonException {
         String json = "{\"error\":\"test error\"}";
         McpErrorResponse errorResponse = mapper.readValue(json, McpErrorResponse.class);
         assertEquals("test error", errorResponse.getError());

@@ -17,13 +17,14 @@
 package com.alibaba.nacos.api.naming.pojo;
 
 import com.alibaba.nacos.api.utils.StringUtils;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -48,13 +49,13 @@ class ServiceInfoTest {
     
     @BeforeEach
     void setUp() throws Exception {
-        mapper = new ObjectMapper();
-        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        mapper = JsonMapper.builder()
+                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES).build();
         serviceInfo = new ServiceInfo("G@@testName", "testClusters");
     }
     
     @Test
-    void testSerialize() throws JsonProcessingException {
+    void testSerialize() throws JacksonException {
         String actual = mapper.writeValueAsString(serviceInfo);
         assertTrue(actual.contains("\"name\":\"G@@testName\""));
         assertTrue(actual.contains("\"clusters\":\"testClusters\""));
@@ -183,7 +184,7 @@ class ServiceInfoTest {
     }
     
     @Test
-    void testSetAndGet() throws JsonProcessingException {
+    void testSetAndGet() throws JacksonException {
         serviceInfo.setReachProtectionThreshold(true);
         serviceInfo.setJsonFromServer(mapper.writeValueAsString(serviceInfo));
         ServiceInfo actual = mapper.readValue(serviceInfo.getJsonFromServer(), ServiceInfo.class);

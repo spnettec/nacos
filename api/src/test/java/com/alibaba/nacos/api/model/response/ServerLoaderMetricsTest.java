@@ -16,11 +16,12 @@
 
 package com.alibaba.nacos.api.model.response;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -38,8 +39,9 @@ class ServerLoaderMetricsTest {
     
     @BeforeEach
     void setUp() {
-        mapper = new ObjectMapper();
-        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        mapper = JsonMapper.builder()
+                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                .build();
         serverLoaderMetrics = new ServerLoaderMetrics();
         Map<String, String> metrics = new HashMap<>();
         metrics.put("conCount", "100");
@@ -59,7 +61,7 @@ class ServerLoaderMetricsTest {
     }
     
     @Test
-    void testSerialize() throws JsonProcessingException {
+    void testSerialize() throws JacksonException {
         String json = mapper.writeValueAsString(serverLoaderMetrics);
         assertTrue(json.contains("\"memberCount\":1"));
         assertTrue(json.contains("\"metricsCount\":1"));

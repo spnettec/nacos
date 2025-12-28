@@ -17,8 +17,8 @@
 package com.alibaba.nacos.api.ai.model.mcp;
 
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class EncryptObjectTest extends BasicRequestTest {
     
     @Test
-    void testSerialize() throws JsonProcessingException {
+    void testSerialize() throws JacksonException {
         EncryptObject encryptObject = new EncryptObject();
         encryptObject.setData("encryptedData");
         
@@ -47,7 +47,7 @@ class EncryptObjectTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserialize() throws JsonProcessingException {
+    void testDeserialize() throws JacksonException {
         String json = "{\"data\":\"encryptedData\",\"encryptInfo\":{\"alg\":\"AES\",\"iv\":\"initialVector\"}}";
         
         EncryptObject result = mapper.readValue(json, EncryptObject.class);

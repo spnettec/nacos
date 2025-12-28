@@ -18,19 +18,19 @@ package com.alibaba.nacos.common.utils;
 
 import com.alibaba.nacos.api.exception.runtime.NacosDeserializationException;
 import com.alibaba.nacos.api.exception.runtime.NacosSerializationException;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.jsontype.NamedType;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.JavaType;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.jsontype.NamedType;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
 
 import java.io.InputStream;
-import java.io.IOException;
 import java.lang.reflect.Type;
 
 /**
@@ -42,14 +42,12 @@ public final class JacksonUtils {
 
     private JacksonUtils() {
     }
-    
-    static ObjectMapper mapper = new ObjectMapper();
-    
-    static {
-        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-        mapper.setSerializationInclusion(Include.NON_NULL);
-    }
-    
+
+    static ObjectMapper mapper = JsonMapper.builder()
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .changeDefaultPropertyInclusion(incl -> incl.withValueInclusion(JsonInclude.Include.NON_NULL))
+            .changeDefaultPropertyInclusion(incl -> incl.withContentInclusion(JsonInclude.Include.NON_NULL)).build();
+
     /**
      * Object to json string.
      *
@@ -60,11 +58,11 @@ public final class JacksonUtils {
     public static String toJson(Object obj) {
         try {
             return mapper.writeValueAsString(obj);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new NacosSerializationException(obj.getClass(), e);
         }
     }
-    
+
     /**
      * Object to json string byte array.
      *
@@ -75,11 +73,11 @@ public final class JacksonUtils {
     public static byte[] toJsonBytes(Object obj) {
         try {
             return mapper.writeValueAsBytes(obj);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new NacosSerializationException(obj.getClass(), e);
         }
     }
-    
+
     /**
      * Json string deserialize to Object.
      *
@@ -96,7 +94,7 @@ public final class JacksonUtils {
             throw new NacosDeserializationException(cls, e);
         }
     }
-    
+
     /**
      * Json string deserialize to Object.
      *
@@ -113,7 +111,7 @@ public final class JacksonUtils {
             throw new NacosDeserializationException(e);
         }
     }
-    
+
     /**
      * Json string deserialize to Object.
      *
@@ -126,11 +124,11 @@ public final class JacksonUtils {
     public static <T> T toObj(InputStream inputStream, Class<T> cls) {
         try {
             return mapper.readValue(inputStream, cls);
-        } catch (IOException e) {
+        } catch (JacksonException e) {
             throw new NacosDeserializationException(e);
         }
     }
-    
+
     /**
      * Json string deserialize to Object.
      *
@@ -147,7 +145,7 @@ public final class JacksonUtils {
             throw new NacosDeserializationException(e);
         }
     }
-    
+
     /**
      * Json string deserialize to Object.
      *
@@ -160,11 +158,11 @@ public final class JacksonUtils {
     public static <T> T toObj(String json, Class<T> cls) {
         try {
             return mapper.readValue(json, cls);
-        } catch (IOException e) {
+        } catch (JacksonException e) {
             throw new NacosDeserializationException(cls, e);
         }
     }
-    
+
     /**
      * Json string deserialize to Object.
      *
@@ -177,11 +175,11 @@ public final class JacksonUtils {
     public static <T> T toObj(String json, Type type) {
         try {
             return mapper.readValue(json, mapper.constructType(type));
-        } catch (IOException e) {
+        } catch (JacksonException e) {
             throw new NacosDeserializationException(e);
         }
     }
-    
+
     /**
      * Json string deserialize to Object.
      *
@@ -194,11 +192,11 @@ public final class JacksonUtils {
     public static <T> T toObj(String json, TypeReference<T> typeReference) {
         try {
             return mapper.readValue(json, typeReference);
-        } catch (IOException e) {
+        } catch (JacksonException e) {
             throw new NacosDeserializationException(typeReference.getClass(), e);
         }
     }
-    
+
     /**
      * Json string deserialize to Object.
      *
@@ -211,11 +209,11 @@ public final class JacksonUtils {
     public static <T> T toObj(InputStream inputStream, Type type) {
         try {
             return mapper.readValue(inputStream, mapper.constructType(type));
-        } catch (IOException e) {
+        } catch (JacksonException e) {
             throw new NacosDeserializationException(type, e);
         }
     }
-    
+
     /**
      * Json string deserialize to Jackson {@link JsonNode}.
      *
@@ -226,11 +224,11 @@ public final class JacksonUtils {
     public static JsonNode toObj(String json) {
         try {
             return mapper.readTree(json);
-        } catch (IOException e) {
+        } catch (JacksonException e) {
             throw new NacosDeserializationException(e);
         }
     }
-    
+
     /**
      * Register sub type for child class.
      *
@@ -238,9 +236,9 @@ public final class JacksonUtils {
      * @param type type name of child class
      */
     public static void registerSubtype(Class<?> clz, String type) {
-        mapper.registerSubtypes(new NamedType(clz, type));
+        mapper = mapper.rebuild().registerSubtypes(new NamedType(clz, type)).build();
     }
-    
+
     /**
      * Create a new empty Jackson {@link ObjectNode}.
      *
@@ -249,7 +247,7 @@ public final class JacksonUtils {
     public static ObjectNode createEmptyJsonNode() {
         return new ObjectNode(mapper.getNodeFactory());
     }
-    
+
     /**
      * Create a new empty Jackson {@link ArrayNode}.
      *
@@ -258,7 +256,7 @@ public final class JacksonUtils {
     public static ArrayNode createEmptyArrayNode() {
         return new ArrayNode(mapper.getNodeFactory());
     }
-    
+
     /**
      * Parse object to Jackson {@link JsonNode}.
      *
@@ -268,7 +266,7 @@ public final class JacksonUtils {
     public static JsonNode transferToJsonNode(Object obj) {
         return mapper.valueToTree(obj);
     }
-    
+
     /**
      * construct java type -> Jackson Java Type.
      *

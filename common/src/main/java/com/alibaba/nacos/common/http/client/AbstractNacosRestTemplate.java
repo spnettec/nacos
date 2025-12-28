@@ -22,8 +22,8 @@ import com.alibaba.nacos.common.http.client.handler.ResponseHandler;
 import com.alibaba.nacos.common.http.client.handler.RestResultResponseHandler;
 import com.alibaba.nacos.common.http.client.handler.StringResponseHandler;
 import com.alibaba.nacos.common.utils.JacksonUtils;
-import com.fasterxml.jackson.databind.JavaType;
 import org.slf4j.Logger;
+import tools.jackson.databind.JavaType;
 
 import java.lang.reflect.Type;
 import java.util.HashMap;

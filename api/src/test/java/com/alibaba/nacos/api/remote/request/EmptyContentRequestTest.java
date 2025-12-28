@@ -17,49 +17,52 @@
 package com.alibaba.nacos.api.remote.request;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DeserializationFeature;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class EmptyContentRequestTest extends BasicRequestTest {
-    
+
     private static final String COMMON_JSON = "{\"headers\":{\"clientIp\":\"1.1.1.1\"},\"requestId\":\"1\",\"module\":\"internal\"}";
-    
+
     private static final String TO_STRING = "%s{headers={clientIp=1.1.1.1}, requestId='1'}";
-    
+
     @BeforeEach
     public void setUp() throws Exception {
         super.setUp();
-        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        mapper = mapper.rebuild()
+                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                .changeDefaultPropertyInclusion(incl -> incl.withValueInclusion(JsonInclude.Include.NON_NULL))
+                .changeDefaultPropertyInclusion(incl -> incl.withContentInclusion(JsonInclude.Include.NON_NULL))
+                .build();
     }
-    
+
     @Test
-    void testClientDetectionRequest() throws JsonProcessingException, InstantiationException, IllegalAccessException {
+    void testClientDetectionRequest() throws JacksonException, InstantiationException, IllegalAccessException {
         doTest(ClientDetectionRequest.class);
     }
-    
+
     @Test
-    void testHealthCheckRequest() throws JsonProcessingException, InstantiationException, IllegalAccessException {
+    void testHealthCheckRequest() throws JacksonException, InstantiationException, IllegalAccessException {
         doTest(HealthCheckRequest.class);
     }
-    
+
     @Test
-    void testServerCheckRequest() throws JsonProcessingException, InstantiationException, IllegalAccessException {
+    void testServerCheckRequest() throws JacksonException, InstantiationException, IllegalAccessException {
         doTest(ServerCheckRequest.class);
     }
-    
+
     @Test
-    void testServerLoaderInfoRequest() throws JsonProcessingException, InstantiationException, IllegalAccessException {
+    void testServerLoaderInfoRequest() throws JacksonException, InstantiationException, IllegalAccessException {
         doTest(ServerLoaderInfoRequest.class);
     }
-    
+
     private void doTest(Class<? extends Request> clazz)
-            throws IllegalAccessException, InstantiationException, JsonProcessingException {
+            throws IllegalAccessException, InstantiationException, JacksonException {
         Request request = clazz.newInstance();
         request.setRequestId("1");
         request.putHeader("clientIp", "1.1.1.1");
@@ -68,13 +71,13 @@ class EmptyContentRequestTest extends BasicRequestTest {
         request = mapper.readValue(COMMON_JSON, ServerLoaderInfoRequest.class);
         assertCommonRequest(request);
     }
-    
+
     private void assertCommonRequestJson(String actualJson) {
         assertTrue(actualJson.contains("\"requestId\":\"1\""));
         assertTrue(actualJson.contains("\"module\":\"internal\""));
         assertTrue(actualJson.contains("\"headers\":{\"clientIp\":\"1.1.1.1\"}"));
     }
-    
+
     private void assertCommonRequest(Request request) {
         assertEquals("1", request.getRequestId());
         assertEquals("internal", request.getModule());

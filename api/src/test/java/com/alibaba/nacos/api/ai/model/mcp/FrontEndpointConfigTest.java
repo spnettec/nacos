@@ -18,8 +18,8 @@ package com.alibaba.nacos.api.ai.model.mcp;
 
 import com.alibaba.nacos.api.ai.model.mcp.registry.KeyValueInput;
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class FrontEndpointConfigTest extends BasicRequestTest {
     
     @Test
-    void testSerialize() throws JsonProcessingException {
+    void testSerialize() throws JacksonException {
         FrontEndpointConfig frontEndpointConfig = new FrontEndpointConfig();
         frontEndpointConfig.setType("sse");
         frontEndpointConfig.setProtocol("http");
@@ -56,7 +56,7 @@ class FrontEndpointConfigTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserialize() throws JsonProcessingException {
+    void testDeserialize() throws JacksonException {
         String json = "{\"type\":\"sse\",\"protocol\":\"http\",\"endpointType\":\"DIRECT\","
                 + "\"endpointData\":\"127.0.0.1:8080\",\"path\":\"/test\","
                 + "\"headers\":[{\"name\":\"Authorization\",\"value\":\"Bearer token\"}]}";

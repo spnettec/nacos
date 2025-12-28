@@ -17,8 +17,8 @@
 package com.alibaba.nacos.api.exception.runtime;
 
 import com.alibaba.nacos.api.common.Constants;
-import com.fasterxml.jackson.databind.type.SimpleType;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.type.SimpleType;
 
 import java.lang.reflect.Type;
 

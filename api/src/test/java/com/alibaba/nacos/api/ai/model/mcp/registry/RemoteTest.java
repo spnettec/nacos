@@ -17,8 +17,8 @@
 package com.alibaba.nacos.api.ai.model.mcp.registry;
 
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
 
 import java.util.Collections;
 
@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class RemoteTest extends BasicRequestTest {
     
     @Test
-    void testSerialize() throws JsonProcessingException {
+    void testSerialize() throws JacksonException {
         Remote remote = new Remote();
         remote.setType("https");
         remote.setUrl("https://test.server.com/api");
@@ -49,7 +49,7 @@ class RemoteTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserialize() throws JsonProcessingException {
+    void testDeserialize() throws JacksonException {
         String json = "{\"type\":\"https\",\"url\":\"https://test.server.com/api\","
                 + "\"headers\":[{\"name\":\"Authorization\",\"value\":\"Bearer token\"}]}";
         

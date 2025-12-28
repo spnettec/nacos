@@ -19,12 +19,13 @@ package com.alibaba.nacos.api.selector;
 import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.naming.pojo.Instance;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.jsontype.NamedType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.jsontype.NamedType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,24 +36,27 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class NoneSelectorTest {
     
-    ObjectMapper mapper = new ObjectMapper();
+    ObjectMapper mapper;
     
     @BeforeEach
     void setUp() throws Exception {
-        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-        mapper.registerSubtypes(new NamedType(NoneSelector.class, SelectorType.none.name()));
+        mapper = JsonMapper.builder()
+                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                .changeDefaultPropertyInclusion(incl -> incl.withValueInclusion(JsonInclude.Include.NON_NULL))
+                .changeDefaultPropertyInclusion(incl -> incl.withContentInclusion(JsonInclude.Include.NON_NULL))
+                .registerSubtypes(new NamedType(NoneSelector.class, SelectorType.none.name()))
+                .build();
     }
     
     @Test
-    void testSerialization() throws JsonProcessingException {
+    void testSerialization() throws JacksonException {
         NoneSelector selector = new NoneSelector();
         String actual = mapper.writeValueAsString(selector);
         assertTrue(actual.contains("\"type\":\"" + SelectorType.none.name() + "\""));
     }
     
     @Test
-    void testDeserialization() throws JsonProcessingException {
+    void testDeserialization() throws JacksonException {
         String json = "{\"type\":\"none\"}";
         AbstractSelector actual = mapper.readValue(json, AbstractSelector.class);
         assertEquals(SelectorType.none.name(), actual.getType());

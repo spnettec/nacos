@@ -17,9 +17,9 @@
 package com.alibaba.nacos.api.ai.model.mcp.registry;
 
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.SerializationFeature;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -31,9 +31,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class NacosMcpRegistryServerDetailTest extends BasicRequestTest {
     
     @Test
-    void testSerialize() throws JsonProcessingException {
+    void testSerialize() throws JacksonException {
         // Repository is empty object
-        mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
+        mapper = mapper.rebuild().disable(SerializationFeature.FAIL_ON_EMPTY_BEANS).build();
         McpRegistryServerDetail mcpRegistryServerDetail = new McpRegistryServerDetail();
         mcpRegistryServerDetail.setName("testRegistryServer");
         mcpRegistryServerDetail.setDescription("test mcp registry server object");
@@ -67,7 +67,7 @@ class NacosMcpRegistryServerDetailTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserialize() throws JsonProcessingException {
+    void testDeserialize() throws JacksonException {
         String json = "{\"name\":\"testRegistryServer\",\"description\":\"test mcp registry server object\",\"$schema\":\"http://example.com/schema\",\"packages\":[{\"identifier\":\"test-package\",\"version\":\"1.0.0\"}],"
                 + "\"repository\":{},\"version\":\"1.0.0\",\"remotes\":[{\"type\":\"https\","
                 + "\"url\":\"127.0.0.1:8848/sse\"}],\"_meta\":{\"io.modelcontextprotocol.registry/official\":"

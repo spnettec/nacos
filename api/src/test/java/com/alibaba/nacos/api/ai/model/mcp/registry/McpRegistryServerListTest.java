@@ -17,8 +17,8 @@
 package com.alibaba.nacos.api.ai.model.mcp.registry;
 
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
 
 import java.util.Collections;
 import java.util.Arrays;
@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 class McpRegistryServerListTest extends BasicRequestTest {
     
     @Test
-    void testSerialize() throws JsonProcessingException {
+    void testSerialize() throws JacksonException {
         McpRegistryServerList mcpRegistryServerList = new McpRegistryServerList();
         // Use detail type to match List<ServerResponse> in production code
         mcpRegistryServerList.setServers(Collections.singletonList(new ServerResponse()));
@@ -45,7 +45,7 @@ class McpRegistryServerListTest extends BasicRequestTest {
     }
 
     @Test
-    void testDeserialize() throws JsonProcessingException {
+    void testDeserialize() throws JacksonException {
         // Test with new camelCase format (primary)
         String jsonCamelCase = "{\"servers\":[],\"metadata\":{\"nextCursor\":\"next\",\"count\":1}}";
         McpRegistryServerList result1 = mapper.readValue(jsonCamelCase, McpRegistryServerList.class);
@@ -62,7 +62,7 @@ class McpRegistryServerListTest extends BasicRequestTest {
     }
     
     @Test
-    void testSerializeWithMultipleServers() throws JsonProcessingException {
+    void testSerializeWithMultipleServers() throws JacksonException {
         McpRegistryServerList list = new McpRegistryServerList();
         
         ServerResponse sr1 = new ServerResponse();
@@ -86,7 +86,7 @@ class McpRegistryServerListTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserializeWithMultipleServers() throws JsonProcessingException {
+    void testDeserializeWithMultipleServers() throws JacksonException {
         String json = "{\"servers\":["
                 + "{\"server\":{\"name\":\"Server1\",\"version\":\"1.0.0\"}},"
                 + "{\"server\":{\"name\":\"Server2\",\"version\":\"2.0.0\"}}"
@@ -102,7 +102,7 @@ class McpRegistryServerListTest extends BasicRequestTest {
     }
     
     @Test
-    void testMetadataConstructor() throws JsonProcessingException {
+    void testMetadataConstructor() throws JacksonException {
         McpRegistryServerList.Metadata metadata = new McpRegistryServerList.Metadata("test_cursor", 5);
         
         assertEquals("test_cursor", metadata.getNextCursor());
@@ -114,7 +114,7 @@ class McpRegistryServerListTest extends BasicRequestTest {
     }
     
     @Test
-    void testEmptyServerList() throws JsonProcessingException {
+    void testEmptyServerList() throws JacksonException {
         McpRegistryServerList list = new McpRegistryServerList();
         list.setServers(Collections.emptyList());
         list.setMetadata(new McpRegistryServerList.Metadata(null, 0));
@@ -125,7 +125,7 @@ class McpRegistryServerListTest extends BasicRequestTest {
     }
     
     @Test
-    void testNullNextCursorHandling() throws JsonProcessingException {
+    void testNullNextCursorHandling() throws JacksonException {
         McpRegistryServerList list = new McpRegistryServerList();
         list.setServers(Collections.emptyList());
         list.setMetadata(new McpRegistryServerList.Metadata(null, 0));
@@ -138,7 +138,7 @@ class McpRegistryServerListTest extends BasicRequestTest {
     }
     
     @Test
-    void testBackwardCompatibilitySnakeCaseAlias() throws JsonProcessingException {
+    void testBackwardCompatibilitySnakeCaseAlias() throws JacksonException {
         // Ensure @JsonAlias works for next_cursor -> nextCursor
         String jsonSnakeCase = "{\"servers\":[],\"metadata\":{\"next_cursor\":\"pagination_cursor\",\"count\":10}}";
         McpRegistryServerList list = mapper.readValue(jsonSnakeCase, McpRegistryServerList.class);
@@ -148,7 +148,7 @@ class McpRegistryServerListTest extends BasicRequestTest {
     }
     
     @Test
-    void testPrimaryFormatCamelCase() throws JsonProcessingException {
+    void testPrimaryFormatCamelCase() throws JacksonException {
         // Ensure camelCase is the primary serialization format
         McpRegistryServerList list = new McpRegistryServerList();
         list.setServers(Collections.emptyList());

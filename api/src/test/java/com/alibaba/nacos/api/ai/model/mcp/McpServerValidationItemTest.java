@@ -18,9 +18,9 @@ package com.alibaba.nacos.api.ai.model.mcp;
 
 import com.alibaba.nacos.api.ai.constant.AiConstants;
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.SerializationFeature;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -34,8 +34,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class McpServerValidationItemTest extends BasicRequestTest {
     
     @Test
-    void testSerializeValidItem() throws JsonProcessingException {
-        mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
+    void testSerializeValidItem() throws JacksonException {
+        mapper = mapper.rebuild().disable(SerializationFeature.FAIL_ON_EMPTY_BEANS).build();
         
         McpServerValidationItem item = new McpServerValidationItem();
         item.setServerName("test-server");
@@ -63,7 +63,7 @@ class McpServerValidationItemTest extends BasicRequestTest {
     }
     
     @Test
-    void testSerializeInvalidItem() throws JsonProcessingException {
+    void testSerializeInvalidItem() throws JacksonException {
         McpServerValidationItem item = new McpServerValidationItem();
         item.setServerName("invalid-server");
         item.setStatus("invalid");
@@ -80,7 +80,7 @@ class McpServerValidationItemTest extends BasicRequestTest {
     }
     
     @Test
-    void testSerializeDuplicateItem() throws JsonProcessingException {
+    void testSerializeDuplicateItem() throws JacksonException {
         McpServerValidationItem item = new McpServerValidationItem();
         item.setServerName("existing-server");
         item.setServerId("existing-id");
@@ -99,7 +99,7 @@ class McpServerValidationItemTest extends BasicRequestTest {
     }
     
     @Test
-    void testSerializeDefaultSelectedValue() throws JsonProcessingException {
+    void testSerializeDefaultSelectedValue() throws JacksonException {
         McpServerValidationItem item = new McpServerValidationItem();
         item.setServerName("default-server");
         item.setStatus("valid");
@@ -111,7 +111,7 @@ class McpServerValidationItemTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserializeValidItem() throws JsonProcessingException {
+    void testDeserializeValidItem() throws JacksonException {
         String json = "{\"serverName\":\"test-server\",\"serverId\":\"server-123\",\"status\":\"valid\","
                 + "\"exists\":false,\"selected\":true,\"server\":{\"name\":\"test-server\",\"id\":\"server-123\","
                 + "\"protocol\":\"stdio\",\"description\":\"Test server\"}}";
@@ -133,7 +133,7 @@ class McpServerValidationItemTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserializeInvalidItem() throws JsonProcessingException {
+    void testDeserializeInvalidItem() throws JacksonException {
         String json = "{\"serverName\":\"invalid-server\",\"status\":\"invalid\","
                 + "\"errors\":[\"Missing protocol\",\"Invalid port\",\"Empty name\"],\"exists\":false,\"selected\":false}";
         
@@ -153,7 +153,7 @@ class McpServerValidationItemTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserializeDuplicateItem() throws JsonProcessingException {
+    void testDeserializeDuplicateItem() throws JacksonException {
         String json = "{\"serverName\":\"existing-server\",\"serverId\":\"existing-id\",\"status\":\"duplicate\","
                 + "\"exists\":true,\"selected\":false,\"errors\":[\"Server already exists\"]}";
         
@@ -171,7 +171,7 @@ class McpServerValidationItemTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserializeDefaultSelectedValue() throws JsonProcessingException {
+    void testDeserializeDefaultSelectedValue() throws JacksonException {
         String json = "{\"serverName\":\"default-server\",\"status\":\"valid\"}";
         
         McpServerValidationItem result = mapper.readValue(json, McpServerValidationItem.class);
@@ -183,7 +183,7 @@ class McpServerValidationItemTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserializeMinimalItem() throws JsonProcessingException {
+    void testDeserializeMinimalItem() throws JacksonException {
         String json = "{\"serverName\":\"minimal-server\",\"status\":\"unknown\",\"exists\":false,\"selected\":true}";
         
         McpServerValidationItem result = mapper.readValue(json, McpServerValidationItem.class);
@@ -198,7 +198,7 @@ class McpServerValidationItemTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserializeWithEmptyErrors() throws JsonProcessingException {
+    void testDeserializeWithEmptyErrors() throws JacksonException {
         String json = "{\"serverName\":\"server-with-empty-errors\",\"status\":\"valid\",\"errors\":[]}";
         
         McpServerValidationItem result = mapper.readValue(json, McpServerValidationItem.class);

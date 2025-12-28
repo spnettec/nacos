@@ -17,8 +17,8 @@
 package com.alibaba.nacos.api.ai.model.mcp.registry;
 
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class ServerVersionDetailTest extends BasicRequestTest {
     
     @Test
-    void testSerialize() throws JsonProcessingException {
+    void testSerialize() throws JacksonException {
         ServerVersionDetail serverVersionDetail = new ServerVersionDetail();
         serverVersionDetail.setVersion("1.0.0");
         serverVersionDetail.setRelease_date("2022-01-01T00:00:00Z");
@@ -41,7 +41,7 @@ class ServerVersionDetailTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserialize() throws JsonProcessingException {
+    void testDeserialize() throws JacksonException {
         String json = "{\"version\":\"1.0.0\",\"release_date\":\"2022-01-01T00:00:00Z\",\"is_latest\":true}";
         
         ServerVersionDetail serverVersionDetail = mapper.readValue(json, ServerVersionDetail.class);

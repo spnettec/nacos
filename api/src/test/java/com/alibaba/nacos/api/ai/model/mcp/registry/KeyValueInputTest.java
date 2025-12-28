@@ -17,8 +17,8 @@
 package com.alibaba.nacos.api.ai.model.mcp.registry;
 
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class KeyValueInputTest extends BasicRequestTest {
     
     @Test
-    void testSerialize() throws JsonProcessingException {
+    void testSerialize() throws JacksonException {
         KeyValueInput keyValueInput = new KeyValueInput();
         keyValueInput.setName("testKey");
         keyValueInput.setDescription("test description");
@@ -41,7 +41,7 @@ class KeyValueInputTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserialize() throws JsonProcessingException {
+    void testDeserialize() throws JacksonException {
         String json = "{\"name\":\"testKey\",\"description\":\"test description\",\"value\":\"test value\"}";
         
         KeyValueInput keyValueInput = mapper.readValue(json, KeyValueInput.class);

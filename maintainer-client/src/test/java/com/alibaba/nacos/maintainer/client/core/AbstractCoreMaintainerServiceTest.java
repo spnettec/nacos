@@ -25,14 +25,14 @@ import com.alibaba.nacos.api.model.response.ServerLoaderMetrics;
 import com.alibaba.nacos.api.model.v2.Result;
 import com.alibaba.nacos.common.http.HttpRestResult;
 import com.alibaba.nacos.maintainer.client.remote.ClientHttpProxy;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -393,7 +393,7 @@ class AbstractCoreMaintainerServiceTest {
     }
     
     @Test
-    void getServerState() throws JsonProcessingException, NacosException {
+    void getServerState() throws JacksonException, NacosException {
         Map<String, String> serverState = new HashMap<>();
         serverState.put("key", "value");
         HttpRestResult<String> mockHttpRestResult = new HttpRestResult<>();

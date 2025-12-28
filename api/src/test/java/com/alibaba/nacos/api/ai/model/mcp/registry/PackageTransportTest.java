@@ -17,8 +17,8 @@
 package com.alibaba.nacos.api.ai.model.mcp.registry;
 
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
 
 import java.util.Arrays;
 
@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class PackageTransportTest extends BasicRequestTest {
     
     @Test
-    void testPackageWithStdioTransport() throws JsonProcessingException {
+    void testPackageWithStdioTransport() throws JacksonException {
         Package pkg = new Package();
         pkg.setIdentifier("test-package");
         pkg.setVersion("1.0.0");
@@ -45,7 +45,7 @@ class PackageTransportTest extends BasicRequestTest {
     }
     
     @Test
-    void testPackageWithStreamableHttpTransport() throws JsonProcessingException {
+    void testPackageWithStreamableHttpTransport() throws JacksonException {
         Package pkg = new Package();
         pkg.setIdentifier("test-package");
         pkg.setVersion("1.0.0");
@@ -66,7 +66,7 @@ class PackageTransportTest extends BasicRequestTest {
     }
     
     @Test
-    void testPackageWithSseTransport() throws JsonProcessingException {
+    void testPackageWithSseTransport() throws JacksonException {
         Package pkg = new Package();
         pkg.setIdentifier("test-package");
         pkg.setVersion("1.0.0");
@@ -81,7 +81,7 @@ class PackageTransportTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserializePackageWithStdioTransport() throws JsonProcessingException {
+    void testDeserializePackageWithStdioTransport() throws JacksonException {
         String json = "{\"identifier\":\"test-package\",\"version\":\"1.0.0\","
                 + "\"transport\":{\"type\":\"stdio\"}}";
         
@@ -94,7 +94,7 @@ class PackageTransportTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserializePackageWithStreamableHttpTransport() throws JsonProcessingException {
+    void testDeserializePackageWithStreamableHttpTransport() throws JacksonException {
         String json = "{\"identifier\":\"test-package\",\"version\":\"1.0.0\","
                 + "\"transport\":{\"type\":\"streamable-http\",\"url\":\"http://localhost:8080/api\","
                 + "\"headers\":[{\"name\":\"Authorization\",\"value\":\"Bearer token\"}]}}";
@@ -107,7 +107,7 @@ class PackageTransportTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserializePackageWithSseTransport() throws JsonProcessingException {
+    void testDeserializePackageWithSseTransport() throws JacksonException {
         String json = "{\"identifier\":\"test-package\",\"version\":\"1.0.0\","
                 + "\"transport\":{\"type\":\"sse\",\"url\":\"https://example.com/sse\"}}";
         
@@ -119,7 +119,7 @@ class PackageTransportTest extends BasicRequestTest {
     }
     
     @Test
-    void testPackageWithCompleteFields() throws JsonProcessingException {
+    void testPackageWithCompleteFields() throws JacksonException {
         Package pkg = new Package();
         pkg.setRegistryType("npm");
         pkg.setRegistryBaseUrl("https://registry.npmjs.org");

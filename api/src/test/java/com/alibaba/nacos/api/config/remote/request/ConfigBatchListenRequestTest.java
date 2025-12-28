@@ -17,8 +17,8 @@
 package com.alibaba.nacos.api.config.remote.request;
 
 import com.alibaba.nacos.api.common.Constants;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -27,7 +27,7 @@ class ConfigBatchListenRequestTest extends BasedConfigRequestTest {
     
     @Override
     @Test
-    public void testSerialize() throws JsonProcessingException {
+    public void testSerialize() throws JacksonException {
         ConfigBatchListenRequest configBatchListenRequest = new ConfigBatchListenRequest();
         configBatchListenRequest.putAllHeader(HEADERS);
         configBatchListenRequest.addConfigListenContext(GROUP, DATA_ID, TENANT, MD5);
@@ -42,7 +42,7 @@ class ConfigBatchListenRequestTest extends BasedConfigRequestTest {
     
     @Override
     @Test
-    public void testDeserialize() throws JsonProcessingException {
+    public void testDeserialize() throws JacksonException {
         String json = "{\"headers\":{\"header1\":\"test_header1\"},\"listen\":true,"
                 + "\"configListenContexts\":[{\"group\":\"group\",\"md5\":\"test_MD5\","
                 + "\"dataId\":\"test_data\",\"tenant\":\"test_tenant\"}],\"module\":\"config\"}";

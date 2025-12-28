@@ -17,11 +17,12 @@
 package com.alibaba.nacos.api.naming.remote.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -31,13 +32,14 @@ class NamingFuzzyWatchSyncResponseTest {
     
     @BeforeAll
     static void setUp() throws Exception {
-        mapper = new ObjectMapper();
-        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        mapper = JsonMapper.builder()
+                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                .changeDefaultPropertyInclusion(incl -> incl.withValueInclusion(JsonInclude.Include.NON_NULL))
+                .changeDefaultPropertyInclusion(incl -> incl.withContentInclusion(JsonInclude.Include.NON_NULL)).build();
     }
     
     @Test
-    void testSerializeSuccessResponse() throws JsonProcessingException {
+    void testSerializeSuccessResponse() throws JacksonException {
         NamingFuzzyWatchSyncResponse response = NamingFuzzyWatchSyncResponse.buildSuccessResponse();
         response.setResultCode(200);
         String json = mapper.writeValueAsString(response);
@@ -46,7 +48,7 @@ class NamingFuzzyWatchSyncResponseTest {
     }
     
     @Test
-    void testSerializeFailResponse() throws JsonProcessingException {
+    void testSerializeFailResponse() throws JacksonException {
         NamingFuzzyWatchSyncResponse response = NamingFuzzyWatchSyncResponse.buildFailResponse("test");
         String json = mapper.writeValueAsString(response);
         assertTrue(json.contains("\"resultCode\":500"));
@@ -56,7 +58,7 @@ class NamingFuzzyWatchSyncResponseTest {
     }
     
     @Test
-    void testDeserialize() throws JsonProcessingException {
+    void testDeserialize() throws JacksonException {
         String json = "{\"resultCode\":200,\"errorCode\":0,\"success\":true}";
         NamingFuzzyWatchSyncResponse response = mapper.readValue(json, NamingFuzzyWatchSyncResponse.class);
         assertTrue(response.isSuccess());

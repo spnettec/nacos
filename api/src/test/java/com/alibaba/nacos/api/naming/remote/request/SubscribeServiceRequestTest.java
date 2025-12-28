@@ -16,8 +16,8 @@
 
 package com.alibaba.nacos.api.naming.remote.request;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class SubscribeServiceRequestTest extends BasedNamingRequestTest {
     
     @Test
-    void testSerialize() throws JsonProcessingException {
+    void testSerialize() throws JacksonException {
         SubscribeServiceRequest request = new SubscribeServiceRequest(NAMESPACE, GROUP, SERVICE, "", true);
         String json = mapper.writeValueAsString(request);
         checkSerializeBasedInfo(json);
@@ -35,7 +35,7 @@ class SubscribeServiceRequestTest extends BasedNamingRequestTest {
     }
     
     @Test
-    void testDeserialize() throws JsonProcessingException {
+    void testDeserialize() throws JacksonException {
         String json = "{\"headers\":{},\"namespace\":\"namespace\",\"serviceName\":\"service\",\"groupName\":\"group\","
                 + "\"subscribe\":false,\"clusters\":\"aa,bb\",\"module\":\"naming\"}";
         SubscribeServiceRequest actual = mapper.readValue(json, SubscribeServiceRequest.class);

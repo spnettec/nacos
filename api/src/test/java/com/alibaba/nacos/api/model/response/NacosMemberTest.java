@@ -17,12 +17,13 @@
 package com.alibaba.nacos.api.model.response;
 
 import com.alibaba.nacos.api.common.NodeState;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -36,8 +37,9 @@ class NacosMemberTest {
     
     @BeforeEach
     void setUp() {
-        mapper = new ObjectMapper();
-        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        mapper = JsonMapper.builder()
+                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                .build();
         member = new NacosMember();
         member.setIp("127.0.0.1");
         member.setPort(8080);
@@ -50,7 +52,7 @@ class NacosMemberTest {
     }
     
     @Test
-    public void testSerialize() throws JsonProcessingException {
+    public void testSerialize() throws JacksonException {
         String json = mapper.writeValueAsString(member);
         assertTrue(json.contains("\"ip\":\"127.0.0.1\""));
         assertTrue(json.contains("\"port\":8080"));
@@ -61,7 +63,7 @@ class NacosMemberTest {
     }
     
     @Test
-    public void testDeserialize() throws JsonProcessingException {
+    public void testDeserialize() throws JacksonException {
         String json =
                 "{\"ip\":\"127.0.0.1\",\"port\":8080,\"state\":\"UP\",\"extendInfo\":{\"testK\":\"testV\"},\"address\":\"127.0.0.1:8080\","
                         + "\"abilities\":{\"remoteAbility\":{\"supportRemoteConnection\":false,\"grpcReportEnabled\":true},"

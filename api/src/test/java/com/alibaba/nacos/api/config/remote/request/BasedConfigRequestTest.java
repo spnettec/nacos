@@ -18,11 +18,12 @@ package com.alibaba.nacos.api.config.remote.request;
 
 import com.alibaba.nacos.api.remote.request.Request;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.MapperFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeAll;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.MapperFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -58,15 +59,16 @@ public abstract class BasedConfigRequestTest {
     
     @BeforeAll
     public static void setUp() throws Exception {
-        mapper = new ObjectMapper();
-        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-        mapper.enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY);
+        mapper = JsonMapper.builder().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                .changeDefaultPropertyInclusion(incl -> incl.withValueInclusion(JsonInclude.Include.NON_NULL))
+                .changeDefaultPropertyInclusion(incl -> incl.withContentInclusion(JsonInclude.Include.NON_NULL))
+                .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
+                .build();
     }
     
-    public abstract void testSerialize() throws JsonProcessingException;
+    public abstract void testSerialize() throws JacksonException;
     
-    public abstract void testDeserialize() throws JsonProcessingException;
+    public abstract void testDeserialize() throws JacksonException;
     
     protected String injectRequestUuId(Request request) {
         String uuid = UUID.randomUUID().toString();

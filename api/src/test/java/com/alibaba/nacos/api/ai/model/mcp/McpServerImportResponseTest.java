@@ -17,8 +17,8 @@
 package com.alibaba.nacos.api.ai.model.mcp;
 
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class McpServerImportResponseTest extends BasicRequestTest {
     
     @Test
-    void testSerializeSuccessResponse() throws JsonProcessingException {
+    void testSerializeSuccessResponse() throws JacksonException {
         McpServerImportResponse response = new McpServerImportResponse();
         response.setSuccess(true);
         response.setTotalCount(5);
@@ -68,7 +68,7 @@ class McpServerImportResponseTest extends BasicRequestTest {
     }
     
     @Test
-    void testSerializeFailedResponse() throws JsonProcessingException {
+    void testSerializeFailedResponse() throws JacksonException {
         McpServerImportResponse response = new McpServerImportResponse();
         response.setSuccess(false);
         response.setTotalCount(0);
@@ -89,7 +89,7 @@ class McpServerImportResponseTest extends BasicRequestTest {
     }
     
     @Test
-    void testSerializePartialSuccessResponse() throws JsonProcessingException {
+    void testSerializePartialSuccessResponse() throws JacksonException {
         McpServerImportResponse response = new McpServerImportResponse();
         response.setSuccess(true);
         response.setTotalCount(3);
@@ -116,7 +116,7 @@ class McpServerImportResponseTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserializeSuccessResponse() throws JsonProcessingException {
+    void testDeserializeSuccessResponse() throws JacksonException {
         String json = "{\"success\":true,\"totalCount\":5,\"successCount\":4,\"failedCount\":1,\"skippedCount\":0,"
                 + "\"results\":[{\"serverName\":\"server1\",\"serverId\":\"id1\",\"status\":\"success\"},"
                 + "{\"serverName\":\"server2\",\"status\":\"failed\",\"errorMessage\":\"Connection failed\"}]}";
@@ -144,7 +144,7 @@ class McpServerImportResponseTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserializeFailedResponse() throws JsonProcessingException {
+    void testDeserializeFailedResponse() throws JacksonException {
         String json = "{\"success\":false,\"totalCount\":0,\"successCount\":0,\"failedCount\":0,\"skippedCount\":0,"
                 + "\"errorMessage\":\"Invalid import data format\",\"results\":[]}";
         
@@ -161,7 +161,7 @@ class McpServerImportResponseTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserializePartialSuccessResponse() throws JsonProcessingException {
+    void testDeserializePartialSuccessResponse() throws JacksonException {
         String json = "{\"success\":true,\"totalCount\":3,\"successCount\":2,\"failedCount\":0,\"skippedCount\":1,"
                 + "\"results\":[{\"serverName\":\"existing-server\",\"status\":\"skipped\",\"conflictType\":\"duplicate_name\"}]}";
         

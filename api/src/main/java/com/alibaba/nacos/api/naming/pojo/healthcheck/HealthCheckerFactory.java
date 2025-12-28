@@ -19,12 +19,11 @@ package com.alibaba.nacos.api.naming.pojo.healthcheck;
 import com.alibaba.nacos.api.exception.runtime.NacosDeserializationException;
 import com.alibaba.nacos.api.exception.runtime.NacosSerializationException;
 import com.alibaba.nacos.api.naming.pojo.healthcheck.AbstractHealthChecker.None;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.jsontype.NamedType;
-
-import java.io.IOException;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.jsontype.NamedType;
 
 /**
  * health checker factory.
@@ -33,11 +32,8 @@ import java.io.IOException;
  */
 public class HealthCheckerFactory {
     
-    private static final ObjectMapper MAPPER = new ObjectMapper();
-    
-    static {
-        MAPPER.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-    }
+    private static ObjectMapper MAPPER = JsonMapper.builder()
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES).build();
     
     /**
      * Register new sub type of health checker to factory for serialize and deserialize.
@@ -56,7 +52,7 @@ public class HealthCheckerFactory {
      */
     public static void registerSubType(Class<? extends AbstractHealthChecker> extendHealthCheckerClass,
             String typeName) {
-        MAPPER.registerSubtypes(new NamedType(extendHealthCheckerClass, typeName));
+        MAPPER = MAPPER.rebuild().registerSubtypes(new NamedType(extendHealthCheckerClass, typeName)).build();
     }
     
     /**
@@ -77,7 +73,7 @@ public class HealthCheckerFactory {
     public static AbstractHealthChecker deserialize(String jsonString) {
         try {
             return MAPPER.readValue(jsonString, AbstractHealthChecker.class);
-        } catch (IOException e) {
+        } catch (JacksonException e) {
             throw new NacosDeserializationException(AbstractHealthChecker.class, e);
         }
     }
@@ -91,7 +87,7 @@ public class HealthCheckerFactory {
     public static String serialize(AbstractHealthChecker healthChecker) {
         try {
             return MAPPER.writeValueAsString(healthChecker);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new NacosSerializationException(healthChecker.getClass(), e);
         }
     }

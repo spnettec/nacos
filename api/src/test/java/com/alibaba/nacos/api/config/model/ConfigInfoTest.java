@@ -15,12 +15,12 @@
  */
 
 package com.alibaba.nacos.api.config.model;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -42,8 +42,9 @@ class ConfigInfoTest {
     @BeforeEach
     void setUp() {
         createTime = System.currentTimeMillis();
-        mapper = new ObjectMapper();
-        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        mapper = JsonMapper.builder()
+                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                .build();
         basicInfo = new ConfigBasicInfo();
         detailInfo = new ConfigDetailInfo();
         grayInfo = new ConfigGrayInfo();
@@ -80,13 +81,13 @@ class ConfigInfoTest {
     }
     
     @Test
-    public void testBasicInfoSerialize() throws JsonProcessingException {
+    public void testBasicInfoSerialize() throws JacksonException {
         String json = mapper.writeValueAsString(basicInfo);
         assertJsonContainBasicInfos(json);
     }
     
     @Test
-    public void testBasicInfoDeserialize() throws JsonProcessingException {
+    public void testBasicInfoDeserialize() throws JacksonException {
         String json = "{\"id\":\"1\",\"namespaceId\":\"testNs\",\"groupName\":\"testGroup\",\"dataId\":\"testDataId\","
                 + "\"md5\":\"testMd5\",\"type\":\"text\",\"appName\":\"testApp\",\"createTime\":%s,\"modifyTime\":%s}";
         json = String.format(json, createTime, modifyTime);
@@ -94,14 +95,14 @@ class ConfigInfoTest {
     }
     
     @Test
-    public void testDetailInfoSerialize() throws JsonProcessingException {
+    public void testDetailInfoSerialize() throws JacksonException {
         String json = mapper.writeValueAsString(detailInfo);
         assertJsonContainBasicInfos(json);
         asserJsonContainDetailInfos(json);
     }
     
     @Test
-    public void testDetailInfoDeserialize() throws JsonProcessingException {
+    public void testDetailInfoDeserialize() throws JacksonException {
         String json = "{\"id\":\"1\",\"namespaceId\":\"testNs\",\"groupName\":\"testGroup\",\"dataId\":\"testDataId\","
                 + "\"md5\":\"testMd5\",\"type\":\"text\",\"appName\":\"testApp\",\"createTime\":%s,"
                 + "\"modifyTime\":%s,\"content\":\"testContent\",\"desc\":\"testDesc\","
@@ -114,7 +115,7 @@ class ConfigInfoTest {
     }
     
     @Test
-    public void testGrayInfoSerialize() throws JsonProcessingException {
+    public void testGrayInfoSerialize() throws JacksonException {
         String json = mapper.writeValueAsString(grayInfo);
         assertJsonContainBasicInfos(json);
         asserJsonContainDetailInfos(json);
@@ -127,7 +128,7 @@ class ConfigInfoTest {
     }
     
     @Test
-    public void testGrayInfoDeserialize() throws JsonProcessingException {
+    public void testGrayInfoDeserialize() throws JacksonException {
         String json = "{\"id\":\"1\",\"namespaceId\":\"testNs\",\"groupName\":\"testGroup\",\"dataId\":\"testDataId\","
                 + "\"md5\":\"testMd5\",\"type\":\"text\",\"appName\":\"testApp\",\"createTime\":%s,\"modifyTime\":%s,"
                 + "\"content\":\"testContent\",\"desc\":\"testDesc\",\"encryptedDataKey\":\"testEncryptedDataKey\","

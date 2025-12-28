@@ -16,10 +16,11 @@
 
 package com.alibaba.nacos.api.naming.pojo.healthcheck.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.io.IOException;
 import java.util.Map;
@@ -37,7 +38,7 @@ class HttpTest {
     
     @BeforeEach
     void setUp() {
-        objectMapper = new ObjectMapper();
+        objectMapper = JsonMapper.builder().build();
         http = new Http();
     }
     
@@ -57,7 +58,7 @@ class HttpTest {
     }
     
     @Test
-    void testSerialize() throws JsonProcessingException {
+    void testSerialize() throws JacksonException {
         http.setHeaders("x:a|y:");
         http.setPath("/x");
         String actual = objectMapper.writeValueAsString(http);

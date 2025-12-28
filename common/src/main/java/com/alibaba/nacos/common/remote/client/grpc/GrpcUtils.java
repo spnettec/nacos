@@ -26,10 +26,10 @@ import com.alibaba.nacos.api.utils.NetUtils;
 import com.alibaba.nacos.common.remote.PayloadRegistry;
 import com.alibaba.nacos.common.remote.exception.RemoteException;
 import com.alibaba.nacos.common.utils.JacksonUtils;
-import com.fasterxml.jackson.databind.util.ByteBufferBackedInputStream;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.UnsafeByteOperations;
+import tools.jackson.databind.util.ByteBufferBackedInputStream;
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;

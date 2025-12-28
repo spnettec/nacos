@@ -20,11 +20,12 @@ import com.alibaba.nacos.api.common.Constants;
 import com.alibaba.nacos.api.exception.api.NacosApiException;
 import com.alibaba.nacos.api.naming.PreservedMetadataKeys;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -42,9 +43,11 @@ class InstanceTest {
     
     @BeforeAll
     static void setUp() throws Exception {
-        mapper = new ObjectMapper();
-        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        mapper = JsonMapper.builder()
+                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                .changeDefaultPropertyInclusion(incl -> incl.withValueInclusion(JsonInclude.Include.NON_NULL))
+                .changeDefaultPropertyInclusion(incl -> incl.withContentInclusion(JsonInclude.Include.NON_NULL))
+                .build();
     }
     
     @Test
@@ -65,7 +68,7 @@ class InstanceTest {
     }
     
     @Test
-    void testJsonSerialize() throws JsonProcessingException {
+    void testJsonSerialize() throws JacksonException {
         Instance instance = new Instance();
         setInstance(instance);
         String actual = mapper.writeValueAsString(instance);
@@ -85,7 +88,7 @@ class InstanceTest {
     }
     
     @Test
-    void testJsonDeserialize() throws JsonProcessingException {
+    void testJsonDeserialize() throws JacksonException {
         String json = "{\"instanceId\":\"id\",\"ip\":\"1.1.1.1\",\"port\":1000,\"weight\":100.0,\"healthy\":false,"
                 + "\"enabled\":false,\"ephemeral\":false,\"clusterName\":\"cluster\","
                 + "\"serviceName\":\"group@@serviceName\",\"metadata\":{\"a\":\"b\"},\"instanceHeartBeatInterval\":5000,"

@@ -24,9 +24,10 @@ import com.alibaba.nacos.common.utils.JacksonUtils;
 import com.alibaba.nacos.common.utils.StringUtils;
 import com.alibaba.nacos.core.paramcheck.AbstractHttpParamExtractor;
 import com.alibaba.nacos.naming.misc.UtilsAndCommons;
-import com.fasterxml.jackson.core.type.TypeReference;
 
 import jakarta.servlet.http.HttpServletRequest;
+import tools.jackson.core.type.TypeReference;
+
 import java.util.ArrayList;
 import java.util.List;
 

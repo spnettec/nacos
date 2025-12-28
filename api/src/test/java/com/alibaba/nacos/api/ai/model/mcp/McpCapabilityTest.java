@@ -17,15 +17,15 @@
 package com.alibaba.nacos.api.ai.model.mcp;
 
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class McpCapabilityTest extends BasicRequestTest {
     
     @Test
-    void testSerialize() throws JsonProcessingException {
+    void testSerialize() throws JacksonException {
         String jsonTool = mapper.writeValueAsString(McpCapability.TOOL);
         String jsonPrompt = mapper.writeValueAsString(McpCapability.PROMPT);
         String jsonResource = mapper.writeValueAsString(McpCapability.RESOURCE);
@@ -36,7 +36,7 @@ class McpCapabilityTest extends BasicRequestTest {
     }
     
     @Test
-    void testDeserialize() throws JsonProcessingException {
+    void testDeserialize() throws JacksonException {
         assertEquals(McpCapability.TOOL, mapper.readValue("\"TOOL\"", McpCapability.class));
         assertEquals(McpCapability.PROMPT, mapper.readValue("\"PROMPT\"", McpCapability.class));
         assertEquals(McpCapability.RESOURCE, mapper.readValue("\"RESOURCE\"", McpCapability.class));
