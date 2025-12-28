@@ -193,7 +193,6 @@
                                         <include>org.javassist:*</include>
                                         <include>io.perfmark:perfmark-api</include>
                                         <include>com.google.*:*</include>
-                                        <include>javax.annotation:javax.annotation-api</include>
                                         <include>org.checkerframework:*</include>
                                         <include>org.codehaus.mojo:*</include>
                                     </includes>

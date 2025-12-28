@@ -24,7 +24,6 @@ import org.springframework.scheduling.config.IntervalTask;
 import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
 import java.time.Duration;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -36,11 +35,14 @@ import java.util.concurrent.ThreadPoolExecutor;
 @Component
 public class GrpcServerThreadPoolMonitor implements SchedulingConfigurer {
 
-    @Resource
-    private GrpcSdkServer sdkServer;
+    private final GrpcSdkServer sdkServer;
 
-    @Resource
-    private GrpcClusterServer clusterServer;
+    private final GrpcClusterServer clusterServer;
+
+    public GrpcServerThreadPoolMonitor(GrpcSdkServer sdkServer, GrpcClusterServer clusterServer) {
+        this.sdkServer = sdkServer;
+        this.clusterServer = clusterServer;
+    }
 
     @Override
     public void configureTasks(ScheduledTaskRegistrar taskRegistrar) {

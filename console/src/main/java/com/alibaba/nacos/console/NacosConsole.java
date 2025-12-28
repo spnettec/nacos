@@ -18,7 +18,6 @@ package com.alibaba.nacos.console;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.ldap.autoconfigure.LdapAutoConfiguration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
@@ -27,7 +26,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  *
  * @author xiweng.yy
  */
-@SpringBootApplication(exclude = LdapAutoConfiguration.class)
+@SpringBootApplication(excludeName = {"org.springframework.boot.ldap.autoconfigure.LdapAutoConfiguration",
+        "org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration"})
 @PropertySource("classpath:nacos-console.properties")
 @EnableScheduling
 public class NacosConsole {

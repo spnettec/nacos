@@ -19,7 +19,7 @@ package com.alibaba.nacos.core.web;
 import com.alibaba.nacos.core.code.ControllerMethodsCache;
 import org.springframework.context.annotation.Configuration;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 
 /**
  * Nacos core web configuration.

@@ -20,7 +20,6 @@ import com.alibaba.nacos.server.NacosWebBeanTypeFilter;
 import com.alibaba.nacos.sys.filter.NacosTypeExcludeFilter;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.ldap.autoconfigure.LdapAutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.FilterType;
@@ -31,7 +30,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  *
  * @author xiweng.yy
  */
-@SpringBootApplication(exclude = {LdapAutoConfiguration.class})
+@SpringBootApplication(excludeName = {"org.springframework.boot.ldap.autoconfigure.LdapAutoConfiguration",
+        "org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration"})
 @ComponentScan(basePackages = "com.alibaba.nacos", excludeFilters = {
         @Filter(type = FilterType.REGEX, pattern = "com\\.alibaba\\.nacos\\.console.*"),
         @Filter(type = FilterType.REGEX, pattern = "com\\.alibaba\\.nacos\\.plugin\\.auth\\.impl.*"),
@@ -39,7 +39,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
         @Filter(type = FilterType.CUSTOM, classes = {NacosTypeExcludeFilter.class, NacosWebBeanTypeFilter.class})})
 @EnableScheduling
 public class NacosServerBasicApplication {
-    
+
     public static void main(String[] args) {
         SpringApplication.run(NacosServerBasicApplication.class, args);
     }

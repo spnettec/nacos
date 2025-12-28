@@ -17,6 +17,7 @@
 package com.alibaba.nacos.plugin.auth.impl.condition;
 
 import com.alibaba.nacos.sys.env.Constants;
+import org.jspecify.annotations.NonNull;
 import org.springframework.context.annotation.Condition;
 import org.springframework.context.annotation.ConditionContext;
 import org.springframework.core.type.AnnotatedTypeMetadata;
@@ -29,7 +30,7 @@ import org.springframework.core.type.AnnotatedTypeMetadata;
 public class ConditionOnInnerDatasource implements Condition {
     
     @Override
-    public boolean matches(ConditionContext conditionContext, AnnotatedTypeMetadata annotatedTypeMetadata) {
+    public boolean matches(ConditionContext conditionContext, @NonNull AnnotatedTypeMetadata annotatedTypeMetadata) {
         return !Constants.NACOS_DEPLOYMENT_TYPE_CONSOLE.equalsIgnoreCase(
                 conditionContext.getEnvironment().getProperty(Constants.NACOS_DEPLOYMENT_TYPE));
     }
