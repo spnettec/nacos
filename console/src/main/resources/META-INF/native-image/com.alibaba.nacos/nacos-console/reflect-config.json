@@ -1512,6 +1512,7 @@
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
   "queryAllDeclaredConstructors":true,
+  "methods":[{"name":"<init>","parameterTypes":["com.alibaba.nacos.persistence.repository.embedded.operate.DatabaseOperate"] }, {"name":"createPaginationHelper","parameterTypes":[] }, {"name":"detailConfigHistory","parameterTypes":["java.lang.Long"] }, {"name":"detailPreviousConfigHistory","parameterTypes":["java.lang.Long"] }, {"name":"findConfigHistory","parameterTypes":["java.lang.String","java.lang.String","java.lang.String","int","int"] }, {"name":"findConfigHistoryCountByTime","parameterTypes":["java.sql.Timestamp"] }, {"name":"findDeletedConfig","parameterTypes":["java.sql.Timestamp","long","int"] }, {"name":"insertConfigHistoryAtomic","parameterTypes":["long","com.alibaba.nacos.config.server.model.ConfigInfo","java.lang.String","java.lang.String","java.sql.Timestamp","java.lang.String"] }, {"name":"removeConfigHistory","parameterTypes":["java.sql.Timestamp","int"] }]
 },
 {
   "name":"com.alibaba.nacos.config.server.service.repository.embedded.EmbeddedHistoryConfigInfoPersistServiceImpl$$SpringCGLIB$$0",
