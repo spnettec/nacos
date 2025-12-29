@@ -32,7 +32,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.mock.env.MockEnvironment;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -41,7 +40,6 @@ import org.springframework.security.web.DefaultSecurityFilterChain;
 import org.springframework.security.web.SecurityFilterChain;
 import tools.jackson.databind.json.JsonMapper;
 
-import java.time.ZoneId;
 import java.util.Iterator;
 import java.util.TimeZone;
 
