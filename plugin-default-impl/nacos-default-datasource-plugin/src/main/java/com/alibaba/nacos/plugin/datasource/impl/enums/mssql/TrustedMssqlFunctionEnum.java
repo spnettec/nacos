@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2018 Alibaba Group Holding Ltd.
+ * Copyright 1999-2022 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,30 +14,33 @@
  * limitations under the License.
  */
 
-package com.alibaba.nacos.plugin.datasource.enums.oracle;
+package com.alibaba.nacos.plugin.datasource.impl.enums.mssql;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * The TrustedSqlFunctionEnum enum class is used to enumerate and manage a list of trusted built-in SQL functions.
- * By using this enum, you can verify whether a given SQL function is part of the trusted functions list
- * to avoid potential SQL injection risks.
+ * Trusted Derby Function Enum.
  *
- * @author blake.qiu
+ * @author xiweng.yy
  */
-public enum TrustedOracleFunctionEnum {
+public enum TrustedMssqlFunctionEnum {
 
     /**
      * NOW().
      */
-    NOW("NOW()", "sysdate");
+    NOW("NOW()", "CURRENT_TIMESTAMP"),
 
-    private static final Map<String, TrustedOracleFunctionEnum> LOOKUP_MAP = new HashMap<>();
+    /**
+     * CURRENT_TIMESTAMP().
+     */
+    CURRENT_TIMESTAMP("CURRENT_TIMESTAMP()", "CURRENT_TIMESTAMP");
+
+    private static final Map<String, String> LOOKUP_MAP = new HashMap<>();
 
     static {
-        for (TrustedOracleFunctionEnum entry : TrustedOracleFunctionEnum.values()) {
-            LOOKUP_MAP.put(entry.functionName, entry);
+        for (TrustedMssqlFunctionEnum entry : TrustedMssqlFunctionEnum.values()) {
+            LOOKUP_MAP.put(entry.functionName, entry.function);
         }
     }
 
@@ -45,7 +48,7 @@ public enum TrustedOracleFunctionEnum {
 
     private final String function;
 
-    TrustedOracleFunctionEnum(String functionName, String function) {
+    TrustedMssqlFunctionEnum(String functionName, String function) {
         this.functionName = functionName;
         this.function = function;
     }
@@ -57,9 +60,9 @@ public enum TrustedOracleFunctionEnum {
      * @return function
      */
     public static String getFunctionByName(String functionName) {
-        TrustedOracleFunctionEnum entry = LOOKUP_MAP.get(functionName);
-        if (entry != null) {
-            return entry.function;
+        String function = LOOKUP_MAP.get(functionName);
+        if (null != function) {
+            return function;
         }
         throw new IllegalArgumentException(String.format("Invalid function name: %s", functionName));
     }
