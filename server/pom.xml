@@ -25,10 +25,10 @@
         <version>${revision}</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
-
+    
     <artifactId>nacos-server</artifactId>
     <name>nacos-server ${project.version}</name>
-
+    
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -46,11 +46,19 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>nacos-prometheus</artifactId>
         </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>nacos-default-plugin-all</artifactId>
-            <version>${project.version}</version>
-        </dependency>
     </dependencies>
+
+    <profiles>
+        <profile>
+            <id>dev</id>
+            <dependencies>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>nacos-default-plugin-all</artifactId>
+                    <version>${project.version}</version>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
 
 </project>

@@ -35,7 +35,7 @@ import java.util.stream.Stream;
  */
 @SuppressWarnings("all")
 public class NacosRuntimeHints implements RuntimeHintsRegistrar {
-
+    
     // region Java
     private final Class<?>[] javaClasses = {byte.class, byte.class, byte[].class, boolean.class, Object.class,
             Integer.class, com.sun.management.GarbageCollectorMXBean.class, com.sun.management.GcInfo.class,
@@ -52,12 +52,12 @@ public class NacosRuntimeHints implements RuntimeHintsRegistrar {
             java.sql.Driver.class, java.sql.DriverManager.class, java.sql.Time.class, java.sql.Timestamp.class,
             java.util.concurrent.locks.LockSupport.class, java.util.Optional.class, java.util.Properties.class};
     // endregion
-
+    
     // region Hessian
     private final Class<?>[] hessianClasses = {com.caucho.hessian.io.Hessian2Input.class,
             com.caucho.hessian.io.ContextSerializerFactory.class};
     // endregion
-
+    
     // region SQL
     private final Class<?>[] sqlClasses = {org.apache.derby.impl.store.raw.data.CachedPage.class,
             org.apache.derby.catalog.types.TypesImplInstanceGetter.class,
@@ -128,16 +128,16 @@ public class NacosRuntimeHints implements RuntimeHintsRegistrar {
             org.apache.derby.impl.sql.GenericLanguageFactory.class,
             org.apache.derby.impl.services.uuid.BasicUUIDFactory.class, org.apache.derby.impl.store.raw.RawStore.class,
             org.apache.derby.impl.store.access.btree.index.B2IFactory.class, com.zaxxer.hikari.HikariConfig.class,
-
+            
             // hard code
             Class.forName("org.apache.derby.impl.services.monitor.ModuleInstance"),
             Class.forName("org.apache.derby.impl.services.monitor.ProtocolKey"),
             Class.forName("org.apache.derby.impl.services.monitor.TopService"),
             Class.forName("org.apache.derby.iapi.services.cache.ClassSizeCatalogImpl"),
-
+            
             com.alibaba.nacos.persistence.datasource.ExternalDataSourceProperties.class};
     // endregion
-
+    
     // region JRaft Entity
     private final Class<?>[] jraftDataClasses = {com.alipay.sofa.jraft.entity.LocalFileMetaOutter.LocalFileMeta.class,
             com.alipay.sofa.jraft.entity.LocalFileMetaOutter.LocalFileMeta.Builder.class,
@@ -158,7 +158,7 @@ public class NacosRuntimeHints implements RuntimeHintsRegistrar {
             com.alipay.sofa.jraft.entity.codec.v2.LogOutter.PBLogEntry.class,
             com.alipay.sofa.jraft.entity.codec.v2.LogOutter.PBLogEntry.Builder.class,};
     // endregion
-
+    
     // region JRaft RPC
     private final Class<?>[] jraftRpcClasses = {com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesRequest.class,
             com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesRequest.Builder.class,
@@ -191,7 +191,7 @@ public class NacosRuntimeHints implements RuntimeHintsRegistrar {
             com.alipay.sofa.jraft.rpc.RpcRequests.ReadIndexResponse.class,
             com.alipay.sofa.jraft.rpc.RpcRequests.ReadIndexResponse.Builder.class};
     // endregion
-
+    
     // region JRaft CLI
     private final Class<?>[] jraftCliClasses = {com.alipay.sofa.jraft.rpc.CliRequests.LearnersOpResponse.class,
             com.alipay.sofa.jraft.rpc.CliRequests.LearnersOpResponse.Builder.class,
@@ -228,7 +228,7 @@ public class NacosRuntimeHints implements RuntimeHintsRegistrar {
             com.alipay.sofa.jraft.rpc.CliRequests.AddPeerRequest.class,
             com.alipay.sofa.jraft.rpc.CliRequests.AddPeerRequest.Builder.class};
     // endregion
-
+    
     // region JRaft Service
     private final Class<?>[] jraftUtilClasses = {com.alipay.sofa.jraft.rpc.ProtobufMsgFactory.class,
             com.alipay.sofa.jraft.rpc.RpcRequestClosure.class,
@@ -243,14 +243,14 @@ public class NacosRuntimeHints implements RuntimeHintsRegistrar {
             com.alipay.sofa.jraft.core.Replicator.class,
             com.alipay.sofa.jraft.storage.snapshot.local.LocalSnapshotReader.class};
     // endregion
-
+    
     // region gRpc
     private final Class<?>[] grpcClasses = {com.google.protobuf.Any.class, com.google.protobuf.Any.Builder.class,
             com.google.protobuf.ByteString.class, com.google.protobuf.Message.class,
             com.google.protobuf.ByteString.class, com.google.protobuf.CodedInputStream.class,
             com.google.common.util.concurrent.AbstractFuture.class,
             com.google.common.util.concurrent.ListenableFuture.class,
-
+            
             io.grpc.KnownLength.class, io.grpc.ServerCall.class, io.grpc.ServerBuilder.class,
             io.grpc.stub.ClientCalls.class, io.grpc.stub.ServerCalls.class, io.grpc.stub.ServerCallStreamObserver.class,
             io.grpc.stub.CallStreamObserver.class, io.grpc.stub.StreamObserver.class,
@@ -270,12 +270,12 @@ public class NacosRuntimeHints implements RuntimeHintsRegistrar {
             io.grpc.netty.shaded.io.netty.channel.socket.nio.NioSocketChannel.class,
             io.grpc.netty.shaded.io.netty.util.AttributeKey.class, io.grpc.ForwardingServerCall.class,
             io.grpc.ForwardingServerCall.SimpleForwardingServerCall.class,
-
+            
             Class.forName("io.grpc.internal.ServerCallImpl"),
             Class.forName("io.grpc.netty.shaded.io.grpc.netty.WriteQueue"),
             Class.forName("io.grpc.netty.shaded.io.grpc.netty.NettyServerStream")};
     // endregion
-
+    
     // region Nacos Hints
     private final Class<?>[] nacosClasses = {
             // reflect
@@ -425,7 +425,6 @@ public class NacosRuntimeHints implements RuntimeHintsRegistrar {
             com.alibaba.nacos.naming.pojo.ClusterInfo.class, com.alibaba.nacos.naming.pojo.InstanceOperationInfo.class,
             com.alibaba.nacos.naming.pojo.IpAddressInfo.class, com.alibaba.nacos.naming.pojo.Record.class,
             com.alibaba.nacos.naming.pojo.ServiceDetailInfo.class, com.alibaba.nacos.naming.pojo.ServiceNameView.class,
-            com.alibaba.nacos.plugin.auth.impl.jwt.NacosJwtPayload.class,
             // sys and plugin
             com.alibaba.nacos.config.server.filter.ConfigEnabledFilter.class,
             com.alibaba.nacos.naming.config.NamingEnabledFilter.class,
@@ -441,7 +440,7 @@ public class NacosRuntimeHints implements RuntimeHintsRegistrar {
             com.alibaba.nacos.core.remote.ConnectionManager.class,
             com.alibaba.nacos.config.server.remote.RpcConfigChangeNotifier.class,};
     // endregion
-
+    
     // region Nacos Serializer
     private final List<Class<? extends Serializable>> serializer = List.of(byte.class, byte[].class, String.class,
             ConcurrentHashMap.class, com.alibaba.nacos.api.grpc.auto.Metadata.class,
@@ -465,15 +464,15 @@ public class NacosRuntimeHints implements RuntimeHintsRegistrar {
             com.alibaba.nacos.consistency.entity.ReadRequest.class, com.alibaba.nacos.consistency.entity.Response.class,
             com.alibaba.nacos.consistency.entity.GetRequest.class, com.alibaba.nacos.consistency.entity.Log.class);
     // endregion
-
+    
     private final String[] resourcePattern = {AotConfiguration.reflectToNativeLibraryLoader(),
             ".*libnetty_transport_native_epoll_.*\\.so", ".*\\.desc$", ".*\\.html$", ".*\\.css$", ".*\\.js$",
             ".*\\.js.map$", ".*\\.png$", ".*\\.svg$", ".*\\.eot$", ".*\\.woff$", ".*\\.woff2$", ".*\\.ttf$",
             "org/apache/derby/modules.properties", "application.properties",};
-
+    
     public NacosRuntimeHints() throws ClassNotFoundException {
     }
-
+    
     @Override
     public void registerHints(RuntimeHints hints, ClassLoader classLoader) {
         Stream.of(javaClasses, hessianClasses, sqlClasses, grpcClasses, jraftDataClasses, jraftRpcClasses,
@@ -481,11 +480,25 @@ public class NacosRuntimeHints implements RuntimeHintsRegistrar {
                 .registerType(type, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS, MemberCategory.INVOKE_DECLARED_METHODS,
                         MemberCategory.DECLARED_FIELDS, MemberCategory.DECLARED_CLASSES));
 
+        // Register optional plugin classes by name to avoid compile-time dependency
+        registerOptionalClass(hints, "com.alibaba.nacos.plugin.auth.impl.jwt.NacosJwtPayload");
+
         for (String pattern : resourcePattern) {
             hints.resources().registerPattern(pattern);
         }
 
         serializer.forEach(type -> hints.serialization().registerType(type));
+    }
+
+    private void registerOptionalClass(RuntimeHints hints, String className) {
+        try {
+            Class<?> clazz = Class.forName(className);
+            hints.reflection().registerType(clazz, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
+                    MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.DECLARED_FIELDS,
+                    MemberCategory.DECLARED_CLASSES);
+        } catch (ClassNotFoundException e) {
+            // Optional plugin class not available, skip registration
+        }
     }
 
 }

@@ -136,6 +136,7 @@
         <log4j.version>2.25.1</log4j.version>
 
         <mysql-connector-java.version>8.2.0</mysql-connector-java.version>
+        <postgresql.version>42.7.2</postgresql.version>
         <derby.version>10.14.2.0</derby.version>
         <jjwt.version>0.12.6</jjwt.version>
         <grpc-java.version>1.78.0</grpc-java.version>
@@ -1014,6 +1015,11 @@
                 <groupId>com.mysql</groupId>
                 <artifactId>mysql-connector-j</artifactId>
                 <version>${mysql-connector-java.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.postgresql</groupId>
+                <artifactId>postgresql</artifactId>
+                <version>${postgresql.version}</version>
             </dependency>
             
             <dependency>

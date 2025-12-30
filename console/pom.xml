@@ -27,7 +27,7 @@
     <packaging>jar</packaging>
     <name>nacos-console ${project.version}</name>
     <url>https://nacos.io</url>
-
+    
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -51,11 +51,6 @@
         </dependency>
 
         <dependency>
-            <groupId>com.github.heyoulin.nacos</groupId>
-            <artifactId>nacos-default-plugin-all</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>nacos-istio</artifactId>
         </dependency>
@@ -67,12 +62,12 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>nacos-k8s-sync</artifactId>
         </dependency>
-
+        
         <dependency>
             <groupId>io.modelcontextprotocol.sdk</groupId>
             <artifactId>mcp</artifactId>
         </dependency>
-
+        
         <!-- log -->
         <!-- log4j通过slf4j来代理 -->
         <dependency>
@@ -95,11 +90,12 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-jackson</artifactId>
+            <artifactId>spring-boot-test-autoconfigure</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-test-autoconfigure</artifactId>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -112,8 +108,14 @@
             <artifactId>spring-boot-webmvc-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>default-auth-plugin</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
-
+    
     <build>
         <plugins>
             <plugin>
@@ -139,7 +141,7 @@
             </resource>
         </resources>
     </build>
-
+    
     <reporting>
         <plugins>
             <plugin>
@@ -148,8 +150,18 @@
             </plugin>
         </plugins>
     </reporting>
-
+    
     <profiles>
+        <profile>
+            <id>dev</id>
+            <dependencies>
+                <dependency>
+                    <groupId>com.alibaba.nacos</groupId>
+                    <artifactId>nacos-default-plugin-all</artifactId>
+                    <version>${project.version}</version>
+                </dependency>
+            </dependencies>
+        </profile>
         <profile>
             <id>native-win64</id>
             <activation>
@@ -295,7 +307,7 @@
                                 --initialize-at-run-time=com.google.common.util.concurrent.AbstractFuture$Listener
                                 --initialize-at-run-time=com.google.protobuf.Any
                                 --initialize-at-run-time=com.google.protobuf.Any$Builder
-
+                                
                                 --initialize-at-run-time=io.grpc.internal.ServerCallImpl
                                 --initialize-at-run-time=io.grpc.ForwardingServerCall
                                 --initialize-at-run-time=io.grpc.ForwardingServerCall$SimpleForwardingServerCall
@@ -362,7 +374,7 @@
                                 --initialize-at-run-time=io.grpc.netty.shaded.io.netty.internal.tcnative.SSLPrivateKeyMethod
                                 --initialize-at-run-time=io.grpc.netty.shaded.io.netty.internal.tcnative.AsyncSSLPrivateKeyMethod
                                 --initialize-at-run-time=io.grpc.netty.shaded.io.netty.internal.tcnative.CertificateCompressionAlgo
-
+                                
                                 --initialize-at-run-time=com.alibaba.nacos.consistency.entity.WriteRequest
                                 --initialize-at-run-time=com.alibaba.nacos.consistency.entity.WriteRequest$Builder
                                 --initialize-at-run-time=com.alibaba.nacos.consistency.entity.ReadRequest
@@ -373,10 +385,10 @@
                                 --initialize-at-run-time=com.alibaba.nacos.consistency.entity.GetRequest$Builder
                                 --initialize-at-run-time=com.alibaba.nacos.consistency.entity.Log
                                 --initialize-at-run-time=com.alibaba.nacos.consistency.entity.Log$Builder
-
+                                
                                 --initialize-at-run-time=com.alipay.sofa.jraft.entity.LocalFileMetaOutter$LocalFileMeta
                                 --initialize-at-run-time=com.alipay.sofa.jraft.rpc.ProtobufMsgFactory
-
+                                
                                 --initialize-at-run-time=org.apache.derby.jdbc.AutoloadedDriver
                                 --initialize-at-run-time=org.apache.derby.jdbc.InternalDriver
                                 --initialize-at-run-time=org.apache.derby.jdbc.Driver42
@@ -468,7 +480,7 @@
                                 --initialize-at-run-time=com.alibaba.nacos.api.config.remote.request.ConfigBatchListenRequest$ConfigListenContext
                                 --initialize-at-run-time=com.alibaba.nacos.naming.cluster.remote.request.DistroDataRequest
                                 --initialize-at-run-time=com.alibaba.nacos.naming.cluster.remote.response.DistroDataResponse
-
+                                
                                 --initialize-at-run-time=com.alibaba.nacos.plugin.auth.impl.jwt.NacosJwtPayload
                                 <!-- Build-time Hints -->
                                 --initialize-at-build-time=org.slf4j.LoggerFactory
