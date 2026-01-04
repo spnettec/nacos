@@ -29,7 +29,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static com.alibaba.nacos.api.common.Constants.Naming.NAMING_MODULE;
-import static java.lang.Compiler.disable;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 

@@ -26,7 +26,6 @@ import tools.jackson.databind.json.JsonMapper;
 
 import java.util.Collections;
 
-import static java.lang.Compiler.disable;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
