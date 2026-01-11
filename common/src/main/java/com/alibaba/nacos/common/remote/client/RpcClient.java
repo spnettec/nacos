@@ -70,7 +70,7 @@ import static com.alibaba.nacos.api.exception.NacosException.SERVER_ERROR;
 public abstract class RpcClient implements Closeable {
     
     private static final Logger LOGGER = LoggerFactory.getLogger("com.alibaba.nacos.common.remote.client");
-    
+
     private ServerListFactory serverListFactory;
     
     protected BlockingQueue<ConnectionEvent> eventLinkedBlockingQueue = new LinkedBlockingQueue<>();
@@ -636,9 +636,7 @@ public abstract class RpcClient implements Closeable {
         int retryTimes = 0;
         Response response;
         Throwable exceptionThrow = null;
-        long start = System.currentTimeMillis();
-        while (retryTimes <= rpcClientConfig.retryTimes() && (timeoutMills <= 0
-                || System.currentTimeMillis() < timeoutMills + start)) {
+        while (retryTimes <= rpcClientConfig.retryTimes()) {
             boolean waitReconnect = false;
             try {
                 if (this.currentConnection == null || !isRunning()) {
@@ -673,12 +671,12 @@ public abstract class RpcClient implements Closeable {
                 if (waitReconnect) {
                     try {
                         // wait client to reconnect.
-                        Thread.sleep(Math.min(100, timeoutMills / 3));
+                        Thread.sleep(Math.max(100, rpcClientConfig.retryWaitMills()));
                     } catch (Exception exception) {
                         // Do nothing.
                     }
                 }
-                
+
                 LoggerUtils.printIfErrorEnabled(LOGGER,
                         "Send request fail, request = {}, retryTimes = {}, errorMessage = {}", request, retryTimes,
                         e.getMessage());

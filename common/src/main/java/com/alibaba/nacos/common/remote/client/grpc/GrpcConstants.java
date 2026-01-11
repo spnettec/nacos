@@ -48,6 +48,9 @@ public class GrpcConstants {
     
     @GRpcConfigLabel
     public static final String GRPC_RETRY_TIMES = NACOS_CLIENT_GRPC + ".retry.times";
+
+    @GRpcConfigLabel
+    public static final String GRPC_RETRY_WAITMILLS = NACOS_CLIENT_GRPC + ".retry.waitmills";
     
     @GRpcConfigLabel
     public static final String GRPC_TIMEOUT_MILLS = NACOS_CLIENT_GRPC + ".timeout";

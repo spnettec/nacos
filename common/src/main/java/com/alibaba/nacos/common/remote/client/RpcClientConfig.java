@@ -38,6 +38,13 @@ public interface RpcClientConfig {
      * @return retryTimes.
      */
     int retryTimes();
+
+    /**
+     * get request retry waitMills.
+     *
+     * @return retryWaitMills.
+     */
+    long retryWaitMills();
     
     /**
      * get time out mills.
