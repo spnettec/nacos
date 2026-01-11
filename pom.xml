@@ -1056,7 +1056,7 @@
                 <version>${jjwt.version}</version>
                 <scope>runtime</scope>
             </dependency>
-            
+
             <!-- gRPC dependency start -->
             <dependency>
                 <groupId>io.grpc</groupId>
