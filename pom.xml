@@ -118,7 +118,7 @@
         <maven-gpg-plugin.version>3.1.0</maven-gpg-plugin.version>
         <maven-failsafe-plugin.version>3.2.5</maven-failsafe-plugin.version>
         <maven-assembly-plugin.version>3.0.0</maven-assembly-plugin.version>
-        <maven-checkstyle-plugin.version>3.1.2</maven-checkstyle-plugin.version>
+        <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
         <maven-easyj-version>1.1.5</maven-easyj-version>
         <!-- dependency version related to plugin -->
         <extra-enforcer-rules.version>1.9.0</extra-enforcer-rules.version>
@@ -131,7 +131,7 @@
         <slf4j-api.version>2.0.17</slf4j-api.version>
         <logback.version>1.5.23</logback.version>
         <log4j.version>2.25.3</log4j.version>
-
+        
         <mysql-connector-java.version>8.2.0</mysql-connector-java.version>
         <postgresql.version>42.7.8</postgresql.version>
         <derby.version>10.17.1.0</derby.version>
