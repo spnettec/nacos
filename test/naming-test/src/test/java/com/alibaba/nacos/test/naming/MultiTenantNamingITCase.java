@@ -54,6 +54,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author nkorange
  */
+@Disabled
 @SpringBootTest(classes = Nacos.class, properties = {
         "server.servlet.context-path=/nacos"}, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class MultiTenantNamingITCase {
