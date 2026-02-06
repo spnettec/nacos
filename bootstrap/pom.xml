@@ -55,7 +55,7 @@
             </activation>
             <dependencies>
                 <dependency>
-                    <groupId>com.alibaba.nacos</groupId>
+                    <groupId>${project.groupId}</groupId>
                     <artifactId>nacos-default-plugin-all</artifactId>
                     <version>${project.version}</version>
                 </dependency>
