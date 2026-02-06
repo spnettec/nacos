@@ -104,7 +104,7 @@
         <dependency-mediator-maven-plugin.version>1.0.2</dependency-mediator-maven-plugin.version>
         <clirr-maven-plugin.version>2.7</clirr-maven-plugin.version>
         <maven-enforcer-plugin.version>3.5.0</maven-enforcer-plugin.version>
-        <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
+        <maven-compiler-plugin.version>3.15.0</maven-compiler-plugin.version>
         <maven-javadoc-plugin.version>3.5.0</maven-javadoc-plugin.version>
         <maven-jar-plugin.version>3.2.2</maven-jar-plugin.version>
         <maven-source-plugin.version>3.0.1</maven-source-plugin.version>
@@ -125,20 +125,20 @@
         <p3c-pmd.version>2.1.1</p3c-pmd.version>
         
         <!-- dependency version -->
-        <spring-boot-dependencies.version>4.0.1</spring-boot-dependencies.version>
+        <spring-boot-dependencies.version>4.0.2</spring-boot-dependencies.version>
         <commons-io.version>2.21.0</commons-io.version>
         <commons-collections4.version>4.5.0</commons-collections4.version>
         <slf4j-api.version>2.0.17</slf4j-api.version>
-        <logback.version>1.5.23</logback.version>
+        <logback.version>1.5.27</logback.version>
         <log4j.version>2.25.3</log4j.version>
         
         <mysql-connector-java.version>8.2.0</mysql-connector-java.version>
         <postgresql.version>42.7.8</postgresql.version>
         <derby.version>10.17.1.0</derby.version>
         <jjwt.version>0.12.6</jjwt.version>
-        <grpc-java.version>1.78.0</grpc-java.version>
-        <proto-google-common-protos.version>2.63.2</proto-google-common-protos.version>
-        <protobuf-java.version>4.33.2</protobuf-java.version>
+        <grpc-java.version>1.79.0</grpc-java.version>
+        <proto-google-common-protos.version>2.65.1</proto-google-common-protos.version>
+        <protobuf-java.version>4.33.5</protobuf-java.version>
         <protoc-gen-grpc-java.version>${grpc-java.version}</protoc-gen-grpc-java.version>
         <hessian.version>4.0.66</hessian.version>
         <mockito.version>5.21.0</mockito.version>
@@ -162,7 +162,7 @@
         <concurrentlinkedhashmap.version>1.4.2</concurrentlinkedhashmap.version>
 
         <!-- native -->
-        <native-maven-plugin.version>0.10.6</native-maven-plugin.version>
+        <native-maven-plugin.version>0.11.4</native-maven-plugin.version>
     </properties>
     <!-- == -->
     <!-- =========================================================Build plugins================================================ -->
@@ -1018,6 +1018,16 @@
             <dependency>
                 <groupId>org.apache.derby</groupId>
                 <artifactId>derby</artifactId>
+                <version>${derby.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.derby</groupId>
+                <artifactId>derbyshared</artifactId> <!-- 必须包含 -->
+                <version>${derby.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.derby</groupId>
+                <artifactId>derbytools</artifactId> <!-- EmbeddedDriver 类在此包中 -->
                 <version>${derby.version}</version>
             </dependency>
             

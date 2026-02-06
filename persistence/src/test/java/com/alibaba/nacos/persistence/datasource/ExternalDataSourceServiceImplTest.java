@@ -57,7 +57,6 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class ExternalDataSourceServiceImplTest {
 
-    @InjectMocks
     private ExternalDataSourceServiceImpl service;
 
     @Mock
