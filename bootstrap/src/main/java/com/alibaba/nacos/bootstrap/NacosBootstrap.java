@@ -46,8 +46,8 @@ public class NacosBootstrap {
     private static final String SPRING_JMX_ENABLED = "spring.jmx.enabled";
 
     public static void main(String[] args) {
-        String STANDALONE_MODE = "nacos.standalone";
-        System.setProperty(STANDALONE_MODE, "true");
+        String standaloneMode = "nacos.standalone";
+        System.setProperty(standaloneMode, "true");
         String type = System.getProperty(Constants.NACOS_DEPLOYMENT_TYPE, Constants.NACOS_DEPLOYMENT_TYPE_MERGED);
         DeploymentType deploymentType = DeploymentType.getType(type);
         EnvUtil.setDeploymentType(deploymentType);

@@ -32,7 +32,7 @@ import tools.jackson.databind.jsontype.NamedType;
  */
 public class HealthCheckerFactory {
     
-    private static ObjectMapper MAPPER = JsonMapper.builder()
+    private static ObjectMapper healthCheckerMAPPER = JsonMapper.builder()
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES).build();
     
     /**
@@ -52,7 +52,7 @@ public class HealthCheckerFactory {
      */
     public static void registerSubType(Class<? extends AbstractHealthChecker> extendHealthCheckerClass,
             String typeName) {
-        MAPPER = MAPPER.rebuild().registerSubtypes(new NamedType(extendHealthCheckerClass, typeName)).build();
+        healthCheckerMAPPER = healthCheckerMAPPER.rebuild().registerSubtypes(new NamedType(extendHealthCheckerClass, typeName)).build();
     }
     
     /**
@@ -72,7 +72,7 @@ public class HealthCheckerFactory {
      */
     public static AbstractHealthChecker deserialize(String jsonString) {
         try {
-            return MAPPER.readValue(jsonString, AbstractHealthChecker.class);
+            return healthCheckerMAPPER.readValue(jsonString, AbstractHealthChecker.class);
         } catch (JacksonException e) {
             throw new NacosDeserializationException(AbstractHealthChecker.class, e);
         }
@@ -86,7 +86,7 @@ public class HealthCheckerFactory {
      */
     public static String serialize(AbstractHealthChecker healthChecker) {
         try {
-            return MAPPER.writeValueAsString(healthChecker);
+            return healthCheckerMAPPER.writeValueAsString(healthChecker);
         } catch (JacksonException e) {
             throw new NacosSerializationException(healthChecker.getClass(), e);
         }

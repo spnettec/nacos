@@ -24,8 +24,6 @@ import com.alibaba.nacos.plugin.datasource.mapper.ConfigMigrateMapper;
 import com.alibaba.nacos.plugin.datasource.model.MapperContext;
 import com.alibaba.nacos.plugin.datasource.model.MapperResult;
 
-import java.util.ArrayList;
-
 /**
  * The type Config migrate mapper by derby.
  *
@@ -36,7 +34,8 @@ public class ConfigMigrateMapperByMssql extends AbstractMapperByDerby implements
     @Override
     public MapperResult findConfigIdNeedInsertMigrate(MapperContext context) {
         String sql = "SELECT ci.id FROM config_info ci WHERE ci.tenant_id = '' AND NOT EXISTS "
-                + " ( SELECT 1 FROM config_info ci2  WHERE ci2.data_id = ci.data_id AND ci2.group_id = ci.group_id AND ci2.tenant_id = 'public' )"
+                + " ( SELECT 1 FROM config_info ci2  WHERE ci2.data_id = ci.data_id AND "
+                + "ci2.group_id = ci.group_id AND ci2.tenant_id = 'public' )"
                 + " AND ci.id > ?" + " ORDER BY ci.id OFFSET 0 ROWS FETCH NEXT ? ROWS ONLY";
         return new MapperResult(sql, CollectionUtils.list(context.getWhereParameter(FieldConstant.ID),
                 context.getPageSize()));

@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
 
 public class Sequence {
 
-    private static final Logger log = LoggerFactory.getLogger(Sequence.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Sequence.class);
 
     /**
      * 时间起始标记点，作为基准，一般取系统的最近时间（一旦确定不能变动）
@@ -78,7 +78,7 @@ public class Sequence {
      */
     private long lastTimestamp = -1L;
 
-    private static volatile InetAddress LOCAL_ADDRESS = null;
+    private static volatile InetAddress localAddress = null;
     private static final Pattern IP_PATTERN = Pattern.compile("\\d{1,3}(\\.\\d{1,3}){3,5}$");
 
     public Sequence() {
@@ -128,7 +128,7 @@ public class Sequence {
                 }
             }
         } catch (Exception e) {
-            log.warn(" getDatacenterId: " + e.getMessage());
+            LOG.warn(" getDatacenterId: " + e.getMessage());
         }
 
         return id;
@@ -219,12 +219,12 @@ public class Sequence {
      * @return first valid local IP
      */
     public static InetAddress getLocalAddress() {
-        if (LOCAL_ADDRESS != null) {
-            return LOCAL_ADDRESS;
+        if (localAddress != null) {
+            return localAddress;
         }
 
-        LOCAL_ADDRESS = getLocalAddress0();
-        return LOCAL_ADDRESS;
+        localAddress = getLocalAddress0();
+        return localAddress;
     }
 
     private static InetAddress getLocalAddress0() {
@@ -235,7 +235,7 @@ public class Sequence {
                 return localAddress;
             }
         } catch (Throwable e) {
-            log.warn("Failed to retrieving ip address, " + e.getMessage(), e);
+            LOG.warn("Failed to retrieving ip address, " + e.getMessage(), e);
         }
 
         try {
@@ -251,18 +251,18 @@ public class Sequence {
                                 return address;
                             }
                         } catch (Throwable e) {
-                            log.warn("Failed to retrieving ip address, " + e.getMessage(), e);
+                            LOG.warn("Failed to retrieving ip address, " + e.getMessage(), e);
                         }
                     }
                 } catch (Throwable e) {
-                    log.warn("Failed to retrieving ip address, " + e.getMessage(), e);
+                    LOG.warn("Failed to retrieving ip address, " + e.getMessage(), e);
                 }
             }
         } catch (Throwable e) {
-            log.warn("Failed to retrieving ip address, " + e.getMessage(), e);
+            LOG.warn("Failed to retrieving ip address, " + e.getMessage(), e);
         }
 
-        log.error("Could not get local host ip address, will use 127.0.0.1 instead.");
+        LOG.error("Could not get local host ip address, will use 127.0.0.1 instead.");
         return localAddress;
     }
 

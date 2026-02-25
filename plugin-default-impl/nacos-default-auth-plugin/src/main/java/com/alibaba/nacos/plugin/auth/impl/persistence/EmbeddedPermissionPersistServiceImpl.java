@@ -58,7 +58,7 @@ public class EmbeddedPermissionPersistServiceImpl implements PermissionPersistSe
         String sqlCountRows = "SELECT count(*) FROM permissions WHERE ";
 
         String sqlFetchRows = "SELECT role,resource,action FROM permissions WHERE ";
-        if(dataSourceType.equals(ORACLE)){
+        if (dataSourceType.equals(ORACLE)) {
             sqlFetchRows = "SELECT role,\"RESOURCE\",action FROM permissions WHERE ";
         }
         String where = " role= ? ";
@@ -90,7 +90,7 @@ public class EmbeddedPermissionPersistServiceImpl implements PermissionPersistSe
     @Override
     public void addPermission(String role, String resource, String action) {
         String sql = "INSERT INTO permissions (role, resource, action) VALUES (?, ?, ?)";
-        if(dataSourceType.equals(ORACLE)){
+        if (dataSourceType.equals(ORACLE)) {
             sql = "INSERT INTO permissions (role, \"RESOURCE\", action) VALUES (?, ?, ?)";
         }
         EmbeddedStorageContextHolder.addSqlContext(sql, role, resource, action);
@@ -107,7 +107,7 @@ public class EmbeddedPermissionPersistServiceImpl implements PermissionPersistSe
     @Override
     public void deletePermission(String role, String resource, String action) {
         String sql = "DELETE FROM permissions WHERE role=? AND resource=? AND action=?";
-        if(dataSourceType.equals(ORACLE)){
+        if (dataSourceType.equals(ORACLE)) {
             sql = "DELETE FROM permissions WHERE role=? AND \"RESOURCE\"=? AND action=?";
         }
         EmbeddedStorageContextHolder.addSqlContext(sql, role, resource, action);
@@ -121,7 +121,7 @@ public class EmbeddedPermissionPersistServiceImpl implements PermissionPersistSe
         String sqlCountRows = "SELECT count(*) FROM permissions ";
 
         String sqlFetchRows = "SELECT role,resource,action FROM permissions ";
-        if(dataSourceType.equals(ORACLE)){
+        if (dataSourceType.equals(ORACLE)) {
             sqlFetchRows = "SELECT role,\"RESOURCE\",action FROM permissions WHERE ";
         }
 

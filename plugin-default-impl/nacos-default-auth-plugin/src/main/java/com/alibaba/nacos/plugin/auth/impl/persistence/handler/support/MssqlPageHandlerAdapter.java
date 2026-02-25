@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.alibaba.nacos.persistence.constants.PersistenceConstant;
 import com.alibaba.nacos.plugin.auth.impl.constant.AuthPageConstant;
 import com.alibaba.nacos.plugin.auth.impl.model.OffsetFetchResult;
 import com.alibaba.nacos.plugin.auth.impl.persistence.handler.PageHandlerAdapter;

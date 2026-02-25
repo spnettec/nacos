@@ -19,7 +19,6 @@ package com.alibaba.nacos.plugin.datasource.impl.oracle;
 import com.alibaba.nacos.common.utils.CollectionUtils;
 import com.alibaba.nacos.common.utils.NamespaceUtil;
 import com.alibaba.nacos.common.utils.StringUtils;
-import com.alibaba.nacos.common.utils.UuidUtils;
 import com.alibaba.nacos.plugin.datasource.constants.ContextConstant;
 import com.alibaba.nacos.plugin.datasource.constants.DataSourceConstant;
 import com.alibaba.nacos.plugin.datasource.constants.FieldConstant;
@@ -190,7 +189,7 @@ public class ConfigInfoMapperByOracle extends AbstractMapperByOracle implements 
         if (StringUtils.isNotBlank(dataId)) {
             where.append(" tenant_id=? ");
             paramList.add(tenantId);
-        } else{
+        } else {
             where.append(" tenant_id is NULL ");
         }
         if (StringUtils.isNotBlank(dataId)) {
@@ -227,7 +226,7 @@ public class ConfigInfoMapperByOracle extends AbstractMapperByOracle implements 
         if (StringUtils.isNotBlank(dataId)) {
             where.append(" tenant_id=? ");
             paramList.add(tenantId);
-        } else{
+        } else {
             where.append(" tenant_id is NULL ");
         }
         if (StringUtils.isNotBlank(dataId)) {
@@ -272,7 +271,7 @@ public class ConfigInfoMapperByOracle extends AbstractMapperByOracle implements 
         if (StringUtils.isNotBlank(tenantId)) {
             where.append(" tenant_id LIKE ? ");
             paramList.add(tenantId);
-        } else{
+        } else {
             where.append(" tenant_id is NULL ");
         }
         if (!StringUtils.isBlank(dataId)) {
@@ -293,6 +292,7 @@ public class ConfigInfoMapperByOracle extends AbstractMapperByOracle implements 
         }
         return new MapperResult(sqlCountRows + where, paramList);
     }
+
     @Override
     public MapperResult findConfigInfoLike4PageFetchRows(MapperContext context) {
 
@@ -309,7 +309,7 @@ public class ConfigInfoMapperByOracle extends AbstractMapperByOracle implements 
         if (StringUtils.isNotBlank(dataId)) {
             where.append(" tenant_id=? ");
             paramList.add(tenantId);
-        } else{
+        } else {
             where.append(" tenant_id is NULL ");
         }
         if (!StringUtils.isBlank(dataId)) {
@@ -343,13 +343,14 @@ public class ConfigInfoMapperByOracle extends AbstractMapperByOracle implements 
         List<Object> parasList = CollectionUtils.list(context.getStartRow(),
                 context.getPageSize());
         if (StringUtils.isNotBlank(tenantId)) {
-            sql = sql.replace("tenant_id IS NULL","tenant_id LIKE ?");
-            parasList.add(0,tenantId);
+            sql = sql.replace("tenant_id IS NULL", "tenant_id LIKE ?");
+            parasList.add(0, tenantId);
         }
         return new MapperResult(sql,
                 CollectionUtils.list(context.getStartRow(),
                         context.getPageSize()));
     }
+
     @Override
     public MapperResult updateConfigInfoAtomicCas(MapperContext context) {
         List<Object> paramList = new ArrayList<>();
@@ -372,13 +373,13 @@ public class ConfigInfoMapperByOracle extends AbstractMapperByOracle implements 
                 + ", app_name=?, c_desc=?, c_use=?, effect=?, type=?, c_schema=?, encrypted_data_key=? "
                 + "WHERE data_id=? AND group_id=? AND tenant_id=? AND (md5=? OR md5 IS NULL OR md5='')";
         String tenantTmp = (String) context.getWhereParameter(FieldConstant.TENANT_ID);
-        if(StringUtils.isNotBlank(tenantTmp)) {
+        if (StringUtils.isNotBlank(tenantTmp)) {
             paramList.add(context.getWhereParameter(FieldConstant.TENANT_ID));
-        } else{
+        } else {
             sql = "UPDATE config_info SET " + "content=?, md5=?, src_ip=?, src_user=?, gmt_modified="
                     + "(SELECT SYSTIMESTAMP FROM DUAL)"
                     + ", app_name=?, c_desc=?, c_use=?, effect=?, type=?, c_schema=?, encrypted_data_key=? "
-                    +  "WHERE data_id=? AND group_id=? AND tenant_id is NULL AND (md5=? OR md5 IS NULL OR md5='')";
+                    + "WHERE data_id=? AND group_id=? AND tenant_id is NULL AND (md5=? OR md5 IS NULL OR md5='')";
         }
         paramList.add(context.getWhereParameter(FieldConstant.MD5));
 

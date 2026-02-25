@@ -15,6 +15,7 @@
  */
 
 package com.alibaba.nacos.api.config.model;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import tools.jackson.core.JacksonException;

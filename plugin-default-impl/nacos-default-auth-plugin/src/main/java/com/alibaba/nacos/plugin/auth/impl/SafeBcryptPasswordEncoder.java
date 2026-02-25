@@ -16,7 +16,6 @@
 
 package com.alibaba.nacos.plugin.auth.impl;
 
-import com.alibaba.nacos.plugin.auth.impl.constant.AuthConstants;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 /**

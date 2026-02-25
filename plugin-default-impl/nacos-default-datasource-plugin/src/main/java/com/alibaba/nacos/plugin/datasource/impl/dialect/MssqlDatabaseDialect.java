@@ -17,7 +17,6 @@
 package com.alibaba.nacos.plugin.datasource.impl.dialect;
 
 import com.alibaba.nacos.plugin.datasource.constants.DatabaseTypeConstant;
-import com.alibaba.nacos.plugin.datasource.impl.enums.derby.TrustedDerbyFunctionEnum;
 import com.alibaba.nacos.plugin.datasource.impl.enums.mssql.TrustedMssqlFunctionEnum;
 
 /**

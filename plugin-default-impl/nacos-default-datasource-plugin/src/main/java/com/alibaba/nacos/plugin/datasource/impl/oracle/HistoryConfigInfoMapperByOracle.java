@@ -57,23 +57,27 @@ public class HistoryConfigInfoMapperByOracle extends AbstractMapperByOracle impl
     @Override
     public MapperResult pageFindConfigHistoryFetchRows(MapperContext context) {
         String sql =
-                "SELECT nid,data_id,group_id,tenant_id,app_name,src_ip,src_user,op_type,gray_name,ext_info,publish_type,gmt_create,gmt_modified FROM his_config_info "
+                "SELECT nid,data_id,group_id,tenant_id,app_name,src_ip,src_user,op_type,gray_name,ext_info,"
+                        + "publish_type,gmt_create,gmt_modified FROM his_config_info "
                         + "WHERE data_id is NULL AND group_id is NULL AND tenant_id is NULL ORDER BY nid DESC  OFFSET "
-                        + context.getStartRow() + " ROWS FETCH NEXT " + context.getPageSize() + " ROWS ONLY";
+                        + context.getStartRow()
+                        + " ROWS FETCH NEXT "
+                        + context.getPageSize()
+                        + " ROWS ONLY";
         List<Object> paraList = new ArrayList<>();
         final String dataId = (String) context.getWhereParameter(FieldConstant.DATA_ID);
         final String groupId = (String) context.getWhereParameter(FieldConstant.GROUP_ID);
         final String tenantId = (String) context.getWhereParameter(FieldConstant.TENANT_ID);
         if (StringUtils.isNotBlank(dataId)) {
-            sql = sql.replace("data_id is NULL","data_id = ?");
+            sql = sql.replace("data_id is NULL", "data_id = ?");
             paraList.add(dataId);
         }
         if (StringUtils.isNotBlank(groupId)) {
-            sql = sql.replace("group_id is NULL","group_id = ?");
+            sql = sql.replace("group_id is NULL", "group_id = ?");
             paraList.add(groupId);
         }
         if (StringUtils.isNotBlank(tenantId)) {
-            sql = sql.replace("tenant_id is NULL","tenant_id = ?");
+            sql = sql.replace("tenant_id is NULL", "tenant_id = ?");
             paraList.add(tenantId);
         }
         return new MapperResult(sql, paraList);

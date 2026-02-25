@@ -51,8 +51,8 @@ public class HistoryService {
     private final ConfigInfoGrayPersistService configInfoGrayPersistService;
 
     public HistoryService(HistoryConfigInfoPersistService historyConfigInfoPersistService,
-            ConfigInfoPersistService configInfoPersistService,
-            ConfigInfoGrayPersistService configInfoGrayPersistService) {
+                          ConfigInfoPersistService configInfoPersistService,
+                          ConfigInfoGrayPersistService configInfoGrayPersistService) {
         this.historyConfigInfoPersistService = historyConfigInfoPersistService;
         this.configInfoPersistService = configInfoPersistService;
         this.configInfoGrayPersistService = configInfoGrayPersistService;
@@ -62,7 +62,7 @@ public class HistoryService {
      * Query the list history config.
      */
     public Page<ConfigHistoryInfo> listConfigHistory(String dataId, String group, String namespaceId, Integer pageNo,
-            Integer pageSize) {
+                                                     Integer pageSize) {
         return historyConfigInfoPersistService.findConfigHistory(dataId, group, namespaceId, pageNo, pageSize);
     }
 
@@ -117,10 +117,10 @@ public class HistoryService {
      * Check if the input dataId,group and namespaceId match the history config.
      */
     private void checkHistoryInfoPermission(ConfigHistoryInfo configHistoryInfo, String dataId, String group,
-            String namespaceId) throws AccessException {
-        if (!Objects.equals(configHistoryInfo.getDataId() == null? "":configHistoryInfo.getDataId(), dataId)
-                || !Objects.equals(configHistoryInfo.getGroup() == null? "":configHistoryInfo.getGroup(),
-                group) || !Objects.equals(configHistoryInfo.getTenant() == null? "":configHistoryInfo.getTenant(), namespaceId)) {
+                                            String namespaceId) throws AccessException {
+        if (!Objects.equals(configHistoryInfo.getDataId() == null ? "" : configHistoryInfo.getDataId(), dataId)
+                || !Objects.equals(configHistoryInfo.getGroup() == null ? "" : configHistoryInfo.getGroup(),
+                group) || !Objects.equals(configHistoryInfo.getTenant() == null ? "" : configHistoryInfo.getTenant(), namespaceId)) {
             throw new AccessException("Please check dataId, group or namespaceId.");
         }
     }
@@ -172,7 +172,7 @@ public class HistoryService {
                 currentConfigInfo = StringUtils.isEmpty(configHistoryInfoDetail.getGrayName())
                         ? configInfoPersistService.findConfigInfo(dataId, group, namespaceId)
                         : configInfoGrayPersistService.findConfigInfo4Gray(dataId, group, namespaceId,
-                                configHistoryInfoDetail.getGrayName());
+                        configHistoryInfoDetail.getGrayName());
                 nextHistoryInfo = historyConfigInfoPersistService.getNextHistoryInfo(dataId, group, namespaceId,
                         configHistoryInfoDetail.getPublishType(), configHistoryInfoDetail.getGrayName(), nid);
 

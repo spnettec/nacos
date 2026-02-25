@@ -16,7 +16,6 @@
 
 package com.alibaba.nacos.api.naming.pojo.healthcheck;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import tools.jackson.core.JacksonException;

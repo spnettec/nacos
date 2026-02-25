@@ -58,6 +58,7 @@ import static com.alibaba.nacos.config.server.service.repository.ConfigRowMapper
 
 /**
  * The type External config migrate persist service.
+ *
  * @author Sunrisea
  */
 @Conditional(value = ConditionOnExternalStorage.class)
@@ -158,7 +159,7 @@ public class ExternalConfigMigratePersistServiceImpl implements ConfigMigratePer
 
     @Override
     public List<ConfigInfo> getMigrateConfigUpdateList(long startId, int pageSize, String srcTenant,
-            String targetTenant, String srcUser) {
+                                                       String targetTenant, String srcUser) {
         ConfigMigrateMapper configMigrateMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                 TableConstant.MIGRATE_CONFIG);
         MapperContext context = new MapperContext();
@@ -174,7 +175,7 @@ public class ExternalConfigMigratePersistServiceImpl implements ConfigMigratePer
 
     @Override
     public List<ConfigInfoGrayWrapper> getMigrateConfigGrayUpdateList(long startId, int pageSize, String srcTenant,
-            String targetTenant, String srcUser) {
+                                                                      String targetTenant, String srcUser) {
         ConfigMigrateMapper configMigrateMapper = mapperManager.findMapper(dataSourceService.getDataSourceType(),
                 TableConstant.MIGRATE_CONFIG);
         MapperContext context = new MapperContext();
@@ -184,7 +185,7 @@ public class ExternalConfigMigratePersistServiceImpl implements ConfigMigratePer
         context.putWhereParameter(FieldConstant.TARGET_TENANT, targetTenant);
         context.setPageSize(pageSize);
         MapperResult mapperResult = configMigrateMapper.findConfigGrayNeedUpdateMigrate(context);
-        return jt.query(mapperResult.getSql(),CONFIG_INFO_GRAY_WRAPPER_ROW_MAPPER,
+        return jt.query(mapperResult.getSql(), CONFIG_INFO_GRAY_WRAPPER_ROW_MAPPER,
                 mapperResult.getParamList().toArray());
     }
 
@@ -222,7 +223,7 @@ public class ExternalConfigMigratePersistServiceImpl implements ConfigMigratePer
 
     @Override
     public void syncConfigGray(String dataId, String group, String tenant, String grayName, String targetTenant,
-            String srcUser) {
+                               String srcUser) {
         tjt.execute(status -> {
             try {
                 ConfigInfoGrayWrapper sourceConfigInfoGrayWrapper = configInfoGrayPersistService.findConfigInfo4Gray(
@@ -288,7 +289,7 @@ public class ExternalConfigMigratePersistServiceImpl implements ConfigMigratePer
      * @param srcUser  the src user
      */
     public void removeConfigInfoGrayWithoutHistory(final String dataId, final String group, final String tenant,
-            final String grayName, final String srcIp, final String srcUser) {
+                                                   final String grayName, final String srcIp, final String srcUser) {
         String tenantTmp = StringUtils.isBlank(tenant) ? StringUtils.EMPTY : tenant;
         String grayNameTmp = StringUtils.isBlank(grayName) ? StringUtils.EMPTY : grayName;
         try {
@@ -312,7 +313,7 @@ public class ExternalConfigMigratePersistServiceImpl implements ConfigMigratePer
      * @param srcUser    the src user
      */
     public void updateConfigInfo4GrayWithoutHistory(ConfigInfo configInfo, String grayName, String grayRule,
-            String srcIp, String srcUser, long lastModified, final String targetMd5) {
+                                                    String srcIp, String srcUser, long lastModified, final String targetMd5) {
         String appNameTmp = StringUtils.defaultEmptyIfBlank(configInfo.getAppName());
         String tenantTmp = StringUtils.defaultEmptyIfBlank(configInfo.getTenant());
         String grayNameTmp = StringUtils.isBlank(grayName) ? StringUtils.EMPTY : grayName.trim();
@@ -370,7 +371,7 @@ public class ExternalConfigMigratePersistServiceImpl implements ConfigMigratePer
                     } else if (sourceConfigInfoWrapper.getLastModified() >= targetConfigInfoWrapper.getLastModified()) {
                         sourceConfigInfoWrapper.setTenant(targetTenant);
                         updateConfigInfoAtomic(sourceConfigInfoWrapper, null, srcUser, null, targetConfigInfoWrapper.getLastModified(),
-                                 targetConfigInfoWrapper.getMd5());
+                                targetConfigInfoWrapper.getMd5());
                         ConfigInfoWrapper configInfoWrapper = configInfoPersistService.findConfigInfo(dataId, group,
                                 tenant);
                         if (!StringUtils.equals(configInfoWrapper.getMd5(), sourceConfigInfoWrapper.getMd5())) {
@@ -401,7 +402,7 @@ public class ExternalConfigMigratePersistServiceImpl implements ConfigMigratePer
      * @param lastModified      the last modified
      */
     public void updateConfigInfoAtomic(final ConfigInfo configInfo, final String srcIp, final String srcUser,
-            Map<String, Object> configAdvanceInfo, long lastModified, final String targetMd5) {
+                                       Map<String, Object> configAdvanceInfo, long lastModified, final String targetMd5) {
         String appNameTmp = StringUtils.defaultEmptyIfBlank(configInfo.getAppName());
         String tenantTmp = StringUtils.defaultEmptyIfBlank(configInfo.getTenant());
         final String md5Tmp = MD5Utils.md5Hex(configInfo.getContent(), Constants.ENCODE);

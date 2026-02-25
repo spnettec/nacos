@@ -167,7 +167,7 @@ class ExternalHistoryConfigInfoPersistServiceImplTest {
         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
         String publishType = "formal";
         Mockito.when(jdbcTemplate.query(anyString(),
-                eq(HISTORY_DETAIL_ROW_MAPPER), eq(new Object[] {publishType, timestamp, startId, pageSize}))).thenReturn(list);
+                eq(HISTORY_DETAIL_ROW_MAPPER), eq(new Object[]{publishType, timestamp, startId, pageSize}))).thenReturn(list);
         //execute
         List<ConfigInfoStateWrapper> deletedConfig = externalHistoryConfigInfoPersistService.findDeletedConfig(
                 timestamp, startId, pageSize, "formal");
@@ -183,7 +183,8 @@ class ExternalHistoryConfigInfoPersistServiceImplTest {
 
         //mock exception
         Mockito.when(jdbcTemplate.query(anyString(),
-                eq(HISTORY_DETAIL_ROW_MAPPER), eq(new Object[] {publishType, timestamp, startId, pageSize}))).thenThrow(new CannotGetJdbcConnectionException("conn error"));
+                        eq(HISTORY_DETAIL_ROW_MAPPER), eq(new Object[]{publishType, timestamp, startId, pageSize})))
+                .thenThrow(new CannotGetJdbcConnectionException("conn error"));
 
         try {
             externalHistoryConfigInfoPersistService.findDeletedConfig(timestamp, startId, pageSize, "formal");
@@ -202,7 +203,7 @@ class ExternalHistoryConfigInfoPersistServiceImplTest {
 
         //mock count
         Mockito.when(
-                        jdbcTemplate.queryForObject(anyString(), eq(Integer.class), eq(new Object[] {dataId, group, tenant})))
+                        jdbcTemplate.queryForObject(anyString(), eq(Integer.class), eq(new Object[]{dataId, group, tenant})))
                 .thenReturn(300);
         //mock list
         List<ConfigHistoryInfo> mockList = new ArrayList<>();
@@ -210,7 +211,7 @@ class ExternalHistoryConfigInfoPersistServiceImplTest {
         mockList.add(createMockConfigHistoryInfo(1));
         mockList.add(createMockConfigHistoryInfo(2));
         Mockito.when(
-                        jdbcTemplate.query(anyString(), eq(HISTORY_LIST_ROW_MAPPER), eq(new Object[] {dataId, group, tenant})))
+                        jdbcTemplate.query(anyString(), eq(HISTORY_LIST_ROW_MAPPER), eq(new Object[]{dataId, group, tenant})))
                 .thenReturn(mockList);
         int pageSize = 100;
         int pageNo = 2;
@@ -222,7 +223,7 @@ class ExternalHistoryConfigInfoPersistServiceImplTest {
 
         //mock exception
         Mockito.when(
-                        jdbcTemplate.queryForObject(anyString(), eq(Integer.class), eq(new Object[] {dataId, group, tenant})))
+                        jdbcTemplate.queryForObject(anyString(), eq(Integer.class), eq(new Object[]{dataId, group, tenant})))
                 .thenThrow(new CannotGetJdbcConnectionException("conn error111"));
         try {
             externalHistoryConfigInfoPersistService.findConfigHistory(dataId, group, tenant, pageNo, pageSize);
@@ -238,20 +239,20 @@ class ExternalHistoryConfigInfoPersistServiceImplTest {
 
         //mock query
         ConfigHistoryInfo mockConfigHistoryInfo = createMockConfigHistoryInfo(0);
-        Mockito.when(jdbcTemplate.queryForObject(anyString(), eq(HISTORY_DETAIL_ROW_MAPPER), eq(new Object[] {nid})))
+        Mockito.when(jdbcTemplate.queryForObject(anyString(), eq(HISTORY_DETAIL_ROW_MAPPER), eq(new Object[]{nid})))
                 .thenReturn(mockConfigHistoryInfo);
         //execute & verify
         ConfigHistoryInfo historyReturn = externalHistoryConfigInfoPersistService.detailConfigHistory(nid);
         assertEquals(mockConfigHistoryInfo, historyReturn);
 
         //mock exception EmptyResultDataAccessException
-        Mockito.when(jdbcTemplate.queryForObject(anyString(), eq(HISTORY_DETAIL_ROW_MAPPER), eq(new Object[] {nid})))
+        Mockito.when(jdbcTemplate.queryForObject(anyString(), eq(HISTORY_DETAIL_ROW_MAPPER), eq(new Object[]{nid})))
                 .thenThrow(new EmptyResultDataAccessException(1));
         ConfigHistoryInfo historyReturnNull = externalHistoryConfigInfoPersistService.detailConfigHistory(nid);
         assertNull(historyReturnNull);
 
         //mock exception CannotGetJdbcConnectionException
-        Mockito.when(jdbcTemplate.queryForObject(anyString(), eq(HISTORY_DETAIL_ROW_MAPPER), eq(new Object[] {nid})))
+        Mockito.when(jdbcTemplate.queryForObject(anyString(), eq(HISTORY_DETAIL_ROW_MAPPER), eq(new Object[]{nid})))
                 .thenThrow(new CannotGetJdbcConnectionException("conn error111"));
         try {
             externalHistoryConfigInfoPersistService.detailConfigHistory(nid);
@@ -266,20 +267,20 @@ class ExternalHistoryConfigInfoPersistServiceImplTest {
         long nid = 256789;
         //mock query
         ConfigHistoryInfo mockConfigHistoryInfo = createMockConfigHistoryInfo(0);
-        Mockito.when(jdbcTemplate.queryForObject(anyString(), eq(HISTORY_DETAIL_ROW_MAPPER), eq(new Object[] {nid})))
+        Mockito.when(jdbcTemplate.queryForObject(anyString(), eq(HISTORY_DETAIL_ROW_MAPPER), eq(new Object[]{nid})))
                 .thenReturn(mockConfigHistoryInfo);
         //execute & verify
         ConfigHistoryInfo historyReturn = externalHistoryConfigInfoPersistService.detailPreviousConfigHistory(nid);
         assertEquals(mockConfigHistoryInfo, historyReturn);
 
         //mock exception EmptyResultDataAccessException
-        Mockito.when(jdbcTemplate.queryForObject(anyString(), eq(HISTORY_DETAIL_ROW_MAPPER), eq(new Object[] {nid})))
+        Mockito.when(jdbcTemplate.queryForObject(anyString(), eq(HISTORY_DETAIL_ROW_MAPPER), eq(new Object[]{nid})))
                 .thenThrow(new EmptyResultDataAccessException(1));
         ConfigHistoryInfo historyReturnNull = externalHistoryConfigInfoPersistService.detailPreviousConfigHistory(nid);
         assertNull(historyReturnNull);
 
         //mock exception CannotGetJdbcConnectionException
-        Mockito.when(jdbcTemplate.queryForObject(anyString(), eq(HISTORY_DETAIL_ROW_MAPPER), eq(new Object[] {nid})))
+        Mockito.when(jdbcTemplate.queryForObject(anyString(), eq(HISTORY_DETAIL_ROW_MAPPER), eq(new Object[]{nid})))
                 .thenThrow(new CannotGetJdbcConnectionException("conn error111"));
         try {
             externalHistoryConfigInfoPersistService.detailPreviousConfigHistory(nid);
@@ -294,14 +295,14 @@ class ExternalHistoryConfigInfoPersistServiceImplTest {
         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 
         //mock count
-        Mockito.when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class), eq(new Object[] {timestamp})))
+        Mockito.when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class), eq(new Object[]{timestamp})))
                 .thenReturn(308);
         //execute & verify
         int count = externalHistoryConfigInfoPersistService.findConfigHistoryCountByTime(timestamp);
         assertEquals(308, count);
 
         //mock count is null
-        Mockito.when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class), eq(new Object[] {timestamp})))
+        Mockito.when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class), eq(new Object[]{timestamp})))
                 .thenReturn(null);
         //execute & verify
         try {

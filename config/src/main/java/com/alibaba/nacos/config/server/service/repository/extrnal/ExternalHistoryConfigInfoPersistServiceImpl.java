@@ -90,7 +90,7 @@ public class ExternalHistoryConfigInfoPersistServiceImpl implements HistoryConfi
 
     @Override
     public void insertConfigHistoryAtomic(long id, ConfigInfo configInfo, String srcIp, String srcUser,
-            final Timestamp time, String ops, String publishType, String grayName, String extInfo) {
+                                          final Timestamp time, String ops, String publishType, String grayName, String extInfo) {
         String appNameTmp = StringUtils.defaultEmptyIfBlank(configInfo.getAppName());
         String tenantTmp = StringUtils.defaultEmptyIfBlank(configInfo.getTenant());
         final String md5Tmp = MD5Utils.md5Hex(configInfo.getContent(), Constants.ENCODE);
@@ -114,7 +114,7 @@ public class ExternalHistoryConfigInfoPersistServiceImpl implements HistoryConfi
                 parasList.add(UuidUtils.nextId());
             }
             jt.update(historyConfigInfoMapper.insert(
-                            insertList), parasList.toArray());
+                    insertList), parasList.toArray());
         } catch (DataAccessException e) {
             LogUtil.FATAL_LOG.error("[db-error] " + e, e);
             throw e;
@@ -135,7 +135,7 @@ public class ExternalHistoryConfigInfoPersistServiceImpl implements HistoryConfi
 
     @Override
     public List<ConfigInfoStateWrapper> findDeletedConfig(final Timestamp startTime, long startId, int pageSize,
-            String publishType) {
+                                                          String publishType) {
         try {
             HistoryConfigInfoMapper historyConfigInfoMapper = mapperManager.findMapper(
                     dataSourceService.getDataSourceType(), TableConstant.HIS_CONFIG_INFO);
@@ -170,7 +170,7 @@ public class ExternalHistoryConfigInfoPersistServiceImpl implements HistoryConfi
 
     @Override
     public Page<ConfigHistoryInfo> findConfigHistory(String dataId, String group, String tenant, int pageNo,
-            int pageSize) {
+                                                     int pageSize) {
         PaginationHelper<ConfigHistoryInfo> helper = createPaginationHelper();
         String tenantTmp = StringUtils.isBlank(tenant) ? StringUtils.EMPTY : tenant;
 
@@ -183,14 +183,14 @@ public class ExternalHistoryConfigInfoPersistServiceImpl implements HistoryConfi
                 dataSourceService.getDataSourceType(), TableConstant.HIS_CONFIG_INFO);
 
         String sqlCountRows = historyConfigInfoMapper.count(Arrays.asList("data_id", "group_id", "tenant_id"));
-        if (dataSourceService.getDataSourceType().equals(PropertiesConstant.ORACLE) ) {
-            if(StringUtils.isBlank(dataId)) {
+        if (dataSourceService.getDataSourceType().equals(PropertiesConstant.ORACLE)) {
+            if (StringUtils.isBlank(dataId)) {
                 sqlCountRows = sqlCountRows.replace("data_id = ?", "data_id is NULL");
             }
-            if(StringUtils.isBlank(group)) {
+            if (StringUtils.isBlank(group)) {
                 sqlCountRows = sqlCountRows.replace("group_id = ?", "group_id is NULL");
             }
-            if(StringUtils.isBlank(tenantTmp)) {
+            if (StringUtils.isBlank(tenantTmp)) {
                 sqlCountRows = sqlCountRows.replace("tenant_id = ?", "tenant_id is NULL");
             }
         }
@@ -201,7 +201,7 @@ public class ExternalHistoryConfigInfoPersistServiceImpl implements HistoryConfi
             page = helper.fetchPage(sqlCountRows, sqlFetchRows.getSql(), sqlFetchRows.getParamList().toArray(), pageNo,
                     pageSize, HISTORY_LIST_ROW_MAPPER);
         } catch (DataAccessException e) {
-            LogUtil.FATAL_LOG.error("[list-config-history] error, dataId:{}, group:{}", new Object[] {dataId, group},
+            LogUtil.FATAL_LOG.error("[list-config-history] error, dataId:{}, group:{}", new Object[]{dataId, group},
                     e);
             throw e;
         }
@@ -222,7 +222,7 @@ public class ExternalHistoryConfigInfoPersistServiceImpl implements HistoryConfi
         } catch (EmptyResultDataAccessException emptyResultDataAccessException) {
             return null;
         } catch (DataAccessException e) {
-            LogUtil.FATAL_LOG.error("[detail-config-history] error, nid:{}", new Object[] {nid}, e);
+            LogUtil.FATAL_LOG.error("[detail-config-history] error, nid:{}", new Object[]{nid}, e);
             throw e;
         }
 
@@ -242,7 +242,7 @@ public class ExternalHistoryConfigInfoPersistServiceImpl implements HistoryConfi
         } catch (EmptyResultDataAccessException emptyResultDataAccessException) {
             return null;
         } catch (DataAccessException e) {
-            LogUtil.FATAL_LOG.error("[detail-previous-config-history] error, id:{}", new Object[] {id}, e);
+            LogUtil.FATAL_LOG.error("[detail-previous-config-history] error, id:{}", new Object[]{id}, e);
             throw e;
         }
     }
@@ -264,7 +264,7 @@ public class ExternalHistoryConfigInfoPersistServiceImpl implements HistoryConfi
 
     @Override
     public ConfigHistoryInfo getNextHistoryInfo(String dataId, String group, String tenant, String publishType,
-            String grayName, long startNid) {
+                                                String grayName, long startNid) {
         HistoryConfigInfoMapper historyConfigInfoMapper = mapperManager.findMapper(
                 dataSourceService.getDataSourceType(), TableConstant.HIS_CONFIG_INFO);
         MapperContext context = new MapperContext();

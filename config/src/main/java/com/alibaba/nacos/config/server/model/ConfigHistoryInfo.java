@@ -16,7 +16,6 @@
 
 package com.alibaba.nacos.config.server.model;
 
-
 import tools.jackson.databind.annotation.JsonSerialize;
 import tools.jackson.databind.ser.std.ToStringSerializer;
 

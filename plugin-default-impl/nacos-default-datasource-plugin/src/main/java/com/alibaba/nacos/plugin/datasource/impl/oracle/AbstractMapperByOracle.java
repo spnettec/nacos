@@ -46,7 +46,7 @@ public abstract class AbstractMapperByOracle extends AbstractMapper {
             valueJoiner.add(parts.length > 1 ? getFunction(parts[1]) : "?");
         }
 
-        if(!columns.contains("id")) {
+        if (!columns.contains("id")) {
             columnJoiner.add("id");
             valueJoiner.add(String.valueOf(UuidUtils.nextId()));
         }

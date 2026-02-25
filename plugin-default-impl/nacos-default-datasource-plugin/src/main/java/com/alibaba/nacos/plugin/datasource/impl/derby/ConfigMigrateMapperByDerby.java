@@ -23,8 +23,6 @@ import com.alibaba.nacos.plugin.datasource.mapper.ConfigMigrateMapper;
 import com.alibaba.nacos.plugin.datasource.model.MapperContext;
 import com.alibaba.nacos.plugin.datasource.model.MapperResult;
 
-import java.util.ArrayList;
-
 /**
  * The type Config migrate mapper by derby.
  *

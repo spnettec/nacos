@@ -32,7 +32,7 @@ public class UuidUtils {
         return UUID.randomUUID().toString();
     }
 
-    public static long nextId(){
+    public static long nextId() {
         return SEQUENCE.nextId();
     }
 }

@@ -1,4 +1,3 @@
-package com.alibaba.nacos.common.utils;
 /*
  * Copyright 1999-2018 Alibaba Group Holding Ltd.
  *
@@ -14,6 +13,8 @@ package com.alibaba.nacos.common.utils;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package com.alibaba.nacos.common.utils;
 
 import java.sql.Timestamp;
 import java.util.concurrent.ScheduledExecutorService;
