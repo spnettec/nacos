@@ -21,7 +21,6 @@ import com.alibaba.nacos.core.exception.NacosApiExceptionHandler;
 import com.alibaba.nacos.console.filter.NacosConsoleAuthFilter;
 import com.alibaba.nacos.console.filter.XssFilter;
 import com.alibaba.nacos.core.code.ControllerMethodsCache;
-import com.alibaba.nacos.core.controller.compatibility.ApiCompatibilityFilter;
 import com.alibaba.nacos.core.paramcheck.ParamCheckerFilter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.jackson.autoconfigure.JsonMapperBuilderCustomizer;
@@ -47,13 +46,13 @@ import java.util.TimeZone;
  */
 @Configuration
 public class ConsoleWebConfig {
-
+    
     private final ControllerMethodsCache methodsCache;
-
+    
     public ConsoleWebConfig(ControllerMethodsCache methodsCache) {
         this.methodsCache = methodsCache;
     }
-
+    
     /**
      * Init.
      */
@@ -61,7 +60,7 @@ public class ConsoleWebConfig {
     public void init() {
         methodsCache.initClassMethod("com.alibaba.nacos.console.controller");
     }
-
+    
     @Bean
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
@@ -87,14 +86,14 @@ public class ConsoleWebConfig {
         source.registerCorsConfiguration("/**", config);
         return new CorsFilter(source);
     }
-
+    
     @Bean
     public XssFilter xssFilter() {
         return new XssFilter();
     }
-
+    
     @Bean
-    public FilterRegistrationBean<NacosConsoleAuthFilter> consoleAuthFilterRegistration(NacosConsoleAuthFilter authFilter) {
+    public FilterRegistrationBean<NacosConsoleAuthFilter> authFilterRegistration(NacosConsoleAuthFilter authFilter) {
         FilterRegistrationBean<NacosConsoleAuthFilter> registration = new FilterRegistrationBean<>();
         registration.setFilter(authFilter);
         registration.addUrlPatterns("/*");
@@ -102,13 +101,13 @@ public class ConsoleWebConfig {
         registration.setOrder(6);
         return registration;
     }
-
+    
     @Bean
     public NacosConsoleAuthFilter consoleAuthFilter(ControllerMethodsCache methodsCache) {
         return new NacosConsoleAuthFilter(NacosAuthConfigHolder.getInstance()
                 .getNacosAuthConfigByScope(NacosConsoleAuthConfig.NACOS_CONSOLE_AUTH_SCOPE), methodsCache);
     }
-
+    
     @Bean
     public FilterRegistrationBean<ParamCheckerFilter> consoleParamCheckerFilterRegistration(
             ParamCheckerFilter consoleParamCheckerFilter) {
@@ -119,41 +118,25 @@ public class ConsoleWebConfig {
         registration.setOrder(8);
         return registration;
     }
-
+    
     @Bean
     public ParamCheckerFilter consoleParamCheckerFilter(ControllerMethodsCache methodsCache) {
         return new ParamCheckerFilter(methodsCache);
     }
 
     @Bean
-    public ApiCompatibilityFilter consoleApiCompatibilityFilter(ControllerMethodsCache methodsCache) {
-        return new ApiCompatibilityFilter(methodsCache, null);
-    }
-
-    @Bean
-    public FilterRegistrationBean<ApiCompatibilityFilter> consoleApiCompatibilityFilterRegistration(
-            ApiCompatibilityFilter consoleApiCompatibilityFilter) {
-        FilterRegistrationBean<ApiCompatibilityFilter> registration = new FilterRegistrationBean<>();
-        registration.setFilter(consoleApiCompatibilityFilter);
-        registration.addUrlPatterns("/v1/*", "/v2/*");
-        registration.setName("consoleApiCompatibilityFilter");
-        registration.setOrder(5);
-        return registration;
-    }
-
-    @Bean
     public JsonMapperBuilderCustomizer jacksonObjectMapperCustomization() {
-        return jacksonObjectMapperBuilder -> jacksonObjectMapperBuilder.defaultTimeZone(TimeZone.getDefault());
+        return jacksonObjectMapperBuilder -> jacksonObjectMapperBuilder.timeZone(ZoneId.systemDefault().toString());
     }
-
+    
     @Bean
     @ConditionalOnMissingBean
-    public SecurityFilterChain consoleSecurityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests((authorizeHttpRequests) -> authorizeHttpRequests.requestMatchers("/**").permitAll());
         http.csrf(AbstractHttpConfigurer::disable);
         return http.build();
     }
-
+    
     @Bean
     public NacosApiExceptionHandler nacosApiExceptionHandler() {
         return new NacosApiExceptionHandler();

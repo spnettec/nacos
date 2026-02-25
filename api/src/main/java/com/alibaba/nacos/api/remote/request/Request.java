@@ -27,7 +27,6 @@ import java.util.TreeMap;
  *
  * @author liuzunfei
  */
-@SuppressWarnings("PMD.AbstractClassShouldStartWithAbstractNamingRule")
 public abstract class Request implements Payload {
     @JsonMerge
     private final Map<String, String> headers = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
