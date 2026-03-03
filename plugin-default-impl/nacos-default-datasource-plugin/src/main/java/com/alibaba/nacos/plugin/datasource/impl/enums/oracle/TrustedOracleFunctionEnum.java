@@ -24,14 +24,14 @@ import java.util.Map;
  * By using this enum, you can verify whether a given SQL function is part of the trusted functions list
  * to avoid potential SQL injection risks.
  *
- * @author blake.qiu
+ * @author liam.fu
  */
 public enum TrustedOracleFunctionEnum {
 
     /**
      * NOW().
      */
-    NOW("NOW()", "sysdate");
+    NOW("NOW()", "SYSDATE");
 
     private static final Map<String, TrustedOracleFunctionEnum> LOOKUP_MAP = new HashMap<>();
 

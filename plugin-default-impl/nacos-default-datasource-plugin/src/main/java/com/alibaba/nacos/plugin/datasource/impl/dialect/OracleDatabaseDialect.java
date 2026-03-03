@@ -17,12 +17,12 @@
 package com.alibaba.nacos.plugin.datasource.impl.dialect;
 
 import com.alibaba.nacos.plugin.datasource.constants.DatabaseTypeConstant;
-import com.alibaba.nacos.plugin.datasource.impl.enums.oracle.TrustedOracleFunctionEnum;
+import com.alibaba.nacos.plugin.datasource.impl.enums.mysql.TrustedMysqlFunctionEnum;
 
 /**
- * Derby database dialect.
+ * Oracle database dialect.
  *
- * @author xiweng.yy
+ * @author liam.fu
  */
 public class OracleDatabaseDialect extends AbstractDatabaseDialect {
 
@@ -53,6 +53,6 @@ public class OracleDatabaseDialect extends AbstractDatabaseDialect {
 
     @Override
     public String getFunction(String functionName) {
-        return TrustedOracleFunctionEnum.getFunctionByName(functionName);
+        return TrustedMysqlFunctionEnum.getFunctionByName(functionName);
     }
 }

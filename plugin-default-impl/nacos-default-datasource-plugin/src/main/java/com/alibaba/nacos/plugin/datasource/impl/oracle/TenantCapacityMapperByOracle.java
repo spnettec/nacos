@@ -28,18 +28,15 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * The mysql implementation of TenantCapacityMapper.
+ * The oracle implementation of TenantCapacityMapper.
  *
- * @author hyx
+ * @author liam.fu
  **/
-
 public class TenantCapacityMapperByOracle extends AbstractMapperByOracle implements TenantCapacityMapper {
 
     @Override
-    public MapperResult getCapacityList4CorrectUsage(MapperContext context) {
-        String sql = "SELECT id, tenant_id FROM tenant_capacity WHERE id>? OFFSET 0 ROWS FETCH NEXT ? ROWS ONLY";
-        return new MapperResult(sql, CollectionUtils.list(context.getWhereParameter(FieldConstant.ID),
-                context.getWhereParameter(FieldConstant.LIMIT_SIZE)));
+    public String getDataSource() {
+        return DataSourceConstant.ORACLE;
     }
 
     @Override
@@ -47,6 +44,13 @@ public class TenantCapacityMapperByOracle extends AbstractMapperByOracle impleme
         String sql = "SELECT id, quota, usage, max_size, max_aggr_count, max_aggr_size, tenant_id FROM tenant_capacity "
                 + "WHERE tenant_id = ?";
         return new MapperResult(sql, Collections.singletonList(context.getWhereParameter(FieldConstant.TENANT_ID)));
+    }
+
+    @Override
+    public MapperResult getCapacityList4CorrectUsage(MapperContext context) {
+        String sql = "SELECT id, tenant_id FROM tenant_capacity WHERE id>? FETCH FIRST ? ROWS ONLY";
+        return new MapperResult(sql, CollectionUtils.list(context.getWhereParameter(FieldConstant.ID),
+                context.getWhereParameter(FieldConstant.LIMIT_SIZE)));
     }
 
     @Override
@@ -110,10 +114,4 @@ public class TenantCapacityMapperByOracle extends AbstractMapperByOracle impleme
                         + "gmt_create, gmt_modified) SELECT ?, ?, count(*), ?, ?, ?, ?, ? FROM config_info WHERE tenant_id=?",
                 paramList);
     }
-
-    @Override
-    public String getDataSource() {
-        return DataSourceConstant.ORACLE;
-    }
-
 }

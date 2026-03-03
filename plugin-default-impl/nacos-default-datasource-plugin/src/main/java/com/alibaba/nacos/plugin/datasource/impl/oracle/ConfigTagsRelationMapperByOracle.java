@@ -29,105 +29,147 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The mysql implementation of ConfigTagsRelationMapper.
+ * The oracle implementation of ConfigTagsRelationMapper.
  *
- * @author hyx
+ * @author liam.fu
  **/
-
 public class ConfigTagsRelationMapperByOracle extends AbstractMapperByOracle implements ConfigTagsRelationMapper {
 
     @Override
     public MapperResult findConfigInfo4PageFetchRows(MapperContext context) {
-        final String appName = (String) context.getWhereParameter(FieldConstant.APP_NAME);
+        final String tenant = (String) context.getWhereParameter(FieldConstant.TENANT_ID);
         final String dataId = (String) context.getWhereParameter(FieldConstant.DATA_ID);
         final String group = (String) context.getWhereParameter(FieldConstant.GROUP_ID);
+        final String appName = (String) context.getWhereParameter(FieldConstant.APP_NAME);
         final String content = (String) context.getWhereParameter(FieldConstant.CONTENT);
-        final String tenantId = (String) context.getWhereParameter(FieldConstant.TENANT_ID);
         final String[] tagArr = (String[]) context.getWhereParameter(FieldConstant.TAG_ARR);
 
         List<Object> paramList = new ArrayList<>();
-        StringBuilder where = new StringBuilder(" WHERE ");
-        final String baseSql =
-                "SELECT a.id,a.data_id,a.group_id,a.tenant_id,a.app_name,a.content FROM config_info  a LEFT JOIN "
-                        + "config_tags_relation b ON a.id=b.id";
 
-        where.append(" a.tenant_id=? ");
-        paramList.add(tenantId);
+        // 构建内层查询：根据标签条件筛选配置
+        StringBuilder idSql = new StringBuilder();
+        idSql.append("SELECT DISTINCT a.id ")
+                .append("FROM config_info a ")
+                .append("LEFT JOIN config_tags_relation b ON a.id = b.id ")
+                .append("WHERE a.tenant_id = ? ");
+        paramList.add(tenant);
 
         if (StringUtils.isNotBlank(dataId)) {
-            where.append(" AND a.data_id=? ");
+            idSql.append(" AND a.data_id=? ");
             paramList.add(dataId);
         }
         if (StringUtils.isNotBlank(group)) {
-            where.append(" AND a.group_id=? ");
+            idSql.append(" AND a.group_id=? ");
             paramList.add(group);
         }
         if (StringUtils.isNotBlank(appName)) {
-            where.append(" AND a.app_name=? ");
+            idSql.append(" AND a.app_name=? ");
             paramList.add(appName);
         }
         if (!StringUtils.isBlank(content)) {
-            where.append(" AND a.content LIKE ? ");
+            idSql.append(" AND a.content LIKE ? ");
             paramList.add(content);
         }
-        where.append(" AND b.tag_name IN (");
-        for (int i = 0; i < tagArr.length; i++) {
-            if (i != 0) {
-                where.append(", ");
+        if (tagArr != null && tagArr.length > 0) {
+            idSql.append(" AND b.tag_name IN (");
+            for (int i = 0; i < tagArr.length; i++) {
+                if (i != 0) {
+                    idSql.append(", ");
+                }
+                idSql.append('?');
+                paramList.add(tagArr[i]);
             }
-            where.append('?');
-            paramList.add(tagArr[i]);
+            idSql.append(") ");
         }
-        where.append(") ");
-        String sql = baseSql + where + " OFFSET " + context.getStartRow() + " ROWS FETCH NEXT " + context.getPageSize()
-                + " ROWS ONLY";
+
+        idSql.append(" OFFSET ")
+                .append(context.getStartRow())
+                .append(" ROWS FETCH NEXT ")
+                .append(context.getPageSize())
+                .append(" ROWS ONLY ");
+
+        // 使用子查询分离筛选逻辑和标签聚合逻辑
+        String sql =
+                "WITH tag_agg AS ( "
+                        + "   SELECT id, LISTAGG(DISTINCT tag_name, ',') "
+                        + "   WITHIN GROUP (ORDER BY tag_name) AS config_tags "
+                        + "   FROM config_tags_relation GROUP BY id "
+                        + ") "
+                        + "SELECT a.id,a.data_id,a.group_id,a.tenant_id,a.app_name,"
+                        + "       a.content,a.md5,a.type,a.encrypted_data_key,a.c_desc,"
+                        + "       t.config_tags "
+                        + "FROM config_info a "
+                        + "JOIN ("
+                        + idSql.toString()
+                        + ") x ON a.id = x.id "
+                        + "LEFT JOIN tag_agg t ON a.id = t.id";
+
         return new MapperResult(sql, paramList);
     }
 
     @Override
     public MapperResult findConfigInfoLike4PageFetchRows(MapperContext context) {
-        final String appName = (String) context.getWhereParameter(FieldConstant.APP_NAME);
+        final String tenant = (String) context.getWhereParameter(FieldConstant.TENANT_ID);
         final String dataId = (String) context.getWhereParameter(FieldConstant.DATA_ID);
         final String group = (String) context.getWhereParameter(FieldConstant.GROUP_ID);
+        final String appName = (String) context.getWhereParameter(FieldConstant.APP_NAME);
         final String content = (String) context.getWhereParameter(FieldConstant.CONTENT);
-        final String tenantId = (String) context.getWhereParameter(FieldConstant.TENANT_ID);
         final String[] tagArr = (String[]) context.getWhereParameter(FieldConstant.TAG_ARR);
         final String[] types = (String[]) context.getWhereParameter(FieldConstant.TYPE);
 
-        WhereBuilder where = new WhereBuilder(
-                "SELECT a.ID,a.data_id,a.group_id,a.tenant_id,a.app_name,a.content,a.type FROM config_info a LEFT JOIN "
-                        + "config_tags_relation b ON a.id=b.id");
+        // 构建内层查询：根据标签条件筛选配置
+        WhereBuilder idQuery = new WhereBuilder(
+                "SELECT DISTINCT a.id FROM config_info a "
+                        + "LEFT JOIN config_tags_relation b ON a.id=b.id");
 
-        where.like("a.tenant_id", tenantId);
+        idQuery.like("a.tenant_id", tenant);
 
         if (StringUtils.isNotBlank(dataId)) {
-            where.and().like("a.data_id", dataId);
+            idQuery.and().like("a.data_id", dataId);
         }
         if (StringUtils.isNotBlank(group)) {
-            where.and().like("a.group_id", group);
+            idQuery.and().like("a.group_id", group);
         }
         if (StringUtils.isNotBlank(appName)) {
-            where.and().eq("a.app_name", appName);
+            idQuery.and().eq("a.app_name", appName);
         }
         if (StringUtils.isNotBlank(content)) {
-            where.and().like("a.content", content);
+            idQuery.and().like("a.content", content);
         }
         if (!ArrayUtils.isEmpty(tagArr)) {
-            where.and().startParentheses();
+            idQuery.and().startParentheses();
             for (int i = 0; i < tagArr.length; i++) {
                 if (i != 0) {
-                    where.or();
+                    idQuery.or();
                 }
-                where.like("b.tag_name", tagArr[i]);
+                idQuery.like("b.tag_name", tagArr[i]);
             }
-            where.endParentheses();
+            idQuery.endParentheses();
         }
         if (!ArrayUtils.isEmpty(types)) {
-            where.and().in("a.type", types);
+            idQuery.and().in("a.type", types);
         }
 
-        where.offset(context.getStartRow(), context.getPageSize());
-        return where.build();
+        idQuery.offset(context.getStartRow(), context.getPageSize());
+        MapperResult idResult = idQuery.build();
+
+        // 构建外层查询：获取筛选出的配置的完整标签信息
+        final String sql =
+                "WITH tag_agg AS ( "
+                        + "   SELECT id, LISTAGG(DISTINCT tag_name, ',') "
+                        + "   WITHIN GROUP (ORDER BY tag_name) AS config_tags "
+                        + "   FROM config_tags_relation GROUP BY id "
+                        + ") "
+                        + "SELECT a.id,a.data_id,a.group_id,a.tenant_id,a.app_name,"
+                        + "       a.content,a.md5,a.encrypted_data_key,a.type,a.c_desc,"
+                        + "       t.config_tags "
+                        + "FROM config_info a "
+                        + "JOIN ("
+                        + idResult.getSql()
+                        + ") x ON a.id = x.id "
+                        + "LEFT JOIN tag_agg t ON a.id = t.id";
+
+        return new MapperResult(sql, idResult.getParamList());
     }
 
     @Override
