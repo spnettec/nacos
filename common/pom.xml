@@ -17,7 +17,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-
+    
     <parent>
         <groupId>com.github.heyoulin.nacos</groupId>
         <artifactId>nacos-all</artifactId>
@@ -25,36 +25,36 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-
+    
     <artifactId>nacos-common</artifactId>
     <packaging>jar</packaging>
-
+    
     <name>nacos-common ${project.version}</name>
     <url>https://nacos.io</url>
     <description>Nacos common pom.xml file</description>
-
+    
     <properties>
         <maven.compiler.source>${client.java.version}</maven.compiler.source>
         <maven.compiler.target>${client.java.version}</maven.compiler.target>
     </properties>
-
+    
     <dependencies>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
-
+        
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
         </dependency>
-
+        
         <!-- issue#12028 upgrade org.apache.httpcomponents:httpasyncclient to org.apache.httpcomponents.client5:httpclient5 -->
         <dependency>
             <groupId>org.apache.httpcomponents.client5</groupId>
             <artifactId>httpclient5</artifactId>
         </dependency>
-
+        
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>nacos-api</artifactId>
