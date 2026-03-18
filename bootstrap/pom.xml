@@ -25,14 +25,18 @@
         <version>${revision}</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
-
+    
     <artifactId>nacos-bootstrap</artifactId>
     <name>nacos-bootstrap ${project.version}</name>
-
+    
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>nacos-console</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>nacos-core</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -42,8 +46,22 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>nacos-mcp-registry-adaptor</artifactId>
         </dependency>
-    </dependencies>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>default-auth-plugin</artifactId>
+            <version>${revision}</version>
 
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba.nacos</groupId>
+            <artifactId>default-datasource-plugin</artifactId>
+            <version>${revision}</version>
+
+        </dependency>
+
+
+    </dependencies>
+    
     <profiles>
         <profile>
             <id>dev</id>

@@ -22,6 +22,7 @@ import com.alibaba.nacos.common.utils.ConvertUtils;
 import com.alibaba.nacos.common.utils.InternetAddressUtil;
 import com.alibaba.nacos.common.utils.LoggerUtils;
 import com.alibaba.nacos.common.utils.StringUtils;
+import com.alibaba.nacos.common.utils.ThreadUtils;
 import com.alibaba.nacos.consistency.ProtoMessageUtil;
 import com.alibaba.nacos.consistency.RequestProcessor;
 import com.alibaba.nacos.consistency.SerializeFactory;
@@ -77,7 +78,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -259,20 +260,13 @@ public class JRaftServer {
             Node node = raftGroupService.start(false);
             machine.setNode(node);
             RouteTable.getInstance().updateConfiguration(groupName, configuration);
-            if (!EnvUtil.getStandaloneMode()) {
-                RaftExecutor.scheduleAtFixedRateByCommon(() -> registerSelfToCluster(groupName, localPeerId, configuration),
-                        0, 1_000L);
-                // Turn on the leader auto refresh for this group
-                Random random = new Random();
-                long period = nodeOptions.getElectionTimeoutMs() + random.nextInt(5 * 1000);
-                RaftExecutor.scheduleRaftMemberRefreshJob(() -> refreshRouteTable(groupName),
-                        nodeOptions.getElectionTimeoutMs(), period, TimeUnit.MILLISECONDS);
-            } else{
-                registerSelfToCluster(groupName, localPeerId, configuration);
-                refreshRouteTable(groupName);
-            }
-
-
+            
+            RaftExecutor.executeByCommon(() -> registerSelfToCluster(groupName, localPeerId, configuration));
+            
+            // Turn on the leader auto refresh for this group
+            long period = nodeOptions.getElectionTimeoutMs() + ThreadLocalRandom.current().nextInt(5 * 1000);
+            RaftExecutor.scheduleRaftMemberRefreshJob(() -> refreshRouteTable(groupName),
+                    nodeOptions.getElectionTimeoutMs(), period, TimeUnit.MILLISECONDS);
             multiRaftGroup.put(groupName, new RaftGroupTuple(node, processor, raftGroupService, machine));
         }
     }
@@ -353,23 +347,22 @@ public class JRaftServer {
      * @return join success
      */
     void registerSelfToCluster(String groupId, PeerId selfIp, Configuration conf) {
-        if (isShutdown) {
-            return;
-        }
-        try {
-            List<PeerId> peerIds = cliService.getPeers(groupId, conf);
-            if (peerIds.contains(selfIp)) {
-                return;
+        while (!isShutdown) {
+            try {
+                List<PeerId> peerIds = cliService.getPeers(groupId, conf);
+                if (peerIds.contains(selfIp)) {
+                    return;
+                }
+                Status status = cliService.addPeer(groupId, conf, selfIp);
+                if (status.isOk()) {
+                    return;
+                }
+                Loggers.RAFT.warn("Failed to join the cluster, retry...");
+            } catch (Exception e) {
+                Loggers.RAFT.error("Failed to join the cluster, retry...", e);
             }
-            Status status = cliService.addPeer(groupId, conf, selfIp);
-            if (status.isOk()) {
-                return;
-            }
-            Loggers.RAFT.warn("Failed to join the cluster, retry...");
-        } catch (Exception e) {
-            Loggers.RAFT.error("Failed to join the cluster, retry...", e);
+            ThreadUtils.sleep(1_000L);
         }
-
     }
     
     protected PeerId getLeader(final String raftGroupId) {

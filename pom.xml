@@ -108,6 +108,7 @@
         <maven-javadoc-plugin.version>3.5.0</maven-javadoc-plugin.version>
         <maven-jar-plugin.version>3.2.2</maven-jar-plugin.version>
         <maven-source-plugin.version>3.0.1</maven-source-plugin.version>
+
         <apache-rat-plugin.version>0.12</apache-rat-plugin.version>
         <maven-resources-plugin.version>3.3.0</maven-resources-plugin.version>
         <jacoco-maven-plugin.version>0.8.13</jacoco-maven-plugin.version>
@@ -342,6 +343,10 @@
                         <exclude>**/failover_test/**</exclude>
                         <exclude>lefthook.yml</exclude>
                         <exclude>.vscode/**</exclude>
+                        <exclude>.cursor/**</exclude>
+                        <exclude>.agents/**</exclude>
+                        <exclude>.qoder/**</exclude>
+                        <exclude>skills/**</exclude>
                     </excludes>
                 </configuration>
                 <executions>
@@ -530,21 +535,7 @@
             </properties>
             
             <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-gpg-plugin</artifactId>
-                        <version>${maven-gpg-plugin.version}</version>
-                        <executions>
-                            <execution>
-                                <id>sign-artifacts</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>sign</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
+
             </build>
         </profile>
         <profile>
@@ -652,6 +643,7 @@
         <module>maintainer-client</module>
         <module>client-basic</module>
         <module>ai</module>
+        <module>copilot</module>
         <module>mcp-registry-adaptor</module>
     </modules>
     
@@ -720,7 +712,7 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>${project.groupId}</groupId>
+                <groupId>com.alibaba.nacos</groupId>
                 <artifactId>nacos-persistence</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -730,7 +722,7 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>${project.groupId}</groupId>
+                <groupId>com.alibaba.nacos</groupId>
                 <artifactId>nacos-ai</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -848,7 +840,7 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>${project.groupId}</groupId>
+                <groupId>com.alibaba.nacos</groupId>
                 <artifactId>nacos-config-plugin</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -858,12 +850,12 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>${project.groupId}</groupId>
+                <groupId>com.alibaba.nacos</groupId>
                 <artifactId>nacos-trace-plugin</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>${project.groupId}</groupId>
+                <groupId>com.alibaba.nacos</groupId>
                 <artifactId>nacos-datasource-plugin</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -1008,6 +1000,16 @@
                 <groupId>com.github.heyoulin.sofa-jraft</groupId>
                 <artifactId>rpc-grpc-impl</artifactId>
                 <version>${rpc-grpc-impl.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.google.protobuf</groupId>
+                        <artifactId>protobuf-java</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>io.grpc</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             
             <!-- Third-party libs -->

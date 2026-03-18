@@ -48,7 +48,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 import static com.alibaba.nacos.config.server.utils.LogUtil.DUMP_LOG;
@@ -59,45 +59,45 @@ import static com.alibaba.nacos.config.server.utils.LogUtil.DUMP_LOG;
  * @author Nacos
  */
 public abstract class DumpService {
-
+    
     private static final Logger LOGGER = LoggerFactory.getLogger(DumpService.class);
-
+    
     protected DumpProcessor processor;
-
+    
     protected DumpAllProcessor dumpAllProcessor;
-
+    
     protected DumpAllGrayProcessor dumpAllGrayProcessor;
-
+    
     protected ConfigInfoPersistService configInfoPersistService;
-
+    
     protected NamespacePersistService namespacePersistService;
-
+    
     protected HistoryConfigInfoPersistService historyConfigInfoPersistService;
-
+    
     protected ConfigInfoGrayPersistService configInfoGrayPersistService;
-
+    
     protected ConfigMigrateService configMigrateService;
-
+    
     protected final ServerMemberManager memberManager;
-
+    
     /**
      * full dump interval.
      */
     static final int DUMP_ALL_INTERVAL_IN_MINUTE = 6 * 60;
-
+    
     /**
      * full dump delay.
      */
     static final int INITIAL_DELAY_IN_MINUTE = 6 * 60;
-
+    
     private TaskManager dumpTaskMgr;
-
+    
     private TaskManager dumpAllTaskMgr;
-
+    
     static final int INIT_THREAD_COUNT = 10;
-
+    
     int total = 0;
-
+    
     /**
      * Here you inject the dependent objects constructively, ensuring that some of the dependent functionality is
      * initialized ahead of time.
@@ -121,28 +121,28 @@ public abstract class DumpService {
         this.dumpAllGrayProcessor = new DumpAllGrayProcessor(this.configInfoGrayPersistService);
         this.dumpTaskMgr = new TaskManager("com.alibaba.nacos.server.DumpTaskManager");
         this.dumpTaskMgr.setDefaultTaskProcessor(processor);
-
+        
         this.dumpAllTaskMgr = new TaskManager("com.alibaba.nacos.server.DumpAllTaskManager");
         this.dumpAllTaskMgr.setDefaultTaskProcessor(dumpAllProcessor);
-
+        
         this.dumpAllTaskMgr.addProcessor(DumpAllTask.TASK_ID, dumpAllProcessor);
         this.dumpAllTaskMgr.addProcessor(DumpAllGrayTask.TASK_ID, dumpAllGrayProcessor);
         DynamicDataSource.getInstance().getDataSource();
-
+        
         NotifyCenter.registerSubscriber(new Subscriber() {
-
+            
             @Override
             public void onEvent(Event event) {
                 handleConfigDataChange(event);
             }
-
+            
             @Override
             public Class<? extends Event> subscribeType() {
                 return ConfigDataChangeEvent.class;
             }
         });
     }
-
+    
     void handleConfigDataChange(Event event) {
         // Generate ConfigDataChangeEvent concurrently
         if (event instanceof ConfigDataChangeEvent) {
@@ -153,25 +153,25 @@ public abstract class DumpService {
             DumpService.this.dump(dumpRequest);
         }
     }
-
+    
     /**
      * initialize.
      *
      * @throws Throwable throws Exception when actually operate.
      */
     protected abstract void init() throws Throwable;
-
+    
     /**
      * config history clear.
      */
     class ConfigHistoryClear implements Runnable {
-
+        
         private HistoryConfigCleaner historyConfigCleaner;
-
+        
         public ConfigHistoryClear(HistoryConfigCleaner historyConfigCleaner) {
             this.historyConfigCleaner = historyConfigCleaner;
         }
-
+        
         @Override
         public void run() {
             LOGGER.warn("clearHistoryConfig get scheduled");
@@ -188,37 +188,37 @@ public abstract class DumpService {
             }
         }
     }
-
+    
     /**
      * config history clear.
      */
     class DumpAllProcessorRunner implements Runnable {
-
+        
         @Override
         public void run() {
             dumpAllTaskMgr.addTask(DumpAllTask.TASK_ID, new DumpAllTask());
         }
     }
-
+    
     /**
      * dump all gray processor runner.
      */
     class DumpAllGrayProcessorRunner implements Runnable {
-
+        
         @Override
         public void run() {
             dumpAllTaskMgr.addTask(DumpAllGrayTask.TASK_ID, new DumpAllGrayTask());
         }
     }
-
+    
     protected void dumpOperate() throws NacosException {
         String dumpFileContext = "CONFIG_DUMP_TO_FILE";
         TimerContext.start(dumpFileContext);
         try {
             LogUtil.DEFAULT_LOG.warn("DumpService start");
-
+            
             Timestamp currentTime = new Timestamp(System.currentTimeMillis());
-
+            
             try {
                 dumpAllConfigInfoOnStartup(dumpAllProcessor);
                 dumpAllGrayConfigInfoOnStartup(dumpAllGrayProcessor);
@@ -230,39 +230,40 @@ public abstract class DumpService {
                         e);
             }
             if (!EnvUtil.getStandaloneMode()) {
-
-                Random random = new Random();
-                long initialDelay = random.nextInt(INITIAL_DELAY_IN_MINUTE) + 10;
+                
+                long initialDelay = ThreadLocalRandom.current().nextInt(INITIAL_DELAY_IN_MINUTE) + 10;
                 LogUtil.DEFAULT_LOG.warn("initialDelay:{}", initialDelay);
-
+                
                 ConfigExecutor.scheduleConfigTask(new DumpAllProcessorRunner(), initialDelay,
                         DUMP_ALL_INTERVAL_IN_MINUTE, TimeUnit.MINUTES);
                 ConfigExecutor.scheduleConfigTask(new DumpAllGrayProcessorRunner(), initialDelay,
                         DUMP_ALL_INTERVAL_IN_MINUTE, TimeUnit.MINUTES);
-
+                
                 ConfigExecutor.scheduleConfigChangeTask(
                         new DumpChangeConfigWorker(this.configInfoPersistService, this.historyConfigInfoPersistService,
                                 this.configMigrateService,
-                                currentTime), random.nextInt((int) PropertyUtil.getDumpChangeWorkerInterval()),
+                                currentTime),
+                        ThreadLocalRandom.current().nextInt((int) PropertyUtil.getDumpChangeWorkerInterval()),
                         TimeUnit.MILLISECONDS);
                 ConfigExecutor.scheduleConfigChangeTask(
                         new DumpChangeGrayConfigWorker(this.configInfoGrayPersistService, currentTime,
                                 this.historyConfigInfoPersistService, this.configMigrateService),
-                        random.nextInt((int) PropertyUtil.getDumpChangeWorkerInterval()), TimeUnit.MILLISECONDS);
+                        ThreadLocalRandom.current().nextInt((int) PropertyUtil.getDumpChangeWorkerInterval()),
+                        TimeUnit.MILLISECONDS);
             }
-
+            
             HistoryConfigCleaner cleaner = HistoryConfigCleanerManager.getHistoryConfigCleaner(
                     HistoryConfigCleanerConfig.getInstance().getActiveHistoryConfigCleaner());
             ConfigExecutor.scheduleConfigTask(new ConfigHistoryClear(cleaner), 10, 10, TimeUnit.MINUTES);
-
+            
         } finally {
             TimerContext.end(dumpFileContext, LogUtil.DUMP_LOG);
         }
-
+        
     }
-
+    
     private void dumpAllConfigInfoOnStartup(DumpAllProcessor dumpAllProcessor) {
-
+        
         try {
             LogUtil.DEFAULT_LOG.info("start clear all config-info.");
             ConfigDiskServiceFactory.getInstance().clearAll();
@@ -272,7 +273,7 @@ public abstract class DumpService {
             throw e;
         }
     }
-
+    
     private void dumpAllGrayConfigInfoOnStartup(DumpAllGrayProcessor dumpAllGrayProcessor) {
         try {
             LogUtil.DEFAULT_LOG.info("start to clear all gray-config-info on startup.");
@@ -283,7 +284,7 @@ public abstract class DumpService {
             throw e;
         }
     }
-
+    
     /**
      * dump operation.
      *
@@ -298,7 +299,7 @@ public abstract class DumpService {
                     dumpRequest.getLastModifiedTs(), dumpRequest.getSourceIp());
         }
     }
-
+    
     /**
      * dump formal config.
      *
@@ -313,9 +314,9 @@ public abstract class DumpService {
         String taskKey = groupKey;
         dumpTaskMgr.addTask(taskKey, new DumpTask(groupKey, null, lastModified, handleIp));
         DUMP_LOG.info("[dump] add formal task. groupKey={}", groupKey);
-
+        
     }
-
+    
     /**
      * dump gray.
      *
@@ -332,13 +333,13 @@ public abstract class DumpService {
         String taskKey = groupKey + "+gray+" + grayName;
         dumpTaskMgr.addTask(taskKey, new DumpTask(groupKey, grayName, lastModified, handleIp));
         DUMP_LOG.info("[dump] add gray task. groupKey={},grayName={}", groupKey, grayName);
-
+        
     }
-
+    
     public void dumpAll() {
         dumpAllTaskMgr.addTask(DumpAllTask.TASK_ID, new DumpAllTask());
     }
-
+    
     /**
      * Used to determine whether the aggregation task, configuration history cleanup task can be performed.
      *
