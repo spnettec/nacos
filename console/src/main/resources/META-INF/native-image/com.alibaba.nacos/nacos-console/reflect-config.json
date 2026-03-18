@@ -4474,7 +4474,7 @@
   "name":"com.fasterxml.jackson.core.ObjectCodec",
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
-  "methods":[{"name":"getJsonFactory","parameterTypes":[] }, {"name":"readValues","parameterTypes":["com.fasterxml.jackson.core.JsonParser","com.fasterxml.jackson.core.type.ResolvedType"] }, {"name":"readValues","parameterTypes":["com.fasterxml.jackson.core.JsonParser","com.fasterxml.jackson.core.type.TypeReference"] }, {"name":"readValues","parameterTypes":["com.fasterxml.jackson.core.JsonParser","java.lang.Class"] }]
+  "methods":[{"name":"getJsonFactory","parameterTypes":[] }, {"name":"readValues","parameterTypes":["com.fasterxml.jackson.core.JsonParser","com.fasterxml.jackson.core.type.ResolvedType"] }, {"name":"readValues","parameterTypes":["com.fasterxml.jackson.core.JsonParser","tools.jackson.core.type.TypeReference"] }, {"name":"readValues","parameterTypes":["com.fasterxml.jackson.core.JsonParser","java.lang.Class"] }]
 },
 {
   "name":"com.fasterxml.jackson.core.PrettyPrinter"
@@ -4516,10 +4516,10 @@
   "name":"com.fasterxml.jackson.core.io.CharacterEscapes"
 },
 {
-  "name":"com.fasterxml.jackson.core.type.ResolvedType"
+  "name":"tools.jackson.core.type.ResolvedType"
 },
 {
-  "name":"com.fasterxml.jackson.core.type.TypeReference"
+  "name":"tools.jackson.core.type.TypeReference"
 },
 {
   "name":"com.fasterxml.jackson.databind.AnnotationIntrospector"
@@ -4599,7 +4599,7 @@
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
   "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"close","parameterTypes":[] }, {"name":"createArrayNode","parameterTypes":[] }, {"name":"createObjectNode","parameterTypes":[] }, {"name":"getFactory","parameterTypes":[] }, {"name":"missingNode","parameterTypes":[] }, {"name":"nullNode","parameterTypes":[] }, {"name":"readTree","parameterTypes":["com.fasterxml.jackson.core.JsonParser"] }, {"name":"readValue","parameterTypes":["com.fasterxml.jackson.core.JsonParser","com.fasterxml.jackson.core.type.ResolvedType"] }, {"name":"readValue","parameterTypes":["com.fasterxml.jackson.core.JsonParser","com.fasterxml.jackson.core.type.TypeReference"] }, {"name":"readValue","parameterTypes":["com.fasterxml.jackson.core.JsonParser","java.lang.Class"] }, {"name":"readValues","parameterTypes":["com.fasterxml.jackson.core.JsonParser","com.fasterxml.jackson.core.type.ResolvedType"] }, {"name":"readValues","parameterTypes":["com.fasterxml.jackson.core.JsonParser","com.fasterxml.jackson.core.type.TypeReference"] }, {"name":"readValues","parameterTypes":["com.fasterxml.jackson.core.JsonParser","java.lang.Class"] }, {"name":"shutdown","parameterTypes":[] }, {"name":"treeAsTokens","parameterTypes":["com.fasterxml.jackson.core.TreeNode"] }, {"name":"treeToValue","parameterTypes":["com.fasterxml.jackson.core.TreeNode","java.lang.Class"] }, {"name":"version","parameterTypes":[] }, {"name":"writeTree","parameterTypes":["com.fasterxml.jackson.core.JsonGenerator","com.fasterxml.jackson.core.TreeNode"] }, {"name":"writeValue","parameterTypes":["com.fasterxml.jackson.core.JsonGenerator","java.lang.Object"] }]
+  "methods":[{"name":"close","parameterTypes":[] }, {"name":"createArrayNode","parameterTypes":[] }, {"name":"createObjectNode","parameterTypes":[] }, {"name":"getFactory","parameterTypes":[] }, {"name":"missingNode","parameterTypes":[] }, {"name":"nullNode","parameterTypes":[] }, {"name":"readTree","parameterTypes":["com.fasterxml.jackson.core.JsonParser"] }, {"name":"readValue","parameterTypes":["com.fasterxml.jackson.core.JsonParser","com.fasterxml.jackson.core.type.ResolvedType"] }, {"name":"readValue","parameterTypes":["com.fasterxml.jackson.core.JsonParser","tools.jackson.core.type.TypeReference"] }, {"name":"readValue","parameterTypes":["com.fasterxml.jackson.core.JsonParser","java.lang.Class"] }, {"name":"readValues","parameterTypes":["com.fasterxml.jackson.core.JsonParser","com.fasterxml.jackson.core.type.ResolvedType"] }, {"name":"readValues","parameterTypes":["com.fasterxml.jackson.core.JsonParser","tools.jackson.core.type.TypeReference"] }, {"name":"readValues","parameterTypes":["com.fasterxml.jackson.core.JsonParser","java.lang.Class"] }, {"name":"shutdown","parameterTypes":[] }, {"name":"treeAsTokens","parameterTypes":["com.fasterxml.jackson.core.TreeNode"] }, {"name":"treeToValue","parameterTypes":["com.fasterxml.jackson.core.TreeNode","java.lang.Class"] }, {"name":"version","parameterTypes":[] }, {"name":"writeTree","parameterTypes":["com.fasterxml.jackson.core.JsonGenerator","com.fasterxml.jackson.core.TreeNode"] }, {"name":"writeValue","parameterTypes":["com.fasterxml.jackson.core.JsonGenerator","java.lang.Object"] }]
 },
 {
   "name":"com.fasterxml.jackson.databind.ObjectMapper$DefaultTyping"

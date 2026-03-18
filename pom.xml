@@ -712,7 +712,7 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.alibaba.nacos</groupId>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>nacos-persistence</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -722,7 +722,7 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.alibaba.nacos</groupId>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>nacos-ai</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -840,7 +840,7 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.alibaba.nacos</groupId>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>nacos-config-plugin</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -850,12 +850,12 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.alibaba.nacos</groupId>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>nacos-trace-plugin</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.alibaba.nacos</groupId>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>nacos-datasource-plugin</artifactId>
                 <version>${project.version}</version>
             </dependency>

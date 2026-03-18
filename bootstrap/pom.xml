@@ -53,7 +53,7 @@
 
         </dependency>
         <dependency>
-            <groupId>com.alibaba.nacos</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>default-datasource-plugin</artifactId>
             <version>${revision}</version>
 

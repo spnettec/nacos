@@ -31,12 +31,12 @@ import com.alibaba.nacos.common.notify.NotifyCenter;
 import com.alibaba.nacos.common.utils.JacksonUtils;
 import com.alibaba.nacos.common.utils.StringUtils;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.MapperFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.slf4j.Logger;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.MapperFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -62,16 +62,18 @@ public class NacosSkillCacheHolder implements Closeable {
     
     private final Map<String, SkillSubscriptionInfo> subscriptionMap;
     
-    private final ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = JsonMapper.builder()
+            .configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true)
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .changeDefaultPropertyInclusion(incl -> incl.withValueInclusion(JsonInclude.Include.NON_NULL))
+            .changeDefaultPropertyInclusion(incl -> incl.withContentInclusion(JsonInclude.Include.NON_NULL))
+            .build();
     
     public NacosSkillCacheHolder(ConfigService configService, String namespaceId) {
         this.configService = configService;
         this.namespaceId = namespaceId;
         this.skillCache = new ConcurrentHashMap<>(4);
         this.subscriptionMap = new ConcurrentHashMap<>(4);
-        this.objectMapper = JsonMapper.builder().configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true)
-                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES).build()
-                .setSerializationInclusion(JsonInclude.Include.NON_NULL);
     }
     
     /**
@@ -437,7 +439,7 @@ public class NacosSkillCacheHolder implements Closeable {
                 LOGGER.info("skill changed: {} -> {}", oldJson, newJson);
                 return true;
             }
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             LOGGER.error("Compare skill info failed: ", e);
         }
         return false;
