@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>com.alibaba.nacos</groupId>
+  <groupId>com.github.heyoulin.nacos</groupId>
   <artifactId>nacos-oidc-auth-plugin</artifactId>
-  <name>nacos-oidc-auth-plugin 3.2.0-BETA</name>
-  <version>3.2.0-BETA</version>
+  <name>nacos-oidc-auth-plugin 3.0.2.B</name>
+  <version>3.0.2.B</version>
   <description>OAuth2/OIDC Authentication Plugin for Nacos</description>
   <url>https://nacos.io</url>
   <issueManagement>
@@ -38,45 +38,45 @@
   </organization>
   <dependencies>
     <dependency>
-      <groupId>com.alibaba.nacos</groupId>
+      <groupId>com.github.heyoulin.nacos</groupId>
       <artifactId>nacos-auth-plugin</artifactId>
-      <version>3.2.0-BETA</version>
+      <version>3.0.2.B</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>com.alibaba.nacos</groupId>
+      <groupId>com.github.heyoulin.nacos</groupId>
       <artifactId>nacos-common</artifactId>
-      <version>3.2.0-BETA</version>
+      <version>3.0.2.B</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>com.alibaba.nacos</groupId>
+      <groupId>com.github.heyoulin.nacos</groupId>
       <artifactId>nacos-sys</artifactId>
-      <version>3.2.0-BETA</version>
+      <version>3.0.2.B</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>com.alibaba.nacos</groupId>
+      <groupId>com.github.heyoulin.nacos</groupId>
       <artifactId>nacos-core</artifactId>
-      <version>3.2.0-BETA</version>
+      <version>3.0.2.B</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>com.github.ben-manes.caffeine</groupId>
       <artifactId>caffeine</artifactId>
-      <version>3.1.8</version>
+      <version>3.2.3</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-test</artifactId>
-      <version>6.2.11</version>
+      <version>7.0.6</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
-      <version>5.10.2</version>
+      <version>6.0.2</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>
@@ -96,7 +96,7 @@
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
-      <version>4.11.0</version>
+      <version>5.21.0</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>
@@ -115,14 +115,8 @@
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
-      <artifactId>mockito-inline</artifactId>
-      <version>4.11.0</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.mockito</groupId>
       <artifactId>mockito-junit-jupiter</artifactId>
-      <version>4.11.0</version>
+      <version>5.21.0</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>
