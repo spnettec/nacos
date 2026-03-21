@@ -48,18 +48,10 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>default-auth-plugin</artifactId>
+            <artifactId>nacos-datasource-plugin-base</artifactId>
             <version>${revision}</version>
 
         </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>default-datasource-plugin</artifactId>
-            <version>${revision}</version>
-
-        </dependency>
-
-
     </dependencies>
     
     <profiles>

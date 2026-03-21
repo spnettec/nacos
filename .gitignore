@@ -19,4 +19,5 @@ derby.log
 yarn.lock
 .flattened-pom.xml
 lefthook.yml
-/distribution/plugins/
+distribution/conf/*.sql
+distribution/plugins/*.jar
