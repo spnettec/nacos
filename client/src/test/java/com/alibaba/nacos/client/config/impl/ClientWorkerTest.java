@@ -423,7 +423,7 @@ class ClientWorkerTest {
         JsonNode jsonNode = JacksonUtils.toObj(metricResponse.getMetrics().get(uuid).toString());
         String metricValues = jsonNode.get("metricValues")
                 .get(ClientConfigMetricRequest.MetricsKey.build(ClientConfigMetricRequest.MetricsKey.CACHE_DATA,
-                        GroupKey.getKeyTenant(dataId, group, tenant)).toString()).textValue();
+                        GroupKey.getKeyTenant(dataId, group, tenant)).toString()).stringValue();
         
         int colonIndex = metricValues.lastIndexOf(":");
         assertEquals(content, metricValues.substring(0, colonIndex));
