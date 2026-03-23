@@ -18,8 +18,8 @@ package com.alibaba.nacos.client.auth.oidc;
 
 import com.alibaba.nacos.common.utils.StringUtils;
 import com.alibaba.nacos.plugin.auth.constant.OidcProtocolConstants;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -138,7 +138,7 @@ public class OidcClientContext {
                 return false;
             }
             
-            this.tokenEndpoint = tokenEndpointNode.asText();
+            this.tokenEndpoint = tokenEndpointNode.asString();
             this.discovered = true;
             LOGGER.info("[OIDC-CLIENT] OIDC Discovery success, token_endpoint: {}", this.tokenEndpoint);
             return true;
@@ -191,7 +191,7 @@ public class OidcClientContext {
         while ((length = inputStream.read(buffer)) != -1) {
             result.write(buffer, 0, length);
         }
-        return result.toString(StandardCharsets.UTF_8.name());
+        return result.toString(StandardCharsets.UTF_8);
     }
 }
 
