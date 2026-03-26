@@ -137,7 +137,7 @@ public class GrpcConnection extends Connection {
         //set callback .
         Futures.addCallback(requestFuture, new FutureCallback<Payload>() {
             @Override
-            public void onSuccess(@Nullable Payload grpcResponse) {
+            public void onSuccess(Payload grpcResponse) {
                 if (grpcResponse == null) {
                     requestCallBack.onException(new NacosException(ResponseCode.FAIL.getCode(), "grpc response is null"));
                     return;
