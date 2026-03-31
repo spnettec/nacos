@@ -29,11 +29,11 @@ import com.alibaba.nacos.common.notify.NotifyCenter;
 import com.alibaba.nacos.common.utils.JacksonUtils;
 import com.alibaba.nacos.common.utils.StringUtils;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.MapperFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.json.JsonMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.MapperFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import org.slf4j.Logger;
 
 import java.util.HashMap;
@@ -77,8 +77,10 @@ public class NacosAgentSpecCacheHolder implements Closeable {
         this.agentSpecCache = new ConcurrentHashMap<>(4);
         this.subscriptionMap = new ConcurrentHashMap<>(4);
         this.objectMapper = JsonMapper.builder().configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true)
-                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES).build()
-                .setSerializationInclusion(JsonInclude.Include.NON_NULL);
+                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                .changeDefaultPropertyInclusion(incl -> incl.withValueInclusion(JsonInclude.Include.NON_NULL))
+                .changeDefaultPropertyInclusion(incl -> incl.withContentInclusion(JsonInclude.Include.NON_NULL))
+                .build();
     }
 
     /**
@@ -353,7 +355,7 @@ public class NacosAgentSpecCacheHolder implements Closeable {
                 LOGGER.info("AgentSpec changed: {} -> {}", oldJson, newJson);
                 return true;
             }
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             LOGGER.error("Compare agent spec info failed: ", e);
         }
         return false;
