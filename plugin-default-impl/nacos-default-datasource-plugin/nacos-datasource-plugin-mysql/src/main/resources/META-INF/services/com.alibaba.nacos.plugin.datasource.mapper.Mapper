@@ -24,3 +24,5 @@ com.alibaba.nacos.plugin.datasource.impl.mysql.TenantInfoMapperByMySql
 com.alibaba.nacos.plugin.datasource.impl.mysql.TenantCapacityMapperByMySql
 com.alibaba.nacos.plugin.datasource.impl.mysql.GroupCapacityMapperByMysql
 com.alibaba.nacos.plugin.datasource.impl.mysql.ConfigMigrateMapperByMysql
+com.alibaba.nacos.plugin.datasource.impl.mysql.AiResourceMapperByMySql
+com.alibaba.nacos.plugin.datasource.impl.mysql.AiResourceVersionMapperByMySql

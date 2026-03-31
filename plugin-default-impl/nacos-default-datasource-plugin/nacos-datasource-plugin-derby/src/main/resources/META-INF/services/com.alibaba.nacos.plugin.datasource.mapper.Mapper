@@ -24,3 +24,5 @@ com.alibaba.nacos.plugin.datasource.impl.derby.TenantInfoMapperByDerby
 com.alibaba.nacos.plugin.datasource.impl.derby.TenantCapacityMapperByDerby
 com.alibaba.nacos.plugin.datasource.impl.derby.GroupCapacityMapperByDerby
 com.alibaba.nacos.plugin.datasource.impl.derby.ConfigMigrateMapperByDerby
+com.alibaba.nacos.plugin.datasource.impl.derby.AiResourceMapperByDerby
+com.alibaba.nacos.plugin.datasource.impl.derby.AiResourceVersionMapperByDerby

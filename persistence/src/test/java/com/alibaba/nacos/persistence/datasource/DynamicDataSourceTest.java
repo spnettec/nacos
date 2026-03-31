@@ -33,29 +33,68 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ExtendWith(MockitoExtension.class)
 class DynamicDataSourceTest {
-
+    
     @InjectMocks
     private DynamicDataSource dataSource;
-
+    
     @Mock
     private LocalDataSourceServiceImpl localDataSourceService;
-
+    
     @Mock
     private ExternalDataSourceServiceImpl basicDataSourceService;
-
+    
     @BeforeEach
     void setUp() {
         EnvUtil.setEnvironment(new MockEnvironment());
         dataSource = DynamicDataSource.getInstance();
     }
-
+    
     @AfterEach
     void tearDown() {
         DatasourceConfiguration.setEmbeddedStorage(true);
         DatasourceConfiguration.setUseExternalDb(false);
         ReflectionTestUtils.setField(dataSource, "localDataSourceService", null);
         ReflectionTestUtils.setField(dataSource, "basicDataSourceService", null);
+        // Shutdown Derby to release locks
+        try {
+            java.sql.DriverManager.getConnection("jdbc:derby:;shutdown=true");
+        } catch (Exception e) {
+            // Ignore shutdown exception as Derby always throws an exception on successful shutdown
+        }
+
+        // Wait for Derby to fully shutdown and release locks
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+        // Clean up derby data directory to ensure fresh start for next test
+        try {
+            String derbyPath = System.getProperty("user.dir") + "/data/derby-data";
+            java.io.File derbyDir = new java.io.File(derbyPath);
+            if (derbyDir.exists()) {
+                deleteDirectory(derbyDir);
+            }
+        } catch (Exception e) {
+            // Ignore cleanup exceptions
+        }
+
         EnvUtil.setEnvironment(null);
+    }
+
+    private void deleteDirectory(java.io.File directory) throws Exception {
+        if (directory.exists()) {
+            java.nio.file.Files.walk(directory.toPath())
+                    .sorted((a, b) -> b.compareTo(a))
+                    .forEach(path -> {
+                        try {
+                            java.nio.file.Files.delete(path);
+                        } catch (Exception e) {
+                            // Ignore
+                        }
+                    });
+        }
     }
 
     @Test
@@ -64,23 +103,23 @@ class DynamicDataSourceTest {
         ReflectionTestUtils.setField(dataSource, "basicDataSourceService", basicDataSourceService);
         DatasourceConfiguration.setEmbeddedStorage(true);
         assertInstanceOf(LocalDataSourceServiceImpl.class, dataSource.getDataSource());
-
+        
         DatasourceConfiguration.setEmbeddedStorage(false);
         assertInstanceOf(ExternalDataSourceServiceImpl.class, dataSource.getDataSource());
     }
-
+    
     @Test
     void testInitWithEmbeddedStorage() {
         DatasourceConfiguration.setEmbeddedStorage(true);
         assertInstanceOf(LocalDataSourceServiceImpl.class, dataSource.getDataSource());
     }
-
+    
     @Test
     void testInitWithExternalStorage() {
         DatasourceConfiguration.setEmbeddedStorage(false);
         assertInstanceOf(ExternalDataSourceServiceImpl.class, dataSource.getDataSource());
     }
-
+    
     @Test
     void testInitWithException() {
         EnvUtil.setEnvironment(null);

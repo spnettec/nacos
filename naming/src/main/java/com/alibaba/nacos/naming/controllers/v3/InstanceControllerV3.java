@@ -17,6 +17,7 @@
 package com.alibaba.nacos.naming.controllers.v3;
 
 import com.alibaba.nacos.api.annotation.NacosApi;
+import com.alibaba.nacos.api.common.ApiType;
 import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.model.v2.Result;
 import com.alibaba.nacos.api.naming.pojo.Instance;
@@ -49,7 +50,7 @@ import com.alibaba.nacos.naming.utils.InstanceUtil;
 import com.alibaba.nacos.naming.utils.NamingRequestUtil;
 import com.alibaba.nacos.naming.web.CanDistro;
 import com.alibaba.nacos.plugin.auth.constant.ActionTypes;
-import com.alibaba.nacos.plugin.auth.constant.ApiType;
+import tools.jackson.core.type.TypeReference;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -57,7 +58,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import tools.jackson.core.type.TypeReference;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -76,20 +76,20 @@ import static com.alibaba.nacos.naming.misc.UtilsAndCommons.DEFAULT_CLUSTER_NAME
 @RequestMapping(UtilsAndCommons.INSTANCE_CONTROLLER_V3_ADMIN_PATH)
 @ExtractorManager.Extractor(httpExtractor = NamingDefaultHttpParamExtractor.class)
 public class InstanceControllerV3 {
-
+    
     private final SwitchDomain switchDomain;
-
+    
     private final InstanceOperatorClientImpl instanceService;
-
+    
     private final CatalogService catalogService;
-
+    
     public InstanceControllerV3(SwitchDomain switchDomain, InstanceOperatorClientImpl instanceService,
             CatalogService catalogService) {
         this.switchDomain = switchDomain;
         this.instanceService = instanceService;
         this.catalogService = catalogService;
     }
-
+    
     /**
      * Register new instance.
      */
@@ -110,10 +110,10 @@ public class InstanceControllerV3 {
         NotifyCenter.publishEvent(
                 new RegisterInstanceTraceEvent(System.currentTimeMillis(), NamingRequestUtil.getSourceIp(), false,
                         namespaceId, groupName, serviceName, instance.getIp(), instance.getPort()));
-
+        
         return Result.success("ok");
     }
-
+    
     /**
      * Deregister instances.
      */
@@ -132,10 +132,10 @@ public class InstanceControllerV3 {
                 new DeregisterInstanceTraceEvent(System.currentTimeMillis(), NamingRequestUtil.getSourceIp(), false,
                         DeregisterInstanceReason.REQUEST, instanceForm.getNamespaceId(), instanceForm.getGroupName(),
                         instanceForm.getServiceName(), instance.getIp(), instance.getPort()));
-
+        
         return Result.success("ok");
     }
-
+    
     /**
      * Update instance.
      */
@@ -155,10 +155,10 @@ public class InstanceControllerV3 {
                 new UpdateInstanceTraceEvent(System.currentTimeMillis(), NamingRequestUtil.getSourceIp(),
                         instanceForm.getNamespaceId(), instanceForm.getGroupName(), instanceForm.getServiceName(),
                         instance.getIp(), instance.getPort(), instance.getMetadata()));
-
+        
         return Result.success("ok");
     }
-
+    
     /**
      * Batch update instance's metadata. old key exist = update, old key not exist = add.
      */
@@ -170,19 +170,19 @@ public class InstanceControllerV3 {
     public Result<InstanceMetadataBatchResult> batchUpdateInstanceMetadata(InstanceMetadataBatchOperationForm form)
             throws NacosException {
         form.validate();
-
+        
         List<Instance> targetInstances = parseBatchInstances(form.getInstances());
         Map<String, String> targetMetadata = UtilsAndCommons.parseMetadata(form.getMetadata());
         InstanceOperationInfo instanceOperationInfo = buildOperationInfo(buildCompositeServiceName(form),
                 form.getConsistencyType(), targetInstances);
-
+        
         List<String> operatedInstances = instanceService.batchUpdateMetadata(form.getNamespaceId(),
                 instanceOperationInfo, targetMetadata);
         ArrayList<String> ipList = new ArrayList<>(operatedInstances);
-
+        
         return Result.success(new InstanceMetadataBatchResult(ipList));
     }
-
+    
     /**
      * Batch delete instance's metadata. old key exist = delete, old key not exist = not operate
      */
@@ -201,10 +201,10 @@ public class InstanceControllerV3 {
         List<String> operatedInstances = instanceService.batchDeleteMetadata(form.getNamespaceId(),
                 instanceOperationInfo, targetMetadata);
         ArrayList<String> ipList = new ArrayList<>(operatedInstances);
-
+        
         return Result.success(new InstanceMetadataBatchResult(ipList));
     }
-
+    
     private InstanceOperationInfo buildOperationInfo(String serviceName, String consistencyType,
             List<Instance> instances) {
         if (!CollectionUtils.isEmpty(instances)) {
@@ -216,7 +216,7 @@ public class InstanceControllerV3 {
         }
         return new InstanceOperationInfo(serviceName, consistencyType, instances);
     }
-
+    
     private List<Instance> parseBatchInstances(String instances) {
         try {
             return JacksonUtils.toObj(instances, new TypeReference<List<Instance>>() {
@@ -226,7 +226,7 @@ public class InstanceControllerV3 {
         }
         return Collections.emptyList();
     }
-
+    
     /**
      * Partial update instance.
      */
@@ -254,7 +254,7 @@ public class InstanceControllerV3 {
                 instanceForm.getServiceName(), patchObject);
         return Result.success("ok");
     }
-
+    
     /**
      * Get all instance of input service.
      */
@@ -271,7 +271,7 @@ public class InstanceControllerV3 {
         }
         return Result.success(instances);
     }
-
+    
     /**
      * Get detail information of specified instance.
      */
@@ -288,9 +288,9 @@ public class InstanceControllerV3 {
                 instanceForm.getServiceName(), clusterName, ip, port);
         return Result.success(instance);
     }
-
+    
     private String buildCompositeServiceName(InstanceMetadataBatchOperationForm form) {
         return NamingUtils.getGroupedName(form.getServiceName(), form.getGroupName());
     }
-
+    
 }

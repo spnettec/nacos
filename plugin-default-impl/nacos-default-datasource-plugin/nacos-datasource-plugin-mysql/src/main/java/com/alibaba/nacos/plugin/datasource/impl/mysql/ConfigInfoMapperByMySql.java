@@ -55,7 +55,7 @@ public class ConfigInfoMapperByMySql extends AbstractMapperByMysql implements Co
         final String appName = (String) context.getWhereParameter(FieldConstant.APP_NAME);
         final String tenantId = (String) context.getWhereParameter(FieldConstant.TENANT_ID);
         String sql = "SELECT id,data_id,group_id,tenant_id,app_name,content FROM config_info"
-                + " WHERE tenant_id LIKE ? AND app_name= ?" + " LIMIT " + context.getStartRow() + ","
+                + " WHERE tenant_id LIKE ? AND app_name= ?" + " ORDER BY id LIMIT " + context.getStartRow() + ","
                 + context.getPageSize();
         return new MapperResult(sql, CollectionUtils.list(tenantId, appName));
     }
@@ -63,14 +63,14 @@ public class ConfigInfoMapperByMySql extends AbstractMapperByMysql implements Co
     @Override
     public MapperResult getTenantIdList(MapperContext context) {
         String sql = "SELECT tenant_id FROM config_info WHERE tenant_id != '" + NamespaceUtil.getNamespaceDefaultId()
-                + "' GROUP BY tenant_id LIMIT " + context.getStartRow() + "," + context.getPageSize();
+                + "' GROUP BY tenant_id ORDER BY tenant_id LIMIT " + context.getStartRow() + "," + context.getPageSize();
         return new MapperResult(sql, Collections.emptyList());
     }
     
     @Override
     public MapperResult getGroupIdList(MapperContext context) {
         String sql = "SELECT group_id FROM config_info WHERE tenant_id ='" + NamespaceUtil.getNamespaceDefaultId()
-                + "' GROUP BY group_id LIMIT " + context.getStartRow() + "," + context.getPageSize();
+                + "' GROUP BY group_id ORDER BY group_id LIMIT " + context.getStartRow() + "," + context.getPageSize();
         return new MapperResult(sql, Collections.emptyList());
     }
     
@@ -177,7 +177,7 @@ public class ConfigInfoMapperByMySql extends AbstractMapperByMysql implements Co
             where += " AND content LIKE ? ";
             paramList.add(content);
         }
-        return new MapperResult(sqlFetchRows + where + " LIMIT " + context.getStartRow() + "," + context.getPageSize(),
+        return new MapperResult(sqlFetchRows + where + " ORDER BY id LIMIT " + context.getStartRow() + "," + context.getPageSize(),
                 paramList);
     }
     
@@ -214,8 +214,8 @@ public class ConfigInfoMapperByMySql extends AbstractMapperByMysql implements Co
         }
         
         // 先分页，减少后续 JOIN 的数据量
-        innerSql.append(" LIMIT ").append(context.getStartRow()).append(",").append(context.getPageSize());
-        
+        innerSql.append(" ORDER BY id LIMIT ").append(context.getStartRow()).append(",").append(context.getPageSize());
+
         // 外层查询：对分页后的结果进行标签关联
         final String sql = "SELECT a.id,a.data_id,a.group_id,a.tenant_id,a.app_name,a.content,a.md5,a.type,a.encrypted_data_key,a.c_desc,"
                           + "GROUP_CONCAT(b.tag_name SEPARATOR ',') as config_tags "
@@ -227,7 +227,7 @@ public class ConfigInfoMapperByMySql extends AbstractMapperByMysql implements Co
     
     @Override
     public MapperResult findConfigInfoBaseByGroupFetchRows(MapperContext context) {
-        String sql = "SELECT id,data_id,group_id,content FROM config_info WHERE group_id=? AND tenant_id=?" + " LIMIT "
+        String sql = "SELECT id,data_id,group_id,content FROM config_info WHERE group_id=? AND tenant_id=?" + " ORDER BY id LIMIT "
                 + context.getStartRow() + "," + context.getPageSize();
         return new MapperResult(sql, CollectionUtils.list(context.getWhereParameter(FieldConstant.GROUP_ID),
                 context.getWhereParameter(FieldConstant.TENANT_ID)));
@@ -278,8 +278,8 @@ public class ConfigInfoMapperByMySql extends AbstractMapperByMysql implements Co
         }
         
         // 先分页，减少后续 JOIN 的数据量
-        innerSql.append(" LIMIT ").append(context.getStartRow()).append(",").append(context.getPageSize());
-        
+        innerSql.append(" ORDER BY id LIMIT ").append(context.getStartRow()).append(",").append(context.getPageSize());
+
         // 外层查询：对分页后的结果进行标签关联
         final String sql = "SELECT a.id,a.data_id,a.group_id,a.tenant_id,a.app_name,a.content,a.md5,"
                           + "a.encrypted_data_key,a.type,a.c_desc,a.gmt_modified,"

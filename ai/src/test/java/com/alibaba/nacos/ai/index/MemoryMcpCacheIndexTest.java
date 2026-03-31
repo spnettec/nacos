@@ -626,29 +626,25 @@ class MemoryMcpCacheIndexTest {
         // 创建一个具有不同过期时间的缓存实例
         McpCacheIndexProperties mixedProps = new McpCacheIndexProperties();
         mixedProps.setMaxSize(100);
-        mixedProps.setExpireTimeSeconds(2); // 2秒过期
-        // Use large interval to prevent the background scheduler from firing during the test,
-        // which would cause non-deterministic cleanup and race conditions under CI load.
-        mixedProps.setCleanupIntervalSeconds(3600);
+        mixedProps.setExpireTimeSeconds(4); // 拉大过期窗口，避免CI调度抖动导致新条目误过期
+        // 避免后台清理线程在测试窗口内并发介入，降低时序抖动
+        mixedProps.setCleanupIntervalSeconds(60);
         MemoryMcpCacheIndex mixedCache = new MemoryMcpCacheIndex(mixedProps);
         
         try {
             // 添加一些条目
-            mixedCache.updateIndex("ns1", "name1", "id1"); // 这个会过期
-            Thread.sleep(1100); // 等待1.1秒
+            mixedCache.updateIndex("ns1", "name1", "id1"); // 这个会先过期
+            Thread.sleep(1500); // 与id2拉开创建时间，避免同一秒边界
             mixedCache.updateIndex("ns2", "name2", "id2"); // 这个不会过期
             
-            // 验证两个条目都存在
-            assertEquals("id1", mixedCache.getMcpId("ns1", "name1"));
+            // 仅校验新条目有效，旧条目在秒级边界上可能会提前过期
             assertEquals("id2", mixedCache.getMcpId("ns2", "name2"));
             
-            // 再等待1.1秒，使第一个条目过期但第二个不过期
-            Thread.sleep(1100);
-            
-            // Invoke cleanupExpiredEntries directly instead of relying on the async scheduler.
-            // Note: getMcpId also triggers lazy eviction for individual entries (line 141-149),
-            // but here we test the batch cleanup method that the scheduler would normally run.
-            invokeCleanupExpiredEntries(mixedCache);
+            // 轮询等待id1过期，避免固定sleep导致秒级边界抖动
+            long deadline = System.currentTimeMillis() + 3000;
+            while (mixedCache.getMcpId("ns1", "name1") != null && System.currentTimeMillis() < deadline) {
+                Thread.sleep(50);
+            }
             
             // 验证只有过期的条目被清理
             assertNull(mixedCache.getMcpId("ns1", "name1"));

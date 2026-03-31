@@ -30,22 +30,22 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class DefaultParamCheckerTest {
-
+    
     DefaultParamChecker paramChecker;
-
+    
     int maxMetadataLength = RandomUtils.nextInt(1024, 10240);
-
+    
     @BeforeEach
     void setUp() throws Exception {
         System.setProperty("nacos.naming.service.metadata.length", String.valueOf(maxMetadataLength));
         paramChecker = new DefaultParamChecker();
     }
-
+    
     @Test
     void testCheckerType() {
         assertEquals("default", paramChecker.getCheckerType());
     }
-
+    
     @Test
     void testCheckEmptyParamInfoList() {
         ParamCheckResponse actual = paramChecker.checkParamInfoList(null);
@@ -53,7 +53,7 @@ class DefaultParamCheckerTest {
         actual = paramChecker.checkParamInfoList(Collections.emptyList());
         assertTrue(actual.isSuccess());
     }
-
+    
     @Test
     void testCheckEmptyParamInfo() {
         ParamInfo paramInfo = new ParamInfo();
@@ -63,7 +63,7 @@ class DefaultParamCheckerTest {
         ParamCheckResponse actual = paramChecker.checkParamInfoList(paramInfos);
         assertTrue(actual.isSuccess());
     }
-
+    
     @Test
     void testCheckParamInfoForNamespaceShowName() {
         ParamInfo paramInfo = new ParamInfo();
@@ -85,7 +85,7 @@ class DefaultParamCheckerTest {
         actual = paramChecker.checkParamInfoList(paramInfos);
         assertTrue(actual.isSuccess());
     }
-
+    
     @Test
     void testCheckParamInfoForNamespaceId() {
         ParamInfo paramInfo = new ParamInfo();
@@ -107,7 +107,7 @@ class DefaultParamCheckerTest {
         actual = paramChecker.checkParamInfoList(paramInfos);
         assertTrue(actual.isSuccess());
     }
-
+    
     @Test
     void testCheckParamInfoForDataId() {
         ParamInfo paramInfo = new ParamInfo();
@@ -129,7 +129,7 @@ class DefaultParamCheckerTest {
         actual = paramChecker.checkParamInfoList(paramInfos);
         assertTrue(actual.isSuccess());
     }
-
+    
     @Test
     void testCheckParamInfoForServiceName() {
         ParamInfo paramInfo = new ParamInfo();
@@ -151,7 +151,7 @@ class DefaultParamCheckerTest {
         actual = paramChecker.checkParamInfoList(paramInfos);
         assertTrue(actual.isSuccess());
     }
-
+    
     @Test
     void testCheckParamInfoForGroup() {
         ParamInfo paramInfo = new ParamInfo();
@@ -173,7 +173,7 @@ class DefaultParamCheckerTest {
         actual = paramChecker.checkParamInfoList(paramInfos);
         assertTrue(actual.isSuccess());
     }
-
+    
     @Test
     void testCheckParamInfoForClusters() {
         ParamInfo paramInfo = new ParamInfo();
@@ -195,7 +195,7 @@ class DefaultParamCheckerTest {
         actual = paramChecker.checkParamInfoList(paramInfos);
         assertTrue(actual.isSuccess());
     }
-
+    
     @Test
     void testCheckParamInfoForCluster() {
         ParamInfo paramInfo = new ParamInfo();
@@ -217,7 +217,7 @@ class DefaultParamCheckerTest {
         actual = paramChecker.checkParamInfoList(paramInfos);
         assertTrue(actual.isSuccess());
     }
-
+    
     @Test
     void testCheckParamInfoForIp() {
         ParamInfo paramInfo = new ParamInfo();
@@ -239,7 +239,7 @@ class DefaultParamCheckerTest {
         actual = paramChecker.checkParamInfoList(paramInfos);
         assertTrue(actual.isSuccess());
     }
-
+    
     @Test
     void testCheckParamInfoForPort() {
         ParamInfo paramInfo = new ParamInfo();
@@ -265,7 +265,7 @@ class DefaultParamCheckerTest {
         actual = paramChecker.checkParamInfoList(paramInfos);
         assertTrue(actual.isSuccess());
     }
-
+    
     @Test
     void testCheckParamInfoForMetadata() {
         ParamInfo paramInfo = new ParamInfo();
@@ -281,6 +281,34 @@ class DefaultParamCheckerTest {
         assertEquals(String.format("Param 'Metadata' is illegal, the param length should not exceed %d.", maxMetadataLength), actual.getMessage());
         // Success
         metadata.put("key2", String.format("Any key and value, only require length sum not more than %d.", maxMetadataLength));
+        actual = paramChecker.checkParamInfoList(paramInfos);
+        assertTrue(actual.isSuccess());
+    }
+
+    @Test
+    void testCheckParamInfoForSkillName() {
+        ParamInfo paramInfo = new ParamInfo();
+        ArrayList<ParamInfo> paramInfos = new ArrayList<>();
+        paramInfos.add(paramInfo);
+        // Pattern
+        paramInfo.setSkillName("Skill_Name");
+        ParamCheckResponse actual = paramChecker.checkParamInfoList(paramInfos);
+        assertFalse(actual.isSuccess());
+        assertEquals(
+                "Skill name may only contain lowercase letters, numbers, and hyphens, and must not start or end with a hyphen",
+                actual.getMessage());
+        // Max Length
+        paramInfo.setSkillName(buildStringLength(65));
+        actual = paramChecker.checkParamInfoList(paramInfos);
+        assertFalse(actual.isSuccess());
+        assertEquals("Skill name must be 1-64 characters", actual.getMessage());
+        // Consecutive hyphens
+        paramInfo.setSkillName("test--skill");
+        actual = paramChecker.checkParamInfoList(paramInfos);
+        assertFalse(actual.isSuccess());
+        assertEquals("Skill name must not contain consecutive hyphens (--)", actual.getMessage());
+        // Success
+        paramInfo.setSkillName("skill-name1");
         actual = paramChecker.checkParamInfoList(paramInfos);
         assertTrue(actual.isSuccess());
     }

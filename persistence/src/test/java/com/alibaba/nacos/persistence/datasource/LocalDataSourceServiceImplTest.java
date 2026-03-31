@@ -22,6 +22,7 @@ import com.alibaba.nacos.sys.env.EnvUtil;
 import com.zaxxer.hikari.HikariDataSource;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -47,22 +48,63 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class LocalDataSourceServiceImplTest {
-
+    
     @InjectMocks
     private LocalDataSourceServiceImpl service;
-
+    
     @Mock
     private JdbcTemplate jt;
-
+    
     @Mock
     private TransactionTemplate tjt;
-
+    
     @BeforeEach
     void setUp() {
         DatasourceConfiguration.setUseExternalDb(false);
         service = new LocalDataSourceServiceImpl();
         ReflectionTestUtils.setField(service, "jt", jt);
         ReflectionTestUtils.setField(service, "tjt", tjt);
+    }
+
+    @AfterEach
+    void tearDown() throws Exception {
+        // Shutdown Derby to release locks
+        try {
+            java.sql.DriverManager.getConnection("jdbc:derby:;shutdown=true");
+        } catch (Exception e) {
+            // Ignore shutdown exception as Derby always throws an exception on successful shutdown
+        }
+
+        // Wait for Derby to fully shutdown and release locks
+        Thread.sleep(500);
+
+        // Clean up derby data directory to ensure fresh start for next test
+        try {
+            String derbyPath = System.getProperty("user.dir") + "/data/derby-data";
+            java.io.File derbyDir = new java.io.File(derbyPath);
+            if (derbyDir.exists()) {
+                deleteDirectory(derbyDir);
+            }
+        } catch (Exception e) {
+            // Ignore cleanup exceptions
+        }
+
+        DatasourceConfiguration.setUseExternalDb(false);
+        EnvUtil.setEnvironment(null);
+    }
+
+    private void deleteDirectory(java.io.File directory) throws Exception {
+        if (directory.exists()) {
+            java.nio.file.Files.walk(directory.toPath())
+                    .sorted((a, b) -> b.compareTo(a))
+                    .forEach(path -> {
+                        try {
+                            java.nio.file.Files.delete(path);
+                        } catch (Exception e) {
+                            // Ignore
+                        }
+                    });
+        }
     }
 
     @Test
@@ -76,7 +118,7 @@ class LocalDataSourceServiceImplTest {
             DatasourceConfiguration.setUseExternalDb(false);
         }
     }
-
+    
     @Test
     void testInit() throws Exception {
         try {
@@ -90,12 +132,12 @@ class LocalDataSourceServiceImplTest {
             EnvUtil.setEnvironment(null);
         }
     }
-
+    
     @Test
     void testReloadWithNullDatasource() {
         assertThrowsExactly(RuntimeException.class, service::reload, "datasource is null");
     }
-
+    
     @Test
     void testReloadWithException() throws SQLException {
         DataSource ds = mock(DataSource.class);
@@ -103,7 +145,7 @@ class LocalDataSourceServiceImplTest {
         when(ds.getConnection()).thenThrow(new SQLException());
         assertThrows(NacosRuntimeException.class, service::reload);
     }
-
+    
     @Test
     void testCleanAndReopen() throws Exception {
         try {
@@ -115,7 +157,7 @@ class LocalDataSourceServiceImplTest {
             EnvUtil.setEnvironment(null);
         }
     }
-
+    
     @Test
     void testRestoreDerby() throws Exception {
         try {
@@ -129,7 +171,7 @@ class LocalDataSourceServiceImplTest {
             EnvUtil.setEnvironment(null);
         }
     }
-
+    
     @Test
     void testGetDataSource() {
         HikariDataSource dataSource = new HikariDataSource();
@@ -137,17 +179,17 @@ class LocalDataSourceServiceImplTest {
         when(jt.getDataSource()).thenReturn(dataSource);
         assertEquals(dataSource.getJdbcUrl(), ((HikariDataSource) service.getDatasource()).getJdbcUrl());
     }
-
+    
     @Test
     void testCheckMasterWritable() {
         assertTrue(service.checkMasterWritable());
     }
-
+    
     @Test
     void testSetAndGetHealth() {
         service.setHealthStatus("DOWN");
         assertEquals("DOWN", service.getHealth());
-
+        
         service.setHealthStatus("UP");
         assertEquals("UP", service.getHealth());
     }

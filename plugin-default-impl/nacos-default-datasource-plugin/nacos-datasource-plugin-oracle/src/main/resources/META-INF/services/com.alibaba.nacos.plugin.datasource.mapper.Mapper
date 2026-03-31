@@ -24,3 +24,5 @@ com.alibaba.nacos.plugin.datasource.impl.oracle.TenantInfoMapperByOracle
 com.alibaba.nacos.plugin.datasource.impl.oracle.TenantCapacityMapperByOracle
 com.alibaba.nacos.plugin.datasource.impl.oracle.GroupCapacityMapperByOracle
 com.alibaba.nacos.plugin.datasource.impl.oracle.ConfigMigrateMapperByOracle
+com.alibaba.nacos.plugin.datasource.impl.oracle.AiResourceMapperByOracle
+com.alibaba.nacos.plugin.datasource.impl.oracle.AiResourceVersionMapperByOracle

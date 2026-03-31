@@ -99,7 +99,7 @@ class ConfigInfoMapperByDerbyTest {
     void testFindConfigInfoByAppFetchRows() {
         MapperResult mapperResult = configInfoMapperByDerby.findConfigInfoByAppFetchRows(context);
         assertEquals(mapperResult.getSql(), "SELECT ID,data_id,group_id,tenant_id,app_name,content FROM config_info WHERE tenant_id LIKE"
-                + " ? ESCAPE '\\' AND app_name = ? OFFSET " + startRow + " ROWS FETCH NEXT " + pageSize + " ROWS ONLY");
+                + " ? ESCAPE '\\' AND app_name = ? ORDER BY id OFFSET " + startRow + " ROWS FETCH NEXT " + pageSize + " ROWS ONLY");
         assertArrayEquals(new Object[] {tenantId, appName}, mapperResult.getParamList().toArray());
     }
     
@@ -113,18 +113,21 @@ class ConfigInfoMapperByDerbyTest {
     @Test
     void testGetTenantIdList() {
         MapperResult mapperResult = configInfoMapperByDerby.getTenantIdList(context);
+        String expectedSql = "SELECT tenant_id FROM config_info WHERE tenant_id != 'public' "
+                + "GROUP BY tenant_id ORDER BY tenant_id OFFSET " + startRow + " ROWS FETCH NEXT "
+                + pageSize + " ROWS ONLY";
         assertEquals(mapperResult.getSql(),
-                "SELECT tenant_id FROM config_info WHERE tenant_id != 'public' GROUP BY tenant_id OFFSET " + startRow + " ROWS FETCH NEXT "
-                        + pageSize + " ROWS ONLY");
+                expectedSql);
         assertArrayEquals(mapperResult.getParamList().toArray(), emptyObjs);
     }
     
     @Test
     void testGetGroupIdList() {
         MapperResult mapperResult = configInfoMapperByDerby.getGroupIdList(context);
+        String expectedSql = "SELECT group_id FROM config_info WHERE tenant_id ='public' GROUP BY group_id "
+                + "ORDER BY group_id OFFSET " + startRow + " ROWS FETCH NEXT " + pageSize + " ROWS ONLY";
         assertEquals(mapperResult.getSql(),
-                "SELECT group_id FROM config_info WHERE tenant_id ='public' GROUP BY group_id OFFSET " + startRow + " ROWS FETCH NEXT " + pageSize
-                        + " ROWS ONLY");
+                expectedSql);
         assertArrayEquals(mapperResult.getParamList().toArray(), emptyObjs);
     }
     
@@ -185,7 +188,7 @@ class ConfigInfoMapperByDerbyTest {
     void testFindChangeConfigFetchRows() {
         MapperResult mapperResult = configInfoMapperByDerby.findChangeConfigFetchRows(context);
         assertEquals(mapperResult.getSql(), "SELECT id,data_id,group_id,tenant_id,app_name,content,type,md5,gmt_modified FROM config_info "
-                + "WHERE  1=1  AND app_name = ?  AND gmt_modified >=?  AND gmt_modified <=?  OFFSET " + startRow + " ROWS FETCH NEXT "
+                + "WHERE  1=1  AND app_name = ?  AND gmt_modified >=?  AND gmt_modified <=?  ORDER BY id OFFSET " + startRow + " ROWS FETCH NEXT "
                 + pageSize + " ROWS ONLY");
         assertArrayEquals(new Object[] {appName, startTime, endTime}, mapperResult.getParamList().toArray());
 
@@ -195,7 +198,7 @@ class ConfigInfoMapperByDerbyTest {
         mapperResult = configInfoMapperByDerby.findChangeConfigFetchRows(context);
         assertEquals(mapperResult.getSql(), "SELECT id,data_id,group_id,tenant_id,app_name,content,type,"
                 + "md5,gmt_modified FROM config_info WHERE  1=1  AND data_id LIKE ? ESCAPE '\\'  AND group_id LIKE ? ESCAPE '\\' "
-                + " AND app_name = ?  AND gmt_modified >=?  AND gmt_modified <=?  OFFSET "
+                + " AND app_name = ?  AND gmt_modified >=?  AND gmt_modified <=?  ORDER BY id OFFSET "
                 + startRow + " ROWS FETCH NEXT " + pageSize + " ROWS ONLY");
         assertArrayEquals(new Object[] {"test_data", "test_group", appName, startTime, endTime}, mapperResult.getParamList().toArray());
     }
@@ -239,7 +242,7 @@ class ConfigInfoMapperByDerbyTest {
     void testFindConfigInfoBaseLikeFetchRows() {
         MapperResult mapperResult = configInfoMapperByDerby.findConfigInfoBaseLikeFetchRows(context);
         assertEquals(mapperResult.getSql(),
-                "SELECT id,data_id,group_id,tenant_id,content FROM config_info WHERE  1=1 AND tenant_id='public'  " + "OFFSET " + startRow
+                "SELECT id,data_id,group_id,tenant_id,content FROM config_info WHERE  1=1 AND tenant_id='public'  " + "ORDER BY id OFFSET " + startRow
                         + " ROWS FETCH NEXT " + pageSize + " ROWS ONLY");
         assertArrayEquals(mapperResult.getParamList().toArray(), emptyObjs);
 
@@ -251,7 +254,7 @@ class ConfigInfoMapperByDerbyTest {
         assertEquals(mapperResult.getSql(),
                 "SELECT id,data_id,group_id,tenant_id,content FROM config_info WHERE  1=1 AND tenant_id='public' "
                         + " AND data_id LIKE ? ESCAPE '\\'  AND group_id LIKE ? ESCAPE '\\'  AND content LIKE ? ESCAPE '\\' "
-                        + " OFFSET " + startRow + " ROWS FETCH NEXT " + pageSize + " ROWS ONLY");
+                        + " ORDER BY id OFFSET " + startRow + " ROWS FETCH NEXT " + pageSize + " ROWS ONLY");
         assertArrayEquals(new Object[] {"test_data", "test_group", "test_content"}, mapperResult.getParamList().toArray());
     }
     
@@ -268,7 +271,7 @@ class ConfigInfoMapperByDerbyTest {
         assertEquals(mapperResult.getSql(),
                 "SELECT id,data_id,group_id,tenant_id,app_name,content,md5,type,encrypted_data_key,c_desc "
                         + "FROM config_info WHERE  tenant_id=?  AND app_name=? "
-                        + " OFFSET " + startRow + " ROWS FETCH NEXT " + pageSize + " ROWS ONLY");
+                        + " ORDER BY id OFFSET " + startRow + " ROWS FETCH NEXT " + pageSize + " ROWS ONLY");
         assertArrayEquals(new Object[] {tenantId, appName}, mapperResult.getParamList().toArray());
 
         // Test with content to verify LIKE ESCAPE
@@ -277,7 +280,7 @@ class ConfigInfoMapperByDerbyTest {
         assertEquals(mapperResult.getSql(),
                 "SELECT id,data_id,group_id,tenant_id,app_name,content,md5,type,encrypted_data_key,c_desc "
                         + "FROM config_info WHERE  tenant_id=?  AND app_name=?  AND content LIKE ? ESCAPE '\\' "
-                        + " OFFSET " + startRow + " ROWS FETCH NEXT " + pageSize + " ROWS ONLY");
+                        + " ORDER BY id OFFSET " + startRow + " ROWS FETCH NEXT " + pageSize + " ROWS ONLY");
         assertArrayEquals(new Object[] {tenantId, appName, "test_content"}, mapperResult.getParamList().toArray());
     }
     
@@ -286,7 +289,7 @@ class ConfigInfoMapperByDerbyTest {
         context.putWhereParameter(FieldConstant.GROUP_ID, groupId);
         MapperResult mapperResult = configInfoMapperByDerby.findConfigInfoBaseByGroupFetchRows(context);
         assertEquals(mapperResult.getSql(),
-                "SELECT id,data_id,group_id,content FROM config_info WHERE group_id=? AND tenant_id=? " + "OFFSET " + startRow
+                "SELECT id,data_id,group_id,content FROM config_info WHERE group_id=? AND tenant_id=? " + "ORDER BY id OFFSET " + startRow
                         + " ROWS FETCH NEXT " + pageSize + " ROWS ONLY");
         assertArrayEquals(new Object[] {groupId, tenantId}, mapperResult.getParamList().toArray());
     }
@@ -313,9 +316,11 @@ class ConfigInfoMapperByDerbyTest {
     void testFindConfigInfoLike4PageFetchRows() {
         MapperResult mapperResult = configInfoMapperByDerby.findConfigInfoLike4PageFetchRows(context);
         // Verify LIKE ESCAPE is used for tenant_id
-        assertEquals(mapperResult.getSql(), "SELECT id,data_id,group_id,tenant_id,app_name,content,"
+        String expectedSql = "SELECT id,data_id,group_id,tenant_id,app_name,content,"
                 + "md5,encrypted_data_key,type,c_desc,gmt_modified FROM config_info "
-                + "WHERE tenant_id LIKE ? ESCAPE '\\'  AND app_name = ?  OFFSET " + startRow + " ROWS FETCH NEXT " + pageSize + " ROWS ONLY");
+                + "WHERE tenant_id LIKE ? ESCAPE '\\'  AND app_name = ?  ORDER BY id OFFSET "
+                + startRow + " ROWS FETCH NEXT " + pageSize + " ROWS ONLY";
+        assertEquals(mapperResult.getSql(), expectedSql);
         assertArrayEquals(new Object[] {tenantId, appName}, mapperResult.getParamList().toArray());
 
         // Test with dataId, group, and content to verify LIKE ESCAPE
@@ -327,7 +332,7 @@ class ConfigInfoMapperByDerbyTest {
                 + "md5,encrypted_data_key,type,c_desc,gmt_modified FROM config_info WHERE tenant_id LIKE ? ESCAPE '\\' "
                 + " AND data_id LIKE ? ESCAPE '\\'  AND group_id LIKE ? ESCAPE '\\'  AND app_name = ? "
                 + " AND content LIKE ? ESCAPE '\\' "
-                + " OFFSET " + startRow + " ROWS FETCH NEXT " + pageSize + " ROWS ONLY");
+                + " ORDER BY id OFFSET " + startRow + " ROWS FETCH NEXT " + pageSize + " ROWS ONLY");
         assertArrayEquals(new Object[] {tenantId, "test_data", "test_group", appName, "test_content"}, mapperResult.getParamList().toArray());
     }
     

@@ -23,8 +23,7 @@ import com.alibaba.nacos.common.lifecycle.Closeable;
 /**
  * AI client proxy interface for abstracting transport layer (gRPC / HTTP).
  *
- * <p>Defines AI operations that support switching between gRPC and HTTP transport.
- * Currently covers Prompt operations; extensible for Skill and other capabilities.</p>
+ * <p>Defines AI operations that support switching between gRPC and HTTP transport.</p>
  *
  * @author nacos
  */

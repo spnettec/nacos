@@ -150,7 +150,7 @@
         <SnakeYaml.version>2.5</SnakeYaml.version>
         <kubernetes.client.version>24.0.0</kubernetes.client.version>
         <junit5.version>6.0.2</junit5.version>
-        <mcp.version>0.14.1</mcp.version>
+        <mcp.version>0.17.0</mcp.version>
         <ojdbc.version>19.7.0.0</ojdbc.version>
 
         <!-- Maven Central Portal -->
@@ -326,6 +326,7 @@
                         <exclude>**/*.txt</exclude>
                         <exclude>**/*.factories</exclude>
                         <exclude>/console-ui/**</exclude>
+                        <exclude>/console-ui-next/**</exclude>
                         <exclude>**/gogo.proto</exclude>
                         <exclude>**/any.proto</exclude>
                         <exclude>src/main/java/com/alibaba/nacos/common/packagescan/classreading/**</exclude>
@@ -346,6 +347,7 @@
                         <exclude>.cursor/**</exclude>
                         <exclude>.agents/**</exclude>
                         <exclude>.qoder/**</exclude>
+                        <exclude>.tools/**</exclude>
                         <exclude>skills/**</exclude>
                     </excludes>
                 </configuration>
@@ -644,7 +646,7 @@
         <module>client-basic</module>
         <module>ai</module>
         <module>copilot</module>
-        <module>mcp-registry-adaptor</module>
+        <module>ai-registry-adaptor</module>
     </modules>
     
     <!-- Default dependencies in all subprojects -->
@@ -862,6 +864,16 @@
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>nacos-custom-environment-plugin</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>nacos-ai-plugin</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>nacos-visibility-plugin</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -1158,4 +1170,3 @@
         </repository>
     </repositories>
 </project>
-
