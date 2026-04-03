@@ -29,7 +29,7 @@ import com.alibaba.nacos.core.cluster.Member;
 import com.alibaba.nacos.core.cluster.ServerMemberManager;
 import com.alibaba.nacos.core.remote.Connection;
 import com.alibaba.nacos.core.remote.ConnectionManager;
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import com.alibaba.nacos.sys.env.EnvUtil;
 import jakarta.servlet.ServletContext;
 import org.junit.jupiter.api.AfterEach;
