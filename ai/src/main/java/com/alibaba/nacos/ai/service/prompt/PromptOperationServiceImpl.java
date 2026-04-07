@@ -27,6 +27,7 @@ import com.alibaba.nacos.ai.pipeline.repository.PipelineExecutionRepository;
 import com.alibaba.nacos.ai.service.VisibilityHelper;
 import com.alibaba.nacos.ai.service.repository.AiResourcePersistService;
 import com.alibaba.nacos.ai.service.repository.AiResourceVersionPersistService;
+import com.alibaba.nacos.ai.service.trace.AiResourceTraceService;
 import com.alibaba.nacos.ai.pipeline.model.PipelineExecutionResult;
 import com.alibaba.nacos.ai.storage.NacosConfigAiResourceStorage;
 import com.alibaba.nacos.plugin.ai.storage.AiResourceStorageRouter;
@@ -174,6 +175,9 @@ public class PromptOperationServiceImpl implements PromptOperationService {
             newMeta.setVersionInfo(JacksonUtils.toJson(info));
             newMeta.setMetaVersion(1L);
             aiResourcePersistService.insert(newMeta);
+            AiResourceTraceService.logSuccess(RESOURCE_TYPE_PROMPT, promptKey, version,
+                    AiResourceTraceService.OP_CREATE_DRAFT, VisibilityHelper.resolveCurrentIdentity(),
+                    VisibilityHelper.resolveClientIp());
             
             return version;
         }
@@ -211,6 +215,9 @@ public class PromptOperationServiceImpl implements PromptOperationService {
             
             info.setEditingVersion(newVersion);
             updateMetaVersionInfoCas(namespaceId, meta, info);
+            AiResourceTraceService.logSuccess(RESOURCE_TYPE_PROMPT, promptKey, newVersion,
+                    AiResourceTraceService.OP_CREATE_DRAFT, VisibilityHelper.resolveCurrentIdentity(),
+                    VisibilityHelper.resolveClientIp(), "basedOn=" + basedOnVersion);
             return newVersion;
         }
         
@@ -234,6 +241,9 @@ public class PromptOperationServiceImpl implements PromptOperationService {
         
         info.setEditingVersion(newVersion);
         updateMetaVersionInfoCas(namespaceId, meta, info);
+        AiResourceTraceService.logSuccess(RESOURCE_TYPE_PROMPT, promptKey, newVersion,
+                AiResourceTraceService.OP_CREATE_DRAFT, VisibilityHelper.resolveCurrentIdentity(),
+                VisibilityHelper.resolveClientIp());
         return newVersion;
     }
     
@@ -271,6 +281,9 @@ public class PromptOperationServiceImpl implements PromptOperationService {
             aiResourceVersionPersistService.updateStorageAndDesc(namespaceId, promptKey, RESOURCE_TYPE_PROMPT,
                     editing, storageJson, commitMsg);
         }
+        AiResourceTraceService.logSuccess(RESOURCE_TYPE_PROMPT, promptKey, editing,
+                AiResourceTraceService.OP_UPDATE_DRAFT, VisibilityHelper.resolveCurrentIdentity(),
+                VisibilityHelper.resolveClientIp());
     }
     
     @Override
@@ -295,6 +308,9 @@ public class PromptOperationServiceImpl implements PromptOperationService {
             aiResourceVersionPersistService.delete(namespaceId, promptKey, RESOURCE_TYPE_PROMPT, editing);
             deletePromptStorageForVersion(namespaceId, promptKey, editing);
         }
+        AiResourceTraceService.logSuccess(RESOURCE_TYPE_PROMPT, promptKey, editing,
+                AiResourceTraceService.OP_DELETE_DRAFT, VisibilityHelper.resolveCurrentIdentity(),
+                VisibilityHelper.resolveClientIp());
     }
     
     @Override
@@ -516,6 +532,10 @@ public class PromptOperationServiceImpl implements PromptOperationService {
             info.setOnlineCnt(Math.max(0, cnt - 1));
         }
         updateMetaVersionInfoCas(namespaceId, meta, info);
+        String traceOp = online ? AiResourceTraceService.OP_ONLINE_VERSION
+                : AiResourceTraceService.OP_OFFLINE_VERSION;
+        AiResourceTraceService.logSuccess(RESOURCE_TYPE_PROMPT, promptKey, version, traceOp,
+                VisibilityHelper.resolveCurrentIdentity(), VisibilityHelper.resolveClientIp());
     }
     
     @Override
@@ -533,6 +553,9 @@ public class PromptOperationServiceImpl implements PromptOperationService {
         
         info.setLabels(newLabels);
         updateMetaVersionInfoCas(namespaceId, meta, info);
+        AiResourceTraceService.logSuccess(RESOURCE_TYPE_PROMPT, promptKey, null,
+                AiResourceTraceService.OP_UPDATE_LABELS, VisibilityHelper.resolveCurrentIdentity(),
+                VisibilityHelper.resolveClientIp());
         
         // Refresh latest mirror if latest label changed
         if (labels != null && labels.containsKey(LABEL_LATEST)) {
@@ -549,6 +572,9 @@ public class PromptOperationServiceImpl implements PromptOperationService {
         AiResource meta = requireMeta(namespaceId, promptKey);
         VisibilityHelper.checkWritableResource(meta);
         updateMetaBizTagsCas(namespaceId, meta, bizTags);
+        AiResourceTraceService.logSuccess(RESOURCE_TYPE_PROMPT, promptKey, null,
+                AiResourceTraceService.OP_UPDATE_BIZ_TAGS, VisibilityHelper.resolveCurrentIdentity(),
+                VisibilityHelper.resolveClientIp());
     }
     
     @Override
@@ -556,6 +582,9 @@ public class PromptOperationServiceImpl implements PromptOperationService {
         AiResource meta = requireMeta(namespaceId, promptKey);
         VisibilityHelper.checkWritableResource(meta);
         updateMetaDescriptionCas(namespaceId, meta, description);
+        AiResourceTraceService.logSuccess(RESOURCE_TYPE_PROMPT, promptKey, null,
+                AiResourceTraceService.OP_UPDATE_DESCRIPTION, VisibilityHelper.resolveCurrentIdentity(),
+                VisibilityHelper.resolveClientIp());
     }
     
     @Override
@@ -615,14 +644,7 @@ public class PromptOperationServiceImpl implements PromptOperationService {
         detail.setOnlineCnt(versionInfo.getOnlineCnt());
         detail.setLabels(versionInfo.getLabels());
         detail.setGmtModified(meta.getGmtModified() == null ? null : meta.getGmtModified().getTime());
-        
-        if (meta.getBizTags() != null) {
-            try {
-                detail.setBizTags(JacksonUtils.toObj(meta.getBizTags(), List.class));
-            } catch (Exception e) {
-                detail.setBizTags(new ArrayList<>());
-            }
-        }
+        detail.setBizTags(meta.getBizTags());
         
         // Load version list
         List<AiResourceVersion> allVersions = loadAllVersionRows(namespaceId, promptKey);
@@ -705,13 +727,7 @@ public class PromptOperationServiceImpl implements PromptOperationService {
                 summary.setLabels(vInfo != null ? vInfo.getLabels() : null);
                 summary.setGmtModified(
                         resource.getGmtModified() == null ? null : resource.getGmtModified().getTime());
-                if (resource.getBizTags() != null) {
-                    try {
-                        summary.setBizTags(JacksonUtils.toObj(resource.getBizTags(), List.class));
-                    } catch (Exception e) {
-                        summary.setBizTags(new ArrayList<>());
-                    }
-                }
+                summary.setBizTags(resource.getBizTags());
                 items.add(summary);
             }
         }
@@ -1253,10 +1269,9 @@ public class PromptOperationServiceImpl implements PromptOperationService {
     @Deprecated
     @Override
     public boolean publishPromptVersion(String namespaceId, String promptKey, String version, String template,
-            String commitMsg, String description, List<String> bizTags, List<PromptVariable> variables)
+            String commitMsg, String description, String bizTags, List<PromptVariable> variables)
             throws NacosException {
-        String bizTagsJson = (bizTags != null) ? JacksonUtils.toJson(bizTags) : null;
-        createDraft(namespaceId, promptKey, null, version, template, variables, commitMsg, description, bizTagsJson);
+        createDraft(namespaceId, promptKey, null, version, template, variables, commitMsg, description, bizTags);
         submit(namespaceId, promptKey, version);
         return true;
     }
@@ -1297,13 +1312,13 @@ public class PromptOperationServiceImpl implements PromptOperationService {
     
     @Deprecated
     @Override
-    public boolean updatePromptMetadata(String namespaceId, String promptKey, String description, List<String> bizTags)
+    public boolean updatePromptMetadata(String namespaceId, String promptKey, String description, String bizTags)
             throws NacosException {
         if (description != null) {
             updateDescription(namespaceId, promptKey, description);
         }
         if (bizTags != null) {
-            updateBizTags(namespaceId, promptKey, JacksonUtils.toJson(bizTags));
+            updateBizTags(namespaceId, promptKey, bizTags);
         }
         return true;
     }
