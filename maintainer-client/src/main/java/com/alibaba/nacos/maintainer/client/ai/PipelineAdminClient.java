@@ -18,7 +18,7 @@ package com.alibaba.nacos.maintainer.client.ai;
 
 import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.model.v2.Result;
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 
 /**
  * Admin API client for pipeline execution queries ({@code /v3/admin/ai/pipelines/...}).
