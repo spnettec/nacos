@@ -32,6 +32,10 @@ import {
 import MonacoEditor from '../../../components/MonacoEditor/MonacoEditor';
 import PromptOptimizeDialog from '../PromptOptimizeDialog';
 import { getParams, request } from '@/globalLib';
+import {
+  fetchPipelineExecutionDetail,
+  mapExecutionToPipelineInfo,
+} from '@/utils/pipelineApi';
 import './PromptDetail.scss';
 
 @ConfigProvider.config
@@ -203,18 +207,25 @@ class PromptDetail extends React.Component {
             }
           }
 
-          this.setState({
-            versionContent: versionData,
-            template,
-            variables: this.extractVariables(template),
-            serverVariables: svrVars,
-            variableValues: initialVarValues,
-            selectedVersion: version,
-            selectedVersionStatus: versionSummary?.status || versionData.status || null,
-            pipelineInfo,
-            isEditingDraft: false,
-            editCommitMsg: versionData.commitMsg || '',
-          });
+          this.setState(
+            {
+              versionContent: versionData,
+              template,
+              variables: this.extractVariables(template),
+              serverVariables: svrVars,
+              variableValues: initialVarValues,
+              selectedVersion: version,
+              selectedVersionStatus: versionSummary?.status || versionData.status || null,
+              pipelineInfo,
+              isEditingDraft: false,
+              editCommitMsg: versionData.commitMsg || '',
+            },
+            () => {
+              if (pipelineInfo && pipelineInfo.executionId) {
+                this.syncPipelineExecutionFromConsole(pipelineInfo.executionId);
+              }
+            }
+          );
         } else {
           Message.error(data?.message || locale.getPromptFailed || 'Failed to get version content');
         }
@@ -222,6 +233,28 @@ class PromptDetail extends React.Component {
       error: () => {
         this.setState({ versionLoading: false });
         Message.error(locale.getPromptFailed || 'Failed to get version content');
+      },
+    });
+  };
+
+  /**
+   * Refreshes pipeline status/nodes from Console pipeline API (GET .../pipelines/detail).
+   */
+  syncPipelineExecutionFromConsole = executionId => {
+    if (!executionId) {
+      return;
+    }
+    fetchPipelineExecutionDetail(executionId, {
+      success: data => {
+        if (data && (data.code === 0 || data.code === 200) && data.data) {
+          const merged = mapExecutionToPipelineInfo(data.data);
+          if (merged) {
+            this.setState({ pipelineInfo: merged });
+          }
+        }
+      },
+      error: () => {
+        // Keep governance snapshot on failure (e.g. older server without /detail).
       },
     });
   };
@@ -365,7 +398,7 @@ class PromptDetail extends React.Component {
   // ===== BizTags Editor =====
 
   handleEditBizTags = () => {
-    const bizTags = this.state.governanceData?.bizTags;
+    const bizTags = this.state.governanceData?.bizTagsStr;
     let parsed = [];
     if (bizTags) {
       try {
@@ -397,14 +430,13 @@ class PromptDetail extends React.Component {
       .split(',')
       .map(s => s.trim())
       .filter(Boolean);
-    const bizTagsJson = JSON.stringify(tags);
 
     this.setState({ savingBizTags: true });
 
     request({
       method: 'PUT',
       url: 'v3/console/ai/prompt/biz-tags',
-      data: { promptKey, bizTags: bizTagsJson, namespaceId },
+      data: { promptKey, bizTags: tags.join(','), namespaceId },
       contentType: 'application/x-www-form-urlencoded',
       success: data => {
         this.setState({ savingBizTags: false });
@@ -1164,7 +1196,7 @@ class PromptDetail extends React.Component {
     const reviewingVersionStr = governanceData?.reviewingVersion || null;
     const description = governanceData?.description || '';
     const bizTags = (() => {
-      const raw = governanceData?.bizTags;
+      const raw = governanceData?.bizTagsStr;
       if (!raw) return [];
       try {
         const parsed = JSON.parse(raw);
@@ -1426,7 +1458,7 @@ class PromptDetail extends React.Component {
         </div>
 
         {/* Pipeline Status */}
-        {isReviewing && pipelineInfo && (
+        {pipelineInfo && (
           <div className="pipeline-section">
             <span className="meta-label">{locale.pipelineStatus || 'Pipeline'}:</span>
             <Tag

@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2026 Alibaba Group Holding Ltd.
+ * Copyright 1999-2025 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,37 +14,40 @@
  * limitations under the License.
  */
 
-package com.alibaba.nacos.ai.form.prompt;
+package com.alibaba.nacos.ai.form.pipeline;
 
 import com.alibaba.nacos.api.exception.api.NacosApiException;
+import com.alibaba.nacos.api.model.NacosForm;
+import com.alibaba.nacos.api.model.v2.ErrorCode;
+import com.alibaba.nacos.common.utils.StringUtils;
 
 import java.io.Serial;
 
 /**
- * Prompt biz tags update form.
+ * Pipeline execution detail query form for {@code GET .../detail}.
  *
  * @author nacos
  */
-public class PromptBizTagsUpdateForm extends PromptForm {
+public class PipelineDetailForm implements NacosForm {
     
     @Serial
     private static final long serialVersionUID = 1L;
     
-    /**
-     * JSON string: ["tag1","tag2"].
-     */
-    private String bizTags;
+    private String pipelineId;
     
     @Override
     public void validate() throws NacosApiException {
-        super.validate();
+        if (StringUtils.isBlank(pipelineId)) {
+            throw new NacosApiException(NacosApiException.INVALID_PARAM, ErrorCode.PARAMETER_VALIDATE_ERROR,
+                    "Required parameter 'pipelineId' is missing");
+        }
     }
     
-    public String getBizTags() {
-        return bizTags;
+    public String getPipelineId() {
+        return pipelineId;
     }
     
-    public void setBizTags(String bizTags) {
-        this.bizTags = bizTags;
+    public void setPipelineId(String pipelineId) {
+        this.pipelineId = pipelineId;
     }
 }

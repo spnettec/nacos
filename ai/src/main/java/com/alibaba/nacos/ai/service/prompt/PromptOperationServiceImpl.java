@@ -644,7 +644,8 @@ public class PromptOperationServiceImpl implements PromptOperationService {
         detail.setOnlineCnt(versionInfo.getOnlineCnt());
         detail.setLabels(versionInfo.getLabels());
         detail.setGmtModified(meta.getGmtModified() == null ? null : meta.getGmtModified().getTime());
-        detail.setBizTags(meta.getBizTags());
+        detail.setBizTags(parseBizTagsList(meta.getBizTags()));
+        detail.setBizTagsStr(meta.getBizTags());
         
         // Load version list
         List<AiResourceVersion> allVersions = loadAllVersionRows(namespaceId, promptKey);
@@ -727,7 +728,8 @@ public class PromptOperationServiceImpl implements PromptOperationService {
                 summary.setLabels(vInfo != null ? vInfo.getLabels() : null);
                 summary.setGmtModified(
                         resource.getGmtModified() == null ? null : resource.getGmtModified().getTime());
-                summary.setBizTags(resource.getBizTags());
+                summary.setBizTags(parseBizTagsList(resource.getBizTags()));
+                summary.setBizTagsStr(resource.getBizTags());
                 items.add(summary);
             }
         }
@@ -929,6 +931,28 @@ public class PromptOperationServiceImpl implements PromptOperationService {
                     "Prompt not found: " + promptKey);
         }
         return meta;
+    }
+    
+    /**
+     * Parse biz tags JSON string to list. Supports JSON array format and comma-separated fallback.
+     */
+    private static List<String> parseBizTagsList(String bizTags) {
+        if (StringUtils.isBlank(bizTags)) {
+            return new ArrayList<>();
+        }
+        try {
+            return JacksonUtils.toObj(bizTags, List.class);
+        } catch (Exception e) {
+            // Fallback: treat as comma-separated
+            List<String> result = new ArrayList<>();
+            for (String tag : bizTags.split(",")) {
+                String trimmed = tag.trim();
+                if (!trimmed.isEmpty()) {
+                    result.add(trimmed);
+                }
+            }
+            return result;
+        }
     }
     
     private static PromptVersionInfoPojo requireVersionInfo(AiResource meta) {
@@ -1166,9 +1190,10 @@ public class PromptOperationServiceImpl implements PromptOperationService {
                     version, JacksonUtils.toJson(pipelineInfo));
             
             if (result.getStatus() == PipelineExecutionStatus.APPROVED) {
-                publish(namespaceId, promptKey, version, true);
-            } else if (result.getStatus() == PipelineExecutionStatus.REJECTED) {
-                // Revert to draft
+                AiResourceTraceService.logSuccess(RESOURCE_TYPE_PROMPT, promptKey, version,
+                        AiResourceTraceService.OP_REVIEW_APPROVED, "system", "", result.getExecutionId());
+            } else {
+                // Reject back to draft and move reviewing -> editing (best effort).
                 aiResourceVersionPersistService.updateStatus(namespaceId, promptKey, RESOURCE_TYPE_PROMPT, version,
                         VERSION_STATUS_DRAFT);
                 AiResource meta = aiResourcePersistService.find(namespaceId, promptKey, RESOURCE_TYPE_PROMPT);
@@ -1177,9 +1202,15 @@ public class PromptOperationServiceImpl implements PromptOperationService {
                     if (StringUtils.equals(info.getReviewingVersion(), version)) {
                         info.setReviewingVersion(null);
                         info.setEditingVersion(version);
-                        updateMetaVersionInfoCas(namespaceId, meta, info);
+                        try {
+                            updateMetaVersionInfoCas(namespaceId, meta, info);
+                        } catch (Exception ex) {
+                            LOGGER.warn("Failed to rollback meta working pointers for {}@{}", promptKey, version, ex);
+                        }
                     }
                 }
+                AiResourceTraceService.logSuccess(RESOURCE_TYPE_PROMPT, promptKey, version,
+                        AiResourceTraceService.OP_REVIEW_REJECTED, "system", "", result.getExecutionId());
             }
         } catch (Exception e) {
             LOGGER.error("Failed to handle pipeline completion for prompt: {}@{}", promptKey, version, e);

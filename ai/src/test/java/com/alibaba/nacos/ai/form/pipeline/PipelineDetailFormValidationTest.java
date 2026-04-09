@@ -14,26 +14,30 @@
  * limitations under the License.
  */
 
-package com.alibaba.nacos.ai.form.prompt;
+package com.alibaba.nacos.ai.form.pipeline;
 
+import com.alibaba.nacos.api.exception.api.NacosApiException;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-class PromptBizTagsUpdateFormTest {
+/**
+ * Tests for {@link PipelineDetailForm} validation.
+ */
+class PipelineDetailFormValidationTest {
     
     @Test
-    void validateShouldPassWhenBizTagsProvided() {
-        PromptBizTagsUpdateForm form = new PromptBizTagsUpdateForm();
-        form.setPromptKey("p1");
-        form.setBizTags("[\"tag1\",\"tag2\"]");
-        assertDoesNotThrow(form::validate);
+    void validateRejectsBlankPipelineId() {
+        PipelineDetailForm form = new PipelineDetailForm();
+        form.setPipelineId(" ");
+        assertThrows(NacosApiException.class, form::validate);
     }
     
     @Test
-    void validateShouldPassWhenBizTagsMissing() {
-        PromptBizTagsUpdateForm form = new PromptBizTagsUpdateForm();
-        form.setPromptKey("p1");
+    void validateAcceptsNonBlankPipelineId() {
+        PipelineDetailForm form = new PipelineDetailForm();
+        form.setPipelineId("exec-uuid");
         assertDoesNotThrow(form::validate);
     }
 }
