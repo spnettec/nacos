@@ -40,6 +40,10 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>nacos-sys</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>nacos-maintainer-client</artifactId>
         </dependency>
         

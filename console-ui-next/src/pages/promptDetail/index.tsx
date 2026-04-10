@@ -66,6 +66,7 @@ import {
 } from '@/components/ui/sheet';
 import { useNamespaceStore } from '@/stores/namespace-store';
 import { usePromptStore } from '@/stores/prompt-store';
+import { useServerStore } from '@/stores/server-store';
 import { promptApi } from '@/api/prompt';
 import { cn } from '@/lib/utils';
 import dayjs from 'dayjs';
@@ -103,6 +104,7 @@ export default function PromptDetailPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { currentNamespace } = useNamespaceStore();
+  const copilotEnabled = useServerStore((s) => s.copilotEnabled);
   const {
     currentGovernance,
     currentVersion: storeVersion,
@@ -817,7 +819,7 @@ export default function PromptDetailPage() {
                 <Sparkles className="h-4 w-4 text-amber-500" />
                 {t('prompt.template')}
               </h2>
-              {isEditingDraft && (
+              {isEditingDraft && copilotEnabled && (
                 <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={() => setOptimizeOpen(true)} disabled={!template.trim()}>
                   <Sparkles className="h-3 w-3" />
                   {t('prompt.aiOptimize')}
@@ -847,6 +849,7 @@ export default function PromptDetailPage() {
           </Card>
 
           {/* Debug Panel Card */}
+          {copilotEnabled && (
           <Card className="overflow-hidden py-0 gap-0">
             <div className="px-5 py-3.5 border-b bg-muted/30 flex items-center justify-between">
               <h2 className="text-sm font-semibold flex items-center gap-2">
@@ -933,9 +936,8 @@ export default function PromptDetailPage() {
               </div>
             </CardContent>
           </Card>
+          )}
         </div>
-
-        {/* Right: Sidebar */}
         <div className="space-y-4 lg:w-[320px]">
           {/* Basic Info Card */}
           <Card className="overflow-hidden py-0 gap-0">
