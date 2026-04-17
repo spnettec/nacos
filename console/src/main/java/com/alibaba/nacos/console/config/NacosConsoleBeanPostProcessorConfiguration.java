@@ -37,13 +37,13 @@ import org.springframework.context.annotation.Configuration;
 public class NacosConsoleBeanPostProcessorConfiguration {
     
     @Bean
-    public static InstantiationAwareBeanPostProcessor nacosDuplicateSpringBeanPostProcessor(
+    public InstantiationAwareBeanPostProcessor nacosDuplicateSpringBeanPostProcessor(
             ConfigurableApplicationContext context) {
         return new NacosDuplicateSpringBeanPostProcessor(context);
     }
     
     @Bean
-    public static InstantiationAwareBeanPostProcessor nacosDuplicateConfigurationBeanPostProcessor(
+    public InstantiationAwareBeanPostProcessor nacosDuplicateConfigurationBeanPostProcessor(
             ConfigurableApplicationContext context) {
         return new NacosDuplicateConfigurationBeanPostProcessor(context);
     }

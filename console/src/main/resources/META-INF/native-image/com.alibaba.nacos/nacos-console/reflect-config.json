@@ -1615,6 +1615,7 @@
   "name":"com.alibaba.nacos.consistency.ConsistencyProtocol",
   "queryAllDeclaredMethods":true,
   "queryAllPublicMethods":true,
+  "methods":[{"name":"aGetData","parameterTypes":["com.alibaba.nacos.consistency.entity.ReadRequest"] }, {"name":"addRequestProcessors","parameterTypes":["java.util.Collection"] }, {"name":"getData","parameterTypes":["com.alibaba.nacos.consistency.entity.ReadRequest"] }, {"name":"init","parameterTypes":["com.alibaba.nacos.consistency.Config"] }, {"name":"memberChange","parameterTypes":["java.util.Set"] }, {"name":"protocolMetaData","parameterTypes":[] }, {"name":"shutdown","parameterTypes":[] }, {"name":"write","parameterTypes":["com.alibaba.nacos.consistency.entity.WriteRequest"] }, {"name":"writeAsync","parameterTypes":["com.alibaba.nacos.consistency.entity.WriteRequest"] }]
 },
 {
   "name":"com.alibaba.nacos.consistency.DataOperation",
