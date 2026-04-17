@@ -25,7 +25,11 @@
     "usernameRequired": "Username should not be empty",
     "productDesc": "An easy-to-use dynamic service discovery, configuration and AI agent management platform for building AI agent applications",
     "consoleClosed": "Console Closed",
-    "consoleClosedDesc": "The Nacos console has been closed."
+    "consoleClosedDesc": "The Nacos console has been closed.",
+    "signInWithSSO": "Sign in with SSO",
+    "ssoLoginTip": "Single sign-on is enabled by your administrator. Click the button below to continue to the identity provider.",
+    "oidcRedirectFailed": "Failed to redirect to SSO login page. Please contact your administrator.",
+    "oidcAuthFailed": "SSO authentication failed"
   },
   "menu": {
     "configManagement": "Configuration",
@@ -552,7 +556,11 @@
     "ioModes": "Input/Output Modes",
     "security": "Security",
     "securitySchemes": "Security Schemes",
+    "supportedInterfaces": "Supported Interfaces",
     "additionalInterfaces": "Additional Interfaces",
+    "interfaceItem": "Interface {{index}}",
+    "preferredInterface": "Preferred",
+    "tenant": "Tenant",
     "extendedCardSupport": "Extended Card Support",
     "extendedCardSupportDesc": "Whether authenticated extended card is supported",
     "advancedConfig": "Advanced Config",
@@ -1171,6 +1179,8 @@
     "filterScopeAll": "All scopes",
     "filterScopePublic": "Public only",
     "filterScopePrivate": "Private only",
+    "filterByBizTag": "Filter by business tag",
+    "filterBizTagPlaceholder": "Enter business tag",
     "labelKeyRequired": "Label key is required",
     "labelKeyInvalid": "Invalid label key format",
     "labelKeyDuplicate": "Label key already exists",

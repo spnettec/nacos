@@ -30,8 +30,10 @@ import com.alibaba.nacos.api.ai.listener.NacosPromptEvent;
 import com.alibaba.nacos.api.ai.model.a2a.AgentCard;
 import com.alibaba.nacos.api.ai.model.a2a.AgentCardDetailInfo;
 import com.alibaba.nacos.api.ai.model.a2a.AgentEndpoint;
+import com.alibaba.nacos.api.ai.model.a2a.AgentInterface;
 import com.alibaba.nacos.api.ai.model.agentspecs.AgentSpec;
 import com.alibaba.nacos.api.ai.model.mcp.McpEndpointSpec;
+import com.alibaba.nacos.api.ai.model.mcp.McpResourceSpecification;
 import com.alibaba.nacos.api.ai.model.mcp.McpServerBasicInfo;
 import com.alibaba.nacos.api.ai.model.mcp.McpServerDetailInfo;
 import com.alibaba.nacos.api.ai.model.mcp.McpToolSpecification;
@@ -67,6 +69,7 @@ import org.slf4j.Logger;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
@@ -78,6 +81,11 @@ import java.util.Set;
 public class NacosAiService implements AiService {
     
     private static final Logger LOGGER = LogUtils.logger(NacosAiService.class);
+    
+    private static final String AGENT_CARD_FORMAT_ERROR =
+            "Required parameter `agentCard.supportedInterfaces` not present, and old protocol fields "
+                    + "(`agentCard.protocolVersion`, `agentCard.preferredTransport`, `agentCard.url`) are incomplete. "
+                    + "Please prefer `agentCard.supportedInterfaces` for A2A 1.0.0.";
     
     private final String namespaceId;
     
@@ -150,6 +158,13 @@ public class NacosAiService implements AiService {
     @Override
     public String releaseMcpServer(McpServerBasicInfo serverSpecification, McpToolSpecification toolSpecification,
             McpEndpointSpec endpointSpecification) throws NacosException {
+        return releaseMcpServer(serverSpecification, toolSpecification, null, endpointSpecification);
+    }
+
+    @Override
+    public String releaseMcpServer(McpServerBasicInfo serverSpecification, McpToolSpecification toolSpecification,
+            McpResourceSpecification resourceSpecification, McpEndpointSpec endpointSpecification)
+            throws NacosException {
         if (null == serverSpecification) {
             throw new NacosApiException(NacosException.INVALID_PARAM, ErrorCode.PARAMETER_MISSING,
                     "Required parameter `serverSpecification` not present");
@@ -163,7 +178,8 @@ public class NacosAiService implements AiService {
             throw new NacosApiException(NacosException.INVALID_PARAM, ErrorCode.PARAMETER_MISSING,
                     "Required parameter `serverSpecification.versionDetail.version` not present");
         }
-        return grpcClient.releaseMcpServer(serverSpecification, toolSpecification, endpointSpecification);
+        return grpcClient.releaseMcpServer(serverSpecification, toolSpecification, resourceSpecification,
+                endpointSpecification);
     }
     
     @Override
@@ -249,7 +265,7 @@ public class NacosAiService implements AiService {
         }
         validateAgentCardField("name", agentCard.getName());
         validateAgentCardField("version", agentCard.getVersion());
-        validateAgentCardField("protocolVersion", agentCard.getProtocolVersion());
+        validateAgentCard(agentCard);
         if (StringUtils.isBlank(registrationType)) {
             registrationType = AiConstants.A2a.A2A_ENDPOINT_TYPE_SERVICE;
         }
@@ -360,6 +376,29 @@ public class NacosAiService implements AiService {
             throw new NacosApiException(NacosException.INVALID_PARAM, ErrorCode.PARAMETER_MISSING,
                     "Required parameter `agentCard." + fieldName + "` not present");
         }
+    }
+    
+    private static void validateAgentCard(AgentCard agentCard) throws NacosApiException {
+        boolean hasLegacyRequiredFields = !StringUtils.isEmpty(agentCard.getProtocolVersion()) && !StringUtils.isEmpty(
+                agentCard.getPreferredTransport()) && !StringUtils.isEmpty(agentCard.getUrl());
+        boolean hasV1RequiredFields = hasValidV1Interfaces(agentCard.getSupportedInterfaces());
+        if (!hasLegacyRequiredFields && !hasV1RequiredFields) {
+            throw new NacosApiException(NacosException.INVALID_PARAM, ErrorCode.PARAMETER_MISSING,
+                    AGENT_CARD_FORMAT_ERROR);
+        }
+    }
+    
+    private static boolean hasValidV1Interfaces(List<AgentInterface> interfaces) {
+        if (null == interfaces || interfaces.isEmpty()) {
+            return false;
+        }
+        for (AgentInterface each : interfaces) {
+            if (null == each || StringUtils.isEmpty(each.getUrl()) || StringUtils.isEmpty(each.getProtocolBinding())
+                    || StringUtils.isEmpty(each.getProtocolVersion())) {
+                return false;
+            }
+        }
+        return true;
     }
     
     @Override

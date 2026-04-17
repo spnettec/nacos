@@ -41,12 +41,16 @@ public class Constants {
     
     public static final String MCP_SERVER_TOOL_GROUP = "mcp-tools";
     
+    public static final String MCP_SERVER_RESOURCE_GROUP = "mcp-resources";
+
     public static final String MCP_SERVER_SPEC_DATA_ID_SUFFIX = "-mcp-server.json";
     
     public static final String MCP_SERVER_VERSION_DATA_ID_SUFFIX = "-mcp-versions.json";
     
     public static final String MCP_SERVER_TOOL_DATA_ID_SUFFIX = "-mcp-tools.json";
     
+    public static final String MCP_SERVER_RESOURCE_DATA_ID_SUFFIX = "-mcp-resources.json";
+
     public static final String MCP_SERVER_ENDPOINT_GROUP = "mcp-endpoints";
     
     public static final String MCP_SERVER_ENDPOINT_CLUSTER = com.alibaba.nacos.api.common.Constants.DEFAULT_CLUSTER_NAME;
@@ -83,6 +87,8 @@ public class Constants {
     
     public static final String SERVER_TOOLS_SPEC_CONFIG_DATA_ID_TEMPLATE = "%s-%s" + MCP_SERVER_TOOL_DATA_ID_SUFFIX;
     
+    public static final String SERVER_RESOURCE_SPEC_CONFIG_DATA_ID_TEMPLATE = "%s-%s" + MCP_SERVER_RESOURCE_DATA_ID_SUFFIX;
+
     public static class A2A {
         
         public static final String CONSOLE_PATH = "/v3/console/ai/a2a";
@@ -108,6 +114,10 @@ public class Constants {
         public static final String NACOS_AGENT_ENDPOINT_PROTOCOL_KEY = "__nacos.agent.endpoint.protocol__";
         
         public static final String NACOS_AGENT_ENDPOINT_QUERY_KEY = "__nacos.agent.endpoint.query__";
+        
+        public static final String NACOS_AGENT_ENDPOINT_PROTOCOL_VERSION_KEY = "__nacos.agent.endpoint.protocolVersion__";
+        
+        public static final String NACOS_AGENT_ENDPOINT_TENANT_KEY = "__nacos.agent.endpoint.tenant__";
     }
     
     public static class Skills {
