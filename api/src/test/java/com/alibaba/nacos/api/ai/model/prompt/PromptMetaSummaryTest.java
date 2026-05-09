@@ -17,7 +17,6 @@
 package com.alibaba.nacos.api.ai.model.prompt;
 
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -143,7 +142,7 @@ class PromptMetaSummaryTest extends BasicRequestTest {
 
     @Test
     @DisplayName("test serialize to json")
-    void testSerializeToJson() throws JsonProcessingException {
+    void testSerializeToJson() {
         PromptMetaSummary summary = new PromptMetaSummary();
         summary.setPromptKey("testPrompt");
         summary.setLatestVersion("1.0.0");
@@ -161,7 +160,7 @@ class PromptMetaSummaryTest extends BasicRequestTest {
 
     @Test
     @DisplayName("test deserialize from json")
-    void testDeserializeFromJson() throws JsonProcessingException {
+    void testDeserializeFromJson() {
         String json = "{\"schemaVersion\":1,\"promptKey\":\"testPrompt\",\"description\":\"Test\","
                 + "\"bizTags\":[\"tag1\"],\"latestVersion\":\"1.0.0\",\"gmtModified\":1234567890,"
                 + "\"editingVersion\":\"draft\",\"reviewingVersion\":\"review\",\"onlineCnt\":2}";

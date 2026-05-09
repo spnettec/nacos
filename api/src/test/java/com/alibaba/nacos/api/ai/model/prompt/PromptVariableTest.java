@@ -17,7 +17,6 @@
 package com.alibaba.nacos.api.ai.model.prompt;
 
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -83,7 +82,7 @@ class PromptVariableTest extends BasicRequestTest {
 
     @Test
     @DisplayName("test serialize to json")
-    void testSerializeToJson() throws JsonProcessingException {
+    void testSerializeToJson() {
         PromptVariable variable = new PromptVariable("question", "defaultAnswer", "User question");
         String json = mapper.writeValueAsString(variable);
         assertNotNull(json);
@@ -94,7 +93,7 @@ class PromptVariableTest extends BasicRequestTest {
 
     @Test
     @DisplayName("test deserialize from json")
-    void testDeserializeFromJson() throws JsonProcessingException {
+    void testDeserializeFromJson() {
         String json = "{\"name\":\"question\",\"defaultValue\":\"defaultAnswer\",\"description\":\"User question\"}";
         PromptVariable variable = mapper.readValue(json, PromptVariable.class);
         assertNotNull(variable);
@@ -105,7 +104,7 @@ class PromptVariableTest extends BasicRequestTest {
 
     @Test
     @DisplayName("test deserialize with null defaultValue")
-    void testDeserializeWithNullDefaultValue() throws JsonProcessingException {
+    void testDeserializeWithNullDefaultValue() {
         String json = "{\"name\":\"requiredVar\",\"description\":\"Required variable\"}";
         PromptVariable variable = mapper.readValue(json, PromptVariable.class);
         assertNotNull(variable);

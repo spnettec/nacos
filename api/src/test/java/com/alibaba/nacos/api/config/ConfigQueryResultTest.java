@@ -17,7 +17,6 @@
 package com.alibaba.nacos.api.config;
 
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -125,7 +124,7 @@ class ConfigQueryResultTest extends BasicRequestTest {
 
     @Test
     @DisplayName("test serialize to json")
-    void testSerializeToJson() throws JsonProcessingException {
+    void testSerializeToJson() {
         ConfigQueryResult result = new ConfigQueryResult("test content", "abc123");
         result.setConfigType("yaml");
         result.setEncryptedDataKey("key");
@@ -140,7 +139,7 @@ class ConfigQueryResultTest extends BasicRequestTest {
 
     @Test
     @DisplayName("test deserialize from json")
-    void testDeserializeFromJson() throws JsonProcessingException {
+    void testDeserializeFromJson() {
         String json = "{\"content\":\"test\",\"md5\":\"abc123\",\"configType\":\"yaml\",\"encryptedDataKey\":\"key\"}";
 
         ConfigQueryResult result = mapper.readValue(json, ConfigQueryResult.class);

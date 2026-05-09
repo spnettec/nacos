@@ -17,7 +17,6 @@
 package com.alibaba.nacos.api.ai.model.agentspecs;
 
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -68,7 +67,7 @@ class AgentSpecMetaTest extends BasicRequestTest {
 
     @Test
     @DisplayName("test serialize to json")
-    void testSerializeToJson() throws JsonProcessingException {
+    void testSerializeToJson() {
         AgentSpecMeta meta = new AgentSpecMeta();
         meta.setNamespaceId("public");
         meta.setName("testAgentSpec");
@@ -83,7 +82,7 @@ class AgentSpecMetaTest extends BasicRequestTest {
 
     @Test
     @DisplayName("test deserialize from json")
-    void testDeserializeFromJson() throws JsonProcessingException {
+    void testDeserializeFromJson() {
         String json = "{\"namespaceId\":\"public\",\"name\":\"testAgentSpec\",\"enable\":true,"
                 + "\"versions\":[{\"version\":\"v1.0.0\",\"status\":\"online\"}]}";
 
@@ -180,7 +179,7 @@ class AgentSpecMetaTest extends BasicRequestTest {
 
     @Test
     @DisplayName("test AgentSpecVersionSummary serialize to json")
-    void testAgentSpecVersionSummarySerializeToJson() throws JsonProcessingException {
+    void testAgentSpecVersionSummarySerializeToJson() {
         AgentSpecMeta.AgentSpecVersionSummary summary = new AgentSpecMeta.AgentSpecVersionSummary();
         summary.setVersion("v1.0.0");
         summary.setStatus("online");
@@ -197,7 +196,7 @@ class AgentSpecMetaTest extends BasicRequestTest {
 
     @Test
     @DisplayName("test AgentSpecVersionSummary deserialize from json")
-    void testAgentSpecVersionSummaryDeserializeFromJson() throws JsonProcessingException {
+    void testAgentSpecVersionSummaryDeserializeFromJson() {
         String json = "{\"version\":\"v1.0.0\",\"status\":\"online\",\"author\":\"admin\","
                 + "\"description\":\"Test version\",\"createTime\":1234567890,\"updateTime\":1234567900,"
                 + "\"downloadCount\":100}";

@@ -17,7 +17,6 @@
 package com.alibaba.nacos.api.ai.model.skills;
 
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -149,7 +148,7 @@ class SkillSummaryTest extends BasicRequestTest {
 
     @Test
     @DisplayName("test serialize to json")
-    void testSerializeToJson() throws JsonProcessingException {
+    void testSerializeToJson() {
         SkillSummary summary = new SkillSummary();
         summary.setNamespaceId("public");
         summary.setName("testSkill");
@@ -170,7 +169,7 @@ class SkillSummaryTest extends BasicRequestTest {
 
     @Test
     @DisplayName("test deserialize from json")
-    void testDeserializeFromJson() throws JsonProcessingException {
+    void testDeserializeFromJson() {
         String json = "{\"namespaceId\":\"public\",\"name\":\"testSkill\",\"description\":\"Test\","
                 + "\"owner\":\"admin\",\"enable\":true,\"bizTags\":\"[\\\"tag1\\\"]\",\"from\":\"local\","
                 + "\"scope\":\"PUBLIC\",\"onlineCnt\":2,\"downloadCount\":100}";

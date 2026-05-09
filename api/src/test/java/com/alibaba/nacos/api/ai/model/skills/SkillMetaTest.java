@@ -17,7 +17,6 @@
 package com.alibaba.nacos.api.ai.model.skills;
 
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -70,7 +69,7 @@ class SkillMetaTest extends BasicRequestTest {
 
     @Test
     @DisplayName("test serialize to json")
-    void testSerializeToJson() throws JsonProcessingException {
+    void testSerializeToJson() {
         SkillMeta meta = new SkillMeta();
         meta.setNamespaceId("public");
         meta.setName("testSkill");
@@ -85,7 +84,7 @@ class SkillMetaTest extends BasicRequestTest {
 
     @Test
     @DisplayName("test deserialize from json")
-    void testDeserializeFromJson() throws JsonProcessingException {
+    void testDeserializeFromJson() {
         String json = "{\"namespaceId\":\"public\",\"name\":\"testSkill\",\"owner\":\"admin\","
                 + "\"enable\":true,\"versions\":[{\"version\":\"v1.0.0\",\"status\":\"online\"}]}";
 
@@ -183,7 +182,7 @@ class SkillMetaTest extends BasicRequestTest {
 
     @Test
     @DisplayName("test SkillVersionSummary serialize to json")
-    void testSkillVersionSummarySerializeToJson() throws JsonProcessingException {
+    void testSkillVersionSummarySerializeToJson() {
         SkillMeta.SkillVersionSummary summary = new SkillMeta.SkillVersionSummary();
         summary.setVersion("v1.0.0");
         summary.setStatus("online");
@@ -200,7 +199,7 @@ class SkillMetaTest extends BasicRequestTest {
 
     @Test
     @DisplayName("test SkillVersionSummary deserialize from json")
-    void testSkillVersionSummaryDeserializeFromJson() throws JsonProcessingException {
+    void testSkillVersionSummaryDeserializeFromJson() {
         String json = "{\"version\":\"v1.0.0\",\"status\":\"online\",\"author\":\"admin\","
                 + "\"commitMsg\":\"Initial\",\"createTime\":1234567890,\"updateTime\":1234567900,"
                 + "\"downloadCount\":100}";

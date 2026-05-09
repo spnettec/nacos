@@ -17,7 +17,6 @@
 package com.alibaba.nacos.api.plugin;
 
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -157,7 +156,7 @@ class ConfigItemDefinitionTest extends BasicRequestTest {
 
     @Test
     @DisplayName("test serialize to json")
-    void testSerializeToJson() throws JsonProcessingException {
+    void testSerializeToJson() {
         ConfigItemDefinition definition = new ConfigItemDefinition("testKey", "Test Name", ConfigItemType.STRING);
         definition.setDescription("Test description");
         definition.setDefaultValue("defaultValue");
@@ -175,7 +174,7 @@ class ConfigItemDefinitionTest extends BasicRequestTest {
 
     @Test
     @DisplayName("test deserialize from json")
-    void testDeserializeFromJson() throws JsonProcessingException {
+    void testDeserializeFromJson() {
         String json = "{\"key\":\"testKey\",\"name\":\"Test Name\",\"description\":\"Test\","
                 + "\"defaultValue\":\"default\",\"type\":\"STRING\",\"required\":true,"
                 + "\"enumValues\":[\"opt1\",\"opt2\"]}";

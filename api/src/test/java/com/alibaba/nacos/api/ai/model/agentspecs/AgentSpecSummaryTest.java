@@ -17,7 +17,6 @@
 package com.alibaba.nacos.api.ai.model.agentspecs;
 
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -144,7 +143,7 @@ class AgentSpecSummaryTest extends BasicRequestTest {
 
     @Test
     @DisplayName("test serialize to json")
-    void testSerializeToJson() throws JsonProcessingException {
+    void testSerializeToJson() {
         AgentSpecSummary summary = new AgentSpecSummary();
         summary.setNamespaceId("public");
         summary.setName("testAgentSpec");
@@ -163,7 +162,7 @@ class AgentSpecSummaryTest extends BasicRequestTest {
 
     @Test
     @DisplayName("test deserialize from json")
-    void testDeserializeFromJson() throws JsonProcessingException {
+    void testDeserializeFromJson() {
         String json = "{\"namespaceId\":\"public\",\"name\":\"testAgentSpec\",\"description\":\"Test\","
                 + "\"enable\":true,\"bizTags\":\"[\\\"tag1\\\"]\",\"from\":\"local\","
                 + "\"scope\":\"PUBLIC\",\"onlineCnt\":2,\"downloadCount\":100}";
