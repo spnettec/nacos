@@ -39,23 +39,26 @@ import static com.alibaba.nacos.config.server.constant.Constants.ENCODE_UTF8;
  * @author zunfei.lzf
  */
 public class ConfigRawDiskService implements ConfigDiskService {
-
+    
     private static final String BASE_DIR = File.separator + "data" + File.separator + "config-data";
-
-    private static final String TENANT_BASE_DIR = File.separator + "data" + File.separator + "tenant-config-data";
-
+    
+    private static final String TENANT_BASE_DIR =
+        File.separator + "data" + File.separator + "tenant-config-data";
+    
     private static final String GRAY_DIR = File.separator + "data" + File.separator + "gray-data";
-
-    private static final String TENANT_GRAY_DIR = File.separator + "data" + File.separator + "tenant-gray-data";
-
+    
+    private static final String TENANT_GRAY_DIR =
+        File.separator + "data" + File.separator + "tenant-gray-data";
+    
     /**
      * Save configuration information to disk.
      */
-    public void saveToDisk(String dataId, String group, String tenant, String content) throws IOException {
+    public void saveToDisk(String dataId, String group, String tenant, String content)
+        throws IOException {
         File targetFile = targetFile(dataId, group, tenant);
         FileUtils.writeStringToFile(targetFile, content, ENCODE_UTF8);
     }
-
+    
     /**
      * Returns the path of the server cache file.
      */
@@ -63,7 +66,8 @@ public class ConfigRawDiskService implements ConfigDiskService {
         try {
             ParamUtils.checkParam(dataId, group, tenant);
         } catch (Exception e) {
-            throw new NacosRuntimeException(NacosException.CLIENT_INVALID_PARAM, "parameter is invalid.");
+            throw new NacosRuntimeException(NacosException.CLIENT_INVALID_PARAM,
+                "parameter is invalid.");
         }
         // fix https://github.com/alibaba/nacos/issues/10067
         dataId = PathEncoderManager.getInstance().encode(dataId);
@@ -80,22 +84,24 @@ public class ConfigRawDiskService implements ConfigDiskService {
         file = new File(file, dataId);
         return file;
     }
-
+    
     /**
      * Returns the path of the gray cache file in server.
      */
-    private static File targetGrayFile(String dataId, String group, String tenant, String grayName) {
+    private static File targetGrayFile(String dataId, String group, String tenant,
+        String grayName) {
         try {
             ParamUtils.checkParam(grayName);
             ParamUtils.checkParam(dataId, group, tenant);
         } catch (Exception e) {
-            throw new NacosRuntimeException(NacosException.CLIENT_INVALID_PARAM, "parameter is invalid.");
+            throw new NacosRuntimeException(NacosException.CLIENT_INVALID_PARAM,
+                "parameter is invalid.");
         }
         // fix https://github.com/alibaba/nacos/issues/10067
         dataId = PathEncoderManager.getInstance().encode(dataId);
         group = PathEncoderManager.getInstance().encode(group);
         tenant = PathEncoderManager.getInstance().encode(tenant);
-
+        
         File file = null;
         if (StringUtils.isBlank(tenant)) {
             file = new File(EnvUtil.getNacosHome(), GRAY_DIR);
@@ -108,51 +114,54 @@ public class ConfigRawDiskService implements ConfigDiskService {
         file = new File(file, grayName);
         return file;
     }
-
+    
     /**
      * Returns the path of the gray content cache file in server.
      */
-    private static File targetGrayContentFile(String dataId, String group, String tenant, String grayName) {
+    private static File targetGrayContentFile(String dataId, String group, String tenant,
+        String grayName) {
         return targetGrayFile(dataId, group, tenant, grayName);
     }
-
+    
     /**
      * Save gray information to disk.
      */
-    public void saveGrayToDisk(String dataId, String group, String tenant, String grayName, String content)
-            throws IOException {
+    public void saveGrayToDisk(String dataId, String group, String tenant, String grayName,
+        String content)
+        throws IOException {
         File targetGrayContentFile = targetGrayContentFile(dataId, group, tenant, grayName);
         FileUtils.writeStringToFile(targetGrayContentFile, content, ENCODE_UTF8);
     }
-
+    
     /**
      * Deletes configuration files on disk.
      */
     public void removeConfigInfo(String dataId, String group, String tenant) {
         FileUtils.deleteQuietly(targetFile(dataId, group, tenant));
     }
-
+    
     /**
      * Deletes gray configuration files on disk.
      */
     public void removeConfigInfo4Gray(String dataId, String group, String tenant, String grayName) {
         FileUtils.deleteQuietly(targetGrayContentFile(dataId, group, tenant, grayName));
     }
-
+    
     private static String file2String(File file) throws IOException {
         if (!file.exists()) {
             return null;
         }
         return FileUtils.readFileToString(file, ENCODE_UTF8);
     }
-
+    
     /**
      * Returns the content of the gray cache file in server.
      */
-    public String getGrayContent(String dataId, String group, String tenant, String grayName) throws IOException {
+    public String getGrayContent(String dataId, String group, String tenant, String grayName)
+        throws IOException {
         return file2String(targetGrayContentFile(dataId, group, tenant, grayName));
     }
-
+    
     public String getContent(String dataId, String group, String tenant) throws IOException {
         File file = targetFile(dataId, group, tenant);
         if (file.exists()) {
@@ -169,7 +178,7 @@ public class ConfigRawDiskService implements ConfigDiskService {
             return null;
         }
     }
-
+    
     /**
      * Clear all config file.
      */
@@ -187,13 +196,13 @@ public class ConfigRawDiskService implements ConfigDiskService {
             LogUtil.DEFAULT_LOG.warn("clear all config-info-tenant failed.");
         }
     }
-
+    
     /**
      * Clear all gray config file.
      */
     public void clearAllGray() {
         File file = new File(EnvUtil.getNacosHome(), GRAY_DIR);
-
+        
         if (!file.exists() || FileUtils.deleteQuietly(file)) {
             LogUtil.DEFAULT_LOG.info("clear all config-info-gray success.");
         } else {
@@ -206,5 +215,5 @@ public class ConfigRawDiskService implements ConfigDiskService {
             LogUtil.DEFAULT_LOG.warn("clear all config-info-gray-tenant failed.");
         }
     }
-
+    
 }

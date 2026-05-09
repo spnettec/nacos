@@ -58,7 +58,7 @@ class OidcClientAuthServiceImplTest {
         
         // LoginIdentityContext should not contain accessToken
         LoginIdentityContext ctx = oidcClientAuthService.getLoginIdentityContext(
-                RequestResource.configBuilder().build());
+            RequestResource.configBuilder().build());
         assertNotNull(ctx);
         assertNull(ctx.getParameter(OidcProtocolConstants.ACCESS_TOKEN_PARAM));
     }
@@ -83,38 +83,38 @@ class OidcClientAuthServiceImplTest {
         Properties properties = new Properties();
         properties.setProperty(OidcClientConstants.PROP_CLIENT_ID, "my-client");
         properties.setProperty(OidcClientConstants.PROP_ISSUER_URI, "https://idp.example.com");
-
+        
         // When
         boolean result = oidcClientAuthService.login(properties);
-
+        
         // Then: should succeed (incomplete OIDC config, skip)
         assertTrue(result);
         LoginIdentityContext ctx = oidcClientAuthService.getLoginIdentityContext(
-                RequestResource.configBuilder().build());
+            RequestResource.configBuilder().build());
         assertNull(ctx.getParameter(OidcProtocolConstants.ACCESS_TOKEN_PARAM));
     }
-
+    
     @Test
     void testLoginWithPartialOidcConfigMissingEndpoint() {
         // Given: client-id and secret but no issuer-uri or token-endpoint
         Properties properties = new Properties();
         properties.setProperty(OidcClientConstants.PROP_CLIENT_ID, "my-client");
         properties.setProperty(OidcClientConstants.PROP_CLIENT_SECRET, "my-secret");
-
+        
         // When
         boolean result = oidcClientAuthService.login(properties);
-
+        
         // Then: should succeed (incomplete OIDC config, skip)
         assertTrue(result);
         LoginIdentityContext ctx = oidcClientAuthService.getLoginIdentityContext(
-                RequestResource.configBuilder().build());
+            RequestResource.configBuilder().build());
         assertNull(ctx.getParameter(OidcProtocolConstants.ACCESS_TOKEN_PARAM));
     }
     
     @Test
     void testGetLoginIdentityContextReturnsEmptyByDefault() {
         LoginIdentityContext ctx = oidcClientAuthService.getLoginIdentityContext(
-                RequestResource.configBuilder().build());
+            RequestResource.configBuilder().build());
         assertNotNull(ctx);
     }
 }

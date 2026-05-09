@@ -274,7 +274,10 @@
     "enabled": "Enabled",
     "instanceEphemeral": "Ephemeral",
     "editInstance": "Edit Instance",
+    "deleteInstance": "Delete Instance",
     "instanceUpdateSuccess": "Instance updated",
+    "instanceDeleteSuccess": "Instance deleted",
+    "instanceDeleteConfirm": "Delete instance {{ip}}:{{port}}?",
     "online": "Online",
     "offline": "Offline",
     "noInstances": "No instances in this cluster",
@@ -629,6 +632,13 @@
     "bindLabel": "Bind Label",
     "unbindLabel": "Unbind Label",
     "versionHistory": "Version History",
+    "downloadMarkdown": "Download Markdown",
+    "downloadMarkdownTip": "Export the currently selected version as a Markdown document",
+    "downloadMarkdownSuccess": "Markdown document downloaded successfully",
+    "downloadMarkdownFailed": "Failed to download Markdown document",
+    "downloadCount": "{{count}} downloads",
+    "downloads": "Downloads",
+    "versionDownloads": "Version Downloads",
     "publishVersion": "Publish New Version",
     "debug": "Debug",
     "startDebug": "Start Debug",
@@ -698,6 +708,7 @@
     "retry": "Retry",
     "versionStatus.draft": "Draft",
     "versionStatus.reviewing": "Reviewing",
+    "versionStatus.reviewed": "Pending Publish",
     "versionStatus.online": "Online",
     "versionStatus.offline": "Offline",
     "versionStatus.pendingPublish": "Pending Publish",
@@ -959,6 +970,7 @@
     "versionStatus": {
       "draft": "Draft",
       "reviewing": "Reviewing",
+      "reviewed": "Pending Publish",
       "pendingPublish": "Pending Publish",
       "online": "Online",
       "offline": "Offline"
@@ -1058,6 +1070,7 @@
     "versionStatus": {
       "draft": "Draft",
       "reviewing": "Reviewing",
+      "reviewed": "Pending Publish",
       "pendingPublish": "Pending Publish",
       "online": "Online",
       "offline": "Offline"

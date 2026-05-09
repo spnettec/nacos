@@ -274,7 +274,10 @@
     "enabled": "启用",
     "instanceEphemeral": "临时",
     "editInstance": "编辑实例",
+    "deleteInstance": "删除实例",
     "instanceUpdateSuccess": "实例更新成功",
+    "instanceDeleteSuccess": "实例删除成功",
+    "instanceDeleteConfirm": "确定要删除实例 {{ip}}:{{port}} 吗？",
     "online": "上线",
     "offline": "下线",
     "noInstances": "该集群暂无实例",
@@ -629,6 +632,13 @@
     "bindLabel": "绑定标签",
     "unbindLabel": "解绑标签",
     "versionHistory": "版本历史",
+    "downloadMarkdown": "下载 Markdown",
+    "downloadMarkdownTip": "将当前选中的版本导出为 Markdown 文档",
+    "downloadMarkdownSuccess": "Markdown 文档下载成功",
+    "downloadMarkdownFailed": "Markdown 文档下载失败",
+    "downloadCount": "{{count}} 次下载",
+    "downloads": "下载量",
+    "versionDownloads": "版本下载量",
     "publishVersion": "发布新版本",
     "debug": "调试",
     "startDebug": "开始调试",
@@ -698,6 +708,7 @@
     "retry": "重试",
     "versionStatus.draft": "草稿",
     "versionStatus.reviewing": "审核中",
+    "versionStatus.reviewed": "待发布",
     "versionStatus.online": "已上线",
     "versionStatus.offline": "已下线",
     "versionStatus.pendingPublish": "待发布",
@@ -959,6 +970,7 @@
     "versionStatus": {
       "draft": "草稿",
       "reviewing": "审核中",
+      "reviewed": "待发布",
       "pendingPublish": "待发布",
       "online": "已上线",
       "offline": "已下线"
@@ -1058,6 +1070,7 @@
     "versionStatus": {
       "draft": "草稿",
       "reviewing": "审核中",
+      "reviewed": "待发布",
       "pendingPublish": "待发布",
       "online": "已上线",
       "offline": "已下线"

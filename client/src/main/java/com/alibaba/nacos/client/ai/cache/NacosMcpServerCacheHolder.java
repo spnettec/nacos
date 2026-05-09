@@ -135,7 +135,8 @@ public class NacosMcpServerCacheHolder implements Closeable {
         }
     }
     
-    private boolean isMcpServerChanged(McpServerDetailInfo oldMcpServer, McpServerDetailInfo detailInfo) {
+    private boolean isMcpServerChanged(McpServerDetailInfo oldMcpServer,
+        McpServerDetailInfo detailInfo) {
         try {
             String newJson = objectMapper.writeValueAsString(detailInfo);
             if (null == oldMcpServer) {

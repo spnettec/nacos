@@ -70,11 +70,14 @@ public class NamingSelectorWrapperTest {
         assertFalse(selectorWrapper.isSelectable(null));
         InstancesChangeEvent event1 = new InstancesChangeEvent(null, null, null, null, null, null);
         assertFalse(selectorWrapper.isSelectable(event1));
-        InstancesChangeEvent event2 = new InstancesChangeEvent(null, null, null, null, null, new InstancesDiff());
+        InstancesChangeEvent event2 =
+            new InstancesChangeEvent(null, null, null, null, null, new InstancesDiff());
         assertFalse(selectorWrapper.isSelectable(event2));
-        InstancesChangeEvent event3 = new InstancesChangeEvent(null, null, null, null, Collections.emptyList(), null);
+        InstancesChangeEvent event3 =
+            new InstancesChangeEvent(null, null, null, null, Collections.emptyList(), null);
         assertFalse(selectorWrapper.isSelectable(event3));
-        InstancesChangeEvent event4 = new InstancesChangeEvent(null, null, null, null, Collections.emptyList(),
+        InstancesChangeEvent event4 =
+            new InstancesChangeEvent(null, null, null, null, Collections.emptyList(),
                 new InstancesDiff());
         assertTrue(selectorWrapper.isSelectable(event4));
     }
@@ -82,8 +85,10 @@ public class NamingSelectorWrapperTest {
     @Test
     public void testCallable() {
         NamingSelectorWrapper selectorWrapper = new NamingSelectorWrapper(null, null);
-        InstancesDiff instancesDiff = new InstancesDiff(null, Collections.singletonList(new Instance()), null);
-        NamingChangeEvent changeEvent = new NamingChangeEvent("serviceName", Collections.emptyList(), instancesDiff);
+        InstancesDiff instancesDiff =
+            new InstancesDiff(null, Collections.singletonList(new Instance()), null);
+        NamingChangeEvent changeEvent =
+            new NamingChangeEvent("serviceName", Collections.emptyList(), instancesDiff);
         assertTrue(selectorWrapper.isCallable(changeEvent));
         changeEvent.getRemovedInstances().clear();
         assertFalse(selectorWrapper.isCallable(changeEvent));
@@ -93,9 +98,11 @@ public class NamingSelectorWrapperTest {
     public void testNotifyListener() {
         EventListener listener = mock(EventListener.class);
         NamingSelectorWrapper selectorWrapper = new NamingSelectorWrapper(
-                new DefaultNamingSelector(Instance::isHealthy), listener);
-        InstancesDiff diff = new InstancesDiff(null, Collections.singletonList(new Instance()), null);
-        InstancesChangeEvent event = new InstancesChangeEvent(null, "serviceName", "groupName", "clusters",
+            new DefaultNamingSelector(Instance::isHealthy), listener);
+        InstancesDiff diff =
+            new InstancesDiff(null, Collections.singletonList(new Instance()), null);
+        InstancesChangeEvent event =
+            new InstancesChangeEvent(null, "serviceName", "groupName", "clusters",
                 Collections.emptyList(), diff);
         selectorWrapper.notifyListener(event);
         verify(listener).onEvent(argThat(Objects::nonNull));

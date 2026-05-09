@@ -39,7 +39,7 @@ import static com.alibaba.nacos.config.server.utils.LogUtil.DEFAULT_LOG;
  * @author Nacos
  */
 public class ResponseUtil {
-
+    
     /**
      * Write error msg.
      */
@@ -51,7 +51,7 @@ public class ResponseUtil {
             DEFAULT_LOG.error("ResponseUtil:writeErrMsg wrong", e);
         }
     }
-
+    
     /**
      * Transfer from {@link ConfigAllInfo} to {@link ConfigDetailInfo} for APIs.
      *
@@ -65,7 +65,7 @@ public class ResponseUtil {
         result.setGroupName(configAllInfo.getGroup());
         return result;
     }
-
+    
     /**
      * Transfer from {@link ConfigInfo} to {@link ConfigBasicInfo} for APIs.
      *
@@ -79,7 +79,7 @@ public class ResponseUtil {
         result.setGroupName(configInfo.getGroup());
         return result;
     }
-
+    
     /**
      * Transfer from {@link ConfigInfoWrapper} to {@link ConfigBasicInfo} for APIs.
      *
@@ -91,7 +91,7 @@ public class ResponseUtil {
         result.setModifyTime(configInfo.getLastModified());
         return result;
     }
-
+    
     /**
      * Transfer from {@link ConfigInfoGrayWrapper} to {@link ConfigGrayInfo} for APIs.
      *
@@ -107,34 +107,37 @@ public class ResponseUtil {
         result.setModifyTime(configInfoGray.getLastModified());
         return result;
     }
-
+    
     /**
      * Transfer from {@link ConfigHistoryInfo} to {@link ConfigHistoryBasicInfo} for APIs.
      *
      * @param historyInfo {@link ConfigHistoryInfo} config history information from storage.
      * @return {@link ConfigHistoryBasicInfo} for APIs response.
      */
-    public static ConfigHistoryBasicInfo transferToConfigHistoryBasicInfo(ConfigHistoryInfo historyInfo) {
+    public static ConfigHistoryBasicInfo transferToConfigHistoryBasicInfo(
+        ConfigHistoryInfo historyInfo) {
         ConfigHistoryBasicInfo result = new ConfigHistoryBasicInfo();
         BeanUtils.copyProperties(historyInfo, result);
         injectHistoryBasicInfo(result, historyInfo);
         return result;
     }
-
+    
     /**
      * Transfer from {@link ConfigHistoryInfo} to {@link ConfigHistoryDetailInfo} for APIs.
      *
      * @param historyInfo {@link ConfigHistoryInfo} config history information from storage.
      * @return {@link ConfigHistoryDetailInfo} for APIs response.
      */
-    public static ConfigHistoryDetailInfo transferToConfigHistoryDetailInfo(ConfigHistoryInfo historyInfo) {
+    public static ConfigHistoryDetailInfo transferToConfigHistoryDetailInfo(
+        ConfigHistoryInfo historyInfo) {
         ConfigHistoryDetailInfo result = new ConfigHistoryDetailInfo();
         BeanUtils.copyProperties(historyInfo, result);
         injectHistoryBasicInfo(result, historyInfo);
         return result;
     }
-
-    private static void injectHistoryBasicInfo(ConfigHistoryBasicInfo historyBasicInfo, ConfigHistoryInfo historyInfo) {
+    
+    private static void injectHistoryBasicInfo(ConfigHistoryBasicInfo historyBasicInfo,
+        ConfigHistoryInfo historyInfo) {
         historyBasicInfo.setNamespaceId(historyInfo.getTenant());
         historyBasicInfo.setGroupName(historyInfo.getGroup());
         historyBasicInfo.setCreateTime(historyInfo.getCreatedTime().getTime());

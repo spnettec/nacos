@@ -27,11 +27,10 @@ import com.alibaba.nacos.api.ai.model.prompt.PromptVersionSummary;
 import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.model.Page;
 import com.alibaba.nacos.common.utils.JacksonUtils;
+import com.alibaba.nacos.console.handler.ai.EnabledAiHandler;
 import com.alibaba.nacos.console.handler.ai.PromptHandler;
-import com.alibaba.nacos.console.handler.impl.ConditionFunctionEnabled;
 import com.alibaba.nacos.console.handler.impl.remote.EnabledRemoteHandler;
 import com.alibaba.nacos.console.handler.impl.remote.NacosMaintainerClientHolder;
-import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -46,7 +45,7 @@ import java.util.Map;
  */
 @Service
 @EnabledRemoteHandler
-@Conditional(ConditionFunctionEnabled.ConditionAiEnabled.class)
+@EnabledAiHandler
 public class PromptRemoteHandler implements PromptHandler {
     
     private final NacosMaintainerClientHolder clientHolder;
@@ -85,6 +84,13 @@ public class PromptRemoteHandler implements PromptHandler {
     @Override
     public PromptVersionInfo getVersionDetail(String namespaceId, String promptKey, String version)
             throws NacosException {
+        return clientHolder.getAiMaintainerService().prompt().getVersionDetail(namespaceId, promptKey, version);
+    }
+    
+    @Override
+    public PromptVersionInfo downloadPromptVersion(String namespaceId, String promptKey, String version)
+            throws NacosException {
+        // Remote handler delegates to getVersionDetail; download count is tracked on the target server side.
         return clientHolder.getAiMaintainerService().prompt().getVersionDetail(namespaceId, promptKey, version);
     }
     

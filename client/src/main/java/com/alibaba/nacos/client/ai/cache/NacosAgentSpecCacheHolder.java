@@ -104,7 +104,7 @@ public class NacosAgentSpecCacheHolder implements Closeable {
     public AgentSpec subscribeAgentSpec(String agentSpecName) throws NacosException {
         if (StringUtils.isBlank(agentSpecName)) {
             throw new NacosException(NacosException.INVALID_PARAM,
-                    "Required parameter `agentSpecName` not present");
+                "Required parameter `agentSpecName` not present");
         }
 
         if (subscriptionMap.containsKey(agentSpecName)) {
@@ -130,6 +130,7 @@ public class NacosAgentSpecCacheHolder implements Closeable {
 
         // Listen to manifest for version changes
         Listener manifestListener = new Listener() {
+
             @Override
             public Executor getExecutor() {
                 return null;
@@ -142,7 +143,7 @@ public class NacosAgentSpecCacheHolder implements Closeable {
         };
         sub.manifestListener = manifestListener;
         configService.addListener(AgentSpecUtils.AGENTSPEC_INDEX_DATA_ID,
-                AgentSpecUtils.buildAgentSpecGroup(agentSpecName), manifestListener);
+            AgentSpecUtils.buildAgentSpecGroup(agentSpecName), manifestListener);
 
         LOGGER.info("Subscribed agent spec via config: {}", agentSpecName);
         return agentSpec;
@@ -162,7 +163,7 @@ public class NacosAgentSpecCacheHolder implements Closeable {
         if (sub != null) {
             if (sub.manifestListener != null) {
                 configService.removeListener(AgentSpecUtils.AGENTSPEC_INDEX_DATA_ID,
-                        AgentSpecUtils.buildAgentSpecGroup(agentSpecName), sub.manifestListener);
+                    AgentSpecUtils.buildAgentSpecGroup(agentSpecName), sub.manifestListener);
             }
             unsubscribeResources(sub);
         }
@@ -192,7 +193,7 @@ public class NacosAgentSpecCacheHolder implements Closeable {
 
             if (!StringUtils.equals(sub.currentVersion, newVersion)) {
                 LOGGER.info("AgentSpec {} manifest version changed: {} -> {}", agentSpecName,
-                        sub.currentVersion, newVersion);
+                    sub.currentVersion, newVersion);
                 unsubscribeResources(sub);
                 if (newIndex != null && newIndex.files != null) {
                     sub.currentVersion = newIndex.version;
@@ -236,11 +237,13 @@ public class NacosAgentSpecCacheHolder implements Closeable {
     @SuppressWarnings("unchecked")
     private AgentSpec loadAgentSpecFromConfig(String agentSpecName) throws NacosException {
         AgentSpecIndex index = loadAgentSpecIndex(agentSpecName);
-        if (index == null || StringUtils.isBlank(index.version) || index.files == null || index.files.isEmpty()) {
+        if (index == null || StringUtils.isBlank(index.version) || index.files == null
+            || index.files.isEmpty()) {
             return null;
         }
 
-        String versionGroup = AgentSpecUtils.buildAgentSpecVersionGroup(agentSpecName, index.version);
+        String versionGroup =
+            AgentSpecUtils.buildAgentSpecVersionGroup(agentSpecName, index.version);
         AgentSpec agentSpec = new AgentSpec();
         agentSpec.setNamespaceId(namespaceId);
         Map<String, AgentSpecResource> resourceMap = new HashMap<>(index.files.size());
@@ -260,7 +263,8 @@ public class NacosAgentSpecCacheHolder implements Closeable {
                 String manifestContent = resource.getContent();
                 if (StringUtils.isNotBlank(manifestContent)) {
                     try {
-                        Map<String, Object> manifestMap = JacksonUtils.toObj(manifestContent, Map.class);
+                        Map<String, Object> manifestMap =
+                            JacksonUtils.toObj(manifestContent, Map.class);
                         if (manifestMap != null) {
                             Object nameObj = manifestMap.get("name");
                             if (nameObj != null) {
@@ -272,12 +276,14 @@ public class NacosAgentSpecCacheHolder implements Closeable {
                             }
                         }
                     } catch (Exception e) {
-                        LOGGER.warn("Failed to parse manifest.json content for agent spec: {}", agentSpecName, e);
+                        LOGGER.warn("Failed to parse manifest.json content for agent spec: {}",
+                            agentSpecName, e);
                     }
                 }
                 agentSpec.setContent(manifestContent);
             } else {
-                String resourceId = AgentSpecUtils.generateResourceId(resource.getType(), resource.getName());
+                String resourceId =
+                    AgentSpecUtils.generateResourceId(resource.getType(), resource.getName());
                 resourceMap.put(resourceId, resource);
             }
         }
@@ -288,7 +294,8 @@ public class NacosAgentSpecCacheHolder implements Closeable {
 
     private AgentSpecIndex loadAgentSpecIndex(String agentSpecName) throws NacosException {
         String group = AgentSpecUtils.buildAgentSpecGroup(agentSpecName);
-        String indexContent = configService.getConfig(AgentSpecUtils.AGENTSPEC_INDEX_DATA_ID, group, CONFIG_TIMEOUT);
+        String indexContent = configService.getConfig(AgentSpecUtils.AGENTSPEC_INDEX_DATA_ID, group,
+            CONFIG_TIMEOUT);
         return parseAgentSpecIndex(indexContent);
     }
 
@@ -308,10 +315,12 @@ public class NacosAgentSpecCacheHolder implements Closeable {
         if (index.files == null || index.files.isEmpty() || StringUtils.isBlank(index.version)) {
             return;
         }
-        String versionGroup = AgentSpecUtils.buildAgentSpecVersionGroup(sub.agentSpecName, index.version);
+        String versionGroup =
+            AgentSpecUtils.buildAgentSpecVersionGroup(sub.agentSpecName, index.version);
         sub.resourceGroup = versionGroup;
         for (String filePath : index.files) {
             Listener listener = new Listener() {
+
                 @Override
                 public Executor getExecutor() {
                     return null;
@@ -347,7 +356,7 @@ public class NacosAgentSpecCacheHolder implements Closeable {
             String newJson = objectMapper.writeValueAsString(newAgentSpec);
             if (null == oldAgentSpec) {
                 LOGGER.info("Init new agent spec: {} -> {}",
-                        newAgentSpec != null ? newAgentSpec.getName() : "null", newJson);
+                    newAgentSpec != null ? newAgentSpec.getName() : "null", newJson);
                 return true;
             }
             String oldJson = objectMapper.writeValueAsString(oldAgentSpec);

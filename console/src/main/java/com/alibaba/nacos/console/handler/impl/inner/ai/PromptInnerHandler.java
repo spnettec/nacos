@@ -29,9 +29,7 @@ import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.model.Page;
 import com.alibaba.nacos.console.handler.ai.EnabledAiHandler;
 import com.alibaba.nacos.console.handler.ai.PromptHandler;
-import com.alibaba.nacos.console.handler.impl.ConditionFunctionEnabled;
 import com.alibaba.nacos.console.handler.impl.inner.EnabledInnerHandler;
-import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -45,7 +43,6 @@ import java.util.Map;
 @Component
 @EnabledInnerHandler
 @EnabledAiHandler
-@Conditional(ConditionFunctionEnabled.ConditionAiEnabled.class)
 public class PromptInnerHandler implements PromptHandler {
     
     private final PromptOperationService promptOperationService;
@@ -85,6 +82,12 @@ public class PromptInnerHandler implements PromptHandler {
     public PromptVersionInfo getVersionDetail(String namespaceId, String promptKey, String version)
             throws NacosException {
         return promptOperationService.getPromptVersionDetail(namespaceId, promptKey, version);
+    }
+    
+    @Override
+    public PromptVersionInfo downloadPromptVersion(String namespaceId, String promptKey, String version)
+            throws NacosException {
+        return promptOperationService.downloadPromptVersion(namespaceId, promptKey, version);
     }
     
     @Override
