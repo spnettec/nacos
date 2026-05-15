@@ -21,6 +21,7 @@ import com.alibaba.nacos.ai.constant.Constants;
 import com.alibaba.nacos.ai.event.SkillDownloadEvent;
 import com.alibaba.nacos.ai.model.AiResource;
 import com.alibaba.nacos.ai.model.AiResourceVersion;
+import com.alibaba.nacos.api.ai.model.skills.BatchUploadResult;
 import com.alibaba.nacos.ai.model.skills.SkillIndexManifest;
 import com.alibaba.nacos.ai.pipeline.PublishPipelineExecutor;
 import com.alibaba.nacos.ai.pipeline.model.PipelineExecutionResult;
@@ -166,24 +167,62 @@ public class SkillOperationServiceImpl implements SkillOperationService {
     public String uploadSkillFromZip(String namespaceId, byte[] zipBytes, String zipFileName,
         boolean overwrite,
         String targetVersion) throws NacosException {
-        // Step 1: Parse ZIP and validate skill name
         Skill skill = SkillZipParser.parseSkillFromZip(zipBytes, namespaceId);
         if (skill == null || StringUtils.isBlank(skill.getName())) {
             throw new NacosApiException(NacosException.INVALID_PARAM, ErrorCode.PARAMETER_MISSING,
                 "Skill name is required");
         }
-        validateSkillNameByParamChecker(skill.getName());
-        // Step 2: Resolve version from SKILL.md front-matter, meta.json, or user-specified targetVersion
         String uploadVersion = resolveUploadVersion(skill.getSkillMd(), zipBytes, targetVersion);
+        return doUploadSingleSkill(namespaceId, skill, uploadVersion, overwrite);
+    }
+    
+    /**
+     * Batch upload multiple skills from a single zip archive using best-effort strategy.
+     */
+    @Override
+    public BatchUploadResult batchUploadSkillsFromZip(String namespaceId, byte[] zipBytes,
+        boolean overwrite)
+        throws NacosException {
+        SkillZipParser.MultiSkillParseResult parseResult =
+            SkillZipParser.parseMultipleSkillsFromZip(zipBytes, namespaceId);
+        BatchUploadResult result = new BatchUploadResult();
+        
+        // Record parse failures from invalid skill folders
+        for (SkillZipParser.ParseFailure failure : parseResult.getFailures()) {
+            result.addFailed(failure.getFolder(), failure.getReason());
+        }
+        
+        for (Skill skill : parseResult.getSkills()) {
+            String skillName = skill.getName();
+            try {
+                if (StringUtils.isBlank(skillName)) {
+                    result.addFailed("unknown", "Skill name is required in YAML front matter");
+                    continue;
+                }
+                String uploadVersion = resolveUploadVersion(skill.getSkillMd(), null, null);
+                doUploadSingleSkill(namespaceId, skill, uploadVersion, overwrite);
+                result.addSucceeded(skillName);
+            } catch (Exception e) {
+                LOGGER.warn("Batch upload failed for skill [{}]: {}", skillName, e.getMessage());
+                result.addFailed(skillName != null ? skillName : "unknown", e.getMessage());
+            }
+        }
+        return result;
+    }
+    
+    /**
+     * Core logic for uploading a single skill: validate, check meta, create/overwrite draft, log.
+     */
+    private String doUploadSingleSkill(String namespaceId, Skill skill, String uploadVersion,
+        boolean overwrite) throws NacosException {
         String name = skill.getName();
-        // Step 3: Check if a meta record already exists for this skill name
+        validateSkillNameByParamChecker(name);
+        
         AiResource meta = resourceManager.findMeta(namespaceId, name, RESOURCE_TYPE_SKILL);
         if (overwrite) {
-            // Overwrite mode: replace existing editing draft or create new draft
             return overwriteUploadedSkill(namespaceId, skill, uploadVersion, meta);
         }
         if (meta == null) {
-            // Brand-new skill: create draft directly
             createDraftWithSkill(namespaceId, skill, uploadVersion, null, true);
             AiResourceTraceService.logSuccess(RESOURCE_TYPE_SKILL, name, uploadVersion,
                 AiResourceTraceService.OP_UPLOAD,
@@ -191,12 +230,10 @@ public class SkillOperationServiceImpl implements SkillOperationService {
             return name;
         }
         
-        // Non-overwrite upload for existing skill: ensure no editing/reviewing version exists
         VisibilityHelper.checkWritableResource(meta);
         ResourceVersionInfo info = AiResourceManager.requireVersionInfo(meta);
         AiResourceManager.ensureNoWorkingVersion(info, "upload");
         
-        // Step 4: Resolve version conflicts and create new draft
         String newVersion = resolveFinalUploadVersion(namespaceId, name, uploadVersion);
         createDraftWithSkill(namespaceId, skill, newVersion, meta, false);
         AiResourceTraceService.logSuccess(RESOURCE_TYPE_SKILL, name, newVersion,
