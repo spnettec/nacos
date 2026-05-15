@@ -67,7 +67,7 @@ class EmptyContentRequestTest extends BasicRequestTest {
     }
     
     private void doTest(Class<? extends Request> clazz)
-        throws IllegalAccessException, InstantiationException, JsonProcessingException {
+        throws IllegalAccessException, InstantiationException, JacksonException {
         Request request = clazz.newInstance();
         request.setRequestId("1");
         request.putHeader("clientIp", "1.1.1.1");

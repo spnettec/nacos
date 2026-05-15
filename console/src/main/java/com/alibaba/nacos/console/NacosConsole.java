@@ -27,11 +27,11 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * @author xiweng.yy
  */
 @SpringBootApplication(excludeName = {"org.springframework.boot.ldap.autoconfigure.LdapAutoConfiguration",
-        "org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration"})
+    "org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration"})
 @PropertySource("classpath:nacos-console.properties")
 @EnableScheduling
 public class NacosConsole {
-    
+
     public static void main(String[] args) {
         SpringApplication.run(NacosConsole.class, args);
     }

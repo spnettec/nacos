@@ -22,7 +22,7 @@ import com.alibaba.nacos.console.proxy.core.PluginProxy;
 import com.alibaba.nacos.core.exception.NacosApiExceptionHandler;
 import com.alibaba.nacos.core.plugin.model.vo.PluginDetailVO;
 import com.alibaba.nacos.core.plugin.model.vo.PluginInfoVO;
-import com.fasterxml.jackson.core.type.TypeReference;
+import tools.jackson.core.type.TypeReference;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

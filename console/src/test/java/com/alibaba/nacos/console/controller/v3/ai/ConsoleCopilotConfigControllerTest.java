@@ -21,7 +21,7 @@ import com.alibaba.nacos.common.utils.JacksonUtils;
 import com.alibaba.nacos.copilot.config.CopilotAgentManager;
 import com.alibaba.nacos.copilot.config.CopilotConfigStorage;
 import com.alibaba.nacos.copilot.config.CopilotProperties;
-import com.fasterxml.jackson.core.type.TypeReference;
+import tools.jackson.core.type.TypeReference;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

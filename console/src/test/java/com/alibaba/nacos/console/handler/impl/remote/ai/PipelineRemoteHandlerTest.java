@@ -23,7 +23,7 @@ import com.alibaba.nacos.common.utils.JacksonUtils;
 import com.alibaba.nacos.console.handler.impl.remote.NacosMaintainerClientHolder;
 import com.alibaba.nacos.maintainer.client.ai.AiMaintainerService;
 import com.alibaba.nacos.maintainer.client.ai.PipelineMaintainerService;
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
