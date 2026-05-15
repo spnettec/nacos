@@ -50,7 +50,8 @@ class InstanceResponseTest {
     
     @Test
     void testDeserialize() throws JacksonException {
-        String json = "{\"resultCode\":200,\"errorCode\":0,\"type\":\"deregisterInstance\",\"success\":true}";
+        String json =
+            "{\"resultCode\":200,\"errorCode\":0,\"type\":\"deregisterInstance\",\"success\":true}";
         InstanceResponse response = mapper.readValue(json, InstanceResponse.class);
         assertEquals(NamingRemoteConstants.DE_REGISTER_INSTANCE, response.getType());
     }

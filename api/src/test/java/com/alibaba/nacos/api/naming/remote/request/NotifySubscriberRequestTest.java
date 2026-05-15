@@ -51,7 +51,8 @@ class NotifySubscriberRequestTest {
     @Test
     void testSerialize() throws JacksonException {
         ServiceInfo serviceInfo = new ServiceInfo(GROUP + "@@" + SERVICE);
-        NotifySubscriberRequest request = NotifySubscriberRequest.buildNotifySubscriberRequest(serviceInfo);
+        NotifySubscriberRequest request =
+            NotifySubscriberRequest.buildNotifySubscriberRequest(serviceInfo);
         request.setServiceName(SERVICE);
         request.setGroupName(GROUP);
         request.setNamespace(NAMESPACE);
@@ -62,7 +63,8 @@ class NotifySubscriberRequestTest {
     
     @Test
     void testDeserialize() throws JacksonException {
-        String json = "{\"headers\":{},\"namespace\":\"namespace\",\"serviceName\":\"service\",\"groupName\":\"group\","
+        String json =
+            "{\"headers\":{},\"namespace\":\"namespace\",\"serviceName\":\"service\",\"groupName\":\"group\","
                 + "\"serviceInfo\":{\"name\":\"service\",\"groupName\":\"group\",\"cacheMillis\":1000,\"hosts\":[],"
                 + "\"lastRefTime\":0,\"checksum\":\"\",\"allIPs\":false,\"reachProtectionThreshold\":false,"
                 + "\"valid\":true},\"module\":\"naming\"}";

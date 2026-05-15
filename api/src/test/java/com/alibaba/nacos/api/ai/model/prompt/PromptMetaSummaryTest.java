@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PromptMetaSummaryTest extends BasicRequestTest {
-
+    
     @Test
     @DisplayName("test default constructor initializes default values")
     void testDefaultConstructor() {
@@ -39,7 +39,7 @@ class PromptMetaSummaryTest extends BasicRequestTest {
         assertNotNull(summary.getBizTags());
         assertTrue(summary.getBizTags().isEmpty());
     }
-
+    
     @Test
     @DisplayName("test getter and setter for schemaVersion")
     void testGetterAndSetterForSchemaVersion() {
@@ -47,7 +47,7 @@ class PromptMetaSummaryTest extends BasicRequestTest {
         summary.setSchemaVersion(2);
         assertEquals(2, summary.getSchemaVersion());
     }
-
+    
     @Test
     @DisplayName("test getter and setter for promptKey")
     void testGetterAndSetterForPromptKey() {
@@ -55,7 +55,7 @@ class PromptMetaSummaryTest extends BasicRequestTest {
         summary.setPromptKey("testPrompt");
         assertEquals("testPrompt", summary.getPromptKey());
     }
-
+    
     @Test
     @DisplayName("test getter and setter for description")
     void testGetterAndSetterForDescription() {
@@ -63,7 +63,7 @@ class PromptMetaSummaryTest extends BasicRequestTest {
         summary.setDescription("Test description");
         assertEquals("Test description", summary.getDescription());
     }
-
+    
     @Test
     @DisplayName("test getter and setter for bizTags")
     void testGetterAndSetterForBizTags() {
@@ -77,7 +77,7 @@ class PromptMetaSummaryTest extends BasicRequestTest {
         assertEquals("tag1", summary.getBizTags().get(0));
         assertEquals("tag2", summary.getBizTags().get(1));
     }
-
+    
     @Test
     @DisplayName("test getter and setter for bizTagsStr")
     void testGetterAndSetterForBizTagsStr() {
@@ -85,7 +85,7 @@ class PromptMetaSummaryTest extends BasicRequestTest {
         summary.setBizTagsStr("[\"tag1\",\"tag2\"]");
         assertEquals("[\"tag1\",\"tag2\"]", summary.getBizTagsStr());
     }
-
+    
     @Test
     @DisplayName("test getter and setter for latestVersion")
     void testGetterAndSetterForLatestVersion() {
@@ -93,7 +93,7 @@ class PromptMetaSummaryTest extends BasicRequestTest {
         summary.setLatestVersion("1.0.0");
         assertEquals("1.0.0", summary.getLatestVersion());
     }
-
+    
     @Test
     @DisplayName("test getter and setter for gmtModified")
     void testGetterAndSetterForGmtModified() {
@@ -101,7 +101,7 @@ class PromptMetaSummaryTest extends BasicRequestTest {
         summary.setGmtModified(1234567890L);
         assertEquals(1234567890L, summary.getGmtModified());
     }
-
+    
     @Test
     @DisplayName("test getter and setter for editingVersion")
     void testGetterAndSetterForEditingVersion() {
@@ -109,7 +109,7 @@ class PromptMetaSummaryTest extends BasicRequestTest {
         summary.setEditingVersion("draft-1.0");
         assertEquals("draft-1.0", summary.getEditingVersion());
     }
-
+    
     @Test
     @DisplayName("test getter and setter for reviewingVersion")
     void testGetterAndSetterForReviewingVersion() {
@@ -117,7 +117,7 @@ class PromptMetaSummaryTest extends BasicRequestTest {
         summary.setReviewingVersion("review-1.0");
         assertEquals("review-1.0", summary.getReviewingVersion());
     }
-
+    
     @Test
     @DisplayName("test getter and setter for onlineCnt")
     void testGetterAndSetterForOnlineCnt() {
@@ -125,7 +125,7 @@ class PromptMetaSummaryTest extends BasicRequestTest {
         summary.setOnlineCnt(5);
         assertEquals(5, summary.getOnlineCnt());
     }
-
+    
     @Test
     @DisplayName("test getter and setter for labels")
     void testGetterAndSetterForLabels() {
@@ -139,7 +139,7 @@ class PromptMetaSummaryTest extends BasicRequestTest {
         assertEquals("1.0.0", summary.getLabels().get("latest"));
         assertEquals("0.9.0", summary.getLabels().get("stable"));
     }
-
+    
     @Test
     @DisplayName("test serialize to json")
     void testSerializeToJson() {
@@ -148,7 +148,7 @@ class PromptMetaSummaryTest extends BasicRequestTest {
         summary.setLatestVersion("1.0.0");
         summary.setDescription("Test description");
         summary.setOnlineCnt(3);
-
+        
         String json = mapper.writeValueAsString(summary);
         assertNotNull(json);
         assertTrue(json.contains("\"promptKey\":\"testPrompt\""));
@@ -157,14 +157,14 @@ class PromptMetaSummaryTest extends BasicRequestTest {
         assertTrue(json.contains("\"onlineCnt\":3"));
         assertTrue(json.contains("\"schemaVersion\":1"));
     }
-
+    
     @Test
     @DisplayName("test deserialize from json")
     void testDeserializeFromJson() {
         String json = "{\"schemaVersion\":1,\"promptKey\":\"testPrompt\",\"description\":\"Test\","
-                + "\"bizTags\":[\"tag1\"],\"latestVersion\":\"1.0.0\",\"gmtModified\":1234567890,"
-                + "\"editingVersion\":\"draft\",\"reviewingVersion\":\"review\",\"onlineCnt\":2}";
-
+            + "\"bizTags\":[\"tag1\"],\"latestVersion\":\"1.0.0\",\"gmtModified\":1234567890,"
+            + "\"editingVersion\":\"draft\",\"reviewingVersion\":\"review\",\"onlineCnt\":2}";
+        
         PromptMetaSummary summary = mapper.readValue(json, PromptMetaSummary.class);
         assertNotNull(summary);
         assertEquals(1, summary.getSchemaVersion());

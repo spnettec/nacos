@@ -20,19 +20,29 @@ import com.alibaba.nacos.sys.env.EnvUtil;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedConstruction;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Constructor;
 import java.net.URISyntaxException;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.zip.Adler32;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -40,7 +50,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class DiskUtilsTest {
     
@@ -53,7 +67,8 @@ class DiskUtilsTest {
     @BeforeAll
     static void setup() throws IOException, URISyntaxException {
         testFile = DiskUtils.createTmpFile("nacostmp", ".ut");
-        testLineFile = new File(DiskUtilsTest.class.getClassLoader().getResource("line_iterator_test.txt").toURI());
+        testLineFile = new File(
+            DiskUtilsTest.class.getClassLoader().getResource("line_iterator_test.txt").toURI());
         openTestFile = new File(testLineFile.getParent(), "temp_open_file");
     }
     
@@ -157,12 +172,14 @@ class DiskUtilsTest {
     void testReadNonExistFile2() {
         File file = new File("non-path/non-exist");
         file.deleteOnExit();
-        assertEquals("", DiskUtils.readFile(file.getParentFile().getAbsolutePath(), file.getName()));
+        assertEquals("",
+            DiskUtils.readFile(file.getParentFile().getAbsolutePath(), file.getName()));
     }
     
     @Test
     void testReadFileWithIllegalPath() {
-        String path = testFile.getParentFile().getAbsolutePath() + "/../" + testFile.getParentFile().getName();
+        String path = testFile.getParentFile().getAbsolutePath() + "/../"
+            + testFile.getParentFile().getName();
         assertNull(DiskUtils.readFile(path, testFile.getName()));
     }
     
@@ -206,7 +223,8 @@ class DiskUtilsTest {
     
     @Test
     void testReadFileBytesWithIllegalPath() {
-        String path = testFile.getParentFile().getAbsolutePath() + "/../" + testFile.getParentFile().getName();
+        String path = testFile.getParentFile().getAbsolutePath() + "/../"
+            + testFile.getParentFile().getName();
         assertNull(DiskUtils.readFileBytes(path, testFile.getName()));
     }
     
@@ -219,7 +237,8 @@ class DiskUtilsTest {
     
     @Test
     void writeFile() {
-        assertTrue(DiskUtils.writeFile(testFile, "unit test".getBytes(StandardCharsets.UTF_8), false));
+        assertTrue(
+            DiskUtils.writeFile(testFile, "unit test".getBytes(StandardCharsets.UTF_8), false));
         assertEquals("unit test", DiskUtils.readFile(testFile));
     }
     
@@ -256,7 +275,8 @@ class DiskUtilsTest {
     
     @Test
     void testDeleteFileIllegalPath() {
-        String path = testFile.getParentFile().getAbsolutePath() + "/../" + testFile.getParentFile().getName();
+        String path = testFile.getParentFile().getAbsolutePath() + "/../"
+            + testFile.getParentFile().getName();
         assertFalse(DiskUtils.deleteFile(path, testFile.getName()));
     }
     
@@ -282,8 +302,10 @@ class DiskUtilsTest {
     
     @Test
     void testForceMkdir() throws IOException {
-        File dir = Paths.get(EnvUtil.getNacosTmpDir(), UUID.randomUUID().toString(), UUID.randomUUID().toString())
-                .toFile();
+        File dir = Paths
+            .get(EnvUtil.getNacosTmpDir(), UUID.randomUUID().toString(),
+                UUID.randomUUID().toString())
+            .toFile();
         DiskUtils.forceMkdir(dir);
         assertTrue(dir.exists());
         dir.deleteOnExit();
@@ -291,7 +313,8 @@ class DiskUtilsTest {
     
     @Test
     void testForceMkdirWithPath() throws IOException {
-        Path path = Paths.get(EnvUtil.getNacosTmpDir(), UUID.randomUUID().toString(), UUID.randomUUID().toString());
+        Path path = Paths.get(EnvUtil.getNacosTmpDir(), UUID.randomUUID().toString(),
+            UUID.randomUUID().toString());
         DiskUtils.forceMkdir(path.toString());
         File file = path.toFile();
         assertTrue(file.exists());
@@ -421,7 +444,8 @@ class DiskUtilsTest {
         // 测试磁盘满异常处理 - 模拟 IOException
         // 由于无法真正触发磁盘满，这里测试正常写入失败的返回值
         File invalidFile = new File("/non/existent/path/file.txt");
-        assertFalse(DiskUtils.writeFile(invalidFile, "test".getBytes(StandardCharsets.UTF_8), false));
+        assertFalse(
+            DiskUtils.writeFile(invalidFile, "test".getBytes(StandardCharsets.UTF_8), false));
     }
     
     @Test
@@ -453,7 +477,7 @@ class DiskUtilsTest {
             nonWritableDir.deleteOnExit();
         }
     }
-
+    
     @Test
     void testReadFileWithMultiByteUtf8AcrossChunkBoundary() throws IOException {
         // Reproduces the corruption that happens when a multi-byte UTF-8 character straddles the
@@ -485,10 +509,10 @@ class DiskUtilsTest {
         assertEquals((byte) 0xb8, encoded[4095]);
         assertEquals((byte) 0xad, encoded[4096]);
         Files.write(f.toPath(), encoded);
-
+        
         assertEquals(expected, DiskUtils.readFile(f));
     }
-
+    
     @Test
     void testReadFileWithSmallMultiByteUtf8Content() throws IOException {
         // Regression: small non-ASCII content that fits in a single 4096-byte chunk must continue
@@ -499,7 +523,7 @@ class DiskUtilsTest {
         Files.write(f.toPath(), content.getBytes(StandardCharsets.UTF_8));
         assertEquals(content, DiskUtils.readFile(f));
     }
-
+    
     @Test
     void testReadFileSequentialCallsAreIndependent() throws IOException {
         // Each readFile call must observe a clean decoder regardless of what the previous call
@@ -512,5 +536,109 @@ class DiskUtilsTest {
         assertEquals(first, DiskUtils.readFile(f));
         Files.write(f.toPath(), second.getBytes(StandardCharsets.UTF_8));
         assertEquals(second, DiskUtils.readFile(f));
+    }
+    
+    @Test
+    void testConstructor() {
+        new DiskUtils();
+    }
+    
+    @Test
+    void testWriteFileWithNoSpaceCnTriggersExit() throws Exception {
+        verifyDiskFullExit("设备上没有空间");
+    }
+    
+    @Test
+    void testWriteFileWithNoSpaceEnTriggersExit() throws Exception {
+        verifyDiskFullExit("No space left on device");
+    }
+    
+    @Test
+    void testWriteFileWithDiskQuotaCnTriggersExit() throws Exception {
+        verifyDiskFullExit("xx超出磁盘限额xx");
+    }
+    
+    @Test
+    void testWriteFileWithDiskQuotaEnTriggersExit() throws Exception {
+        verifyDiskFullExit("xx Disk quota exceeded xx");
+    }
+    
+    @Test
+    void testWriteFileWithIoExceptionWithoutMessage() throws Exception {
+        File targetFile = DiskUtils.createTmpFile(UUID.randomUUID().toString(), ".ut");
+        targetFile.deleteOnExit();
+        try (MockedConstruction<FileOutputStream> ignored =
+            Mockito.mockConstruction(FileOutputStream.class, (mock, ctx) -> {
+                FileChannel channel = mock(FileChannel.class);
+                when(mock.getChannel()).thenReturn(channel);
+                when(channel.write(any(ByteBuffer.class))).thenThrow(new IOException());
+            })) {
+            assertFalse(DiskUtils.writeFile(targetFile, new byte[] {1}, false));
+        }
+    }
+    
+    private void verifyDiskFullExit(String ioMessage) throws Exception {
+        File targetFile = DiskUtils.createTmpFile(UUID.randomUUID().toString(), ".ut");
+        targetFile.deleteOnExit();
+        Runtime runtimeMock = mock(Runtime.class);
+        try (MockedConstruction<FileOutputStream> ignored =
+            Mockito.mockConstruction(FileOutputStream.class, (mock, ctx) -> {
+                FileChannel channel = mock(FileChannel.class);
+                when(mock.getChannel()).thenReturn(channel);
+                when(channel.write(any(ByteBuffer.class)))
+                    .thenThrow(new IOException(ioMessage));
+            });
+            MockedStatic<Runtime> runtimeMocked = Mockito.mockStatic(Runtime.class)) {
+            runtimeMocked.when(Runtime::getRuntime).thenReturn(runtimeMock);
+            assertFalse(DiskUtils.writeFile(targetFile, new byte[] {1}, false));
+            verify(runtimeMock).exit(0);
+        }
+    }
+    
+    @Test
+    void testOpenFileRethrowsIoExceptionAsRuntimeException() {
+        try (MockedConstruction<File> ignored =
+            Mockito.mockConstruction(File.class, (mock, ctx) -> {
+                when(mock.exists()).thenReturn(false);
+                when(mock.mkdirs()).thenReturn(true);
+                when(mock.createNewFile()).thenThrow(new IOException("forced"));
+            })) {
+            assertThrows(RuntimeException.class,
+                () -> DiskUtils.openFile("nacos-tmp", "openFile-ioexception"));
+        }
+    }
+    
+    @Test
+    void testDecompressSkipsIllegalEntryName() throws IOException {
+        File zipFile = Files.createTempFile("nacos-sys-illegal-zip", ".zip").toFile();
+        zipFile.deleteOnExit();
+        try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFile))) {
+            ZipEntry illegal = new ZipEntry("../illegal.txt");
+            zos.putNextEntry(illegal);
+            zos.write("evil".getBytes(StandardCharsets.UTF_8));
+            zos.closeEntry();
+            ZipEntry safe = new ZipEntry("safe.txt");
+            zos.putNextEntry(safe);
+            zos.write("ok".getBytes(StandardCharsets.UTF_8));
+            zos.closeEntry();
+        }
+        File outDir = Files.createTempDirectory("nacos-sys-illegal-out").toFile();
+        outDir.deleteOnExit();
+        DiskUtils.decompress(zipFile.getAbsolutePath(), outDir.getAbsolutePath(), new Adler32());
+        assertFalse(new File(outDir.getParentFile(), "illegal.txt").exists());
+        assertTrue(new File(outDir, "safe.txt").exists());
+    }
+    
+    @Test
+    void testLineIteratorRemoveDelegatesToTarget() throws Exception {
+        org.apache.commons.io.LineIterator targetMock =
+            mock(org.apache.commons.io.LineIterator.class);
+        doNothing().when(targetMock).remove();
+        Constructor<DiskUtils.LineIterator> ctor = DiskUtils.LineIterator.class
+            .getDeclaredConstructor(org.apache.commons.io.LineIterator.class);
+        ctor.setAccessible(true);
+        DiskUtils.LineIterator iterator = ctor.newInstance(targetMock);
+        iterator.remove();
+        verify(targetMock).remove();
     }
 }

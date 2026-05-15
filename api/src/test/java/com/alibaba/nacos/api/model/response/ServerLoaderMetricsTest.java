@@ -47,7 +47,8 @@ class ServerLoaderMetricsTest {
         metrics.put("conCount", "100");
         metrics.put("cpu", "100");
         metrics.put("load", "1");
-        ServerLoaderMetric metric = ServerLoaderMetric.Builder.newBuilder().withAddress("127.0.0.1:8848")
+        ServerLoaderMetric metric =
+            ServerLoaderMetric.Builder.newBuilder().withAddress("127.0.0.1:8848")
                 .convertFromMap(metrics).build();
         serverLoaderMetrics.setDetail(Collections.singletonList(metric));
         serverLoaderMetrics.setMemberCount(1);
@@ -81,7 +82,8 @@ class ServerLoaderMetricsTest {
     
     @Test
     void testDeserialize() throws IOException {
-        String jsonString = "{\"detail\":[{\"address\":\"127.0.0.1:8848\",\"sdkConCount\":0,\"conCount\":100,"
+        String jsonString =
+            "{\"detail\":[{\"address\":\"127.0.0.1:8848\",\"sdkConCount\":0,\"conCount\":100,"
                 + "\"load\":\"1\",\"cpu\":\"100\"}],\"memberCount\":1,\"metricsCount\":1,\"completed\":true,"
                 + "\"max\":100,\"min\":100,\"avg\":100,\"threshold\":\"110.00000000000001\",\"total\":100}";
         ServerLoaderMetrics metricsInfo1 = mapper.readValue(jsonString, ServerLoaderMetrics.class);
@@ -93,12 +95,15 @@ class ServerLoaderMetricsTest {
         assertEquals(serverLoaderMetrics.getAvg(), metricsInfo1.getAvg());
         assertEquals(serverLoaderMetrics.getThreshold(), metricsInfo1.getThreshold());
         assertEquals(serverLoaderMetrics.getTotal(), metricsInfo1.getTotal());
-        assertEquals(serverLoaderMetrics.getDetail().get(0).getAddress(), metricsInfo1.getDetail().get(0).getAddress());
+        assertEquals(serverLoaderMetrics.getDetail().get(0).getAddress(),
+            metricsInfo1.getDetail().get(0).getAddress());
         assertEquals(serverLoaderMetrics.getDetail().get(0).getConCount(),
-                metricsInfo1.getDetail().get(0).getConCount());
+            metricsInfo1.getDetail().get(0).getConCount());
         assertEquals(serverLoaderMetrics.getDetail().get(0).getSdkConCount(),
-                metricsInfo1.getDetail().get(0).getSdkConCount());
-        assertEquals(serverLoaderMetrics.getDetail().get(0).getCpu(), metricsInfo1.getDetail().get(0).getCpu());
-        assertEquals(serverLoaderMetrics.getDetail().get(0).getLoad(), metricsInfo1.getDetail().get(0).getLoad());
+            metricsInfo1.getDetail().get(0).getSdkConCount());
+        assertEquals(serverLoaderMetrics.getDetail().get(0).getCpu(),
+            metricsInfo1.getDetail().get(0).getCpu());
+        assertEquals(serverLoaderMetrics.getDetail().get(0).getLoad(),
+            metricsInfo1.getDetail().get(0).getLoad());
     }
 }

@@ -51,7 +51,8 @@ class NamingFuzzyWatchChangeNotifyResponseTest {
     @Test
     void testDeserialize() throws JacksonException {
         String json = "{\"resultCode\":200,\"errorCode\":0,\"success\":true}";
-        NamingFuzzyWatchChangeNotifyResponse response = mapper.readValue(json, NamingFuzzyWatchChangeNotifyResponse.class);
+        NamingFuzzyWatchChangeNotifyResponse response =
+            mapper.readValue(json, NamingFuzzyWatchChangeNotifyResponse.class);
         assertTrue(response.isSuccess());
     }
 }

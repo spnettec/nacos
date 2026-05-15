@@ -17,8 +17,8 @@
 package com.alibaba.nacos.api.ai.model.a2a;
 
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
-import org.junit.jupiter.api.Test;
 import tools.jackson.core.JacksonException;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.List;
@@ -62,7 +62,8 @@ class AgentSkillTest extends BasicRequestTest {
     
     @Test
     void testDeserialize() throws JacksonException {
-        String json = "{\"id\":\"skill-1\",\"name\":\"test skill\",\"description\":\"test description\","
+        String json =
+            "{\"id\":\"skill-1\",\"name\":\"test skill\",\"description\":\"test description\","
                 + "\"tags\":[\"tag1\",\"tag2\"],\"examples\":[\"example1\",\"example2\"],"
                 + "\"inputModes\":[\"text\",\"voice\"],\"outputModes\":[\"text\",\"image\"]}";
         

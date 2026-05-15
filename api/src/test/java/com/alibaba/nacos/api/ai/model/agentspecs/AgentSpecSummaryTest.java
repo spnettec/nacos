@@ -19,6 +19,7 @@ package com.alibaba.nacos.api.ai.model.agentspecs;
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -143,7 +144,7 @@ class AgentSpecSummaryTest extends BasicRequestTest {
 
     @Test
     @DisplayName("test serialize to json")
-    void testSerializeToJson() {
+    void testSerializeToJson() throws JacksonException {
         AgentSpecSummary summary = new AgentSpecSummary();
         summary.setNamespaceId("public");
         summary.setName("testAgentSpec");
@@ -162,8 +163,9 @@ class AgentSpecSummaryTest extends BasicRequestTest {
 
     @Test
     @DisplayName("test deserialize from json")
-    void testDeserializeFromJson() {
-        String json = "{\"namespaceId\":\"public\",\"name\":\"testAgentSpec\",\"description\":\"Test\","
+    void testDeserializeFromJson() throws JacksonException {
+        String json =
+            "{\"namespaceId\":\"public\",\"name\":\"testAgentSpec\",\"description\":\"Test\","
                 + "\"enable\":true,\"bizTags\":\"[\\\"tag1\\\"]\",\"from\":\"local\","
                 + "\"scope\":\"PUBLIC\",\"onlineCnt\":2,\"downloadCount\":100}";
 

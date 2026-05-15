@@ -27,7 +27,7 @@ public class UuidUtils {
     private static final Sequence SEQUENCE = new Sequence();
     private UuidUtils() {
     }
-
+    
     public static String generateUuid() {
         return UUID.randomUUID().toString();
     }

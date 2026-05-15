@@ -37,34 +37,38 @@ import jakarta.servlet.http.HttpServletRequest;
  * @date 2023/1/13 12:48
  */
 public class AbstractAuthenticationManager implements IAuthenticationManager {
-
-    private static final String USER_NOT_FOUND_MESSAGE = "User not found! Please check user exist or password is right!";
-
+    
+    private static final String USER_NOT_FOUND_MESSAGE =
+        "User not found! Please check user exist or password is right!";
+    
     protected NacosUserService userDetailsService;
-
+    
     protected TokenManagerDelegate jwtTokenManager;
-
+    
     protected NacosRoleService roleService;
-
-    public AbstractAuthenticationManager(NacosUserService userDetailsService, TokenManagerDelegate jwtTokenManager,
-            NacosRoleService roleService) {
+    
+    public AbstractAuthenticationManager(NacosUserService userDetailsService,
+        TokenManagerDelegate jwtTokenManager,
+        NacosRoleService roleService) {
         this.userDetailsService = userDetailsService;
         this.jwtTokenManager = jwtTokenManager;
         this.roleService = roleService;
     }
-
+    
     @Override
     public NacosUser authenticate(String username, String rawPassword) throws AccessException {
         if (StringUtils.isBlank(username) || StringUtils.isBlank(rawPassword)) {
             throw new AccessException(USER_NOT_FOUND_MESSAGE);
         }
-        NacosUserDetails nacosUserDetails = (NacosUserDetails) userDetailsService.loadUserByUsername(username);
-        if (nacosUserDetails == null || !PasswordEncoderUtil.matches(rawPassword, nacosUserDetails.getPassword())) {
+        NacosUserDetails nacosUserDetails =
+            (NacosUserDetails) userDetailsService.loadUserByUsername(username);
+        if (nacosUserDetails == null
+            || !PasswordEncoderUtil.matches(rawPassword, nacosUserDetails.getPassword())) {
             throw new AccessException(USER_NOT_FOUND_MESSAGE);
         }
         return new NacosUser(nacosUserDetails.getUsername(), jwtTokenManager.createToken(username));
     }
-
+    
     @Override
     public NacosUser authenticate(String token) throws AccessException {
         if (StringUtils.isBlank(token)) {
@@ -72,11 +76,11 @@ public class AbstractAuthenticationManager implements IAuthenticationManager {
         }
         return jwtTokenManager.parseToken(token);
     }
-
+    
     @Override
     public NacosUser authenticate(HttpServletRequest httpServletRequest) throws AccessException {
         String token = resolveToken(httpServletRequest);
-
+        
         NacosUser user;
         if (StringUtils.isNotBlank(token)) {
             user = authenticate(token);
@@ -85,10 +89,10 @@ public class AbstractAuthenticationManager implements IAuthenticationManager {
             String password = httpServletRequest.getParameter(AuthConstants.PARAM_PASSWORD);
             user = authenticate(userName, password);
         }
-
+        
         return user;
     }
-
+    
     @Override
     public void authorize(Permission permission, NacosUser nacosUser) throws AccessException {
         if (Loggers.AUTH.isDebugEnabled()) {
@@ -100,32 +104,33 @@ public class AbstractAuthenticationManager implements IAuthenticationManager {
         if (hasGlobalAdminRole(nacosUser)) {
             return;
         }
-
+        
         if (!roleService.hasPermission(nacosUser, permission)) {
             throw new AccessException("authorization failed!");
         }
     }
-
+    
     private String resolveToken(HttpServletRequest request) {
         String bearerToken = request.getHeader(AuthConstants.AUTHORIZATION_HEADER);
-        if (StringUtils.isNotBlank(bearerToken) && bearerToken.startsWith(AuthConstants.TOKEN_PREFIX)) {
+        if (StringUtils.isNotBlank(bearerToken)
+            && bearerToken.startsWith(AuthConstants.TOKEN_PREFIX)) {
             return bearerToken.substring(AuthConstants.TOKEN_PREFIX.length());
         }
         bearerToken = request.getParameter(Constants.ACCESS_TOKEN);
-
+        
         return bearerToken;
     }
-
+    
     @Override
     public boolean hasGlobalAdminRole(String username) {
         return roleService.hasGlobalAdminRole(username);
     }
-
+    
     @Override
     public boolean hasGlobalAdminRole() {
         return roleService.hasGlobalAdminRole();
     }
-
+    
     @Override
     public boolean hasGlobalAdminRole(NacosUser nacosUser) {
         if (nacosUser.isGlobalAdmin()) {

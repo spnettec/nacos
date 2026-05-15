@@ -47,15 +47,19 @@ class McpRegistryServerListTest extends BasicRequestTest {
     @Test
     void testDeserialize() throws JacksonException {
         // Test with new camelCase format (primary)
-        String jsonCamelCase = "{\"servers\":[],\"metadata\":{\"nextCursor\":\"next\",\"count\":1}}";
-        McpRegistryServerList result1 = mapper.readValue(jsonCamelCase, McpRegistryServerList.class);
+        String jsonCamelCase =
+            "{\"servers\":[],\"metadata\":{\"nextCursor\":\"next\",\"count\":1}}";
+        McpRegistryServerList result1 =
+            mapper.readValue(jsonCamelCase, McpRegistryServerList.class);
         assertEquals(0, result1.getServers().size());
         assertEquals(1, result1.getMetadata().getCount());
         assertEquals("next", result1.getMetadata().getNextCursor());
         
         // Test with old snake_case format (backward compatibility)
-        String jsonSnakeCase = "{\"servers\":[],\"metadata\":{\"next_cursor\":\"next\",\"count\":1}}";
-        McpRegistryServerList result2 = mapper.readValue(jsonSnakeCase, McpRegistryServerList.class);
+        String jsonSnakeCase =
+            "{\"servers\":[],\"metadata\":{\"next_cursor\":\"next\",\"count\":1}}";
+        McpRegistryServerList result2 =
+            mapper.readValue(jsonSnakeCase, McpRegistryServerList.class);
         assertEquals(0, result2.getServers().size());
         assertEquals(1, result2.getMetadata().getCount());
         assertEquals("next", result2.getMetadata().getNextCursor());
@@ -88,9 +92,9 @@ class McpRegistryServerListTest extends BasicRequestTest {
     @Test
     void testDeserializeWithMultipleServers() throws JacksonException {
         String json = "{\"servers\":["
-                + "{\"server\":{\"name\":\"Server1\",\"version\":\"1.0.0\"}},"
-                + "{\"server\":{\"name\":\"Server2\",\"version\":\"2.0.0\"}}"
-                + "],\"metadata\":{\"nextCursor\":\"cursor2\",\"count\":2}}";
+            + "{\"server\":{\"name\":\"Server1\",\"version\":\"1.0.0\"}},"
+            + "{\"server\":{\"name\":\"Server2\",\"version\":\"2.0.0\"}}"
+            + "],\"metadata\":{\"nextCursor\":\"cursor2\",\"count\":2}}";
         
         McpRegistryServerList list = mapper.readValue(json, McpRegistryServerList.class);
         
@@ -103,7 +107,8 @@ class McpRegistryServerListTest extends BasicRequestTest {
     
     @Test
     void testMetadataConstructor() throws JacksonException {
-        McpRegistryServerList.Metadata metadata = new McpRegistryServerList.Metadata("test_cursor", 5);
+        McpRegistryServerList.Metadata metadata =
+            new McpRegistryServerList.Metadata("test_cursor", 5);
         
         assertEquals("test_cursor", metadata.getNextCursor());
         assertEquals(5, metadata.getCount());
@@ -140,7 +145,8 @@ class McpRegistryServerListTest extends BasicRequestTest {
     @Test
     void testBackwardCompatibilitySnakeCaseAlias() throws JacksonException {
         // Ensure @JsonAlias works for next_cursor -> nextCursor
-        String jsonSnakeCase = "{\"servers\":[],\"metadata\":{\"next_cursor\":\"pagination_cursor\",\"count\":10}}";
+        String jsonSnakeCase =
+            "{\"servers\":[],\"metadata\":{\"next_cursor\":\"pagination_cursor\",\"count\":10}}";
         McpRegistryServerList list = mapper.readValue(jsonSnakeCase, McpRegistryServerList.class);
         
         assertEquals("pagination_cursor", list.getMetadata().getNextCursor());

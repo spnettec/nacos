@@ -42,14 +42,16 @@ class BatchInstanceResponseTest {
     
     @Test
     void testSerialize() throws JacksonException {
-        BatchInstanceResponse response = new BatchInstanceResponse(NamingRemoteConstants.REGISTER_INSTANCE);
+        BatchInstanceResponse response =
+            new BatchInstanceResponse(NamingRemoteConstants.REGISTER_INSTANCE);
         String json = mapper.writeValueAsString(response);
         assertTrue(json.contains("\"type\":\"" + NamingRemoteConstants.REGISTER_INSTANCE + "\""));
     }
     
     @Test
     void testDeserialize() throws JacksonException {
-        String json = "{\"resultCode\":200,\"errorCode\":0,\"type\":\"registerInstance\",\"success\":true}";
+        String json =
+            "{\"resultCode\":200,\"errorCode\":0,\"type\":\"registerInstance\",\"success\":true}";
         BatchInstanceResponse response = mapper.readValue(json, BatchInstanceResponse.class);
         assertEquals(NamingRemoteConstants.REGISTER_INSTANCE, response.getType());
     }

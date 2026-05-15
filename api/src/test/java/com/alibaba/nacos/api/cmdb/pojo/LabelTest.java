@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class LabelTest {
     
-    ObjectMapper mapper;
+    ObjectMapper mapper = new ObjectMapper();
     
     @BeforeEach
     void setUp() throws Exception {
@@ -57,7 +57,8 @@ class LabelTest {
     
     @Test
     void testDeserialization() throws JacksonException {
-        String json = "{\"values\":[\"test-value\"],\"name\":\"test-label\",\"description\":\"CMDB description\"}";
+        String json =
+            "{\"values\":[\"test-value\"],\"name\":\"test-label\",\"description\":\"CMDB description\"}";
         Label label = mapper.readValue(json, Label.class);
         assertEquals("test-label", label.getName());
         assertEquals("CMDB description", label.getDescription());

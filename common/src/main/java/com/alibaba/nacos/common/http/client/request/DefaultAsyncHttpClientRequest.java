@@ -41,52 +41,57 @@ import java.net.URI;
  * @author mai.jh
  */
 public class DefaultAsyncHttpClientRequest implements AsyncHttpClientRequest {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultAsyncHttpClientRequest.class);
-
+    
+    private static final Logger LOGGER =
+        LoggerFactory.getLogger(DefaultAsyncHttpClientRequest.class);
+    
     private final CloseableHttpAsyncClient asyncClient;
-
+    
     private final RequestConfig defaultConfig;
-
-    public DefaultAsyncHttpClientRequest(CloseableHttpAsyncClient asyncClient, DefaultConnectingIOReactor ioReactor, RequestConfig defaultConfig) {
+    
+    public DefaultAsyncHttpClientRequest(CloseableHttpAsyncClient asyncClient,
+        DefaultConnectingIOReactor ioReactor, RequestConfig defaultConfig) {
         this.asyncClient = asyncClient;
         this.defaultConfig = defaultConfig;
         if (this.asyncClient.getStatus() != IOReactorStatus.ACTIVE) {
             this.asyncClient.start();
         }
     }
-
+    
     @Override
     public <T> void execute(URI uri, String httpMethod, RequestHttpEntity requestHttpEntity,
-            final ResponseHandler<T> responseHandler, final Callback<T> callback) throws Exception {
-        HttpUriRequestBase httpRequestBase = DefaultHttpClientRequest.build(uri, httpMethod, requestHttpEntity, defaultConfig);
+        final ResponseHandler<T> responseHandler, final Callback<T> callback) throws Exception {
+        HttpUriRequestBase httpRequestBase =
+            DefaultHttpClientRequest.build(uri, httpMethod, requestHttpEntity, defaultConfig);
         // IllegalStateException has been removed from ver.5.0, should catch it in DefaultConnectingIOReactor callback
-        FutureCallback<SimpleHttpResponse> futureCallback = new FutureCallback<SimpleHttpResponse>() {
-            @Override
-            public void completed(SimpleHttpResponse result) {
-                // SimpleHttpResponse doesn't need to close
-                DefaultClientHttpResponse response = new DefaultClientHttpResponse(result);
-                try {
-                    HttpRestResult<T> httpRestResult = responseHandler.handle(response);
-                    callback.onReceive(httpRestResult);
-                } catch (Exception e) {
-                    callback.onError(e);
+        FutureCallback<SimpleHttpResponse> futureCallback =
+            new FutureCallback<SimpleHttpResponse>() {
+
+                @Override
+                public void completed(SimpleHttpResponse result) {
+                    // SimpleHttpResponse doesn't need to close
+                    DefaultClientHttpResponse response = new DefaultClientHttpResponse(result);
+                    try {
+                        HttpRestResult<T> httpRestResult = responseHandler.handle(response);
+                        callback.onReceive(httpRestResult);
+                    } catch (Exception e) {
+                        callback.onError(e);
+                    }
                 }
-            }
 
-            @Override
-            public void failed(Exception ex) {
-                callback.onError(ex);
-            }
+                @Override
+                public void failed(Exception ex) {
+                    callback.onError(ex);
+                }
 
-            @Override
-            public void cancelled() {
-                callback.onCancel();
-            }
-        };
+                @Override
+                public void cancelled() {
+                    callback.onCancel();
+                }
+            };
         asyncClient.execute(SimpleHttpRequest.copy(httpRequestBase), futureCallback);
     }
-
+    
     @Override
     public void close() throws IOException {
         this.asyncClient.close();

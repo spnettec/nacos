@@ -17,8 +17,8 @@
 package com.alibaba.nacos.api.ai.model.a2a;
 
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
-import org.junit.jupiter.api.Test;
 import tools.jackson.core.JacksonException;
+import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -45,7 +45,8 @@ class AgentVersionDetailTest extends BasicRequestTest {
     
     @Test
     void testDeserialize() throws JacksonException {
-        String json = "{\"version\":\"1.0.0\",\"createdAt\":\"2023-01-01T00:00:00Z\",\"updatedAt\":\"2023-01-02T00:00:00Z\",\"latest\":true}";
+        String json =
+            "{\"version\":\"1.0.0\",\"createdAt\":\"2023-01-01T00:00:00Z\",\"updatedAt\":\"2023-01-02T00:00:00Z\",\"latest\":true}";
         
         AgentVersionDetail agentVersionDetail = mapper.readValue(json, AgentVersionDetail.class);
         assertNotNull(agentVersionDetail);

@@ -52,8 +52,8 @@ class ClientAbilitiesTest {
     @Test
     void testDeserialize() throws JacksonException {
         String json = "{\"remoteAbility\":{\"supportRemoteConnection\":false},"
-                + "\"configAbility\":{\"supportRemoteMetrics\":false},\"namingAbility\":{\"supportDeltaPush\":false,"
-                + "\"supportRemoteMetric\":false}}";
+            + "\"configAbility\":{\"supportRemoteMetrics\":false},\"namingAbility\":{\"supportDeltaPush\":false,"
+            + "\"supportRemoteMetric\":false}}";
         ClientAbilities abilities = mapper.readValue(json, ClientAbilities.class);
         assertNotNull(abilities.getRemoteAbility());
         assertNotNull(abilities.getNamingAbility());

@@ -19,6 +19,7 @@ package com.alibaba.nacos.api.ai.model.prompt;
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -185,7 +186,7 @@ class PromptTest extends BasicRequestTest {
 
     @Test
     @DisplayName("test serialize prompt to json")
-    void testSerializePromptToJson() {
+    void testSerializePromptToJson() throws JacksonException {
         Prompt prompt = new Prompt("testKey", "1.0.0", "Hello {{name}}!");
         prompt.setMd5("abc123");
         List<PromptVariable> variables = new ArrayList<>();
@@ -203,8 +204,9 @@ class PromptTest extends BasicRequestTest {
 
     @Test
     @DisplayName("test deserialize prompt from json")
-    void testDeserializePromptFromJson() {
-        String json = "{\"promptKey\":\"testKey\",\"version\":\"1.0.0\",\"template\":\"Hello {{name}}!\",\"md5\":\"abc123\"}";
+    void testDeserializePromptFromJson() throws JacksonException {
+        String json =
+            "{\"promptKey\":\"testKey\",\"version\":\"1.0.0\",\"template\":\"Hello {{name}}!\",\"md5\":\"abc123\"}";
 
         Prompt prompt = mapper.readValue(json, Prompt.class);
         assertNotNull(prompt);

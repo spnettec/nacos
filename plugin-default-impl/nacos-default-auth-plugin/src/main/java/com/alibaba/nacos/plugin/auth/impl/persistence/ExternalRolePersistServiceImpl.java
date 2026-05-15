@@ -41,36 +41,36 @@ import static com.alibaba.nacos.plugin.auth.impl.persistence.AuthRowMapperManage
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>
  */
 public class ExternalRolePersistServiceImpl implements RolePersistService {
-
+    
     private static final Logger LOGGER = LoggerFactory.getLogger("com.alibaba.nacos.persistence");
-
+    
     private JdbcTemplate jt;
-
+    
     private String dataSourceType = "";
-
+    
     private static final String PATTERN_STR = "*";
-
+    
     @PostConstruct
     protected void init() {
         DataSourceService dataSource = DynamicDataSource.getInstance().getDataSource();
         jt = dataSource.getJdbcTemplate();
         dataSourceType = dataSource.getDataSourceType();
     }
-
+    
     @Override
     public Page<RoleInfo> getRoles(int pageNo, int pageSize) {
-
+        
         AuthPaginationHelper<RoleInfo> helper = createPaginationHelper();
-
+        
         String sqlCountRows = "SELECT count(*) FROM (SELECT DISTINCT role FROM roles) roles WHERE ";
-
+        
         String sqlFetchRows = "SELECT role,username FROM roles WHERE ";
-
+        
         String where = " 1=1 ";
-
+        
         try {
             Page<RoleInfo> pageInfo = helper.fetchPage(sqlCountRows + where, sqlFetchRows + where,
-                    new ArrayList<String>().toArray(), pageNo, pageSize, ROLE_INFO_ROW_MAPPER);
+                new ArrayList<String>().toArray(), pageNo, pageSize, ROLE_INFO_ROW_MAPPER);
             if (pageInfo == null) {
                 pageInfo = new Page<>();
                 pageInfo.setTotalCount(0);
@@ -82,16 +82,17 @@ public class ExternalRolePersistServiceImpl implements RolePersistService {
             throw e;
         }
     }
-
+    
     @Override
-    public Page<RoleInfo> getRolesByUserNameAndRoleName(String username, String role, int pageNo, int pageSize) {
-
+    public Page<RoleInfo> getRolesByUserNameAndRoleName(String username, String role, int pageNo,
+        int pageSize) {
+        
         AuthPaginationHelper<RoleInfo> helper = createPaginationHelper();
-
+        
         String sqlCountRows = "SELECT count(*) FROM roles ";
-
+        
         String sqlFetchRows = "SELECT role,username FROM roles ";
-
+        
         StringBuilder where = new StringBuilder(" WHERE 1 = 1 ");
         List<String> params = new ArrayList<>();
         if (StringUtils.isNotBlank(username)) {
@@ -102,16 +103,17 @@ public class ExternalRolePersistServiceImpl implements RolePersistService {
             where.append(" AND role = ? ");
             params.add(role);
         }
-
+        
         try {
-            return helper.fetchPage(sqlCountRows + where, sqlFetchRows + where, params.toArray(), pageNo, pageSize,
-                    ROLE_INFO_ROW_MAPPER);
+            return helper.fetchPage(sqlCountRows + where, sqlFetchRows + where, params.toArray(),
+                pageNo, pageSize,
+                ROLE_INFO_ROW_MAPPER);
         } catch (CannotGetJdbcConnectionException e) {
             LOGGER.error("[db-error] " + e.toString(), e);
             throw e;
         }
     }
-
+    
     /**
      * Execute add role operation.
      *
@@ -120,9 +122,9 @@ public class ExternalRolePersistServiceImpl implements RolePersistService {
      */
     @Override
     public void addRole(String role, String userName) {
-
+        
         String sql = "INSERT INTO roles (role, username) VALUES (?, ?)";
-
+        
         try {
             jt.update(sql, role, userName);
         } catch (CannotGetJdbcConnectionException e) {
@@ -130,7 +132,7 @@ public class ExternalRolePersistServiceImpl implements RolePersistService {
             throw e;
         }
     }
-
+    
     /**
      * Execute delete role operation.
      *
@@ -146,7 +148,7 @@ public class ExternalRolePersistServiceImpl implements RolePersistService {
             throw e;
         }
     }
-
+    
     /**
      * Execute delete role operation.
      *
@@ -163,14 +165,15 @@ public class ExternalRolePersistServiceImpl implements RolePersistService {
             throw e;
         }
     }
-
+    
     @Override
     public List<String> findRolesLikeRoleName(String role) {
         String sql = "SELECT role FROM roles WHERE role LIKE ?";
-        List<String> users = this.jt.queryForList(sql, new String[] {String.format("%%%s%%", role)}, String.class);
+        List<String> users =
+            this.jt.queryForList(sql, new String[] {String.format("%%%s%%", role)}, String.class);
         return users;
     }
-
+    
     @Override
     public String generateLikeArgument(String s) {
         String underscore = "_";
@@ -185,14 +188,15 @@ public class ExternalRolePersistServiceImpl implements RolePersistService {
             return s;
         }
     }
-
+    
     @Override
-    public Page<RoleInfo> findRolesLike4Page(String username, String role, int pageNo, int pageSize) {
+    public Page<RoleInfo> findRolesLike4Page(String username, String role, int pageNo,
+        int pageSize) {
         String sqlCountRows = "SELECT count(*) FROM roles";
         String sqlFetchRows = "SELECT role, username FROM roles";
         StringBuilder where = new StringBuilder(" WHERE 1 = 1 ");
         List<String> params = new ArrayList<>();
-
+        
         if (StringUtils.isNotBlank(username)) {
             where.append(" AND username LIKE ? ");
             params.add(generateLikeArgument(username));
@@ -201,24 +205,25 @@ public class ExternalRolePersistServiceImpl implements RolePersistService {
             where.append(" AND role LIKE ? ");
             params.add(generateLikeArgument(role));
         }
-
+        
         AuthPaginationHelper<RoleInfo> helper = createPaginationHelper();
         try {
-            return helper.fetchPage(sqlCountRows + where, sqlFetchRows + where, params.toArray(), pageNo, pageSize,
-                    ROLE_INFO_ROW_MAPPER);
+            return helper.fetchPage(sqlCountRows + where, sqlFetchRows + where, params.toArray(),
+                pageNo, pageSize,
+                ROLE_INFO_ROW_MAPPER);
         } catch (CannotGetJdbcConnectionException e) {
             LOGGER.error("[db-error] " + e.toString(), e);
             throw e;
         }
     }
-
+    
     @Override
     public <E> AuthPaginationHelper<E> createPaginationHelper() {
         return new AuthExternalPaginationHelperImpl<>(jt, dataSourceType);
     }
-
+    
     private static final class RoleInfoRowMapper implements RowMapper<RoleInfo> {
-
+        
         @Override
         public RoleInfo mapRow(ResultSet rs, int rowNum) throws SQLException {
             RoleInfo roleInfo = new RoleInfo();

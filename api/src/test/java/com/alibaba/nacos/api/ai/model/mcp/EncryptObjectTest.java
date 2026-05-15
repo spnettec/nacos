@@ -48,7 +48,8 @@ class EncryptObjectTest extends BasicRequestTest {
     
     @Test
     void testDeserialize() throws JacksonException {
-        String json = "{\"data\":\"encryptedData\",\"encryptInfo\":{\"alg\":\"AES\",\"iv\":\"initialVector\"}}";
+        String json =
+            "{\"data\":\"encryptedData\",\"encryptInfo\":{\"alg\":\"AES\",\"iv\":\"initialVector\"}}";
         
         EncryptObject result = mapper.readValue(json, EncryptObject.class);
         assertNotNull(result);

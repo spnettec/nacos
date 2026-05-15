@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class EntityEventTest {
     
-    ObjectMapper mapper;
+    ObjectMapper mapper = new ObjectMapper();
     
     @BeforeEach
     void setUp() throws Exception {
@@ -55,7 +55,8 @@ class EntityEventTest {
     
     @Test
     void testDeserialization() throws JacksonException {
-        String json = "{\"type\":\"ENTITY_REMOVE\",\"entityName\":\"test-entity\",\"entityType\":\"CMDB\"}";
+        String json =
+            "{\"type\":\"ENTITY_REMOVE\",\"entityName\":\"test-entity\",\"entityType\":\"CMDB\"}";
         EntityEvent entity = mapper.readValue(json, EntityEvent.class);
         assertEquals("test-entity", entity.getEntityName());
         assertEquals("CMDB", entity.getEntityType());

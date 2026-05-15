@@ -61,9 +61,9 @@ import static com.alibaba.nacos.common.constant.RequestUrlConstants.HTTP_PREFIX;
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>
  */
 public final class HttpUtils {
-
+    
     private static final Pattern CONTEXT_PATH_MATCH = Pattern.compile("(\\/)\\1+");
-
+    
     /**
      * Init http header.
      *
@@ -77,7 +77,7 @@ public final class HttpUtils {
             requestBase.setHeader(entry.getKey(), entry.getValue());
         }
     }
-
+    
     /**
      * Init http entity.
      *
@@ -86,25 +86,28 @@ public final class HttpUtils {
      * @param header      request header
      * @throws Exception exception
      */
-    public static void initRequestEntity(ClassicHttpRequest requestBase, Object body, Header header) throws Exception {
+    public static void initRequestEntity(ClassicHttpRequest requestBase, Object body, Header header)
+        throws Exception {
         if (body == null) {
             return;
         }
         if (requestBase instanceof HttpEntityContainer) {
             HttpEntityContainer request = requestBase;
             MediaType mediaType = MediaType.valueOf(header.getValue(HttpHeaderConsts.CONTENT_TYPE));
-            ContentType contentType = ContentType.create(mediaType.getType(), mediaType.getCharset());
+            ContentType contentType =
+                ContentType.create(mediaType.getType(), mediaType.getCharset());
             HttpEntity entity;
             if (body instanceof byte[]) {
                 entity = new ByteArrayEntity((byte[]) body, contentType);
             } else {
-                entity = new StringEntity(body instanceof String ? (String) body : JacksonUtils.toJson(body),
-                        contentType);
+                entity = new StringEntity(
+                    body instanceof String ? (String) body : JacksonUtils.toJson(body),
+                    contentType);
             }
             request.setEntity(entity);
         }
     }
-
+    
     /**
      * Init request from entity map.
      *
@@ -113,8 +116,9 @@ public final class HttpUtils {
      * @param charset     charset of entity
      * @throws Exception exception
      */
-    public static void initRequestFromEntity(ClassicHttpRequest requestBase, Map<String, String> body, String charset)
-            throws Exception {
+    public static void initRequestFromEntity(ClassicHttpRequest requestBase,
+        Map<String, String> body, String charset)
+        throws Exception {
         if (body == null || body.isEmpty()) {
             return;
         }
@@ -128,7 +132,7 @@ public final class HttpUtils {
             request.setEntity(entity);
         }
     }
-
+    
     /**
      * Build URL.
      *
@@ -171,7 +175,7 @@ public final class HttpUtils {
         }
         return sb.toString();
     }
-
+    
     /**
      * Translate parameter map.
      *
@@ -179,14 +183,15 @@ public final class HttpUtils {
      * @return parameter map
      * @throws Exception exception
      */
-    public static Map<String, String> translateParameterMap(Map<String, String[]> parameterMap) throws Exception {
+    public static Map<String, String> translateParameterMap(Map<String, String[]> parameterMap)
+        throws Exception {
         Map<String, String> map = new HashMap<>(16);
         for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
             map.put(entry.getKey(), entry.getValue()[0]);
         }
         return map;
     }
-
+    
     /**
      * Encoding parameters to url string.
      *
@@ -196,7 +201,7 @@ public final class HttpUtils {
      * @throws UnsupportedEncodingException if encoding string is illegal
      */
     public static String encodingParams(Map<String, String> params, String encoding)
-            throws UnsupportedEncodingException {
+        throws UnsupportedEncodingException {
         StringBuilder sb = new StringBuilder();
         if (null == params || params.isEmpty()) {
             return null;
@@ -205,15 +210,15 @@ public final class HttpUtils {
             if (StringUtils.isEmpty(entry.getValue())) {
                 continue;
             }
-
+            
             sb.append(entry.getKey()).append('=');
             sb.append(URLEncoder.encode(entry.getValue(), encoding));
             sb.append('&');
         }
-
+        
         return sb.toString();
     }
-
+    
     /**
      * Encoding KV list to url string.
      *
@@ -222,13 +227,14 @@ public final class HttpUtils {
      * @return url string
      * @throws UnsupportedEncodingException if encoding string is illegal
      */
-    public static String encodingParams(List<String> paramValues, String encoding) throws UnsupportedEncodingException {
+    public static String encodingParams(List<String> paramValues, String encoding)
+        throws UnsupportedEncodingException {
         StringBuilder sb = new StringBuilder();
         if (null == paramValues) {
             return null;
         }
-
-        for (Iterator<String> iter = paramValues.iterator(); iter.hasNext(); ) {
+        
+        for (Iterator<String> iter = paramValues.iterator(); iter.hasNext();) {
             sb.append(iter.next()).append('=');
             sb.append(URLEncoder.encode(iter.next(), encoding));
             if (iter.hasNext()) {
@@ -237,11 +243,11 @@ public final class HttpUtils {
         }
         return sb.toString();
     }
-
+    
     public static String decode(String str, String encode) throws UnsupportedEncodingException {
         return innerDecode(null, str, encode);
     }
-
+    
     /**
      * build URI By url and query.
      *
@@ -255,7 +261,7 @@ public final class HttpUtils {
         }
         return new URI(url);
     }
-
+    
     /**
      * HTTP request exception is a timeout exception.
      *
@@ -263,10 +269,12 @@ public final class HttpUtils {
      * @return boolean
      */
     public static boolean isTimeoutException(Throwable throwable) {
-        return throwable instanceof SocketTimeoutException || throwable instanceof ConnectTimeoutException
-                || throwable instanceof TimeoutException || throwable.getCause() instanceof TimeoutException;
+        return throwable instanceof SocketTimeoutException
+            || throwable instanceof ConnectTimeoutException
+            || throwable instanceof TimeoutException
+            || throwable.getCause() instanceof TimeoutException;
     }
-
+    
     /**
      * Build header.
      *
@@ -282,8 +290,9 @@ public final class HttpUtils {
         header.addParam(HttpHeaderConsts.REQUEST_MODULE, module);
         return header;
     }
-
-    private static String innerDecode(String pre, String now, String encode) throws UnsupportedEncodingException {
+    
+    private static String innerDecode(String pre, String now, String encode)
+        throws UnsupportedEncodingException {
         // Because the data may be encoded by the URL more than once,
         // it needs to be decoded recursively until it is fully successful
         if (StringUtils.equals(pre, now)) {
@@ -293,5 +302,5 @@ public final class HttpUtils {
         now = URLDecoder.decode(now, encode);
         return innerDecode(pre, now, encode);
     }
-
+    
 }

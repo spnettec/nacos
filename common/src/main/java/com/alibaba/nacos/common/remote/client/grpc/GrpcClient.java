@@ -79,28 +79,28 @@ import java.util.concurrent.TimeUnit;
  * @version $Id: GrpcClient.java, v 0.1 2020年07月13日 9:16 PM liuzunfei Exp $
  */
 public abstract class GrpcClient extends RpcClient {
-
+    
     private static final Logger LOGGER = LoggerFactory.getLogger(GrpcClient.class);
-
+    
     private final GrpcClientConfig clientConfig;
-
+    
     private ThreadPoolExecutor grpcExecutor;
-
+    
     /**
      * Block to wait setup success response.
      */
     private final RecAbilityContext recAbilityContext = new RecAbilityContext(null);
-
+    
     /**
      * for receiving server abilities.
      */
     private SetupRequestHandler setupRequestHandler;
-
+    
     @Override
     public ConnectionType getConnectionType() {
         return ConnectionType.GRPC;
     }
-
+    
     /**
      * constructor.
      *
@@ -109,7 +109,7 @@ public abstract class GrpcClient extends RpcClient {
     public GrpcClient(String name) {
         this(DefaultGrpcClientConfig.newBuilder().setName(name).build());
     }
-
+    
     /**
      * constructor.
      *
@@ -120,7 +120,7 @@ public abstract class GrpcClient extends RpcClient {
         this.clientConfig = clientConfig;
         initSetupHandler();
     }
-
+    
     /**
      * constructor.
      *
@@ -132,7 +132,7 @@ public abstract class GrpcClient extends RpcClient {
         this.clientConfig = clientConfig;
         initSetupHandler();
     }
-
+    
     /**
      * setup handler.
      */
@@ -140,7 +140,7 @@ public abstract class GrpcClient extends RpcClient {
         // register to handler setup request
         setupRequestHandler = new SetupRequestHandler(this.recAbilityContext);
     }
-
+    
     /**
      * constructor.
      *
@@ -149,29 +149,36 @@ public abstract class GrpcClient extends RpcClient {
      * @param threadPoolMaxSize  .
      * @param labels             .
      */
-    public GrpcClient(String name, Integer threadPoolCoreSize, Integer threadPoolMaxSize, Map<String, String> labels) {
-        this(DefaultGrpcClientConfig.newBuilder().setName(name).setThreadPoolCoreSize(threadPoolCoreSize)
-                .setThreadPoolMaxSize(threadPoolMaxSize).setLabels(labels).build());
+    public GrpcClient(String name, Integer threadPoolCoreSize, Integer threadPoolMaxSize,
+        Map<String, String> labels) {
+        this(DefaultGrpcClientConfig.newBuilder().setName(name)
+            .setThreadPoolCoreSize(threadPoolCoreSize)
+            .setThreadPoolMaxSize(threadPoolMaxSize).setLabels(labels).build());
     }
-
-    public GrpcClient(String name, Integer threadPoolCoreSize, Integer threadPoolMaxSize, Map<String, String> labels,
-            RpcClientTlsConfig tlsConfig) {
-        this(DefaultGrpcClientConfig.newBuilder().setName(name).setThreadPoolCoreSize(threadPoolCoreSize)
-                .setTlsConfig(tlsConfig).setThreadPoolMaxSize(threadPoolMaxSize).setLabels(labels).build());
+    
+    public GrpcClient(String name, Integer threadPoolCoreSize, Integer threadPoolMaxSize,
+        Map<String, String> labels,
+        RpcClientTlsConfig tlsConfig) {
+        this(DefaultGrpcClientConfig.newBuilder().setName(name)
+            .setThreadPoolCoreSize(threadPoolCoreSize)
+            .setTlsConfig(tlsConfig).setThreadPoolMaxSize(threadPoolMaxSize).setLabels(labels)
+            .build());
     }
-
+    
     protected ThreadPoolExecutor createGrpcExecutor(String serverIp) {
         // Thread name will use String.format, ipv6 maybe contain special word %, so handle it first.
         serverIp = serverIp.replaceAll("%", "-");
         ThreadPoolExecutor grpcExecutor = new ThreadPoolExecutor(clientConfig.threadPoolCoreSize(),
-                clientConfig.threadPoolMaxSize(), clientConfig.threadPoolKeepAlive(), TimeUnit.MILLISECONDS,
-                new LinkedBlockingQueue<>(clientConfig.threadPoolQueueSize()),
-                new ThreadFactoryBuilder().daemon(true).nameFormat("nacos-grpc-client-executor-" + serverIp + "-%d")
-                        .build());
+            clientConfig.threadPoolMaxSize(), clientConfig.threadPoolKeepAlive(),
+            TimeUnit.MILLISECONDS,
+            new LinkedBlockingQueue<>(clientConfig.threadPoolQueueSize()),
+            new ThreadFactoryBuilder().daemon(true)
+                .nameFormat("nacos-grpc-client-executor-" + serverIp + "-%d")
+                .build());
         grpcExecutor.allowCoreThreadTimeOut(clientConfig.allowCoreThreadTimeOut());
         return grpcExecutor;
     }
-
+    
     @Override
     public void shutdown() throws NacosException {
         super.shutdown();
@@ -180,17 +187,18 @@ public abstract class GrpcClient extends RpcClient {
             grpcExecutor.shutdown();
         }
     }
-
+    
     /**
      * Create a stub using a channel.
      *
      * @param managedChannelTemp channel.
      * @return if server check success,return a non-null stub.
      */
-    protected RequestGrpc.RequestFutureStub createNewChannelStub(ManagedChannel managedChannelTemp) {
+    protected RequestGrpc.RequestFutureStub createNewChannelStub(
+        ManagedChannel managedChannelTemp) {
         return RequestGrpc.newFutureStub(managedChannelTemp);
     }
-
+    
     /**
      * create a new channel with specific server address.
      *
@@ -199,23 +207,27 @@ public abstract class GrpcClient extends RpcClient {
      * @return if server check success,return a non-null channel.
      */
     private ManagedChannel createNewManagedChannel(String serverIp, int serverPort) {
-        LOGGER.info("grpc client connection server: {} ip, serverPort: {}, grpcTslConfig: {}", serverIp, serverPort,
-                JacksonUtils.toJson(clientConfig.tlsConfig()));
+        LOGGER.info("grpc client connection server: {} ip, serverPort: {}, grpcTslConfig: {}",
+            serverIp, serverPort,
+            JacksonUtils.toJson(clientConfig.tlsConfig()));
+
         try {
             InetAddress inet = InetAddress.getByName(serverIp);
             serverIp = inet.getHostAddress();
         } catch (UnknownHostException ignored) {
             LOGGER.error("invalid ip->{}", serverIp);
         }
-        ManagedChannelBuilder<?> managedChannelBuilder = buildChannel(serverIp, serverPort, buildSslContext())
-                .executor(grpcExecutor).compressorRegistry(CompressorRegistry.getDefaultInstance())
+
+        ManagedChannelBuilder<?> managedChannelBuilder =
+            buildChannel(serverIp, serverPort, buildSslContext()).executor(
+                grpcExecutor).compressorRegistry(CompressorRegistry.getDefaultInstance())
                 .decompressorRegistry(DecompressorRegistry.getDefaultInstance())
                 .maxInboundMessageSize(clientConfig.maxInboundMessageSize())
                 .keepAliveTime(clientConfig.channelKeepAlive(), TimeUnit.MILLISECONDS)
                 .keepAliveTimeout(clientConfig.channelKeepAliveTimeout(), TimeUnit.MILLISECONDS);
         return managedChannelBuilder.build();
     }
-
+    
     /**
      * shutdown a  channel.
      *
@@ -226,40 +238,47 @@ public abstract class GrpcClient extends RpcClient {
             managedChannel.shutdownNow();
         }
     }
-
+    
     /**
      * check server if success.
      *
      * @param requestBlockingStub requestBlockingStub used to check server.
      * @return success or not
      */
-    private Response serverCheck(String ip, int port, RequestGrpc.RequestFutureStub requestBlockingStub) {
+    private Response serverCheck(String ip, int port,
+        RequestGrpc.RequestFutureStub requestBlockingStub) {
         try {
             ServerCheckRequest serverCheckRequest = new ServerCheckRequest();
             Payload grpcRequest = GrpcUtils.convert(serverCheckRequest);
             ListenableFuture<Payload> responseFuture = requestBlockingStub.request(grpcRequest);
-            Payload response = responseFuture.get(clientConfig.serverCheckTimeOut(), TimeUnit.MILLISECONDS);
+            Payload response =
+                responseFuture.get(clientConfig.serverCheckTimeOut(), TimeUnit.MILLISECONDS);
             // receive connection unregister response here,not check response is success.
             return (Response) GrpcUtils.parse(response);
         } catch (Exception e) {
             LoggerUtils.printIfErrorEnabled(LOGGER,
-                    "Server check fail, please check server {}, port {} is available, error ={}", ip, port, e);
-            if (this.clientConfig != null && this.clientConfig.tlsConfig() != null && this.clientConfig.tlsConfig()
+                "Server check fail, please check server {}, port {} is available, error ={}", ip,
+                port, e);
+            if (this.clientConfig != null && this.clientConfig.tlsConfig() != null
+                && this.clientConfig.tlsConfig()
                     .getEnableTls()) {
                 LoggerUtils.printIfErrorEnabled(LOGGER,
-                        "current client is require tls encrypted, server must support tls ,please check");
+                    "current client is require tls encrypted, server must support tls ,please check");
             }
             return null;
         }
     }
-
-    private StreamObserver<Payload> bindRequestStream(final BiRequestStreamGrpc.BiRequestStreamStub streamStub,
-            final GrpcConnection grpcConn) {
+    
+    private StreamObserver<Payload> bindRequestStream(
+        final BiRequestStreamGrpc.BiRequestStreamStub streamStub,
+        final GrpcConnection grpcConn) {
         return streamStub.requestBiStream(new StreamObserver<Payload>() {
+
             @Override
             public void onNext(Payload payload) {
-                LoggerUtils.printIfDebugEnabled(LOGGER, "[{}]Stream server request receive, original info: {}",
-                        grpcConn.getConnectionId(), payload.toString());
+                LoggerUtils.printIfDebugEnabled(LOGGER,
+                    "[{}]Stream server request receive, original info: {}",
+                    grpcConn.getConnectionId(), payload.toString());
                 try {
                     Object parseBody = GrpcUtils.parse(payload);
                     final Request request = (Request) parseBody;
@@ -275,69 +294,79 @@ public abstract class GrpcClient extends RpcClient {
                                 response.setRequestId(request.getRequestId());
                                 sendResponse(response);
                             } else {
-                                LOGGER.warn("[{}]Fail to process server request, ackId->{}", grpcConn.getConnectionId(),
-                                        request.getRequestId());
+                                LOGGER.warn("[{}]Fail to process server request, ackId->{}",
+                                    grpcConn.getConnectionId(),
+                                    request.getRequestId());
                             }
                         } catch (Exception e) {
-                            LoggerUtils.printIfErrorEnabled(LOGGER, "[{}]Handle server request exception: {}",
-                                    grpcConn.getConnectionId(), payload.toString(), e.getMessage());
+                            LoggerUtils.printIfErrorEnabled(LOGGER,
+                                "[{}]Handle server request exception: {}",
+                                grpcConn.getConnectionId(), payload.toString(), e.getMessage());
                             Response errResponse = ErrorResponse.build(NacosException.CLIENT_ERROR,
-                                    "Handle server request error");
+                                "Handle server request error");
                             errResponse.setRequestId(request.getRequestId());
                             sendResponse(errResponse);
                         }
                     }
                 } catch (Exception e) {
-                    LoggerUtils.printIfErrorEnabled(LOGGER, "[{}]Error to process server push response: {}",
-                            grpcConn.getConnectionId(), payload.getBody().getValue().toStringUtf8());
+                    LoggerUtils.printIfErrorEnabled(LOGGER,
+                        "[{}]Error to process server push response: {}",
+                        grpcConn.getConnectionId(), payload.getBody().getValue().toStringUtf8());
                     // remove and notify
                     recAbilityContext.release(null);
                 }
             }
-
+            
             @Override
             public void onError(Throwable throwable) {
                 boolean isRunning = isRunning();
                 boolean isAbandon = grpcConn.isAbandon();
                 if (isRunning && !isAbandon) {
-                    LoggerUtils.printIfErrorEnabled(LOGGER, "[{}]Request stream error, switch server,error={}",
-                            grpcConn.getConnectionId(), throwable);
-                    if (rpcClientStatus.compareAndSet(RpcClientStatus.RUNNING, RpcClientStatus.UNHEALTHY)) {
+                    LoggerUtils.printIfErrorEnabled(LOGGER,
+                        "[{}]Request stream error, switch server,error={}",
+                        grpcConn.getConnectionId(), throwable);
+                    if (rpcClientStatus.compareAndSet(RpcClientStatus.RUNNING,
+                        RpcClientStatus.UNHEALTHY)) {
                         switchServerAsync();
                     }
                 } else {
-                    LoggerUtils.printIfWarnEnabled(LOGGER, "[{}]Ignore error event,isRunning:{},isAbandon={}",
-                            grpcConn.getConnectionId(), isRunning, isAbandon);
+                    LoggerUtils.printIfWarnEnabled(LOGGER,
+                        "[{}]Ignore error event,isRunning:{},isAbandon={}",
+                        grpcConn.getConnectionId(), isRunning, isAbandon);
                 }
             }
-
+            
             @Override
             public void onCompleted() {
                 boolean isRunning = isRunning();
                 boolean isAbandon = grpcConn.isAbandon();
                 if (isRunning && !isAbandon) {
-                    LoggerUtils.printIfErrorEnabled(LOGGER, "[{}]Request stream onCompleted, switch server",
-                            grpcConn.getConnectionId());
-                    if (rpcClientStatus.compareAndSet(RpcClientStatus.RUNNING, RpcClientStatus.UNHEALTHY)) {
+                    LoggerUtils.printIfErrorEnabled(LOGGER,
+                        "[{}]Request stream onCompleted, switch server",
+                        grpcConn.getConnectionId());
+                    if (rpcClientStatus.compareAndSet(RpcClientStatus.RUNNING,
+                        RpcClientStatus.UNHEALTHY)) {
                         switchServerAsync();
                     }
                 } else {
-                    LoggerUtils.printIfInfoEnabled(LOGGER, "[{}]Ignore complete event,isRunning:{},isAbandon={}",
-                            grpcConn.getConnectionId(), isRunning, isAbandon);
+                    LoggerUtils.printIfInfoEnabled(LOGGER,
+                        "[{}]Ignore complete event,isRunning:{},isAbandon={}",
+                        grpcConn.getConnectionId(), isRunning, isAbandon);
                 }
             }
         });
     }
-
+    
     private void sendResponse(Response response) {
         try {
             ((GrpcConnection) this.currentConnection).sendResponse(response);
         } catch (Exception e) {
-            LOGGER.error("[{}]Error to send ack response, ackId->{}", this.currentConnection.getConnectionId(),
-                    response.getRequestId());
+            LOGGER.error("[{}]Error to send ack response, ackId->{}",
+                this.currentConnection.getConnectionId(),
+                response.getRequestId());
         }
     }
-
+    
     @Override
     public Connection connectToServer(ServerInfo serverInfo) {
         // the newest connection id
@@ -349,7 +378,7 @@ public abstract class GrpcClient extends RpcClient {
             int port = serverInfo.getServerPort() + rpcPortOffset();
             ManagedChannel managedChannel = createNewManagedChannel(serverInfo.getServerIp(), port);
             RequestGrpc.RequestFutureStub newChannelStubTemp = createNewChannelStub(managedChannel);
-
+            
             Response response = serverCheck(serverInfo.getServerIp(), port, newChannelStubTemp);
             if (!(response instanceof ServerCheckResponse)) {
                 shuntDownChannel(managedChannel);
@@ -359,8 +388,9 @@ public abstract class GrpcClient extends RpcClient {
             // ability table will be null if server doesn't support ability table
             ServerCheckResponse serverCheckResponse = (ServerCheckResponse) response;
             connectionId = serverCheckResponse.getConnectionId();
-
-            BiRequestStreamGrpc.BiRequestStreamStub biRequestStreamStub = BiRequestStreamGrpc.newStub(
+            
+            BiRequestStreamGrpc.BiRequestStreamStub biRequestStreamStub =
+                BiRequestStreamGrpc.newStub(
                     newChannelStubTemp.getChannel());
             GrpcConnection grpcConn = new GrpcConnection(serverInfo, grpcExecutor);
             grpcConn.setConnectionId(connectionId);
@@ -371,10 +401,11 @@ public abstract class GrpcClient extends RpcClient {
                 // promise null if no abilities receive
                 grpcConn.setAbilityTable(null);
             }
-
+            
             //create stream request and bind connection event to this connection.
-            StreamObserver<Payload> payloadStreamObserver = bindRequestStream(biRequestStreamStub, grpcConn);
-
+            StreamObserver<Payload> payloadStreamObserver =
+                bindRequestStream(biRequestStreamStub, grpcConn);
+            
             // stream observer to send response to server
             grpcConn.setPayloadStreamObserver(payloadStreamObserver);
             grpcConn.setGrpcFutureServiceStub(newChannelStubTemp);
@@ -385,13 +416,14 @@ public abstract class GrpcClient extends RpcClient {
             conSetupRequest.setLabels(super.getLabels());
             // set ability table
             conSetupRequest.setAbilityTable(
-                    NacosAbilityManagerHolder.getInstance().getCurrentNodeAbilities(abilityMode()));
+                NacosAbilityManagerHolder.getInstance().getCurrentNodeAbilities(abilityMode()));
             conSetupRequest.setTenant(super.getTenant());
             grpcConn.sendRequest(conSetupRequest);
             // wait for response
             if (recAbilityContext.isNeedToSync()) {
                 // try to wait for notify response
-                recAbilityContext.await(this.clientConfig.capabilityNegotiationTimeout(), TimeUnit.MILLISECONDS);
+                recAbilityContext.await(this.clientConfig.capabilityNegotiationTimeout(),
+                    TimeUnit.MILLISECONDS);
                 // if no server abilities receiving, then reconnect
                 if (!recAbilityContext.check(grpcConn)) {
                     return null;
@@ -410,45 +442,45 @@ public abstract class GrpcClient extends RpcClient {
         }
         return null;
     }
-
+    
     protected String getClientVersion() {
         return VersionUtils.getFullClientVersion();
     }
-
+    
     /**
      * ability mode: sdk client or cluster client.
      *
      * @return mode
      */
     protected abstract AbilityMode abilityMode();
-
+    
     @Override
     protected void afterReset(ConnectResetRequest request) {
         recAbilityContext.release(null);
     }
-
+    
     /**
      * This is for receiving server abilities.
      */
     static class RecAbilityContext {
-
+        
         /**
          * connection waiting for server abilities.
          */
         private volatile Connection connection;
-
+        
         /**
          * way to block client.
          */
         private volatile CountDownLatch blocker;
-
+        
         private volatile boolean needToSync = false;
-
+        
         public RecAbilityContext(Connection connection) {
             this.connection = connection;
             this.blocker = new CountDownLatch(1);
         }
-
+        
         /**
          * whether to sync for ability table.
          *
@@ -457,7 +489,7 @@ public abstract class GrpcClient extends RpcClient {
         public boolean isNeedToSync() {
             return this.needToSync;
         }
-
+        
         /**
          * reset with new connection which is waiting for ability table.
          *
@@ -468,7 +500,7 @@ public abstract class GrpcClient extends RpcClient {
             this.blocker = new CountDownLatch(1);
             this.needToSync = true;
         }
-
+        
         /**
          * notify sync by abilities.
          *
@@ -485,7 +517,7 @@ public abstract class GrpcClient extends RpcClient {
             }
             this.needToSync = false;
         }
-
+        
         /**
          * await for abilities.
          *
@@ -499,7 +531,7 @@ public abstract class GrpcClient extends RpcClient {
             }
             this.needToSync = false;
         }
-
+        
         /**
          * check whether receive abilities.
          *
@@ -509,10 +541,10 @@ public abstract class GrpcClient extends RpcClient {
         public boolean check(Connection connection) {
             if (!connection.isAbilitiesSet()) {
                 LOGGER.error(
-                        "Client don't receive server abilities table even empty table but server supports ability negotiation."
-                                + " You can check if it is need to adjust the timeout of ability negotiation by property: {}"
-                                + " if always fail to connect.",
-                        GrpcConstants.GRPC_CHANNEL_CAPABILITY_NEGOTIATION_TIMEOUT);
+                    "Client don't receive server abilities table even empty table but server supports ability negotiation."
+                        + " You can check if it is need to adjust the timeout of ability negotiation by property: {}"
+                        + " if always fail to connect.",
+                    GrpcConstants.GRPC_CHANNEL_CAPABILITY_NEGOTIATION_TIMEOUT);
                 connection.setAbandon(true);
                 connection.close();
                 return false;
@@ -520,9 +552,9 @@ public abstract class GrpcClient extends RpcClient {
             return true;
         }
     }
-
+    
     private Optional<SslContext> buildSslContext() {
-
+        
         TlsConfig tlsConfig = clientConfig.tlsConfig();
         if (!tlsConfig.getEnableTls()) {
             return Optional.empty();
@@ -532,7 +564,7 @@ public abstract class GrpcClient extends RpcClient {
             if (StringUtils.isNotBlank(tlsConfig.getSslProvider())) {
                 builder.sslProvider(TlsTypeResolve.getSslProvider(tlsConfig.getSslProvider()));
             }
-
+            
             if (StringUtils.isNotBlank(tlsConfig.getProtocols())) {
                 builder.protocols(tlsConfig.getProtocols().split(","));
             }
@@ -545,47 +577,51 @@ public abstract class GrpcClient extends RpcClient {
                 if (StringUtils.isBlank(tlsConfig.getTrustCollectionCertFile())) {
                     throw new IllegalArgumentException("trustCollectionCertFile must be not null");
                 }
-                Resource resource = resourceLoader.getResource(tlsConfig.getTrustCollectionCertFile());
+                Resource resource =
+                    resourceLoader.getResource(tlsConfig.getTrustCollectionCertFile());
                 builder.trustManager(resource.getInputStream());
             }
-
+            
             if (tlsConfig.getMutualAuthEnable()) {
                 if (StringUtils.isBlank(tlsConfig.getCertChainFile()) || StringUtils.isBlank(
-                        tlsConfig.getCertPrivateKey())) {
-                    throw new IllegalArgumentException("client certChainFile or certPrivateKey must be not null");
+                    tlsConfig.getCertPrivateKey())) {
+                    throw new IllegalArgumentException(
+                        "client certChainFile or certPrivateKey must be not null");
                 }
                 Resource certChainFile = resourceLoader.getResource(tlsConfig.getCertChainFile());
                 Resource privateKey = resourceLoader.getResource(tlsConfig.getCertPrivateKey());
                 builder.keyManager(certChainFile.getInputStream(), privateKey.getInputStream(),
-                        tlsConfig.getCertPrivateKeyPassword());
+                    tlsConfig.getCertPrivateKeyPassword());
             }
             return Optional.of(builder.build());
         } catch (Exception e) {
             throw new RuntimeException("Unable to build SslContext", e);
         }
     }
-
-    private ManagedChannelBuilder buildChannel(String serverIp, int port, Optional<SslContext> sslContext) {
+    
+    private ManagedChannelBuilder buildChannel(String serverIp, int port,
+        Optional<SslContext> sslContext) {
         if (sslContext.isPresent()) {
-            return NettyChannelBuilder.forAddress(serverIp, port).negotiationType(NegotiationType.TLS)
-                    .sslContext(sslContext.get());
-
+            return NettyChannelBuilder.forAddress(serverIp, port)
+                .negotiationType(NegotiationType.TLS)
+                .sslContext(sslContext.get());
+            
         } else {
             return ManagedChannelBuilder.forAddress(serverIp, port).usePlaintext();
         }
     }
-
+    
     /**
      * Setup response handler.
      */
     class SetupRequestHandler implements ServerRequestHandler {
-
+        
         private final RecAbilityContext abilityContext;
-
+        
         public SetupRequestHandler(RecAbilityContext abilityContext) {
             this.abilityContext = abilityContext;
         }
-
+        
         @Override
         public Response requestReply(Request request, Connection connection) {
             // if finish setup
@@ -593,13 +629,11 @@ public abstract class GrpcClient extends RpcClient {
                 SetupAckRequest setupAckRequest = (SetupAckRequest) request;
                 // remove and count down
                 recAbilityContext.release(
-                        Optional.ofNullable(setupAckRequest.getAbilityTable()).orElse(new HashMap<>(0)));
+                    Optional.ofNullable(setupAckRequest.getAbilityTable())
+                        .orElse(new HashMap<>(0)));
                 return new SetupAckResponse();
             }
             return null;
         }
     }
 }
-
-
-

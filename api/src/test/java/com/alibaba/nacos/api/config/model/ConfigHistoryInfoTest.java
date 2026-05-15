@@ -83,7 +83,8 @@ class ConfigHistoryInfoTest {
     
     @Test
     public void testBasicInfoDeserialize() throws JacksonException {
-        String json = "{\"id\":\"1\",\"namespaceId\":\"testNs\",\"groupName\":\"testGroup\",\"dataId\":\"testDataId\","
+        String json =
+            "{\"id\":\"1\",\"namespaceId\":\"testNs\",\"groupName\":\"testGroup\",\"dataId\":\"testDataId\","
                 + "\"md5\":\"testMd5\",\"type\":\"text\",\"appName\":\"testApp\",\"createTime\":%s,\"modifyTime\":%s,"
                 + "\"srcIp\":\"1.1.1.1\",\"srcUser\":\"testCreateUser\",\"opType\":\"I\",\"publishType\":\"formal\"}";
         json = String.format(json, createTime, modifyTime);
@@ -99,7 +100,8 @@ class ConfigHistoryInfoTest {
     
     @Test
     public void testDetailInfoDeserialize() throws JacksonException {
-        String json = "{\"id\":\"1\",\"namespaceId\":\"testNs\",\"groupName\":\"testGroup\",\"dataId\":\"testDataId\","
+        String json =
+            "{\"id\":\"1\",\"namespaceId\":\"testNs\",\"groupName\":\"testGroup\",\"dataId\":\"testDataId\","
                 + "\"md5\":\"testMd5\",\"type\":\"text\",\"appName\":\"testApp\",\"createTime\":%s,\"modifyTime\":%s,"
                 + "\"srcIp\":\"1.1.1.1\",\"srcUser\":\"testCreateUser\",\"opType\":\"I\",\"publishType\":\"formal\","
                 + "\"content\":\"testContent\",\"encryptedDataKey\":\"testEncryptedDataKey\",\"grayName\":\"testGrayName\","

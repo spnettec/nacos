@@ -68,11 +68,13 @@ class NacosMcpRegistryServerDetailTest extends BasicRequestTest {
     
     @Test
     void testDeserialize() throws JacksonException {
-        String json = "{\"name\":\"testRegistryServer\",\"description\":\"test mcp registry server object\",\"$schema\":\"http://example.com/schema\",\"packages\":[{\"identifier\":\"test-package\",\"version\":\"1.0.0\"}],"
+        String json =
+            "{\"name\":\"testRegistryServer\",\"description\":\"test mcp registry server object\",\"$schema\":\"http://example.com/schema\",\"packages\":[{\"identifier\":\"test-package\",\"version\":\"1.0.0\"}],"
                 + "\"repository\":{},\"version\":\"1.0.0\",\"remotes\":[{\"type\":\"https\","
                 + "\"url\":\"127.0.0.1:8848/sse\"}],\"_meta\":{\"io.modelcontextprotocol.registry/official\":"
                 + "{\"publishedAt\":\"2022-01-01T00:00:00Z\"}}}";
-        McpRegistryServerDetail mcpRegistryServerDetail = mapper.readValue(json, McpRegistryServerDetail.class);
+        McpRegistryServerDetail mcpRegistryServerDetail =
+            mapper.readValue(json, McpRegistryServerDetail.class);
         assertNotNull(mcpRegistryServerDetail);
         assertEquals("testRegistryServer", mcpRegistryServerDetail.getName());
         assertEquals("test mcp registry server object", mcpRegistryServerDetail.getDescription());

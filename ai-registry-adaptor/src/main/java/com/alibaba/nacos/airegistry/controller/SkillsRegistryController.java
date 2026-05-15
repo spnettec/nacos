@@ -44,21 +44,22 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 @RestController
 @ConditionalOnProperty(name = "nacos.ai.skill.registry.enabled", havingValue = "true")
 public class SkillsRegistryController {
-
+    
     private static final String BASE_PATH = "/registry";
-
-    private static final String WELL_KNOWN_AGENT_SKILLS = BASE_PATH + "/{namespaceId}/.well-known/agent-skills";
-
+    
+    private static final String WELL_KNOWN_AGENT_SKILLS =
+        BASE_PATH + "/{namespaceId}/.well-known/agent-skills";
+    
     private static final String WELL_KNOWN_SKILLS = BASE_PATH + "/{namespaceId}/.well-known/skills";
-
+    
     private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
-
+    
     private final NacosSkillsRegistryService nacosSkillsRegistryService;
-
+    
     public SkillsRegistryController(NacosSkillsRegistryService nacosSkillsRegistryService) {
         this.nacosSkillsRegistryService = nacosSkillsRegistryService;
     }
-
+    
     /**
      * Expose well-known index.json for the skills CLI.
      *
@@ -67,13 +68,13 @@ public class SkillsRegistryController {
      * @throws NacosException if query fails
      */
     @GetMapping(value = {
-            WELL_KNOWN_AGENT_SKILLS + "/index.json",
-            WELL_KNOWN_SKILLS + "/index.json"
+        WELL_KNOWN_AGENT_SKILLS + "/index.json",
+        WELL_KNOWN_SKILLS + "/index.json"
     }, produces = MediaType.APPLICATION_JSON_VALUE)
     public WellKnownSkillsIndex getIndex(@PathVariable String namespaceId) throws NacosException {
         return nacosSkillsRegistryService.buildIndex(namespaceId);
     }
-
+    
     /**
      * Expose CLI-compatible search results under the adaptor endpoint.
      *
@@ -83,15 +84,18 @@ public class SkillsRegistryController {
      * @return search response with CLI-compatible shape
      * @throws NacosException if query fails
      */
-    @GetMapping(value = BASE_PATH + "/{namespaceId}/api/search", produces = MediaType.APPLICATION_JSON_VALUE)
-    public SkillsSearchResponse search(@PathVariable String namespaceId, SkillsSearchForm form, HttpServletRequest request)
-            throws NacosException {
+    @GetMapping(value = BASE_PATH + "/{namespaceId}/api/search",
+        produces = MediaType.APPLICATION_JSON_VALUE)
+    public SkillsSearchResponse search(@PathVariable String namespaceId, SkillsSearchForm form,
+        HttpServletRequest request)
+        throws NacosException {
         form.setNamespaceId(namespaceId);
         form.validate();
-        return nacosSkillsRegistryService.search(namespaceId, form.getQ(), form.getLimit(), buildSourceBaseUrl(request,
+        return nacosSkillsRegistryService.search(namespaceId, form.getQ(), form.getLimit(),
+            buildSourceBaseUrl(request,
                 namespaceId));
     }
-
+    
     /**
      * Return the exported SKILL.md for a namespace skill.
      *
@@ -101,21 +105,23 @@ public class SkillsRegistryController {
      * @throws NacosException if query fails
      */
     @GetMapping(value = {
-            WELL_KNOWN_AGENT_SKILLS + "/{skillName}/SKILL.md",
-            WELL_KNOWN_SKILLS + "/{skillName}/SKILL.md"
+        WELL_KNOWN_AGENT_SKILLS + "/{skillName}/SKILL.md",
+        WELL_KNOWN_SKILLS + "/{skillName}/SKILL.md"
     }, produces = MediaType.TEXT_PLAIN_VALUE)
-    public ResponseEntity<String> getSkillMarkdown(@PathVariable String namespaceId, @PathVariable String skillName)
-            throws NacosException {
+    public ResponseEntity<String> getSkillMarkdown(@PathVariable String namespaceId,
+        @PathVariable String skillName)
+        throws NacosException {
         SkillsFileQueryForm form = new SkillsFileQueryForm();
         form.setNamespaceId(namespaceId);
         form.setSkillName(skillName);
         form.setFilePath("SKILL.md");
         form.validate();
-        String content = nacosSkillsRegistryService.getSkillFileContent(namespaceId, skillName, form.getFilePath());
+        String content = nacosSkillsRegistryService.getSkillFileContent(namespaceId, skillName,
+            form.getFilePath());
         return content == null ? ResponseEntity.notFound().build()
-                : ResponseEntity.ok().contentType(MediaType.TEXT_PLAIN).body(content);
+            : ResponseEntity.ok().contentType(MediaType.TEXT_PLAIN).body(content);
     }
-
+    
     /**
      * Return an exported text resource for a namespace skill.
      *
@@ -126,34 +132,39 @@ public class SkillsRegistryController {
      * @throws NacosException if query fails
      */
     @GetMapping(value = {
-            WELL_KNOWN_AGENT_SKILLS + "/{skillName}/**",
-            WELL_KNOWN_SKILLS + "/{skillName}/**"
+        WELL_KNOWN_AGENT_SKILLS + "/{skillName}/**",
+        WELL_KNOWN_SKILLS + "/{skillName}/**"
     }, produces = MediaType.TEXT_PLAIN_VALUE)
-    public ResponseEntity<String> getSkillFile(@PathVariable String namespaceId, @PathVariable String skillName,
-            HttpServletRequest request) throws NacosException {
+    public ResponseEntity<String> getSkillFile(@PathVariable String namespaceId,
+        @PathVariable String skillName,
+        HttpServletRequest request) throws NacosException {
         String filePath = extractFilePath(request);
         SkillsFileQueryForm form = new SkillsFileQueryForm();
         form.setNamespaceId(namespaceId);
         form.setSkillName(skillName);
         form.setFilePath(filePath);
         form.validate();
-        String content = nacosSkillsRegistryService.getSkillFileContent(namespaceId, skillName, form.getFilePath());
+        String content = nacosSkillsRegistryService.getSkillFileContent(namespaceId, skillName,
+            form.getFilePath());
         return content == null ? ResponseEntity.notFound().build()
-                : ResponseEntity.ok().contentType(MediaType.TEXT_PLAIN).body(content);
+            : ResponseEntity.ok().contentType(MediaType.TEXT_PLAIN).body(content);
     }
-
+    
     private String buildSourceBaseUrl(HttpServletRequest request, String namespaceId) {
         return ServletUriComponentsBuilder.fromRequestUri(request)
-                .replacePath(BASE_PATH + "/{namespaceId}")
-                .replaceQuery(null)
-                .buildAndExpand(namespaceId)
-                .toUriString();
+            .replacePath(BASE_PATH + "/{namespaceId}")
+            .replaceQuery(null)
+            .buildAndExpand(namespaceId)
+            .toUriString();
     }
-
+    
     private String extractFilePath(HttpServletRequest request) {
-        String pathWithinMapping = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
-        String bestMatchingPattern = (String) request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
-        String extracted = PATH_MATCHER.extractPathWithinPattern(bestMatchingPattern, pathWithinMapping);
+        String pathWithinMapping =
+            (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
+        String bestMatchingPattern =
+            (String) request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+        String extracted =
+            PATH_MATCHER.extractPathWithinPattern(bestMatchingPattern, pathWithinMapping);
         if (StringUtils.isBlank(extracted)) {
             return extracted;
         }

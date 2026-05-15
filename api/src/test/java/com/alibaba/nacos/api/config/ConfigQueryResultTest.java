@@ -19,6 +19,7 @@ package com.alibaba.nacos.api.config;
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -103,7 +104,8 @@ class ConfigQueryResultTest extends BasicRequestTest {
     @DisplayName("test toString with long content truncates")
     void testToStringWithLongContentTruncates() {
         ConfigQueryResult result = new ConfigQueryResult();
-        result.setContent("This is a very long content string that should be truncated in toString output because it exceeds 50 characters limit");
+        result.setContent(
+            "This is a very long content string that should be truncated in toString output because it exceeds 50 characters limit");
         result.setMd5("hash123");
         String str = result.toString();
         assertNotNull(str);
@@ -124,7 +126,7 @@ class ConfigQueryResultTest extends BasicRequestTest {
 
     @Test
     @DisplayName("test serialize to json")
-    void testSerializeToJson() {
+    void testSerializeToJson() throws JacksonException {
         ConfigQueryResult result = new ConfigQueryResult("test content", "abc123");
         result.setConfigType("yaml");
         result.setEncryptedDataKey("key");
@@ -139,8 +141,9 @@ class ConfigQueryResultTest extends BasicRequestTest {
 
     @Test
     @DisplayName("test deserialize from json")
-    void testDeserializeFromJson() {
-        String json = "{\"content\":\"test\",\"md5\":\"abc123\",\"configType\":\"yaml\",\"encryptedDataKey\":\"key\"}";
+    void testDeserializeFromJson() throws JacksonException {
+        String json =
+            "{\"content\":\"test\",\"md5\":\"abc123\",\"configType\":\"yaml\",\"encryptedDataKey\":\"key\"}";
 
         ConfigQueryResult result = mapper.readValue(json, ConfigQueryResult.class);
         assertNotNull(result);

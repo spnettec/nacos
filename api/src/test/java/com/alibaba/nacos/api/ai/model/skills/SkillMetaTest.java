@@ -29,14 +29,14 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SkillMetaTest extends BasicRequestTest {
-
+    
     @Test
     @DisplayName("test default constructor")
     void testDefaultConstructor() {
         SkillMeta meta = new SkillMeta();
         assertNull(meta.getVersions());
     }
-
+    
     @Test
     @DisplayName("test inherited fields from SkillSummary")
     void testInheritedFieldsFromSkillSummary() {
@@ -45,13 +45,13 @@ class SkillMetaTest extends BasicRequestTest {
         meta.setName("testSkill");
         meta.setOwner("admin");
         meta.setEnable(true);
-
+        
         assertEquals("public", meta.getNamespaceId());
         assertEquals("testSkill", meta.getName());
         assertEquals("admin", meta.getOwner());
         assertTrue(meta.isEnable());
     }
-
+    
     @Test
     @DisplayName("test getter and setter for versions")
     void testGetterAndSetterForVersions() {
@@ -66,7 +66,7 @@ class SkillMetaTest extends BasicRequestTest {
         assertEquals(1, meta.getVersions().size());
         assertEquals("v1.0.0", meta.getVersions().get(0).getVersion());
     }
-
+    
     @Test
     @DisplayName("test serialize to json")
     void testSerializeToJson() {
@@ -74,20 +74,20 @@ class SkillMetaTest extends BasicRequestTest {
         meta.setNamespaceId("public");
         meta.setName("testSkill");
         meta.setOwner("admin");
-
+        
         String json = mapper.writeValueAsString(meta);
         assertNotNull(json);
         assertTrue(json.contains("\"namespaceId\":\"public\""));
         assertTrue(json.contains("\"name\":\"testSkill\""));
         assertTrue(json.contains("\"owner\":\"admin\""));
     }
-
+    
     @Test
     @DisplayName("test deserialize from json")
     void testDeserializeFromJson() {
         String json = "{\"namespaceId\":\"public\",\"name\":\"testSkill\",\"owner\":\"admin\","
-                + "\"enable\":true,\"versions\":[{\"version\":\"v1.0.0\",\"status\":\"online\"}]}";
-
+            + "\"enable\":true,\"versions\":[{\"version\":\"v1.0.0\",\"status\":\"online\"}]}";
+        
         SkillMeta meta = mapper.readValue(json, SkillMeta.class);
         assertNotNull(meta);
         assertEquals("public", meta.getNamespaceId());
@@ -99,9 +99,9 @@ class SkillMetaTest extends BasicRequestTest {
         assertEquals("v1.0.0", meta.getVersions().get(0).getVersion());
         assertEquals("online", meta.getVersions().get(0).getStatus());
     }
-
+    
     // ========== SkillVersionSummary Tests ==========
-
+    
     @Test
     @DisplayName("test SkillVersionSummary default constructor")
     void testSkillVersionSummaryDefaultConstructor() {
@@ -115,7 +115,7 @@ class SkillMetaTest extends BasicRequestTest {
         assertNull(summary.getPublishPipelineInfo());
         assertNull(summary.getDownloadCount());
     }
-
+    
     @Test
     @DisplayName("test SkillVersionSummary getter and setter for version")
     void testSkillVersionSummaryGetterAndSetterForVersion() {
@@ -123,7 +123,7 @@ class SkillMetaTest extends BasicRequestTest {
         summary.setVersion("v1.0.0");
         assertEquals("v1.0.0", summary.getVersion());
     }
-
+    
     @Test
     @DisplayName("test SkillVersionSummary getter and setter for status")
     void testSkillVersionSummaryGetterAndSetterForStatus() {
@@ -131,7 +131,7 @@ class SkillMetaTest extends BasicRequestTest {
         summary.setStatus("online");
         assertEquals("online", summary.getStatus());
     }
-
+    
     @Test
     @DisplayName("test SkillVersionSummary getter and setter for author")
     void testSkillVersionSummaryGetterAndSetterForAuthor() {
@@ -139,7 +139,7 @@ class SkillMetaTest extends BasicRequestTest {
         summary.setAuthor("developer");
         assertEquals("developer", summary.getAuthor());
     }
-
+    
     @Test
     @DisplayName("test SkillVersionSummary getter and setter for commitMsg")
     void testSkillVersionSummaryGetterAndSetterForCommitMsg() {
@@ -147,7 +147,7 @@ class SkillMetaTest extends BasicRequestTest {
         summary.setCommitMsg("Initial commit");
         assertEquals("Initial commit", summary.getCommitMsg());
     }
-
+    
     @Test
     @DisplayName("test SkillVersionSummary getter and setter for createTime")
     void testSkillVersionSummaryGetterAndSetterForCreateTime() {
@@ -155,7 +155,7 @@ class SkillMetaTest extends BasicRequestTest {
         summary.setCreateTime(1234567890L);
         assertEquals(1234567890L, summary.getCreateTime());
     }
-
+    
     @Test
     @DisplayName("test SkillVersionSummary getter and setter for updateTime")
     void testSkillVersionSummaryGetterAndSetterForUpdateTime() {
@@ -163,7 +163,7 @@ class SkillMetaTest extends BasicRequestTest {
         summary.setUpdateTime(1234567900L);
         assertEquals(1234567900L, summary.getUpdateTime());
     }
-
+    
     @Test
     @DisplayName("test SkillVersionSummary getter and setter for publishPipelineInfo")
     void testSkillVersionSummaryGetterAndSetterForPublishPipelineInfo() {
@@ -171,7 +171,7 @@ class SkillMetaTest extends BasicRequestTest {
         summary.setPublishPipelineInfo("pipeline-info");
         assertEquals("pipeline-info", summary.getPublishPipelineInfo());
     }
-
+    
     @Test
     @DisplayName("test SkillVersionSummary getter and setter for downloadCount")
     void testSkillVersionSummaryGetterAndSetterForDownloadCount() {
@@ -179,7 +179,7 @@ class SkillMetaTest extends BasicRequestTest {
         summary.setDownloadCount(100L);
         assertEquals(100L, summary.getDownloadCount());
     }
-
+    
     @Test
     @DisplayName("test SkillVersionSummary serialize to json")
     void testSkillVersionSummarySerializeToJson() {
@@ -188,7 +188,7 @@ class SkillMetaTest extends BasicRequestTest {
         summary.setStatus("online");
         summary.setAuthor("admin");
         summary.setDownloadCount(50L);
-
+        
         String json = mapper.writeValueAsString(summary);
         assertNotNull(json);
         assertTrue(json.contains("\"version\":\"v1.0.0\""));
@@ -196,15 +196,16 @@ class SkillMetaTest extends BasicRequestTest {
         assertTrue(json.contains("\"author\":\"admin\""));
         assertTrue(json.contains("\"downloadCount\":50"));
     }
-
+    
     @Test
     @DisplayName("test SkillVersionSummary deserialize from json")
     void testSkillVersionSummaryDeserializeFromJson() {
         String json = "{\"version\":\"v1.0.0\",\"status\":\"online\",\"author\":\"admin\","
-                + "\"commitMsg\":\"Initial\",\"createTime\":1234567890,\"updateTime\":1234567900,"
-                + "\"downloadCount\":100}";
-
-        SkillMeta.SkillVersionSummary summary = mapper.readValue(json, SkillMeta.SkillVersionSummary.class);
+            + "\"commitMsg\":\"Initial\",\"createTime\":1234567890,\"updateTime\":1234567900,"
+            + "\"downloadCount\":100}";
+        
+        SkillMeta.SkillVersionSummary summary =
+            mapper.readValue(json, SkillMeta.SkillVersionSummary.class);
         assertNotNull(summary);
         assertEquals("v1.0.0", summary.getVersion());
         assertEquals("online", summary.getStatus());

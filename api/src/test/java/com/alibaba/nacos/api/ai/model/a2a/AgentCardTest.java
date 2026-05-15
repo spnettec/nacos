@@ -17,8 +17,8 @@
 package com.alibaba.nacos.api.ai.model.a2a;
 
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
-import org.junit.jupiter.api.Test;
 import tools.jackson.core.JacksonException;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -59,7 +59,8 @@ class AgentCardTest extends BasicRequestTest {
     
     @Test
     void testDeserialize() throws JacksonException {
-        String json = "{\"protocolVersion\":\"1.0\",\"name\":\"test agent\",\"description\":\"test description\","
+        String json =
+            "{\"protocolVersion\":\"1.0\",\"name\":\"test agent\",\"description\":\"test description\","
                 + "\"version\":\"1.0.0\",\"iconUrl\":\"http://test.com/icon.png\","
                 + "\"url\":\"http://test.com/agent\",\"preferredTransport\":\"JSONRPC\","
                 + "\"supportedInterfaces\":[{\"url\":\"http://test.com/v1\",\"protocolBinding\":\"JSONRPC\","
@@ -172,7 +173,8 @@ class AgentCardTest extends BasicRequestTest {
         
         assertNotNull(agentCard.getAdditionalInterfaces());
         assertEquals(1, agentCard.getAdditionalInterfaces().size());
-        assertEquals("http://test.com/interface", agentCard.getAdditionalInterfaces().get(0).getUrl());
+        assertEquals("http://test.com/interface",
+            agentCard.getAdditionalInterfaces().get(0).getUrl());
         assertEquals("JSONRPC", agentCard.getAdditionalInterfaces().get(0).getTransport());
     }
     
@@ -212,7 +214,8 @@ class AgentCardTest extends BasicRequestTest {
         agentCard.setDefaultInputModes(Arrays.asList("text", "voice"));
         agentCard.setDefaultOutputModes(Arrays.asList("text", "image"));
         agentCard.setSupportsAuthenticatedExtendedCard(true);
-        agentCard.setSignatures(Collections.singletonList(Collections.<String, Object>singletonMap("alg", "EdDSA")));
+        agentCard.setSignatures(
+            Collections.singletonList(Collections.<String, Object>singletonMap("alg", "EdDSA")));
         
         // Create capabilities
         AgentCapabilities capabilities = new AgentCapabilities();

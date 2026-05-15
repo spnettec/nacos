@@ -17,8 +17,8 @@
 package com.alibaba.nacos.api.ai.model.a2a;
 
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
-import org.junit.jupiter.api.Test;
 import tools.jackson.core.JacksonException;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -64,7 +64,8 @@ class AgentCapabilitiesTest extends BasicRequestTest {
     
     @Test
     void testDeserialize() throws JacksonException {
-        String json = "{\"streaming\":true,\"pushNotifications\":false,\"stateTransitionHistory\":true,"
+        String json =
+            "{\"streaming\":true,\"pushNotifications\":false,\"stateTransitionHistory\":true,"
                 + "\"extendedAgentCard\":true,"
                 + "\"extensions\":[{\"uri\":\"test-uri\",\"description\":\"test description\",\"required\":true,"
                 + "\"params\":{\"param1\":\"value1\"}}]}";

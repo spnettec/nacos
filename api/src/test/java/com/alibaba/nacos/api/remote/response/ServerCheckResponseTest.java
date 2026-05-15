@@ -50,7 +50,8 @@ class ServerCheckResponseTest {
     
     @Test
     void testDeserialization() throws JacksonException {
-        String json = "{\"resultCode\":200,\"errorCode\":0,\"connectionId\":\"35643245_1.1.1.1_3306\",\"success\":true,"
+        String json =
+            "{\"resultCode\":200,\"errorCode\":0,\"connectionId\":\"35643245_1.1.1.1_3306\",\"success\":true,"
                 + "\"supportAbilityNegotiation\":true}";
         ServerCheckResponse response = mapper.readValue(json, ServerCheckResponse.class);
         assertEquals("35643245_1.1.1.1_3306", response.getConnectionId());

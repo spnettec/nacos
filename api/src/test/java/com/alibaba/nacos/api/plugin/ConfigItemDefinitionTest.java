@@ -19,6 +19,7 @@ package com.alibaba.nacos.api.plugin;
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,7 +48,8 @@ class ConfigItemDefinitionTest extends BasicRequestTest {
     @Test
     @DisplayName("test constructor with key, name and type")
     void testConstructorWithKeyNameAndType() {
-        ConfigItemDefinition definition = new ConfigItemDefinition("testKey", "Test Name", ConfigItemType.STRING);
+        ConfigItemDefinition definition =
+            new ConfigItemDefinition("testKey", "Test Name", ConfigItemType.STRING);
         assertEquals("testKey", definition.getKey());
         assertEquals("Test Name", definition.getName());
         assertEquals(ConfigItemType.STRING, definition.getType());
@@ -121,7 +123,8 @@ class ConfigItemDefinitionTest extends BasicRequestTest {
     @Test
     @DisplayName("test Builder pattern")
     void testBuilderPattern() {
-        ConfigItemDefinition definition = new ConfigItemDefinition.Builder("auth.enabled", "Enable Auth", ConfigItemType.BOOLEAN)
+        ConfigItemDefinition definition =
+            new ConfigItemDefinition.Builder("auth.enabled", "Enable Auth", ConfigItemType.BOOLEAN)
                 .description("Enable authentication plugin")
                 .defaultValue("true")
                 .required(true)
@@ -141,7 +144,8 @@ class ConfigItemDefinitionTest extends BasicRequestTest {
         List<String> enumValues = new ArrayList<>();
         enumValues.add("mysql");
         enumValues.add("oracle");
-        ConfigItemDefinition definition = new ConfigItemDefinition.Builder("db.type", "Database Type", ConfigItemType.ENUM)
+        ConfigItemDefinition definition =
+            new ConfigItemDefinition.Builder("db.type", "Database Type", ConfigItemType.ENUM)
                 .description("Database type selection")
                 .defaultValue("mysql")
                 .required(true)
@@ -156,8 +160,9 @@ class ConfigItemDefinitionTest extends BasicRequestTest {
 
     @Test
     @DisplayName("test serialize to json")
-    void testSerializeToJson() {
-        ConfigItemDefinition definition = new ConfigItemDefinition("testKey", "Test Name", ConfigItemType.STRING);
+    void testSerializeToJson() throws JacksonException {
+        ConfigItemDefinition definition =
+            new ConfigItemDefinition("testKey", "Test Name", ConfigItemType.STRING);
         definition.setDescription("Test description");
         definition.setDefaultValue("defaultValue");
         definition.setRequired(true);
@@ -174,10 +179,10 @@ class ConfigItemDefinitionTest extends BasicRequestTest {
 
     @Test
     @DisplayName("test deserialize from json")
-    void testDeserializeFromJson() {
+    void testDeserializeFromJson() throws JacksonException {
         String json = "{\"key\":\"testKey\",\"name\":\"Test Name\",\"description\":\"Test\","
-                + "\"defaultValue\":\"default\",\"type\":\"STRING\",\"required\":true,"
-                + "\"enumValues\":[\"opt1\",\"opt2\"]}";
+            + "\"defaultValue\":\"default\",\"type\":\"STRING\",\"required\":true,"
+            + "\"enumValues\":[\"opt1\",\"opt2\"]}";
 
         ConfigItemDefinition definition = mapper.readValue(json, ConfigItemDefinition.class);
         assertNotNull(definition);

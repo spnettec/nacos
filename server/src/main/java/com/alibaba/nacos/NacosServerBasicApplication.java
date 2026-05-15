@@ -39,7 +39,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
         @Filter(type = FilterType.CUSTOM, classes = {NacosTypeExcludeFilter.class, NacosWebBeanTypeFilter.class})})
 @EnableScheduling
 public class NacosServerBasicApplication {
-
+    
     public static void main(String[] args) {
         SpringApplication.run(NacosServerBasicApplication.class, args);
     }

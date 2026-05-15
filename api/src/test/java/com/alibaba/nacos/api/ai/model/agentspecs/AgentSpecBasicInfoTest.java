@@ -19,6 +19,7 @@ package com.alibaba.nacos.api.ai.model.agentspecs;
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -160,7 +161,7 @@ class AgentSpecBasicInfoTest extends BasicRequestTest {
 
     @Test
     @DisplayName("test serialize to json")
-    void testSerializeToJson() {
+    void testSerializeToJson() throws JacksonException {
         AgentSpecBasicInfo info = new AgentSpecBasicInfo();
         info.setNamespaceId("public");
         info.setName("testAgentSpec");
@@ -177,8 +178,9 @@ class AgentSpecBasicInfoTest extends BasicRequestTest {
 
     @Test
     @DisplayName("test deserialize from json")
-    void testDeserializeFromJson() {
-        String json = "{\"namespaceId\":\"public\",\"name\":\"testAgentSpec\",\"description\":\"Test\","
+    void testDeserializeFromJson() throws JacksonException {
+        String json =
+            "{\"namespaceId\":\"public\",\"name\":\"testAgentSpec\",\"description\":\"Test\","
                 + "\"updateTime\":1234567890}";
 
         AgentSpecBasicInfo info = mapper.readValue(json, AgentSpecBasicInfo.class);

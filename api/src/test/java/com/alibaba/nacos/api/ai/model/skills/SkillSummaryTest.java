@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SkillSummaryTest extends BasicRequestTest {
-
+    
     @Test
     @DisplayName("test default constructor")
     void testDefaultConstructor() {
@@ -42,7 +42,7 @@ class SkillSummaryTest extends BasicRequestTest {
         assertNull(summary.getScope());
         assertNull(summary.getLabels());
     }
-
+    
     @Test
     @DisplayName("test inherited fields from SkillBasicInfo")
     void testInheritedFieldsFromSkillBasicInfo() {
@@ -51,13 +51,13 @@ class SkillSummaryTest extends BasicRequestTest {
         summary.setName("testSkill");
         summary.setDescription("Test skill description");
         summary.setUpdateTime(1234567890L);
-
+        
         assertEquals("public", summary.getNamespaceId());
         assertEquals("testSkill", summary.getName());
         assertEquals("Test skill description", summary.getDescription());
         assertEquals(1234567890L, summary.getUpdateTime());
     }
-
+    
     @Test
     @DisplayName("test getter and setter for owner")
     void testGetterAndSetterForOwner() {
@@ -65,7 +65,7 @@ class SkillSummaryTest extends BasicRequestTest {
         summary.setOwner("admin");
         assertEquals("admin", summary.getOwner());
     }
-
+    
     @Test
     @DisplayName("test getter and setter for enable")
     void testGetterAndSetterForEnable() {
@@ -75,7 +75,7 @@ class SkillSummaryTest extends BasicRequestTest {
         summary.setEnable(false);
         assertFalse(summary.isEnable());
     }
-
+    
     @Test
     @DisplayName("test getter and setter for bizTags")
     void testGetterAndSetterForBizTags() {
@@ -83,7 +83,7 @@ class SkillSummaryTest extends BasicRequestTest {
         summary.setBizTags("[\"tag1\",\"tag2\"]");
         assertEquals("[\"tag1\",\"tag2\"]", summary.getBizTags());
     }
-
+    
     @Test
     @DisplayName("test getter and setter for from")
     void testGetterAndSetterForFrom() {
@@ -91,7 +91,7 @@ class SkillSummaryTest extends BasicRequestTest {
         summary.setFrom("local");
         assertEquals("local", summary.getFrom());
     }
-
+    
     @Test
     @DisplayName("test getter and setter for scope")
     void testGetterAndSetterForScope() {
@@ -99,7 +99,7 @@ class SkillSummaryTest extends BasicRequestTest {
         summary.setScope("PUBLIC");
         assertEquals("PUBLIC", summary.getScope());
     }
-
+    
     @Test
     @DisplayName("test getter and setter for labels")
     void testGetterAndSetterForLabels() {
@@ -113,7 +113,7 @@ class SkillSummaryTest extends BasicRequestTest {
         assertEquals("v3", summary.getLabels().get("latest"));
         assertEquals("v2", summary.getLabels().get("stable"));
     }
-
+    
     @Test
     @DisplayName("test getter and setter for editingVersion")
     void testGetterAndSetterForEditingVersion() {
@@ -121,7 +121,7 @@ class SkillSummaryTest extends BasicRequestTest {
         summary.setEditingVersion("draft-v1");
         assertEquals("draft-v1", summary.getEditingVersion());
     }
-
+    
     @Test
     @DisplayName("test getter and setter for reviewingVersion")
     void testGetterAndSetterForReviewingVersion() {
@@ -129,7 +129,7 @@ class SkillSummaryTest extends BasicRequestTest {
         summary.setReviewingVersion("review-v1");
         assertEquals("review-v1", summary.getReviewingVersion());
     }
-
+    
     @Test
     @DisplayName("test getter and setter for onlineCnt")
     void testGetterAndSetterForOnlineCnt() {
@@ -137,7 +137,7 @@ class SkillSummaryTest extends BasicRequestTest {
         summary.setOnlineCnt(3);
         assertEquals(3, summary.getOnlineCnt());
     }
-
+    
     @Test
     @DisplayName("test getter and setter for downloadCount")
     void testGetterAndSetterForDownloadCount() {
@@ -145,7 +145,7 @@ class SkillSummaryTest extends BasicRequestTest {
         summary.setDownloadCount(1000L);
         assertEquals(1000L, summary.getDownloadCount());
     }
-
+    
     @Test
     @DisplayName("test serialize to json")
     void testSerializeToJson() {
@@ -156,7 +156,7 @@ class SkillSummaryTest extends BasicRequestTest {
         summary.setEnable(true);
         summary.setOnlineCnt(2);
         summary.setDownloadCount(500L);
-
+        
         String json = mapper.writeValueAsString(summary);
         assertNotNull(json);
         assertTrue(json.contains("\"namespaceId\":\"public\""));
@@ -166,14 +166,14 @@ class SkillSummaryTest extends BasicRequestTest {
         assertTrue(json.contains("\"onlineCnt\":2"));
         assertTrue(json.contains("\"downloadCount\":500"));
     }
-
+    
     @Test
     @DisplayName("test deserialize from json")
     void testDeserializeFromJson() {
         String json = "{\"namespaceId\":\"public\",\"name\":\"testSkill\",\"description\":\"Test\","
-                + "\"owner\":\"admin\",\"enable\":true,\"bizTags\":\"[\\\"tag1\\\"]\",\"from\":\"local\","
-                + "\"scope\":\"PUBLIC\",\"onlineCnt\":2,\"downloadCount\":100}";
-
+            + "\"owner\":\"admin\",\"enable\":true,\"bizTags\":\"[\\\"tag1\\\"]\",\"from\":\"local\","
+            + "\"scope\":\"PUBLIC\",\"onlineCnt\":2,\"downloadCount\":100}";
+        
         SkillSummary summary = mapper.readValue(json, SkillSummary.class);
         assertNotNull(summary);
         assertEquals("public", summary.getNamespaceId());

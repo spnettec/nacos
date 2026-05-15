@@ -35,7 +35,7 @@ class AgentInterfaceTest extends BasicRequestTest {
         agentInterface.setProtocolBinding("JSONRPC");
         agentInterface.setProtocolVersion("1.0");
         agentInterface.setTenant("public");
-
+        
         String json = mapper.writeValueAsString(agentInterface);
         assertNotNull(json);
         assertTrue(json.contains("\"url\":\"http://test.com/api\""));
@@ -47,7 +47,8 @@ class AgentInterfaceTest extends BasicRequestTest {
     
     @Test
     void testDeserialize() throws JacksonException {
-        String json = "{\"url\":\"http://test.com/api\",\"transport\":\"JSONRPC\",\"protocolBinding\":\"JSONRPC\","
+        String json =
+            "{\"url\":\"http://test.com/api\",\"transport\":\"JSONRPC\",\"protocolBinding\":\"JSONRPC\","
                 + "\"protocolVersion\":\"1.0\",\"tenant\":\"public\"}";
         
         AgentInterface agentInterface = mapper.readValue(json, AgentInterface.class);
@@ -67,14 +68,14 @@ class AgentInterfaceTest extends BasicRequestTest {
         interface1.setProtocolBinding("JSONRPC");
         interface1.setProtocolVersion("1.0");
         interface1.setTenant("public");
-
+        
         AgentInterface interface2 = new AgentInterface();
         interface2.setUrl("http://test.com/api");
         interface2.setTransport("JSONRPC");
         interface2.setProtocolBinding("JSONRPC");
         interface2.setProtocolVersion("1.0");
         interface2.setTenant("public");
-
+        
         AgentInterface interface3 = new AgentInterface();
         interface3.setUrl("http://other.com/api");
         
@@ -84,7 +85,7 @@ class AgentInterfaceTest extends BasicRequestTest {
         interface4.setProtocolBinding("SSE");
         interface4.setProtocolVersion("1.0");
         interface4.setTenant("public");
-
+        
         assertEquals(interface1, interface2);
         assertEquals(interface1.hashCode(), interface2.hashCode());
         assertNotEquals(interface1, interface3);

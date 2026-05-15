@@ -30,19 +30,19 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class AuthConfigsTest {
-
+    
     private static final boolean TEST_AUTH_ENABLED = true;
-
+    
     private static final boolean TEST_CACHING_ENABLED = false;
-
+    
     private static final String TEST_SERVER_IDENTITY_KEY = "testKey";
-
+    
     private static final String TEST_SERVER_IDENTITY_VALUE = "testValue";
-
+    
     private AuthConfigs authConfigs;
-
+    
     private MockEnvironment environment;
-
+    
     @BeforeEach
     void setUp() throws Exception {
         environment = new MockEnvironment();
@@ -50,14 +50,16 @@ class AuthConfigsTest {
         environment.setProperty("nacos.core.auth.plugin.test.key", "test");
         authConfigs = new AuthConfigs();
     }
-
+    
     @Test
     void testUpgradeFromEvent() {
         environment.setProperty("nacos.core.auth.enabled", String.valueOf(TEST_AUTH_ENABLED));
-        environment.setProperty("nacos.core.auth.caching.enabled", String.valueOf(TEST_CACHING_ENABLED));
+        environment.setProperty("nacos.core.auth.caching.enabled",
+            String.valueOf(TEST_CACHING_ENABLED));
         environment.setProperty("nacos.core.auth.server.identity.key", TEST_SERVER_IDENTITY_KEY);
-        environment.setProperty("nacos.core.auth.server.identity.value", TEST_SERVER_IDENTITY_VALUE);
-
+        environment.setProperty("nacos.core.auth.server.identity.value",
+            TEST_SERVER_IDENTITY_VALUE);
+        
         authConfigs.onEvent(ServerConfigChangeEvent.newEvent());
         assertEquals(TEST_AUTH_ENABLED, authConfigs.isAuthEnabled());
         assertEquals(TEST_CACHING_ENABLED, authConfigs.isCachingEnabled());
@@ -66,7 +68,8 @@ class AuthConfigsTest {
     }
 
     @Test
-    void testGetAuthPluginPropertiesNeverReturnsNullDuringConcurrentRefresh() throws InterruptedException {
+    void testGetAuthPluginPropertiesNeverReturnsNullDuringConcurrentRefresh()
+        throws InterruptedException {
         // Reproduces the check-then-act race: previously `getAuthPluginProperties` read
         // the field twice (`containsKey` then `get`), so if a refresh swapped in a map
         // missing the key in between, `get` returned null and the method propagated null
@@ -90,7 +93,8 @@ class AuthConfigsTest {
                     while (System.currentTimeMillis() < deadline) {
                         Properties properties = authConfigs.getAuthPluginProperties(pluginType);
                         if (properties == null) {
-                            throw new AssertionError("getAuthPluginProperties returned null mid-refresh");
+                            throw new AssertionError(
+                                "getAuthPluginProperties returned null mid-refresh");
                         }
                     }
                 } catch (Throwable t) {
