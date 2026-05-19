@@ -608,7 +608,7 @@ class ConfigControllerV3Test {
     
     @Test
     void testImportConfigWithNullFile() throws Exception {
-        MockHttpServletRequestBuilder builder =
+        MockMultipartHttpServletRequestBuilder builder =
             MockMvcRequestBuilders.multipart(
                 Constants.CONFIG_ADMIN_V3_PATH + "/import")
                 .param("src_user", "test")
@@ -626,7 +626,7 @@ class ConfigControllerV3Test {
             .thenReturn(0);
         MockMultipartFile file = new MockMultipartFile(
             "file", "test.zip", "application/zip", "test".getBytes());
-        MockHttpServletRequestBuilder builder =
+        MockMultipartHttpServletRequestBuilder builder =
             MockMvcRequestBuilders.multipart(
                 Constants.CONFIG_ADMIN_V3_PATH + "/import")
                 .file(file)
@@ -711,8 +711,8 @@ class ConfigControllerV3Test {
             map.put("succCount", 1);
             when(configInfoPersistService.batchInsertOrUpdate(anyList(), anyString(), anyString(),
                 any(), any())).thenReturn(map);
-            
-            MockHttpServletRequestBuilder builder = MockMvcRequestBuilders.multipart(
+
+            MockMultipartHttpServletRequestBuilder builder = MockMvcRequestBuilders.multipart(
                 Constants.CONFIG_ADMIN_V3_PATH + "/import").file(file).param("src_user", "test")
                 .param("namespaceId", "public").param("policy", "ABORT");
             
@@ -746,8 +746,8 @@ class ConfigControllerV3Test {
         try (MockedStatic<ZipUtils> zipUtilsMockedStatic = Mockito.mockStatic(ZipUtils.class)) {
             zipUtilsMockedStatic.when(() -> ZipUtils.unzip(eq(file.getBytes())))
                 .thenReturn(unziped);
-            
-            MockHttpServletRequestBuilder builder = MockMvcRequestBuilders.multipart(
+
+            MockMultipartHttpServletRequestBuilder builder = MockMvcRequestBuilders.multipart(
                 Constants.CONFIG_ADMIN_V3_PATH + "/import").file(file).param("src_user", "test")
                 .param("namespaceId", "").param("policy", "ABORT");
             
@@ -910,8 +910,8 @@ class ConfigControllerV3Test {
             when(configInfoPersistService.batchInsertOrUpdate(
                 anyList(), anyString(), anyString(), any(), any()))
                 .thenReturn(map);
-            
-            MockHttpServletRequestBuilder builder = MockMvcRequestBuilders.multipart(
+
+            MockMultipartHttpServletRequestBuilder builder = MockMvcRequestBuilders.multipart(
                 Constants.CONFIG_ADMIN_V3_PATH + "/import").file(file)
                 .param("src_user", "")
                 .param("namespaceId", "public").param("policy", "ABORT");
@@ -943,8 +943,8 @@ class ConfigControllerV3Test {
                 .thenReturn(unziped);
             when(namespacePersistService.tenantInfoCountByTenantId("public"))
                 .thenReturn(1);
-            
-            MockHttpServletRequestBuilder builder = MockMvcRequestBuilders.multipart(
+
+            MockMultipartHttpServletRequestBuilder builder = MockMvcRequestBuilders.multipart(
                 Constants.CONFIG_ADMIN_V3_PATH + "/import").file(file)
                 .param("src_user", "test")
                 .param("namespaceId", "public").param("policy", "ABORT");
