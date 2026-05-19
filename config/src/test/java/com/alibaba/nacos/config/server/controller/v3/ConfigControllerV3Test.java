@@ -39,6 +39,7 @@ import com.alibaba.nacos.config.server.service.repository.ConfigInfoPersistServi
 import com.alibaba.nacos.config.server.utils.YamlParserUtil;
 import com.alibaba.nacos.config.server.utils.ZipUtils;
 import com.alibaba.nacos.core.namespace.repository.NamespacePersistService;
+import com.alibaba.nacos.config.server.utils.PropertyUtil;
 import com.alibaba.nacos.sys.env.EnvUtil;
 import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 import tools.jackson.databind.JsonNode;
@@ -64,6 +65,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,6 +76,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(SpringExtension.class)
@@ -486,5 +489,471 @@ class ConfigControllerV3Test {
             JacksonUtils.toObj(JacksonUtils.toObj(actualValue).get("data").toString(),
                 Map.class);
         assertEquals(map.get("test"), resultMap.get("test").toString());
+    }
+    
+    @Test
+    void testGetConfigNotFound() throws Exception {
+        when(configInfoPersistService.findConfigAllInfo("test", "test", "public"))
+            .thenReturn(null);
+        MockHttpServletRequestBuilder builder =
+            MockMvcRequestBuilders.get(Constants.CONFIG_ADMIN_V3_PATH)
+                .param("dataId", "test").param("groupName", "test")
+                .param("namespaceId", "");
+        try {
+            mockmvc.perform(builder);
+        } catch (Exception e) {
+            assertEquals("Config not exist, please publish Config first.",
+                e.getCause().getMessage());
+        }
+    }
+    
+    @Test
+    void testPublishConfigMetadata() throws Exception {
+        MockHttpServletRequestBuilder builder =
+            MockMvcRequestBuilders.put(
+                Constants.CONFIG_ADMIN_V3_PATH + "/metadata")
+                .param("dataId", "test").param("groupName", "test")
+                .param("namespaceId", "")
+                .param("config_tags", "tag1,tag2").param("desc", "desc");
+        String actualValue =
+            mockmvc.perform(builder).andReturn().getResponse().getContentAsString();
+        String code = JacksonUtils.toObj(actualValue).get("code").toString();
+        assertEquals("0", code);
+    }
+    
+    @Test
+    void testDeleteConfigsWithNullConfigInfo() throws Exception {
+        when(configInfoPersistService.findConfigInfo(eq(1L))).thenReturn(null);
+        MockHttpServletRequestBuilder builder =
+            MockMvcRequestBuilders.delete(
+                Constants.CONFIG_ADMIN_V3_PATH + "/batch")
+                .param("ids", "1");
+        String actualValue =
+            mockmvc.perform(builder).andReturn().getResponse().getContentAsString();
+        String code = JacksonUtils.toObj(actualValue).get("code").toString();
+        assertEquals("0", code);
+    }
+    
+    @Test
+    void testDeleteConfigsWithException() throws Exception {
+        when(configInfoPersistService.findConfigInfo(eq(1L)))
+            .thenThrow(new RuntimeException("error"));
+        MockHttpServletRequestBuilder builder =
+            MockMvcRequestBuilders.delete(
+                Constants.CONFIG_ADMIN_V3_PATH + "/batch")
+                .param("ids", "1");
+        String actualValue =
+            mockmvc.perform(builder).andReturn().getResponse().getContentAsString();
+        String code = JacksonUtils.toObj(actualValue).get("code").toString();
+        assertEquals("30000", code);
+    }
+    
+    @Test
+    void testQueryBetaNotFound() throws Exception {
+        when(configInfoGrayPersistService.findConfigInfo4Gray(
+            "test", "test", "public", "beta")).thenReturn(null);
+        MockHttpServletRequestBuilder builder =
+            MockMvcRequestBuilders.get(Constants.CONFIG_ADMIN_V3_PATH + "/beta")
+                .param("dataId", "test").param("groupName", "test")
+                .param("namespaceId", "");
+        try {
+            mockmvc.perform(builder);
+        } catch (Exception e) {
+            assertEquals("Config is not in beta.",
+                e.getCause().getMessage());
+        }
+    }
+    
+    @Test
+    void testStopBetaWithException() throws Exception {
+        doThrow(new RuntimeException("error"))
+            .when(configInfoGrayPersistService).removeConfigInfoGray(
+                any(), any(), any(), any(), any(), any());
+        MockHttpServletRequestBuilder builder =
+            MockMvcRequestBuilders.delete(
+                Constants.CONFIG_ADMIN_V3_PATH + "/beta")
+                .param("dataId", "test").param("groupName", "test")
+                .param("namespaceId", "");
+        String actualValue =
+            mockmvc.perform(builder).andReturn().getResponse().getContentAsString();
+        String code = JacksonUtils.toObj(actualValue).get("code").toString();
+        assertEquals("30000", code);
+    }
+    
+    @Test
+    void testSearchConfigWithAdvanceInfo() throws Exception {
+        Page<ConfigInfo> page = new Page<>();
+        page.setTotalCount(0);
+        page.setPageNumber(1);
+        page.setPagesAvailable(0);
+        page.setPageItems(new ArrayList<>());
+        when(configDetailService.findConfigInfoPage(
+            eq("accurate"), eq(1), eq(10), eq("test"), eq("test"),
+            eq("public"), any())).thenReturn(page);
+        
+        MockHttpServletRequestBuilder builder =
+            MockMvcRequestBuilders.get(
+                Constants.CONFIG_ADMIN_V3_PATH + "/list")
+                .param("search", "accurate")
+                .param("dataId", "test").param("groupName", "test")
+                .param("appName", "myApp")
+                .param("namespaceId", "")
+                .param("configTags", "tag1")
+                .param("type", "json")
+                .param("configDetail", "someDetail")
+                .param("pageNo", "1").param("pageSize", "10");
+        int status = mockmvc.perform(builder).andReturn().getResponse().getStatus();
+        assertEquals(200, status);
+    }
+    
+    @Test
+    void testImportConfigWithNullFile() throws Exception {
+        MockHttpServletRequestBuilder builder =
+            MockMvcRequestBuilders.multipart(
+                Constants.CONFIG_ADMIN_V3_PATH + "/import")
+                .param("src_user", "test")
+                .param("namespaceId", "public")
+                .param("policy", "ABORT");
+        String actualValue =
+            mockmvc.perform(builder).andReturn().getResponse().getContentAsString();
+        String code = JacksonUtils.toObj(actualValue).get("code").toString();
+        assertEquals("100005", code);
+    }
+    
+    @Test
+    void testImportConfigNamespaceNotExist() throws Exception {
+        when(namespacePersistService.tenantInfoCountByTenantId("ns1"))
+            .thenReturn(0);
+        MockMultipartFile file = new MockMultipartFile(
+            "file", "test.zip", "application/zip", "test".getBytes());
+        MockHttpServletRequestBuilder builder =
+            MockMvcRequestBuilders.multipart(
+                Constants.CONFIG_ADMIN_V3_PATH + "/import")
+                .file(file)
+                .param("src_user", "test")
+                .param("namespaceId", "ns1")
+                .param("policy", "ABORT");
+        String actualValue =
+            mockmvc.perform(builder).andReturn().getResponse().getContentAsString();
+        String code = JacksonUtils.toObj(actualValue).get("code").toString();
+        assertEquals("22001", code);
+    }
+    
+    @Test
+    void testCloneConfigEmpty() throws Exception {
+        MockHttpServletRequestBuilder builder =
+            MockMvcRequestBuilders.post(
+                Constants.CONFIG_ADMIN_V3_PATH + "/clone")
+                .param("src_user", "test")
+                .param("namespaceId", "public")
+                .param("policy", "ABORT")
+                .content("[]")
+                .contentType(MediaType.APPLICATION_JSON);
+        String actualValue =
+            mockmvc.perform(builder).andReturn().getResponse().getContentAsString();
+        String code = JacksonUtils.toObj(actualValue).get("code").toString();
+        assertEquals("100006", code);
+    }
+    
+    @Test
+    void testCloneConfigNamespaceNotExist() throws Exception {
+        ConfigCloneInfo info = new ConfigCloneInfo();
+        info.setConfigId(1L);
+        when(namespacePersistService.tenantInfoCountByTenantId("ns1"))
+            .thenReturn(0);
+        MockHttpServletRequestBuilder builder =
+            MockMvcRequestBuilders.post(
+                Constants.CONFIG_ADMIN_V3_PATH + "/clone")
+                .param("src_user", "test")
+                .param("namespaceId", "ns1")
+                .param("policy", "ABORT")
+                .content(JacksonUtils.toJson(Collections.singletonList(info)))
+                .contentType(MediaType.APPLICATION_JSON);
+        String actualValue =
+            mockmvc.perform(builder).andReturn().getResponse().getContentAsString();
+        String code = JacksonUtils.toObj(actualValue).get("code").toString();
+        assertEquals("22001", code);
+    }
+    
+    @Test
+    void testImportConfigWithUnrecognizedItems() throws Exception {
+        List<ZipUtils.ZipItem> zipItems = new ArrayList<>();
+        String dataId = "dataId1.json";
+        String groupName = "group1";
+        String content = "content123";
+        zipItems.add(new ZipUtils.ZipItem(groupName + "/" + dataId, content));
+        zipItems.add(new ZipUtils.ZipItem("badNameNoSlash", "data"));
+        zipItems.add(new ZipUtils.ZipItem("unknownGroup/unknownDataId", "data2"));
+        
+        ConfigMetadata configMetadata = new ConfigMetadata();
+        configMetadata.setMetadata(new ArrayList<>());
+        ConfigMetadata.ConfigExportItem item = new ConfigMetadata.ConfigExportItem();
+        item.setDataId(dataId);
+        item.setGroup(groupName);
+        item.setType("json");
+        configMetadata.getMetadata().add(item);
+        ConfigMetadata.ConfigExportItem item2 = new ConfigMetadata.ConfigExportItem();
+        item2.setDataId("noFileDataId");
+        item2.setGroup("noFileGroup");
+        item2.setType("text");
+        configMetadata.getMetadata().add(item2);
+        
+        ZipUtils.UnZipResult unziped = new ZipUtils.UnZipResult(zipItems,
+            new ZipUtils.ZipItem(Constants.CONFIG_EXPORT_METADATA_NEW,
+                YamlParserUtil.dumpObject(configMetadata)));
+        MockMultipartFile file =
+            new MockMultipartFile("file", "test.zip", "application/zip", "test".getBytes());
+        try (MockedStatic<ZipUtils> zipUtilsMockedStatic = Mockito.mockStatic(ZipUtils.class)) {
+            zipUtilsMockedStatic.when(() -> ZipUtils.unzip(eq(file.getBytes())))
+                .thenReturn(unziped);
+            when(namespacePersistService.tenantInfoCountByTenantId("public")).thenReturn(1);
+            Map<String, Object> map = new HashMap<>();
+            map.put("succCount", 1);
+            when(configInfoPersistService.batchInsertOrUpdate(anyList(), anyString(), anyString(),
+                any(), any())).thenReturn(map);
+            
+            MockHttpServletRequestBuilder builder = MockMvcRequestBuilders.multipart(
+                Constants.CONFIG_ADMIN_V3_PATH + "/import").file(file).param("src_user", "test")
+                .param("namespaceId", "public").param("policy", "ABORT");
+            
+            String actualValue =
+                mockmvc.perform(builder).andReturn().getResponse().getContentAsString();
+            String code = JacksonUtils.toObj(actualValue).get("code").toString();
+            assertEquals("0", code);
+            JsonNode data = JacksonUtils.toObj(actualValue).get("data");
+            assertEquals("3", data.get("unrecognizedCount").toString());
+        }
+    }
+    
+    @Test
+    void testImportConfigWithInvalidMetadata() throws Exception {
+        List<ZipUtils.ZipItem> zipItems = new ArrayList<>();
+        zipItems.add(new ZipUtils.ZipItem("group/data.json", "content"));
+        
+        ConfigMetadata configMetadata = new ConfigMetadata();
+        configMetadata.setMetadata(new ArrayList<>());
+        ConfigMetadata.ConfigExportItem badItem = new ConfigMetadata.ConfigExportItem();
+        badItem.setDataId("");
+        badItem.setGroup("group");
+        badItem.setType("json");
+        configMetadata.getMetadata().add(badItem);
+        
+        ZipUtils.UnZipResult unziped = new ZipUtils.UnZipResult(zipItems,
+            new ZipUtils.ZipItem(Constants.CONFIG_EXPORT_METADATA_NEW,
+                YamlParserUtil.dumpObject(configMetadata)));
+        MockMultipartFile file =
+            new MockMultipartFile("file", "test.zip", "application/zip", "test".getBytes());
+        try (MockedStatic<ZipUtils> zipUtilsMockedStatic = Mockito.mockStatic(ZipUtils.class)) {
+            zipUtilsMockedStatic.when(() -> ZipUtils.unzip(eq(file.getBytes())))
+                .thenReturn(unziped);
+            
+            MockHttpServletRequestBuilder builder = MockMvcRequestBuilders.multipart(
+                Constants.CONFIG_ADMIN_V3_PATH + "/import").file(file).param("src_user", "test")
+                .param("namespaceId", "").param("policy", "ABORT");
+            
+            String actualValue =
+                mockmvc.perform(builder).andReturn().getResponse().getContentAsString();
+            String code = JacksonUtils.toObj(actualValue).get("code").toString();
+            assertEquals("100002", code);
+        }
+    }
+    
+    @Test
+    void testCloneConfigEmptyQueryResult() throws Exception {
+        ConfigCloneInfo info = new ConfigCloneInfo();
+        info.setConfigId(1L);
+        when(namespacePersistService.tenantInfoCountByTenantId("public"))
+            .thenReturn(1);
+        when(configInfoPersistService.findAllConfigInfo4Export(
+            any(), any(), any(), any(), anyList()))
+            .thenReturn(new ArrayList<>());
+        MockHttpServletRequestBuilder builder =
+            MockMvcRequestBuilders.post(
+                Constants.CONFIG_ADMIN_V3_PATH + "/clone")
+                .param("src_user", "test")
+                .param("namespaceId", "public")
+                .param("policy", "ABORT")
+                .content(JacksonUtils.toJson(Collections.singletonList(info)))
+                .contentType(MediaType.APPLICATION_JSON);
+        String actualValue =
+            mockmvc.perform(builder).andReturn().getResponse().getContentAsString();
+        String code = JacksonUtils.toObj(actualValue).get("code").toString();
+        assertEquals("100005", code);
+    }
+    
+    @Test
+    void testCloneConfigWithAppNameAndBlankSrcUser() throws Exception {
+        ConfigCloneInfo cloneInfo = new ConfigCloneInfo();
+        cloneInfo.setConfigId(1L);
+        cloneInfo.setTargetDataId("cloned");
+        cloneInfo.setTargetGroupName("clonedGroup");
+        
+        when(namespacePersistService.tenantInfoCountByTenantId("public")).thenReturn(1);
+        
+        ConfigAllInfo configAllInfo = new ConfigAllInfo();
+        configAllInfo.setDataId("orig");
+        configAllInfo.setGroup("origGroup");
+        configAllInfo.setAppName("myApp");
+        configAllInfo.setId(1L);
+        List<ConfigAllInfo> queryedDataList = new ArrayList<>();
+        queryedDataList.add(configAllInfo);
+        
+        when(configInfoPersistService.findAllConfigInfo4Export(
+            any(), any(), any(), any(), anyList()))
+            .thenReturn(queryedDataList);
+        
+        Map<String, Object> map = new HashMap<>();
+        map.put("succCount", 1);
+        when(configInfoPersistService.batchInsertOrUpdate(
+            anyList(), anyString(), anyString(), any(), any()))
+            .thenReturn(map);
+        
+        MockHttpServletRequestBuilder builder =
+            MockMvcRequestBuilders.post(Constants.CONFIG_ADMIN_V3_PATH + "/clone")
+                .param("src_user", "").param("namespaceId", "public")
+                .param("policy", "ABORT")
+                .content(JacksonUtils.toJson(Collections.singletonList(cloneInfo)))
+                .contentType(MediaType.APPLICATION_JSON);
+        
+        String actualValue =
+            mockmvc.perform(builder).andReturn().getResponse().getContentAsString();
+        String code = JacksonUtils.toObj(actualValue).get("code").toString();
+        assertEquals("0", code);
+    }
+    
+    @Test
+    void testCloneConfigDuplicateConfigId() throws Exception {
+        ConfigCloneInfo info1 = new ConfigCloneInfo();
+        info1.setConfigId(1L);
+        info1.setTargetDataId("data1");
+        ConfigCloneInfo info2 = new ConfigCloneInfo();
+        info2.setConfigId(1L);
+        info2.setTargetDataId("data2");
+        List<ConfigCloneInfo> cloneInfos = Arrays.asList(info1, info2);
+        
+        when(namespacePersistService.tenantInfoCountByTenantId("public")).thenReturn(1);
+        
+        ConfigAllInfo configAllInfo = new ConfigAllInfo();
+        configAllInfo.setDataId("orig");
+        configAllInfo.setGroup("origGroup");
+        configAllInfo.setId(1L);
+        when(configInfoPersistService.findAllConfigInfo4Export(
+            any(), any(), any(), any(), anyList()))
+            .thenReturn(Collections.singletonList(configAllInfo));
+        
+        Map<String, Object> map = new HashMap<>();
+        map.put("succCount", 1);
+        when(configInfoPersistService.batchInsertOrUpdate(
+            anyList(), anyString(), anyString(), any(), any()))
+            .thenReturn(map);
+        
+        MockHttpServletRequestBuilder builder =
+            MockMvcRequestBuilders.post(Constants.CONFIG_ADMIN_V3_PATH + "/clone")
+                .param("src_user", "test").param("namespaceId", "public")
+                .param("policy", "ABORT")
+                .content(JacksonUtils.toJson(cloneInfos))
+                .contentType(MediaType.APPLICATION_JSON);
+        
+        String actualValue =
+            mockmvc.perform(builder).andReturn().getResponse().getContentAsString();
+        String code = JacksonUtils.toObj(actualValue).get("code").toString();
+        assertEquals("0", code);
+    }
+    
+    @Test
+    void testStopBetaWithGrayCompatibleModel() throws Exception {
+        try (MockedStatic<PropertyUtil> propertyUtilMock =
+            Mockito.mockStatic(PropertyUtil.class)) {
+            propertyUtilMock.when(PropertyUtil::isGrayCompatibleModel).thenReturn(true);
+            ReflectionTestUtils.setField(configControllerV3, "oldTableVersion", true);
+            
+            MockHttpServletRequestBuilder builder =
+                MockMvcRequestBuilders.delete(Constants.CONFIG_ADMIN_V3_PATH + "/beta")
+                    .param("dataId", "test").param("groupName", "test")
+                    .param("namespaceId", "");
+            
+            String actualValue =
+                mockmvc.perform(builder).andReturn().getResponse().getContentAsString();
+            String code = JacksonUtils.toObj(actualValue).get("code").toString();
+            assertEquals("0", code);
+            Mockito.verify(configInfoBetaPersistService)
+                .removeConfigInfo4Beta("test", "test", "public");
+        }
+    }
+    
+    @Test
+    void testImportConfigWithBlankSrcUser() throws Exception {
+        List<ZipUtils.ZipItem> zipItems = new ArrayList<>();
+        zipItems.add(new ZipUtils.ZipItem("group/data.json", "content"));
+        
+        ConfigMetadata configMetadata = new ConfigMetadata();
+        configMetadata.setMetadata(new ArrayList<>());
+        ConfigMetadata.ConfigExportItem item = new ConfigMetadata.ConfigExportItem();
+        item.setDataId("data.json");
+        item.setGroup("group");
+        item.setType("json");
+        configMetadata.getMetadata().add(item);
+        
+        ZipUtils.UnZipResult unziped = new ZipUtils.UnZipResult(zipItems,
+            new ZipUtils.ZipItem(Constants.CONFIG_EXPORT_METADATA_NEW,
+                YamlParserUtil.dumpObject(configMetadata)));
+        MockMultipartFile file =
+            new MockMultipartFile("file", "test.zip", "application/zip",
+                "test".getBytes());
+        try (MockedStatic<ZipUtils> zipUtilsMock = Mockito.mockStatic(ZipUtils.class)) {
+            zipUtilsMock.when(() -> ZipUtils.unzip(eq(file.getBytes())))
+                .thenReturn(unziped);
+            when(namespacePersistService.tenantInfoCountByTenantId("public"))
+                .thenReturn(1);
+            Map<String, Object> map = new HashMap<>();
+            map.put("succCount", 1);
+            when(configInfoPersistService.batchInsertOrUpdate(
+                anyList(), anyString(), anyString(), any(), any()))
+                .thenReturn(map);
+            
+            MockHttpServletRequestBuilder builder = MockMvcRequestBuilders.multipart(
+                Constants.CONFIG_ADMIN_V3_PATH + "/import").file(file)
+                .param("src_user", "")
+                .param("namespaceId", "public").param("policy", "ABORT");
+            
+            String actualValue =
+                mockmvc.perform(builder).andReturn().getResponse()
+                    .getContentAsString();
+            String code = JacksonUtils.toObj(actualValue).get("code").toString();
+            assertEquals("0", code);
+        }
+    }
+    
+    @Test
+    void testImportConfigWithEmptyMetadataList() throws Exception {
+        List<ZipUtils.ZipItem> zipItems = new ArrayList<>();
+        zipItems.add(new ZipUtils.ZipItem("group/data.json", "content"));
+        
+        ConfigMetadata emptyMetadata = new ConfigMetadata();
+        emptyMetadata.setMetadata(new ArrayList<>());
+        
+        ZipUtils.UnZipResult unziped = new ZipUtils.UnZipResult(zipItems,
+            new ZipUtils.ZipItem(Constants.CONFIG_EXPORT_METADATA_NEW,
+                YamlParserUtil.dumpObject(emptyMetadata)));
+        MockMultipartFile file =
+            new MockMultipartFile("file", "test.zip", "application/zip",
+                "test".getBytes());
+        try (MockedStatic<ZipUtils> zipUtilsMock = Mockito.mockStatic(ZipUtils.class)) {
+            zipUtilsMock.when(() -> ZipUtils.unzip(eq(file.getBytes())))
+                .thenReturn(unziped);
+            when(namespacePersistService.tenantInfoCountByTenantId("public"))
+                .thenReturn(1);
+            
+            MockHttpServletRequestBuilder builder = MockMvcRequestBuilders.multipart(
+                Constants.CONFIG_ADMIN_V3_PATH + "/import").file(file)
+                .param("src_user", "test")
+                .param("namespaceId", "public").param("policy", "ABORT");
+            
+            String actualValue =
+                mockmvc.perform(builder).andReturn().getResponse()
+                    .getContentAsString();
+            String code = JacksonUtils.toObj(actualValue).get("code").toString();
+            assertEquals("100002", code);
+        }
     }
 }

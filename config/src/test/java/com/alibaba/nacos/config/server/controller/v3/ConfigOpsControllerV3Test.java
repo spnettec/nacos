@@ -48,8 +48,11 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.ArrayList;
+import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(SpringExtension.class)
@@ -150,5 +153,204 @@ class ConfigOpsControllerV3Test {
             .file(file);
         int actualValue = mockMvc.perform(builder).andReturn().getResponse().getStatus();
         assertEquals(200, actualValue);
+    }
+    
+    @Test
+    void testDerbyOpsNotEmbedded() throws Exception {
+        ConfigCommonConfig.getInstance().setDerbyOpsEnabled(true);
+        datasourceConfigurationMockedStatic.when(DatasourceConfiguration::isEmbeddedStorage)
+            .thenReturn(false);
+        MockHttpServletRequestBuilder builder =
+            MockMvcRequestBuilders.get(
+                Constants.OPS_CONTROLLER_V3_ADMIN_PATH + "/derby")
+                .param("sql", "SELECT * FROM TEST");
+        String actualValue =
+            mockMvc.perform(builder).andReturn().getResponse().getContentAsString();
+        assertEquals("30000", JacksonUtils.toObj(actualValue).get("code").toString());
+    }
+    
+    @Test
+    void testDerbyOpsNonSelectSql() throws Exception {
+        ConfigCommonConfig.getInstance().setDerbyOpsEnabled(true);
+        datasourceConfigurationMockedStatic.when(DatasourceConfiguration::isEmbeddedStorage)
+            .thenReturn(true);
+        MockHttpServletRequestBuilder builder =
+            MockMvcRequestBuilders.get(
+                Constants.OPS_CONTROLLER_V3_ADMIN_PATH + "/derby")
+                .param("sql", "DELETE FROM TEST");
+        String actualValue =
+            mockMvc.perform(builder).andReturn().getResponse().getContentAsString();
+        assertEquals("30000", JacksonUtils.toObj(actualValue).get("code").toString());
+    }
+    
+    @Test
+    void testDerbyOpsDisabled() throws Exception {
+        ConfigCommonConfig.getInstance().setDerbyOpsEnabled(false);
+        datasourceConfigurationMockedStatic.when(DatasourceConfiguration::isEmbeddedStorage)
+            .thenReturn(true);
+        MockHttpServletRequestBuilder builder =
+            MockMvcRequestBuilders.get(
+                Constants.OPS_CONTROLLER_V3_ADMIN_PATH + "/derby")
+                .param("sql", "SELECT * FROM TEST");
+        String actualValue =
+            mockMvc.perform(builder).andReturn().getResponse().getContentAsString();
+        assertEquals("30000", JacksonUtils.toObj(actualValue).get("code").toString());
+    }
+    
+    @Test
+    void testUpdateLocalCacheFromStoreError() throws Exception {
+        doThrow(new RuntimeException("dump error")).when(dumpService).dumpAll();
+        MockHttpServletRequestBuilder builder =
+            MockMvcRequestBuilders.post(
+                Constants.OPS_CONTROLLER_V3_ADMIN_PATH + "/localCache");
+        String actualValue =
+            mockMvc.perform(builder).andReturn().getResponse().getContentAsString();
+        assertEquals("30000", JacksonUtils.toObj(actualValue).get("code").toString());
+    }
+    
+    @Test
+    void testImportDerbyNotEmbedded() throws Exception {
+        ConfigCommonConfig.getInstance().setDerbyOpsEnabled(true);
+        datasourceConfigurationMockedStatic.when(DatasourceConfiguration::isEmbeddedStorage)
+            .thenReturn(false);
+        MockMultipartFile file =
+            new MockMultipartFile("file", "test.zip", "application/zip",
+                "test".getBytes());
+        MockHttpServletRequestBuilder builder = MockMvcRequestBuilders
+            .multipart(Constants.OPS_CONTROLLER_V3_ADMIN_PATH + "/derby/import")
+            .file(file);
+        int actualValue =
+            mockMvc.perform(builder).andReturn().getResponse().getStatus();
+        assertEquals(200, actualValue);
+    }
+    
+    @Test
+    void testImportDerbyDisabled() throws Exception {
+        ConfigCommonConfig.getInstance().setDerbyOpsEnabled(false);
+        datasourceConfigurationMockedStatic.when(DatasourceConfiguration::isEmbeddedStorage)
+            .thenReturn(true);
+        MockMultipartFile file =
+            new MockMultipartFile("file", "test.zip", "application/zip",
+                "test".getBytes());
+        MockHttpServletRequestBuilder builder = MockMvcRequestBuilders
+            .multipart(Constants.OPS_CONTROLLER_V3_ADMIN_PATH + "/derby/import")
+            .file(file);
+        int actualValue =
+            mockMvc.perform(builder).andReturn().getResponse().getStatus();
+        assertEquals(200, actualValue);
+    }
+    
+    @Test
+    void testDerbyOpsWithExistingLimit() throws Exception {
+        ConfigCommonConfig.getInstance().setDerbyOpsEnabled(true);
+        datasourceConfigurationMockedStatic.when(DatasourceConfiguration::isEmbeddedStorage)
+            .thenReturn(true);
+        DynamicDataSource dataSource = Mockito.mock(DynamicDataSource.class);
+        dynamicDataSourceMockedStatic.when(DynamicDataSource::getInstance)
+            .thenReturn(dataSource);
+        LocalDataSourceServiceImpl dataSourceService =
+            Mockito.mock(LocalDataSourceServiceImpl.class);
+        when(dataSource.getDataSource()).thenReturn(dataSourceService);
+        JdbcTemplate template = Mockito.mock(JdbcTemplate.class);
+        when(dataSourceService.getJdbcTemplate()).thenReturn(template);
+        String sqlWithLimit =
+            "SELECT * FROM TEST OFFSET 0 ROWS FETCH NEXT 100 ROWS ONLY";
+        when(template.queryForList(sqlWithLimit)).thenReturn(new ArrayList<>());
+        MockHttpServletRequestBuilder builder =
+            MockMvcRequestBuilders.get(
+                Constants.OPS_CONTROLLER_V3_ADMIN_PATH + "/derby")
+                .param("sql", sqlWithLimit);
+        String actualValue =
+            mockMvc.perform(builder).andReturn().getResponse().getContentAsString();
+        assertEquals("0", JacksonUtils.toObj(actualValue).get("code").toString());
+    }
+    
+    @Test
+    void testDerbyOpsException() throws Exception {
+        ConfigCommonConfig.getInstance().setDerbyOpsEnabled(true);
+        datasourceConfigurationMockedStatic.when(DatasourceConfiguration::isEmbeddedStorage)
+            .thenReturn(true);
+        DynamicDataSource dataSource = Mockito.mock(DynamicDataSource.class);
+        dynamicDataSourceMockedStatic.when(DynamicDataSource::getInstance)
+            .thenReturn(dataSource);
+        LocalDataSourceServiceImpl dataSourceService =
+            Mockito.mock(LocalDataSourceServiceImpl.class);
+        when(dataSource.getDataSource()).thenReturn(dataSourceService);
+        JdbcTemplate template = Mockito.mock(JdbcTemplate.class);
+        when(dataSourceService.getJdbcTemplate()).thenReturn(template);
+        when(template.queryForList(Mockito.anyString()))
+            .thenThrow(new RuntimeException("db error"));
+        MockHttpServletRequestBuilder builder =
+            MockMvcRequestBuilders.get(
+                Constants.OPS_CONTROLLER_V3_ADMIN_PATH + "/derby")
+                .param("sql", "SELECT * FROM TEST");
+        String actualValue =
+            mockMvc.perform(builder).andReturn().getResponse().getContentAsString();
+        assertEquals("30000",
+            JacksonUtils.toObj(actualValue).get("code").toString());
+    }
+    
+    @Test
+    void testSetLogLevelError() throws Exception {
+        MockHttpServletRequestBuilder builder = MockMvcRequestBuilders
+            .put(Constants.OPS_CONTROLLER_V3_ADMIN_PATH + "/log")
+            .param("logName", "nonexistent.invalid.logger.12345")
+            .param("logLevel", "INVALID_LEVEL");
+        String actualValue =
+            mockMvc.perform(builder).andReturn().getResponse().getContentAsString();
+        int status =
+            mockMvc.perform(builder).andReturn().getResponse().getStatus();
+        assertEquals(200, status);
+    }
+    
+    @Test
+    void testImportDerbyWithSuccessCallback() throws Exception {
+        ConfigCommonConfig.getInstance().setDerbyOpsEnabled(true);
+        datasourceConfigurationMockedStatic.when(DatasourceConfiguration::isEmbeddedStorage)
+            .thenReturn(true);
+        
+        DatabaseOperate mockDbOperate = Mockito.mock(DatabaseOperate.class);
+        applicationUtilsMockedStatic.when(() -> ApplicationUtils.getBean(DatabaseOperate.class))
+            .thenReturn(mockDbOperate);
+        
+        CompletableFuture<com.alibaba.nacos.common.model.RestResult<String>> future =
+            new CompletableFuture<>();
+        when(mockDbOperate.dataImport(any())).thenReturn(future);
+        future.complete(
+            com.alibaba.nacos.common.model.RestResultUtils.success("import success"));
+        
+        MockMultipartFile file =
+            new MockMultipartFile("file", "test.sql", "text/plain",
+                "INSERT INTO test VALUES(1)".getBytes());
+        MockHttpServletRequestBuilder builder = MockMvcRequestBuilders
+            .multipart(Constants.OPS_CONTROLLER_V3_ADMIN_PATH + "/derby/import")
+            .file(file);
+        int status = mockMvc.perform(builder).andReturn().getResponse().getStatus();
+        assertEquals(200, status);
+    }
+    
+    @Test
+    void testImportDerbyWithFailureCallback() throws Exception {
+        ConfigCommonConfig.getInstance().setDerbyOpsEnabled(true);
+        datasourceConfigurationMockedStatic.when(DatasourceConfiguration::isEmbeddedStorage)
+            .thenReturn(true);
+        
+        DatabaseOperate mockDbOperate = Mockito.mock(DatabaseOperate.class);
+        applicationUtilsMockedStatic.when(() -> ApplicationUtils.getBean(DatabaseOperate.class))
+            .thenReturn(mockDbOperate);
+        
+        CompletableFuture<com.alibaba.nacos.common.model.RestResult<String>> future =
+            new CompletableFuture<>();
+        when(mockDbOperate.dataImport(any())).thenReturn(future);
+        future.completeExceptionally(new RuntimeException("import failed"));
+        
+        MockMultipartFile file =
+            new MockMultipartFile("file", "test.sql", "text/plain",
+                "INSERT INTO test VALUES(1)".getBytes());
+        MockHttpServletRequestBuilder builder = MockMvcRequestBuilders
+            .multipart(Constants.OPS_CONTROLLER_V3_ADMIN_PATH + "/derby/import")
+            .file(file);
+        int status = mockMvc.perform(builder).andReturn().getResponse().getStatus();
+        assertEquals(200, status);
     }
 }

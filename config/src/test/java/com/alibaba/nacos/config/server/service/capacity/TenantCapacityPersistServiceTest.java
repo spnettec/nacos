@@ -40,6 +40,8 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -47,6 +49,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -94,6 +97,14 @@ class TenantCapacityPersistServiceTest {
         NamespaceCapacity ret = service.getTenantCapacity(tenantId);
         
         assertEquals(tenantCapacity.getNamespaceId(), ret.getNamespaceId());
+    }
+    
+    @Test
+    void testGetTenantCapacityNotFound() {
+        String tenantId = "notExist";
+        when(jdbcTemplate.query(anyString(), any(RowMapper.class),
+            eq(new Object[] {tenantId}))).thenReturn(new ArrayList<>());
+        assertNull(service.getTenantCapacity(tenantId));
     }
     
     @Test
@@ -372,5 +383,44 @@ class TenantCapacityPersistServiceTest {
         assertEquals(maxAggrCount, groupCapacity.getMaxAggrCount().intValue());
         assertEquals(maxAggrSize, groupCapacity.getMaxAggrSize().intValue());
         assertEquals(tenant, groupCapacity.getNamespaceId());
+    }
+    
+    @Test
+    void testGetCapacityList4CorrectUsageRowMapper() {
+        long lastId = 1;
+        int pageSize = 1;
+        
+        when(jdbcTemplate.query(anyString(), any(Object[].class), any(RowMapper.class)))
+            .thenAnswer((Answer<List<NamespaceCapacity>>) invocation -> {
+                RowMapper<NamespaceCapacity> rowMapper = invocation.getArgument(2);
+                ResultSet rs = Mockito.mock(ResultSet.class);
+                Mockito.when(rs.getLong("id")).thenReturn(200L);
+                Mockito.when(rs.getString("tenant_id")).thenReturn("tenantX");
+                List<NamespaceCapacity> result = new ArrayList<>();
+                result.add(rowMapper.mapRow(rs, 1));
+                return result;
+            });
+        
+        List<NamespaceCapacity> ret = service.getCapacityList4CorrectUsage(lastId, pageSize);
+        assertEquals(1, ret.size());
+        assertEquals(200L, ret.get(0).getId().longValue());
+        assertEquals("tenantX", ret.get(0).getNamespaceId());
+    }
+    
+    @Test
+    void testDeleteTenantCapacityPreparedStatementCreator() throws Exception {
+        Connection connection = Mockito.mock(Connection.class);
+        PreparedStatement ps = Mockito.mock(PreparedStatement.class);
+        Mockito.when(connection.prepareStatement(anyString())).thenReturn(ps);
+        
+        when(jdbcTemplate.update(any(PreparedStatementCreator.class)))
+            .thenAnswer((Answer<Integer>) invocation -> {
+                PreparedStatementCreator creator = invocation.getArgument(0);
+                creator.createPreparedStatement(connection);
+                return 1;
+            });
+        
+        assertTrue(service.deleteTenantCapacity("tenantX"));
+        Mockito.verify(ps).setString(1, "tenantX");
     }
 }

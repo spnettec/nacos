@@ -43,6 +43,8 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -414,6 +416,22 @@ class GroupCapacityPersistServiceTest {
     }
     
     @Test
+    void testGetClusterUsageNullResult() {
+        doReturn(new ConfigInfoMapperByMySql()).when(mapperManager).findMapper(any(),
+            eq(TableConstant.CONFIG_INFO));
+        String groupId = GroupCapacityPersistService.CLUSTER;
+        when(jdbcTemplate.query(anyString(), any(RowMapper.class), eq(new Object[] {groupId})))
+            .thenReturn(new ArrayList<>());
+        when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class))).thenReturn(null);
+        try {
+            service.getClusterUsage();
+            assertTrue(false);
+        } catch (IllegalArgumentException e) {
+            assertEquals("configInfoCount error", e.getMessage());
+        }
+    }
+    
+    @Test
     void testDeleteGroupCapacity() {
         
         when(jdbcTemplate.update(any(PreparedStatementCreator.class))).thenReturn(1);
@@ -428,5 +446,44 @@ class GroupCapacityPersistServiceTest {
         } catch (Exception e) {
             assertEquals("conn fail", e.getMessage());
         }
+    }
+    
+    @Test
+    void testGetCapacityList4CorrectUsageRowMapper() {
+        long lastId = 1;
+        int pageSize = 1;
+        
+        when(jdbcTemplate.query(anyString(), any(Object[].class), any(RowMapper.class)))
+            .thenAnswer((Answer<List<GroupCapacity>>) invocation -> {
+                RowMapper<GroupCapacity> rowMapper = invocation.getArgument(2);
+                ResultSet rs = Mockito.mock(ResultSet.class);
+                Mockito.when(rs.getLong("id")).thenReturn(100L);
+                Mockito.when(rs.getString("group_id")).thenReturn("testGroup");
+                List<GroupCapacity> result = new ArrayList<>();
+                result.add(rowMapper.mapRow(rs, 1));
+                return result;
+            });
+        
+        List<GroupCapacity> ret = service.getCapacityList4CorrectUsage(lastId, pageSize);
+        assertEquals(1, ret.size());
+        assertEquals(100L, ret.get(0).getId().longValue());
+        assertEquals("testGroup", ret.get(0).getGroupName());
+    }
+    
+    @Test
+    void testDeleteGroupCapacityPreparedStatementCreator() throws Exception {
+        Connection connection = Mockito.mock(Connection.class);
+        PreparedStatement ps = Mockito.mock(PreparedStatement.class);
+        Mockito.when(connection.prepareStatement(anyString())).thenReturn(ps);
+        
+        when(jdbcTemplate.update(any(PreparedStatementCreator.class)))
+            .thenAnswer((Answer<Integer>) invocation -> {
+                PreparedStatementCreator creator = invocation.getArgument(0);
+                creator.createPreparedStatement(connection);
+                return 1;
+            });
+        
+        assertTrue(service.deleteGroupCapacity("testGroup"));
+        Mockito.verify(ps).setString(1, "testGroup");
     }
 }

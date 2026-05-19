@@ -535,6 +535,8 @@ class ConfigRowMapperInjectorTest {
         Mockito.when(resultSet.getString(eq("encrypted_data_key"))).thenReturn("encKey");
         Mockito.when(resultSet.getString(eq("c_desc"))).thenReturn("测试配置描述");
         Mockito.when(resultSet.getString(eq("config_tags"))).thenReturn("tag1,tag2,tag3");
+        Timestamp gmtModified = new Timestamp(1700000000000L);
+        Mockito.when(resultSet.getTimestamp(eq("gmt_modified"))).thenReturn(gmtModified);
         
         ConfigInfo configInfo = mapper.mapRow(resultSet, 1);
         
@@ -549,6 +551,7 @@ class ConfigRowMapperInjectorTest {
         assertEquals("encKey", configInfo.getEncryptedDataKey());
         assertEquals("测试配置描述", configInfo.getDesc());
         assertEquals("tag1,tag2,tag3", configInfo.getConfigTags());
+        assertEquals(1700000000000L, configInfo.getGmtModified());
     }
     
     @Test
@@ -567,7 +570,8 @@ class ConfigRowMapperInjectorTest {
         Mockito.when(resultSet.getString(eq("type"))).thenReturn("properties");
         Mockito.when(resultSet.getString(eq("encrypted_data_key"))).thenReturn("encKey");
         Mockito.when(resultSet.getString(eq("c_desc"))).thenReturn(null);
-        Mockito.when(resultSet.getString(eq("config_tags"))).thenReturn(null);
+        Mockito.when(resultSet.getString(eq("config_tags"))).thenReturn("  ");
+        Mockito.when(resultSet.getTimestamp(eq("gmt_modified"))).thenReturn(null);
         
         ConfigInfo configInfo = mapper.mapRow(resultSet, 1);
         
@@ -621,6 +625,66 @@ class ConfigRowMapperInjectorTest {
         // 新字段应该为 null，保证向后兼容
         assertEquals(null, configInfo.getDesc());
         assertEquals(null, configInfo.getConfigTags());
+    }
+    
+    @Test
+    void testConfigInfoGrayWrapperRowMapperMissingColumns() throws SQLException {
+        ResultSetImpl resultSet = Mockito.mock(ResultSetImpl.class);
+        Mockito.when(resultSet.getString(eq("data_id"))).thenReturn("d");
+        Mockito.when(resultSet.getString(eq("group_id"))).thenReturn("g");
+        Mockito.when(resultSet.getString(eq("tenant_id"))).thenReturn("t");
+        Mockito.when(resultSet.getString(eq("gray_name"))).thenReturn("gn");
+        Mockito.when(resultSet.getString(eq("gray_rule")))
+            .thenThrow(new SQLException("not found"));
+        Mockito.when(resultSet.getString(eq("app_name")))
+            .thenThrow(new SQLException("not found"));
+        Mockito.when(resultSet.getString(eq("content")))
+            .thenThrow(new SQLException("not found"));
+        Mockito.when(resultSet.getLong(eq("id")))
+            .thenThrow(new SQLException("not found"));
+        Mockito.when(resultSet.getTimestamp(eq("gmt_modified")))
+            .thenThrow(new SQLException("not found"));
+        Mockito.when(resultSet.getString(eq("md5")))
+            .thenThrow(new SQLException("not found"));
+        Mockito.when(resultSet.getString(eq("encrypted_data_key")))
+            .thenThrow(new SQLException("not found"));
+        Mockito.when(resultSet.getString(eq("src_user")))
+            .thenThrow(new SQLException("not found"));
+        
+        ConfigRowMapperInjector.ConfigInfoGrayWrapperRowMapper mapper =
+            new ConfigRowMapperInjector.ConfigInfoGrayWrapperRowMapper();
+        ConfigInfoGrayWrapper result = mapper.mapRow(resultSet, 1);
+        assertEquals("d", result.getDataId());
+        assertEquals("g", result.getGroup());
+        assertEquals("gn", result.getGrayName());
+    }
+    
+    @Test
+    void testConfigInfoWrapperRowMapperMissingColumns() throws SQLException {
+        ResultSetImpl resultSet = Mockito.mock(ResultSetImpl.class);
+        Mockito.when(resultSet.getString(eq("data_id"))).thenReturn("d");
+        Mockito.when(resultSet.getString(eq("group_id"))).thenReturn("g");
+        Mockito.when(resultSet.getString(eq("tenant_id"))).thenReturn("t");
+        Mockito.when(resultSet.getString(eq("app_name"))).thenReturn("app");
+        Mockito.when(resultSet.getString(eq("type")))
+            .thenThrow(new SQLException("not found"));
+        Mockito.when(resultSet.getString(eq("content")))
+            .thenThrow(new SQLException("not found"));
+        Mockito.when(resultSet.getLong(eq("id")))
+            .thenThrow(new SQLException("not found"));
+        Mockito.when(resultSet.getTimestamp(eq("gmt_modified")))
+            .thenThrow(new SQLException("not found"));
+        Mockito.when(resultSet.getString(eq("md5")))
+            .thenThrow(new SQLException("not found"));
+        Mockito.when(resultSet.getString(eq("encrypted_data_key")))
+            .thenThrow(new SQLException("not found"));
+        
+        ConfigRowMapperInjector.ConfigInfoWrapperRowMapper mapper =
+            new ConfigRowMapperInjector.ConfigInfoWrapperRowMapper();
+        ConfigInfoWrapper result = mapper.mapRow(resultSet, 1);
+        assertEquals("d", result.getDataId());
+        assertEquals("g", result.getGroup());
+        assertEquals("app", result.getAppName());
     }
     
 }

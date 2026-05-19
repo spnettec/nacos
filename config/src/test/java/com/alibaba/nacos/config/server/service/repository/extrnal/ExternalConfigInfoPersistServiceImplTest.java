@@ -75,7 +75,9 @@ import static com.alibaba.nacos.config.server.service.repository.ConfigRowMapper
 import static com.alibaba.nacos.config.server.service.repository.ConfigRowMapperInjector.CONFIG_INFO_WRAPPER_ROW_MAPPER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -1478,6 +1480,47 @@ class ExternalConfigInfoPersistServiceImplTest {
     }
     
     @Test
+    void testUpdateConfigInfoMetadataNotFound() {
+        Mockito.when(jdbcTemplate.queryForObject(anyString(), eq(new Object[] {"d", "g", ""}),
+            eq(CONFIG_INFO_WRAPPER_ROW_MAPPER))).thenReturn(null);
+        assertThrows(NacosException.class,
+            () -> externalConfigInfoPersistService.updateConfigInfoMetadata(
+                "d", "g", "", "tags", "desc"));
+    }
+    
+    @Test
+    void testUpdateConfigInfoMetadataSuccess() throws NacosException {
+        ConfigInfoWrapper wrapper = new ConfigInfoWrapper();
+        wrapper.setId(100L);
+        wrapper.setDataId("d");
+        wrapper.setGroup("g");
+        wrapper.setTenant("");
+        Mockito.when(jdbcTemplate.queryForObject(anyString(), eq(new Object[] {"d", "g", ""}),
+            eq(CONFIG_INFO_WRAPPER_ROW_MAPPER))).thenReturn(wrapper);
+        ConfigOperateResult result =
+            externalConfigInfoPersistService.updateConfigInfoMetadata(
+                "d", "g", "", "tag1,tag2", "newdesc");
+        assertNotNull(result);
+        assertTrue(result.isSuccess());
+    }
+    
+    @Test
+    void testUpdateConfigInfoMetadataDescOnly() throws NacosException {
+        ConfigInfoWrapper wrapper = new ConfigInfoWrapper();
+        wrapper.setId(100L);
+        wrapper.setDataId("d");
+        wrapper.setGroup("g");
+        wrapper.setTenant("");
+        Mockito.when(jdbcTemplate.queryForObject(anyString(), eq(new Object[] {"d", "g", ""}),
+            eq(CONFIG_INFO_WRAPPER_ROW_MAPPER))).thenReturn(wrapper);
+        ConfigOperateResult result =
+            externalConfigInfoPersistService.updateConfigInfoMetadata(
+                "d", "g", "", null, "newdesc");
+        assertNotNull(result);
+        assertTrue(result.isSuccess());
+    }
+    
+    @Test
     void testBuildFindConfigInfoStateSql() {
         MapperManager mapperManager = MapperManager.instance(false);
         ConfigInfoMapper configInfoMapper =
@@ -1489,6 +1532,27 @@ class ExternalConfigInfoPersistServiceImplTest {
         assertEquals(
             "SELECT id,data_id,group_id,tenant_id,gmt_modified FROM config_info WHERE data_id = ? AND group_id = ? AND tenant_id = ?",
             select);
+    }
+    
+    @Test
+    void testGenerateLikeArgumentWithUnderscore() {
+        String result = externalConfigInfoPersistService.generateLikeArgument(
+            "data_id*");
+        assertEquals("data\\_id%", result);
+    }
+    
+    @Test
+    void testGenerateLikeArgumentWithoutWildcard() {
+        String result = externalConfigInfoPersistService.generateLikeArgument(
+            "plain_text");
+        assertEquals("plain\\_text", result);
+    }
+    
+    @Test
+    void testGenerateLikeArgumentWithWildcardOnly() {
+        String result = externalConfigInfoPersistService.generateLikeArgument(
+            "data*");
+        assertEquals("data%", result);
     }
     
 }
