@@ -136,7 +136,7 @@ public class ServiceDetailInfo implements Serializable {
         return ephemeral;
     }
     
-    public void setEphemeral(boolean ephemeral) {
+    public void setEphemeral(Boolean ephemeral) {
         this.ephemeral = ephemeral;
     }
 }

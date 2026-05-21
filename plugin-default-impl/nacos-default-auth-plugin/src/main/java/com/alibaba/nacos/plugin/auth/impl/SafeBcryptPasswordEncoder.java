@@ -18,6 +18,7 @@ package com.alibaba.nacos.plugin.auth.impl;
 
 import com.alibaba.nacos.plugin.auth.impl.constant.AuthConstants;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 /**
  * BCrypt encoder that fixes the password length vulnerability.
@@ -37,9 +38,24 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
  * @see <a href="https://github.com/advisories/GHSA-mg83-c7gq-rv5c">Spring Security Password Length Vulnerability Advisory</a>
  * @author linwumignshi
  */
-public class SafeBcryptPasswordEncoder extends BCryptPasswordEncoder {
+public class SafeBcryptPasswordEncoder implements PasswordEncoder {
+
+    private final BCryptPasswordEncoder delegate;
 
     public SafeBcryptPasswordEncoder() {
-        super(AuthConstants.MAX_PASSWORD_LENGTH);
+        this.delegate = new BCryptPasswordEncoder();
+    }
+
+    @Override
+    public String encode(CharSequence rawPassword) {
+        return delegate.encode(rawPassword);
+    }
+
+    @Override
+    public boolean matches(CharSequence rawPassword, String encodedPassword) {
+        if (rawPassword != null && rawPassword.length() > AuthConstants.MAX_PASSWORD_LENGTH) {
+            return false;
+        }
+        return delegate.matches(rawPassword, encodedPassword);
     }
 }

@@ -42,7 +42,7 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.alibaba.nacos</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>nacos-ldap-auth-plugin</artifactId>
             <version>${revision}</version>
             <scope>test</scope>

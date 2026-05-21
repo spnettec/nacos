@@ -38,6 +38,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.mock.web.MockServletContext;
@@ -58,10 +61,12 @@ import java.util.concurrent.CompletableFuture;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(SpringExtension.class)
+@ExtendWith({SpringExtension.class, MockitoExtension.class})
+@MockitoSettings(strictness = Strictness.LENIENT)
 @ContextConfiguration(classes = MockServletContext.class)
 @WebAppConfiguration
 class ConfigOpsControllerV3Test {
@@ -85,9 +90,15 @@ class ConfigOpsControllerV3Test {
     
     @AfterEach
     void after() {
-        datasourceConfigurationMockedStatic.close();
-        dynamicDataSourceMockedStatic.close();
-        applicationUtilsMockedStatic.close();
+        if (datasourceConfigurationMockedStatic != null) {
+            datasourceConfigurationMockedStatic.close();
+        }
+        if (dynamicDataSourceMockedStatic != null) {
+            dynamicDataSourceMockedStatic.close();
+        }
+        if (applicationUtilsMockedStatic != null) {
+            applicationUtilsMockedStatic.close();
+        }
         ConfigCommonConfig.getInstance().setDerbyOpsEnabled(false);
     }
     
@@ -133,7 +144,7 @@ class ConfigOpsControllerV3Test {
         when(dataSource.getDataSource()).thenReturn(dataSourceService);
         JdbcTemplate template = Mockito.mock(JdbcTemplate.class);
         when(dataSourceService.getJdbcTemplate()).thenReturn(template);
-        when(template.queryForList("SELECT * FROM TEST")).thenReturn(new ArrayList<>());
+        when(template.queryForList(anyString())).thenReturn(new ArrayList<>());
         
         MockHttpServletRequestBuilder builder =
             MockMvcRequestBuilders.get(Constants.OPS_CONTROLLER_V3_ADMIN_PATH + "/derby")

@@ -32,9 +32,6 @@ import org.junit.jupiter.api.Test;
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -61,28 +58,11 @@ class ControlManagerCenterTest {
             Constructor<RuleStorageProxy> constructor =
                 RuleStorageProxy.class.getDeclaredConstructor();
             constructor.setAccessible(true);
-            setStaticFinalField(instanceRuleStorageProxy, constructor.newInstance());
+            instanceRuleStorageProxy.setAccessible(true);
+            instanceRuleStorageProxy.set(null, constructor.newInstance());
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-    
-    private void setStaticFinalField(Field finalField, Object value)
-        throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        Method getDeclaredFields0 =
-            Class.class.getDeclaredMethod("getDeclaredFields0", boolean.class);
-        getDeclaredFields0.setAccessible(true);
-        Field[] fields = (Field[]) getDeclaredFields0.invoke(Field.class, false);
-        Field modifiers = null;
-        for (Field each : fields) {
-            if ("modifiers".equals(each.getName())) {
-                modifiers = each;
-            }
-        }
-        modifiers.setAccessible(true);
-        modifiers.setInt(finalField, finalField.getModifiers() & ~Modifier.FINAL);
-        finalField.setAccessible(true);
-        finalField.set(null, value);
     }
     
     @Test

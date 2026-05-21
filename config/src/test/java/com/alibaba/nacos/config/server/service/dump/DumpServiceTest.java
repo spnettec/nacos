@@ -42,6 +42,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -56,7 +59,8 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 
-@ExtendWith(SpringExtension.class)
+@ExtendWith({SpringExtension.class, MockitoExtension.class})
+@MockitoSettings(strictness = Strictness.LENIENT)
 class DumpServiceTest {
     
     private static final String BETA_TABLE_NAME = "config_info_beta";
@@ -127,10 +131,18 @@ class DumpServiceTest {
     
     @AfterEach
     void after() {
-        envUtilMockedStatic.close();
-        configExecutorMocked.close();
-        propertyUtilMockedStatic.close();
-        historyConfigCleanerManagerMockedStatic.close();
+        if (envUtilMockedStatic != null) {
+            envUtilMockedStatic.close();
+        }
+        if (configExecutorMocked != null) {
+            configExecutorMocked.close();
+        }
+        if (propertyUtilMockedStatic != null) {
+            propertyUtilMockedStatic.close();
+        }
+        if (historyConfigCleanerManagerMockedStatic != null) {
+            historyConfigCleanerManagerMockedStatic.close();
+        }
         ReflectionTestUtils.setField(ConfigDiskServiceFactory.class, "configDiskService", null);
     }
     

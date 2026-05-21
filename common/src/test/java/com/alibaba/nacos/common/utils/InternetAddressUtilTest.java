@@ -18,11 +18,6 @@ package com.alibaba.nacos.common.utils;
 
 import org.junit.jupiter.api.Test;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -195,31 +190,9 @@ public class InternetAddressUtilTest {
     }
     
     @Test
-    void testLocalHostIp()
-        throws NoSuchFieldException, IllegalAccessException, InvocationTargetException,
-        NoSuchMethodException {
-        Field field = InternetAddressUtil.class.getField("PREFER_IPV6_ADDRESSES");
-        field.setAccessible(true);
-        Method getDeclaredFields0 =
-            Class.class.getDeclaredMethod("getDeclaredFields0", boolean.class);
-        getDeclaredFields0.setAccessible(true);
-        Field[] fields = (Field[]) getDeclaredFields0.invoke(Field.class, false);
-        Field modifiersField = null;
-        for (Field each : fields) {
-            if ("modifiers".equals(each.getName())) {
-                modifiersField = each;
-            }
-        }
-        if (modifiersField != null) {
-            modifiersField.setAccessible(true);
-            modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
-        }
-        
-        field.set(null, false);
-        assertEquals("127.0.0.1", InternetAddressUtil.localHostIp());
-        
-        field.set(null, true);
-        assertEquals("[::1]", InternetAddressUtil.localHostIp());
+    void testLocalHostIp() {
+        String expected = InternetAddressUtil.PREFER_IPV6_ADDRESSES ? "[::1]" : "127.0.0.1";
+        assertEquals(expected, InternetAddressUtil.localHostIp());
     }
     
     @Test

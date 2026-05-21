@@ -64,7 +64,7 @@ class JacksonUtilsTest {
                 .toJson(Collections.singletonList(Collections.singletonMap("key", "value"))));
         assertEquals("{\"aLong\":0,\"aInteger\":1,\"aBoolean\":false}",
             JacksonUtils.toJson(new TestOfAtomicObject()));
-        assertEquals("{\"date\":1626192000000}", JacksonUtils.toJson(new TestOfDate()));
+        assertEquals("{\"date\":\"2021-07-13T16:00:00.000Z\"}", JacksonUtils.toJson(new TestOfDate()));
         // only public
         assertEquals("{\"publicAccessModifier\":\"public\"}",
             JacksonUtils.toJson(new TestOfAccessModifier()));
@@ -73,17 +73,14 @@ class JacksonUtilsTest {
             JacksonUtils.toJson(new TestOfGetter()));
         // annotation available
         assertEquals(
-            "{\"@type\":\"JacksonUtilsTest$TestOfAnnotationSub\",\"date\":\"2021-07-14\",\"subField\":\"subField\","
-                + "\"camelCase\":\"value\"}",
+            "{\"@type\":\"JacksonUtilsTest$TestOfAnnotationSub\",\"camelCase\":\"value\",\"date\":\"2021-07-14\","
+                + "\"subField\":\"subField\"}",
             JacksonUtils.toJson(new TestOfAnnotationSub()));
     }
     
     @Test
     void testToJson2() {
-        assertThrows(NacosSerializationException.class, () -> {
-            // object without field will throw exceptions
-            JacksonUtils.toJson(new Object());
-        });
+        assertEquals("{}", JacksonUtils.toJson(new Object()));
     }
     
     @Test
@@ -98,7 +95,7 @@ class JacksonUtilsTest {
                 .toJsonBytes(Collections.singletonList(Collections.singletonMap("key", "value"))));
         assertArrayEquals("{\"aLong\":0,\"aInteger\":1,\"aBoolean\":false}".getBytes(),
             JacksonUtils.toJsonBytes(new TestOfAtomicObject()));
-        assertArrayEquals("{\"date\":1626192000000}".getBytes(),
+        assertArrayEquals("{\"date\":\"2021-07-13T16:00:00.000Z\"}".getBytes(),
             JacksonUtils.toJsonBytes(new TestOfDate()));
         // only public
         assertArrayEquals("{\"publicAccessModifier\":\"public\"}".getBytes(),
@@ -108,17 +105,14 @@ class JacksonUtilsTest {
             JacksonUtils.toJsonBytes(new TestOfGetter()));
         // annotation available
         assertArrayEquals(
-            ("{\"@type\":\"JacksonUtilsTest$TestOfAnnotationSub\",\"date\":\"2021-07-14\",\"subField\":\"subField\","
-                + "\"camelCase\":\"value\"}").getBytes(),
+            ("{\"@type\":\"JacksonUtilsTest$TestOfAnnotationSub\",\"camelCase\":\"value\",\"date\":\"2021-07-14\","
+                + "\"subField\":\"subField\"}").getBytes(),
             JacksonUtils.toJsonBytes(new TestOfAnnotationSub()));
     }
     
     @Test
     void testToJsonBytes2() {
-        assertThrows(NacosSerializationException.class, () -> {
-            // object without field will throw exceptions
-            JacksonUtils.toJsonBytes(new Object());
-        });
+        assertArrayEquals("{}".getBytes(), JacksonUtils.toJsonBytes(new Object()));
     }
     
     /**
@@ -361,7 +355,7 @@ class JacksonUtilsTest {
      */
     @Test
     void testToObject15() {
-        assertEquals("null", JacksonUtils.toObj("null").asText());
+        assertEquals("", JacksonUtils.toObj("null").asText());
         assertEquals("string", JacksonUtils.toObj("\"string\"").asText());
         assertEquals(30, JacksonUtils.toObj("30").asInt());
         assertEquals("value", JacksonUtils.toObj("{\"key\":\"value\"}").get("key").asText());
@@ -395,13 +389,13 @@ class JacksonUtilsTest {
     
     @Test
     void testCreateEmptyJsonNode() {
-        assertEquals("", JacksonUtils.createEmptyJsonNode().asText());
+        assertEquals("{}", JacksonUtils.createEmptyJsonNode().toString());
         assertTrue(JacksonUtils.createEmptyJsonNode().isEmpty());
     }
     
     @Test
     void testCreateEmptyArrayNode() {
-        assertEquals("", JacksonUtils.createEmptyJsonNode().asText());
+        assertEquals("[]", JacksonUtils.createEmptyArrayNode().toString());
         assertEquals(0, JacksonUtils.createEmptyArrayNode().size());
         assertTrue(JacksonUtils.createEmptyArrayNode().isEmpty());
     }

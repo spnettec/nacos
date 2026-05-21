@@ -62,7 +62,7 @@ public class ExternalPermissionPersistServiceImpl implements PermissionPersistSe
 
         String sqlCountRows = "SELECT count(*) FROM permissions WHERE ";
         String sqlFetchRows = "SELECT role,resource,action FROM permissions WHERE ";
-        if (dataSourceType.equals(ORACLE)) {
+        if (ORACLE.equals(dataSourceType)) {
             sqlFetchRows = "SELECT role,\"RESOURCE\",action FROM permissions WHERE ";
         }
         String where = " role= ? ";
@@ -103,7 +103,7 @@ public class ExternalPermissionPersistServiceImpl implements PermissionPersistSe
     public void addPermission(String role, String resource, String action) {
 
         String sql = "INSERT INTO permissions (role, resource, action) VALUES (?, ?, ?)";
-        if (dataSourceType.equals(ORACLE)) {
+        if (ORACLE.equals(dataSourceType)) {
             sql = "INSERT INTO permissions (role, \"RESOURCE\", action) VALUES (?, ?, ?)";
         }
         try {
@@ -125,7 +125,7 @@ public class ExternalPermissionPersistServiceImpl implements PermissionPersistSe
     public void deletePermission(String role, String resource, String action) {
 
         String sql = "DELETE FROM permissions WHERE role=? AND resource=? AND action=?";
-        if (dataSourceType.equals(ORACLE)) {
+        if (ORACLE.equals(dataSourceType)) {
             sql = "DELETE FROM permissions WHERE role=? AND \"RESOURCE\"=? AND action=?";
         }
         try {
@@ -142,7 +142,7 @@ public class ExternalPermissionPersistServiceImpl implements PermissionPersistSe
 
         String sqlCountRows = "SELECT count(*) FROM permissions ";
         String sqlFetchRows = "SELECT role,resource,action FROM permissions ";
-        if (dataSourceType.equals(ORACLE)) {
+        if (ORACLE.equals(dataSourceType)) {
             sqlFetchRows = "SELECT role,\"RESOURCE\",action FROM permissions WHERE ";
         }
 

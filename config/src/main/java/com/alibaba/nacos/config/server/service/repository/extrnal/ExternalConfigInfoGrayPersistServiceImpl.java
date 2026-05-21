@@ -274,6 +274,7 @@ public class ExternalConfigInfoGrayPersistServiceImpl implements ConfigInfoGrayP
                             "expected config info[dataid:{}, group:{}, tenent:{}] but not found.",
                             configInfo.getDataId(), configInfo.getGroup(), configInfo.getTenant());
                     }
+                    return new ConfigOperateResult(false);
                 }
                 
                 String md5 = MD5Utils.md5Hex(configInfo.getContent(), Constants.ENCODE);

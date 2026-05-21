@@ -16,6 +16,9 @@
 
 package com.alibaba.nacos.consistency.snapshot;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.Properties;
 
 /**
@@ -31,7 +34,8 @@ public class LocalFileMeta {
         this.fileMeta = new Properties();
     }
     
-    public LocalFileMeta(Properties properties) {
+    @JsonCreator
+    public LocalFileMeta(@JsonProperty("fileMeta") Properties properties) {
         this.fileMeta = properties;
     }
     

@@ -31,14 +31,10 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -63,45 +59,33 @@ class RpcClientFactoryTest {
     RpcClientTlsConfig rpcClientTlsConfig;
     
     @BeforeAll
-    static void setUpBeforeClass()
-        throws NoSuchFieldException, IllegalAccessException, NoSuchMethodException,
-        InvocationTargetException {
+    static void setUpBeforeClass() throws NoSuchFieldException {
         clientMapField = RpcClientFactory.class.getDeclaredField("CLIENT_MAP");
         clientMapField.setAccessible(true);
-        Method getDeclaredFields0 =
-            Class.class.getDeclaredMethod("getDeclaredFields0", boolean.class);
-        getDeclaredFields0.setAccessible(true);
-        Field[] fields = (Field[]) getDeclaredFields0.invoke(Field.class, false);
-        Field modifiersField1 = null;
-        for (Field each : fields) {
-            if ("modifiers".equals(each.getName())) {
-                modifiersField1 = each;
-            }
-        }
-        if (modifiersField1 != null) {
-            modifiersField1.setAccessible(true);
-            modifiersField1.setInt(clientMapField, clientMapField.getModifiers() & ~Modifier.FINAL);
-        }
     }
     
     @AfterEach
     void tearDown() throws IllegalAccessException {
-        clientMapField.set(null, new ConcurrentHashMap<>());
+        clientMap().clear();
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, RpcClient> clientMap() throws IllegalAccessException {
+        return (Map<String, RpcClient>) clientMapField.get(null);
     }
     
     @Test
     void testGetAllClientEntries() throws IllegalAccessException {
         assertTrue(RpcClientFactory.getAllClientEntries().isEmpty());
         
-        clientMapField.set(null, Collections.singletonMap("testClient", rpcClient));
+        clientMap().put("testClient", rpcClient);
         assertEquals(1, RpcClientFactory.getAllClientEntries().size());
     }
     
     @Test
     void testDestroyClientWhenClientExistThenRemoveAndShutDownRpcClient()
         throws IllegalAccessException, NacosException {
-        clientMapField.set(null,
-            new ConcurrentHashMap<>(Collections.singletonMap("testClient", rpcClient)));
+        clientMap().put("testClient", rpcClient);
         
         RpcClientFactory.destroyClient("testClient");
         
@@ -112,8 +96,7 @@ class RpcClientFactoryTest {
     @Test
     void testDestroyClientWhenClientNotExistThenDoNothing()
         throws IllegalAccessException, NacosException {
-        clientMapField.set(null,
-            new ConcurrentHashMap<>(Collections.singletonMap("testClient", rpcClient)));
+        clientMap().put("testClient", rpcClient);
         
         RpcClientFactory.destroyClient("notExistClientName");
         
@@ -129,8 +112,7 @@ class RpcClientFactoryTest {
         // may be null
         assertNull(RpcClientFactory.getClient("notExistClientName"));
         
-        clientMapField.set(null,
-            new ConcurrentHashMap<>(Collections.singletonMap("testClient", rpcClient)));
+        clientMap().put("testClient", rpcClient);
         assertEquals(rpcClient, RpcClientFactory.getClient("testClient"));
     }
     

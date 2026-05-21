@@ -42,6 +42,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.Properties;
@@ -57,7 +60,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(SpringExtension.class)
+@ExtendWith({SpringExtension.class, MockitoExtension.class})
+@MockitoSettings(strictness = Strictness.LENIENT)
 class ConfigChangeAspectTest {
     
     ConfigChangeAspect configChangeAspect;
@@ -113,8 +117,12 @@ class ConfigChangeAspectTest {
         RequestContextHolder.getContext().getBasicContext().setRequestProtocol(null);
         RequestContextHolder.getContext().getBasicContext().setRequestTarget(null);
         
-        propertiesStatic.close();
-        requestUtilMockedStatic.close();
+        if (propertiesStatic != null) {
+            propertiesStatic.close();
+        }
+        if (requestUtilMockedStatic != null) {
+            requestUtilMockedStatic.close();
+        }
         ConfigChangePluginManager.reset();
     }
     

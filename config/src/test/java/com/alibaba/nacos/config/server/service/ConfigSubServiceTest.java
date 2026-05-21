@@ -36,6 +36,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -58,7 +61,8 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 
-@ExtendWith(SpringExtension.class)
+@ExtendWith({SpringExtension.class, MockitoExtension.class})
+@MockitoSettings(strictness = Strictness.LENIENT)
 class ConfigSubServiceTest {
     
     @Mock
@@ -94,10 +98,12 @@ class ConfigSubServiceTest {
     
     @AfterEach
     void after() {
-        if (!envUtilMockedStatic.isClosed()) {
+        if (envUtilMockedStatic != null && !envUtilMockedStatic.isClosed()) {
             envUtilMockedStatic.close();
         }
-        httpClientManagerMockedStatic.close();
+        if (httpClientManagerMockedStatic != null) {
+            httpClientManagerMockedStatic.close();
+        }
     }
     
     @Test

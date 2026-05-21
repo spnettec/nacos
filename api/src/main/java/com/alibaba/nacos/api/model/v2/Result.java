@@ -25,33 +25,33 @@ import java.io.Serializable;
  * @date 2022/7/12
  */
 public class Result<T> implements Serializable {
-    
+
     private static final long serialVersionUID = 6258345442767540526L;
-    
-    private final Integer code;
-    
-    private final String message;
-    
-    private final T data;
-    
+
+    private Integer code;
+
+    private String message;
+
+    private T data;
+
     public Result(Integer code, String message, T data) {
         this.code = code;
         this.message = message;
         this.data = data;
     }
-    
+
     public Result() {
         this(null);
     }
-    
+
     public Result(T data) {
         this(ErrorCode.SUCCESS.getCode(), ErrorCode.SUCCESS.getMsg(), data);
     }
-    
+
     public Result(Integer code, String message) {
         this(code, message, null);
     }
-    
+
     /**
      * Success return with nothing.
      * @param <T> data type
@@ -60,7 +60,7 @@ public class Result<T> implements Serializable {
     public static <T> Result<T> success() {
         return new Result<>();
     }
-    
+
     /**
      * Success return with data.
      * @param <T> data type
@@ -69,7 +69,7 @@ public class Result<T> implements Serializable {
     public static <T> Result<T> success(T data) {
         return new Result<>(data);
     }
-    
+
     /**
      * Failed return with message and detail error information.
      * @return Result
@@ -77,7 +77,7 @@ public class Result<T> implements Serializable {
     public static Result<String> failure(String message) {
         return new Result<>(ErrorCode.SERVER_ERROR.getCode(), message);
     }
-    
+
     /**
      * Failed return with errorCode and message.
      * @param <T> data type
@@ -86,7 +86,7 @@ public class Result<T> implements Serializable {
     public static <T> Result<T> failure(ErrorCode errorCode) {
         return new Result<>(errorCode.getCode(), errorCode.getMsg());
     }
-    
+
     /**
      * Failed return with errorCode, message and data.
      * @param <T> data type
@@ -95,7 +95,7 @@ public class Result<T> implements Serializable {
     public static <T> Result<T> failure(ErrorCode errorCode, T data) {
         return new Result<>(errorCode.getCode(), errorCode.getMsg(), data);
     }
-    
+
     /**
      * Failed return with code, message and data.
      * @param <T>  data type
@@ -106,22 +106,34 @@ public class Result<T> implements Serializable {
     public static <T> Result<T> failure(Integer code, String msg, T data) {
         return new Result<>(code, msg, data);
     }
-    
+
     @Override
     public String toString() {
         return "Result{" + "errorCode=" + code + ", message='" + message + '\'' + ", data=" + data
             + '}';
     }
-    
+
     public Integer getCode() {
         return code;
     }
-    
+
     public String getMessage() {
         return message;
     }
-    
+
     public T getData() {
         return data;
+    }
+
+    public void setCode(Integer code) {
+        this.code = code;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public void setData(T data) {
+        this.data = data;
     }
 }

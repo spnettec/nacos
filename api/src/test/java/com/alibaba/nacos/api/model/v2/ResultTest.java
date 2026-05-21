@@ -16,13 +16,19 @@
 
 package com.alibaba.nacos.api.model.v2;
 
+import com.alibaba.nacos.api.ai.model.prompt.Prompt;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 class ResultTest {
-    
+
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
     @Test
     void testSuccessEmptyResult() {
         Result<String> result = Result.success();
@@ -30,7 +36,7 @@ class ResultTest {
         assertEquals(ErrorCode.SUCCESS.getCode(), result.getCode());
         assertEquals(ErrorCode.SUCCESS.getMsg(), result.getMessage());
     }
-    
+
     @Test
     void testSuccessWithData() {
         Result<String> result = Result.success("test");
@@ -38,7 +44,7 @@ class ResultTest {
         assertEquals(ErrorCode.SUCCESS.getCode(), result.getCode());
         assertEquals(ErrorCode.SUCCESS.getMsg(), result.getMessage());
     }
-    
+
     @Test
     void testFailureMessageResult() {
         Result<String> result = Result.failure("test");
@@ -46,7 +52,7 @@ class ResultTest {
         assertEquals(ErrorCode.SERVER_ERROR.getCode(), result.getCode());
         assertEquals("test", result.getMessage());
     }
-    
+
     @Test
     void testFailureWithoutData() {
         Result<String> result = Result.failure(ErrorCode.DATA_ACCESS_ERROR);
@@ -54,7 +60,7 @@ class ResultTest {
         assertEquals(ErrorCode.DATA_ACCESS_ERROR.getCode(), result.getCode());
         assertEquals(ErrorCode.DATA_ACCESS_ERROR.getMsg(), result.getMessage());
     }
-    
+
     @Test
     void testFailureWithData() {
         Result<String> result = Result.failure(ErrorCode.DATA_ACCESS_ERROR, "error");
@@ -62,7 +68,7 @@ class ResultTest {
         assertEquals(ErrorCode.DATA_ACCESS_ERROR.getCode(), result.getCode());
         assertEquals(ErrorCode.DATA_ACCESS_ERROR.getMsg(), result.getMessage());
     }
-    
+
     @Test
     void testFailureWithCodeMessageAndData() {
         Result<String> result = Result.failure(10001, "custom error", "errorData");
@@ -70,10 +76,26 @@ class ResultTest {
         assertEquals(Integer.valueOf(10001), result.getCode());
         assertEquals("custom error", result.getMessage());
     }
-    
+
     @Test
     void testToString() {
         Result<String> result = Result.success("test");
         assertEquals("Result{errorCode=0, message='success', data=test}", result.toString());
+    }
+
+    @Test
+    void testDeserializeGenericData() throws JacksonException {
+        Prompt prompt = new Prompt("test-key", "1.0.0", "Hello {{name}}");
+        prompt.setMd5("abc123");
+        String json = OBJECT_MAPPER.writeValueAsString(Result.success(prompt));
+
+        Result<Prompt> result = OBJECT_MAPPER.readValue(json, new TypeReference<Result<Prompt>>() {
+        });
+
+        assertEquals(ErrorCode.SUCCESS.getCode(), result.getCode());
+        assertEquals("test-key", result.getData().getPromptKey());
+        assertEquals("1.0.0", result.getData().getVersion());
+        assertEquals("Hello {{name}}", result.getData().getTemplate());
+        assertEquals("abc123", result.getData().getMd5());
     }
 }

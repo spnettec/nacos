@@ -39,7 +39,9 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -62,7 +64,8 @@ import static org.mockito.Mockito.when;
  *
  * @author shiyiyue
  */
-@ExtendWith(SpringExtension.class)
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class EmbeddedConfigInfoGrayPersistServiceImplTest {
     
     private EmbeddedConfigInfoGrayPersistServiceImpl embeddedConfigInfoGrayPersistService;

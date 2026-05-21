@@ -36,6 +36,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -58,7 +61,8 @@ import static org.mockito.Mockito.times;
  *
  * @author shiyiyue
  */
-@ExtendWith(SpringExtension.class)
+@ExtendWith({SpringExtension.class, MockitoExtension.class})
+@MockitoSettings(strictness = Strictness.LENIENT)
 class AsyncNotifyServiceTest {
     
     @Mock
@@ -83,9 +87,15 @@ class AsyncNotifyServiceTest {
     
     @AfterEach
     void after() {
-        envUtilMocked.close();
-        inetUtilsMocked.close();
-        configExecutorMocked.close();
+        if (envUtilMocked != null) {
+            envUtilMocked.close();
+        }
+        if (inetUtilsMocked != null) {
+            inetUtilsMocked.close();
+        }
+        if (configExecutorMocked != null) {
+            configExecutorMocked.close();
+        }
     }
     
     @Test

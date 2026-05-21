@@ -23,10 +23,13 @@ import com.alibaba.nacos.core.remote.grpc.GrpcConnection;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.JsonNode;
 
+import java.time.Instant;
 import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ConnectionTest {
@@ -52,27 +55,31 @@ class ConnectionTest {
     @Test
     public void testSerialize() {
         String json = JacksonUtils.toJson(connection);
-        assertTrue(json.contains("\"traced\":false"));
-        assertTrue(json.contains("\"metaInfo\":{"));
-        assertTrue(json.contains("\"connectType\":\"grpc\""));
-        assertTrue(json.contains("\"clientIp\":\"127.0.0.1\""));
-        assertTrue(json.contains("\"remoteIp\":\"127.0.0.1\""));
-        assertTrue(json.contains("\"remotePort\":8080"));
-        assertTrue(json.contains("\"localPort\":18080"));
-        assertTrue(json.contains("\"version\":\"3.0.0\""));
-        assertTrue(json.contains("\"connectionId\":\"1739168690942_127.0.0.1_18080\""));
-        assertTrue(
-            json.contains("\"createTime\":" + connection.getMetaInfo().getCreateTime().getTime()));
-        assertTrue(
-            json.contains("\"lastActiveTime\":" + connection.getMetaInfo().getLastActiveTime()));
-        assertTrue(json.contains("\"appName\":\"test\""));
-        assertTrue(json.contains("\"labels\":{"));
-        assertTrue(json.contains("\"AppName\":\"test\""));
-        assertTrue(json.contains("\"sdkSource\":false"));
-        assertTrue(json.contains("\"clusterSource\":false"));
-        assertTrue(json.contains("\"connected\":false"));
-        assertTrue(json.contains("\"abilityTable\":{}"));
-        assertTrue(json.contains("\"namespaceId\":\"public\""));
+        JsonNode root = JacksonUtils.toObj(json);
+        JsonNode metaInfo = root.get("metaInfo");
+        assertFalse(root.get("traced").asBoolean());
+        assertEquals("grpc", metaInfo.get("connectType").asText());
+        assertEquals("127.0.0.1", metaInfo.get("clientIp").asText());
+        assertEquals("127.0.0.1", metaInfo.get("remoteIp").asText());
+        assertEquals(8080, metaInfo.get("remotePort").asInt());
+        assertEquals(18080, metaInfo.get("localPort").asInt());
+        assertEquals("3.0.0", metaInfo.get("version").asText());
+        assertEquals("1739168690942_127.0.0.1_18080", metaInfo.get("connectionId").asText());
+        assertEquals(connection.getMetaInfo().getCreateTime().getTime(),
+            parseDateMillis(metaInfo.get("createTime")));
+        assertEquals(connection.getMetaInfo().getLastActiveTime(),
+            metaInfo.get("lastActiveTime").asLong());
+        assertEquals("test", metaInfo.get("appName").asText());
+        assertEquals("test", metaInfo.get("labels").get("AppName").asText());
+        assertFalse(metaInfo.get("sdkSource").asBoolean());
+        assertFalse(metaInfo.get("clusterSource").asBoolean());
+        assertFalse(root.get("connected").asBoolean());
+        assertTrue(root.get("abilityTable").isEmpty());
+        assertEquals("public", metaInfo.get("namespaceId").asText());
+    }
+
+    private long parseDateMillis(JsonNode node) {
+        return node.isNumber() ? node.asLong() : Instant.parse(node.asText()).toEpochMilli();
     }
     
     @Test

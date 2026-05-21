@@ -44,7 +44,7 @@ class McpRequestUtilTest {
     private static final String MCP_SERVER_SPEC_NEW =
         "{\"protocol\":\"stdio\",\"frontProtocol\":\"stdio\",\"name\":\"nacos-mcp-server\","
             + "\"id\":\"\",\"description\":\"nacos local mcp server(test version)\",\"versionDetail\":{\"version\":\"1.0.0\"},"
-            + "\"enabled\":true,\"localServerConfig\":{}}'";
+            + "\"enabled\":true,\"localServerConfig\":{}}";
     
     private static final String MCP_TOOL_SPEC =
         "{\"tools\":[{\"name\":\"list_namespace\",\"description\":\"list namespace in nacos\","

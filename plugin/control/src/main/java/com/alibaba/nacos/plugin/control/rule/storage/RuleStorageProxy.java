@@ -35,7 +35,7 @@ public class RuleStorageProxy {
     
     private static final Logger LOGGER = Loggers.CONTROL;
     
-    private static final RuleStorageProxy INSTANCE = new RuleStorageProxy();
+    private static volatile RuleStorageProxy INSTANCE = new RuleStorageProxy();
     
     private LocalDiskRuleStorage localDiskRuleStorage = null;
     

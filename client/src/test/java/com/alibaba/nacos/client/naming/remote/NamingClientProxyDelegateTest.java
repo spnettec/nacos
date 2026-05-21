@@ -87,6 +87,7 @@ class NamingClientProxyDelegateTest {
         Field grpcClientProxyField =
             NamingClientProxyDelegate.class.getDeclaredField("grpcClientProxy");
         grpcClientProxyField.setAccessible(true);
+        ((NamingGrpcClientProxy) grpcClientProxyField.get(delegate)).shutdown();
         grpcClientProxyField.set(delegate, mockGrpcClient);
     }
     

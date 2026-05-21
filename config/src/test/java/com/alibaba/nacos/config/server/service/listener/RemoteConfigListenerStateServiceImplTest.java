@@ -94,9 +94,15 @@ class RemoteConfigListenerStateServiceImplTest {
     
     @AfterEach
     void tearDown() {
-        httpClientManagerMockedStatic.close();
-        envUtilMockedStatic.close();
-        authConfigHolderMockedStatic.close();
+        if (httpClientManagerMockedStatic != null) {
+            httpClientManagerMockedStatic.close();
+        }
+        if (envUtilMockedStatic != null) {
+            envUtilMockedStatic.close();
+        }
+        if (authConfigHolderMockedStatic != null) {
+            authConfigHolderMockedStatic.close();
+        }
     }
     
     @Test
