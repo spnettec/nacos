@@ -297,6 +297,18 @@ public class SkillAdminController {
     }
     
     /**
+     * Re-edit a reviewed version, transitioning it back to draft for modification.
+     */
+    @PostMapping("/redraft")
+    @Secured(action = ActionTypes.WRITE, signType = SignType.AI, apiType = ApiType.ADMIN_API)
+    public Result<String> redraft(SkillPublishForm form) throws NacosException {
+        form.validate();
+        skillOperationService.redraft(form.getNamespaceId(), form.getSkillName(),
+            form.getVersion());
+        return Result.success("ok");
+    }
+    
+    /**
      * Update runtime route labels without changing version status.
      */
     @PutMapping("/labels")

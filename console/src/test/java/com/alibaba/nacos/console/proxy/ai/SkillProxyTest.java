@@ -45,6 +45,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -286,6 +287,20 @@ class SkillProxyTest {
         skillProxy.online(form);
         
         verify(skillHandler).changeOnlineStatus(form, true);
+    }
+    
+    @Test
+    public void testRedraft() throws NacosException {
+        SkillPublishForm form = new SkillPublishForm();
+        form.setNamespaceId(NS);
+        form.setSkillName(SKILL_NAME);
+        form.setVersion("v1");
+        
+        doNothing().when(skillHandler).redraft(form);
+        
+        skillProxy.redraft(form);
+        
+        verify(skillHandler, times(1)).redraft(form);
     }
     
     @Test

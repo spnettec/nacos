@@ -16,6 +16,7 @@
 
 package com.alibaba.nacos.ai.service.resource;
 
+import com.alibaba.nacos.ai.config.ReviewedStatusConfig;
 import com.alibaba.nacos.ai.constant.AiResourceConstants;
 import com.alibaba.nacos.ai.model.AiResource;
 import com.alibaba.nacos.ai.model.AiResourceVersion;
@@ -691,9 +692,15 @@ public class AiResourceManager {
     
     /**
      * Transition a version to reviewing status and update meta pointers accordingly.
+     *
+     * <p>Only versions in {@code draft} status are allowed to enter the review stage.
+     * Submitting a version in any other status (reviewing / reviewed / online / offline)
+     * is rejected with {@code INVALID_PARAM} to prevent corrupting formal versions.</p>
      */
     public void moveToReviewing(String namespaceId, String name, String type, String version,
         AiResource meta, ResourceVersionInfo info) throws NacosException {
+        // Guard: only draft version can be submitted for review.
+        requireDraftVersion(namespaceId, name, type, version);
         aiResourceVersionPersistService.updateStatus(namespaceId, name, type, version,
             AiResourceConstants.VERSION_STATUS_REVIEWING);
         info.setEditingVersion(null);
@@ -833,10 +840,18 @@ public class AiResourceManager {
             throw new NacosApiException(NacosException.NOT_FOUND, ErrorCode.RESOURCE_NOT_FOUND,
                 type + " version not found: " + name + "@" + version);
         }
-        if (AiResourceConstants.VERSION_STATUS_ONLINE.equalsIgnoreCase(v.getStatus())) {
-            throw new NacosApiException(NacosException.INVALID_PARAM,
-                ErrorCode.PARAMETER_VALIDATE_ERROR,
-                "Version is already online, force-publish is not needed: " + version);
+        if (!AiResourceConstants.VERSION_STATUS_REVIEWED.equalsIgnoreCase(v.getStatus())
+            && !AiResourceConstants.VERSION_STATUS_REVIEWING.equalsIgnoreCase(
+                v.getStatus())) {
+            // Allow draft only for legacy data: pipeline rejected → draft (historical is null/false)
+            boolean allowDraft = AiResourceConstants.VERSION_STATUS_DRAFT
+                .equalsIgnoreCase(v.getStatus()) && isLegacyRejectedDraft(v);
+            if (!allowDraft) {
+                throw new NacosApiException(NacosException.INVALID_PARAM,
+                    ErrorCode.PARAMETER_VALIDATE_ERROR,
+                    "Force-publish is only allowed for versions in 'reviewing' or "
+                        + "'reviewed' status, current: " + v.getStatus());
+            }
         }
         
         LOGGER.warn("[FORCE-PUBLISH] Bypassing pipeline validation for {} {}@{} by user {}",
@@ -1040,6 +1055,24 @@ public class AiResourceManager {
     }
     
     /**
+     * Check if a draft version is a legacy rejected-to-draft (not from redraft).
+     * Returns true when pipeline info exists with REJECTED status and historical is null/false.
+     */
+    private boolean isLegacyRejectedDraft(AiResourceVersion v) {
+        if (StringUtils.isBlank(v.getPublishPipelineInfo())) {
+            return false;
+        }
+        try {
+            PublishPipelineInfo info =
+                JacksonUtils.toObj(v.getPublishPipelineInfo(), PublishPipelineInfo.class);
+            return info.getStatus() == PipelineExecutionStatus.REJECTED
+                && !Boolean.TRUE.equals(info.getHistorical());
+        } catch (Exception ex) {
+            return false;
+        }
+    }
+    
+    /**
      * Functional interface for deleting storage associated with a specific version.
      */
     @FunctionalInterface
@@ -1103,7 +1136,129 @@ public class AiResourceManager {
     }
     
     /**
-     * Handle pipeline completion: persist pipeline info and rollback to draft on rejection.
+     * Transition a reviewed version back to draft for re-editing.
+     *
+     * <p>Only versions in {@code reviewed} status can be re-edited. The version number and content
+     * are preserved; only the status changes to {@code draft} and meta pointers are updated.</p>
+     *
+     * @param namespaceId namespace
+     * @param name        resource name
+     * @param type        resource type (skill, prompt, agentspec)
+     * @param version     version to re-edit
+     */
+    public void doRedraft(String namespaceId, String name, String type, String version)
+        throws NacosException {
+        AiResource meta = requireMeta(namespaceId, name, type);
+        VisibilityHelper.checkWritableResource(meta);
+        ResourceVersionInfo info = requireVersionInfo(meta);
+        
+        AiResourceVersion v =
+            aiResourceVersionPersistService.find(namespaceId, name, type, version);
+        if (v == null) {
+            throw new NacosApiException(NacosException.NOT_FOUND, ErrorCode.RESOURCE_NOT_FOUND,
+                type + " version not found: " + name + "@" + version);
+        }
+        if (!AiResourceConstants.VERSION_STATUS_REVIEWED.equalsIgnoreCase(v.getStatus())) {
+            throw new NacosApiException(NacosException.INVALID_PARAM,
+                ErrorCode.PARAMETER_VALIDATE_ERROR,
+                "Only reviewed version can be re-edited: " + version);
+        }
+        
+        aiResourceVersionPersistService.updateStatus(namespaceId, name, type, version,
+            AiResourceConstants.VERSION_STATUS_DRAFT);
+        
+        // Mark pipeline info as historical so forcePublish is not available on redrafted versions
+        if (StringUtils.isNotBlank(v.getPublishPipelineInfo())) {
+            try {
+                PublishPipelineInfo pipelineInfo =
+                    JacksonUtils.toObj(v.getPublishPipelineInfo(), PublishPipelineInfo.class);
+                pipelineInfo.setHistorical(true);
+                aiResourceVersionPersistService.updatePublishPipelineInfo(namespaceId, name, type,
+                    version, JacksonUtils.toJson(pipelineInfo));
+            } catch (Exception ex) {
+                LOGGER.warn("Failed to mark pipeline info as historical for {}@{}", name, version,
+                    ex);
+            }
+        }
+        
+        if (StringUtils.equals(info.getReviewingVersion(), version)) {
+            info.setReviewingVersion(null);
+            info.setEditingVersion(version);
+            updateVersionInfoCas(namespaceId, meta, info);
+        }
+        
+        AiResourceTraceService.logSuccess(type, name, version,
+            AiResourceTraceService.OP_REDRAFT,
+            VisibilityHelper.resolveCurrentIdentity(), VisibilityHelper.resolveClientIp());
+    }
+    
+    /**
+     * Unified delete-draft logic for all resource types.
+     *
+     * <p>Resolves the target version from editingVersion (primary) or reviewingVersion (fallback
+     * for reviewed/draft status), clears the corresponding meta pointer, deletes the version row,
+     * and invokes the storage deleter callback.</p>
+     *
+     * @param namespaceId    namespace
+     * @param name           resource name
+     * @param type           resource type
+     * @param storageDeleter callback to delete resource-specific storage files
+     */
+    public void doDeleteDraft(String namespaceId, String name, String type,
+        VersionStorageDeleter storageDeleter) throws NacosException {
+        AiResource meta = requireMeta(namespaceId, name, type);
+        VisibilityHelper.checkWritableResource(meta);
+        ResourceVersionInfo info = requireVersionInfo(meta);
+        String editing = info.getEditingVersion();
+        
+        if (StringUtils.isBlank(editing)) {
+            // Fallback: try reviewingVersion (reviewed/draft status can be deleted)
+            String reviewing = info.getReviewingVersion();
+            if (StringUtils.isBlank(reviewing)) {
+                return;
+            }
+            AiResourceVersion rv =
+                aiResourceVersionPersistService.find(namespaceId, name, type, reviewing);
+            if (rv == null || (!AiResourceConstants.VERSION_STATUS_REVIEWED
+                .equalsIgnoreCase(rv.getStatus())
+                && !AiResourceConstants.VERSION_STATUS_DRAFT
+                    .equalsIgnoreCase(rv.getStatus()))) {
+                return;
+            }
+            info.setReviewingVersion(null);
+            updateVersionInfoCas(namespaceId, meta, info);
+            storageDeleter.deleteStorage(rv);
+            deleteVersion(namespaceId, name, type, reviewing);
+            AiResourceTraceService.logSuccess(type, name, reviewing,
+                AiResourceTraceService.OP_DELETE_DRAFT,
+                VisibilityHelper.resolveCurrentIdentity(),
+                VisibilityHelper.resolveClientIp());
+            return;
+        }
+        
+        AiResourceVersion v =
+            aiResourceVersionPersistService.find(namespaceId, name, type, editing);
+        
+        // Clear meta pointer first
+        info.setEditingVersion(null);
+        updateVersionInfoCas(namespaceId, meta, info);
+        
+        // Delete version row and storage only if status is draft
+        if (v != null && AiResourceConstants.VERSION_STATUS_DRAFT
+            .equalsIgnoreCase(v.getStatus())) {
+            storageDeleter.deleteStorage(v);
+            deleteVersion(namespaceId, name, type, editing);
+        }
+        AiResourceTraceService.logSuccess(type, name, editing,
+            AiResourceTraceService.OP_DELETE_DRAFT,
+            VisibilityHelper.resolveCurrentIdentity(), VisibilityHelper.resolveClientIp());
+    }
+    
+    /**
+     * Handle pipeline completion: persist pipeline info and transition version status.
+     *
+     * <p>When reviewed-status switch is enabled, both approved and rejected results transition
+     * to {@code reviewed}. When disabled, rejected rolls back to {@code draft} (legacy behavior).</p>
      */
     public void onPipelineComplete(String namespaceId, String name, String type, String version,
         PipelineExecutionResult result) {
@@ -1116,33 +1271,46 @@ public class AiResourceManager {
                 version,
                 JacksonUtils.toJson(info));
             
-            if (result == null || result.getStatus() != PipelineExecutionStatus.APPROVED) {
-                // Reject back to draft and move reviewing -> editing (best effort).
-                aiResourceVersionPersistService.updateStatus(namespaceId, name, type, version,
-                    AiResourceConstants.VERSION_STATUS_DRAFT);
-                AiResource meta = aiResourcePersistService.find(namespaceId, name, type);
-                if (meta != null) {
-                    ResourceVersionInfo vInfo = requireVersionInfo(meta);
-                    if (StringUtils.equals(vInfo.getReviewingVersion(), version)) {
-                        vInfo.setReviewingVersion(null);
-                        vInfo.setEditingVersion(version);
-                        try {
-                            updateVersionInfoCas(namespaceId, meta, vInfo);
-                        } catch (Exception ex) {
-                            LOGGER.warn("Failed to rollback meta working pointers for {}@{}", name,
-                                version, ex);
-                        }
-                    }
-                }
-                AiResourceTraceService.logSuccess(type, name, version,
-                    AiResourceTraceService.OP_REVIEW_REJECTED,
-                    "system", "", result == null ? null : result.getExecutionId());
-            } else {
+            boolean approved =
+                result != null && result.getStatus() == PipelineExecutionStatus.APPROVED;
+            
+            if (ReviewedStatusConfig.getInstance().isEnabled()) {
+                // New behavior: always transition to reviewed regardless of pipeline result.
                 aiResourceVersionPersistService.updateStatus(namespaceId, name, type, version,
                     AiResourceConstants.VERSION_STATUS_REVIEWED);
                 AiResourceTraceService.logSuccess(type, name, version,
-                    AiResourceTraceService.OP_REVIEW_APPROVED,
-                    "system", "", result.getExecutionId());
+                    approved ? AiResourceTraceService.OP_REVIEW_APPROVED
+                        : AiResourceTraceService.OP_REVIEW_REJECTED,
+                    "system", "", result == null ? null : result.getExecutionId());
+            } else {
+                // Legacy behavior: rejected rolls back to draft, approved transitions to reviewed.
+                if (!approved) {
+                    aiResourceVersionPersistService.updateStatus(namespaceId, name, type, version,
+                        AiResourceConstants.VERSION_STATUS_DRAFT);
+                    AiResource meta = aiResourcePersistService.find(namespaceId, name, type);
+                    if (meta != null) {
+                        ResourceVersionInfo vInfo = requireVersionInfo(meta);
+                        if (StringUtils.equals(vInfo.getReviewingVersion(), version)) {
+                            vInfo.setReviewingVersion(null);
+                            vInfo.setEditingVersion(version);
+                            try {
+                                updateVersionInfoCas(namespaceId, meta, vInfo);
+                            } catch (Exception ex) {
+                                LOGGER.warn("Failed to rollback meta working pointers for {}@{}",
+                                    name, version, ex);
+                            }
+                        }
+                    }
+                    AiResourceTraceService.logSuccess(type, name, version,
+                        AiResourceTraceService.OP_REVIEW_REJECTED,
+                        "system", "", result == null ? null : result.getExecutionId());
+                } else {
+                    aiResourceVersionPersistService.updateStatus(namespaceId, name, type, version,
+                        AiResourceConstants.VERSION_STATUS_REVIEWED);
+                    AiResourceTraceService.logSuccess(type, name, version,
+                        AiResourceTraceService.OP_REVIEW_APPROVED,
+                        "system", "", result.getExecutionId());
+                }
             }
         } catch (Throwable ex) {
             LOGGER.error("Pipeline callback failed for {}@{}", name, version, ex);

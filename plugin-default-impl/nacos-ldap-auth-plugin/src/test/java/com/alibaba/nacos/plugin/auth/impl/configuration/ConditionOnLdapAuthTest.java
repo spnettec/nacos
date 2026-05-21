@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2021 Alibaba Group Holding Ltd.
+ * Copyright 1999-2026 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,9 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 /**
  * ConditionOnLdapAuth test.
  *
- * @ClassName: ConditionOnLdapAuthTest
- * @Author: ChenHao26
- * @Date: 2022/8/16 17:03
+ * @author ChenHao26
  */
 @ExtendWith(MockitoExtension.class)
 class ConditionOnLdapAuthTest {

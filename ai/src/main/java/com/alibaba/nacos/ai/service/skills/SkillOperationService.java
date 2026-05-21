@@ -331,6 +331,15 @@ public interface SkillOperationService {
         throws NacosException;
     
     /**
+     * Re-edit a reviewed version, transitioning it back to draft.
+     *
+     * @param namespaceId namespace
+     * @param name        skill name
+     * @param version     version to re-edit
+     */
+    void redraft(String namespaceId, String name, String version) throws NacosException;
+    
+    /**
      * Update labels mapping (label -> version) without changing any version status.
      */
     void updateLabels(String namespaceId, String name, Map<String, String> labels)

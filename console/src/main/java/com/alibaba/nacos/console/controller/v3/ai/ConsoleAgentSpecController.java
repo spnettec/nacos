@@ -249,6 +249,21 @@ public class ConsoleAgentSpecController {
     }
     
     /**
+     * Re-edit a reviewed agent spec version, transitioning it back to draft status.
+     *
+     * @param form publish form
+     * @return result of the redraft operation
+     * @throws NacosException if the operation fails
+     */
+    @PostMapping("/redraft")
+    @Secured(action = ActionTypes.WRITE, signType = SignType.AI, apiType = ApiType.CONSOLE_API)
+    public Result<String> redraft(AgentSpecPublishForm form) throws NacosException {
+        form.validate();
+        agentSpecProxy.redraft(form);
+        return Result.success("ok");
+    }
+    
+    /**
      * Update runtime route labels.
      *
      * @param form labels update form

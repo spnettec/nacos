@@ -16,6 +16,7 @@
 
 package com.alibaba.nacos.ai.service.resource;
 
+import com.alibaba.nacos.ai.config.ReviewedStatusConfig;
 import com.alibaba.nacos.ai.constant.AiResourceConstants;
 import com.alibaba.nacos.ai.model.AiResource;
 import com.alibaba.nacos.ai.model.AiResourceVersion;
@@ -1078,6 +1079,111 @@ class AiResourceManagerTest {
             anyString(), anyString());
     }
     
+    @Test
+    void onPipelineCompleteWithSwitchEnabledShouldTransitionToReviewedOnRejection() {
+        try (MockedStatic<ReviewedStatusConfig> configStatic =
+            org.mockito.Mockito.mockStatic(ReviewedStatusConfig.class)) {
+            ReviewedStatusConfig mockConfig = mock(ReviewedStatusConfig.class);
+            when(mockConfig.isEnabled()).thenReturn(true);
+            configStatic.when(ReviewedStatusConfig::getInstance).thenReturn(mockConfig);
+            
+            PipelineExecutionResult result = new PipelineExecutionResult();
+            result.setExecutionId("exec-sw-1");
+            result.setStatus(PipelineExecutionStatus.REJECTED);
+            result.setPipeline(new ArrayList<>());
+            
+            manager.onPipelineComplete(NAMESPACE_ID, "res", RESOURCE_TYPE, "v1", result);
+            
+            // With switch enabled, rejected should go to reviewed (not draft)
+            verify(aiResourceVersionPersistService).updateStatus(NAMESPACE_ID, "res", RESOURCE_TYPE,
+                "v1", AiResourceConstants.VERSION_STATUS_REVIEWED);
+            verify(aiResourceVersionPersistService, never()).updateStatus(anyString(), anyString(),
+                anyString(), anyString(), eq(AiResourceConstants.VERSION_STATUS_DRAFT));
+        }
+    }
+    
+    @Test
+    void onPipelineCompleteWithSwitchEnabledShouldTransitionToReviewedOnApproval() {
+        try (MockedStatic<ReviewedStatusConfig> configStatic =
+            org.mockito.Mockito.mockStatic(ReviewedStatusConfig.class)) {
+            ReviewedStatusConfig mockConfig = mock(ReviewedStatusConfig.class);
+            when(mockConfig.isEnabled()).thenReturn(true);
+            configStatic.when(ReviewedStatusConfig::getInstance).thenReturn(mockConfig);
+            
+            PipelineExecutionResult result = new PipelineExecutionResult();
+            result.setExecutionId("exec-sw-2");
+            result.setStatus(PipelineExecutionStatus.APPROVED);
+            result.setPipeline(new ArrayList<>());
+            
+            manager.onPipelineComplete(NAMESPACE_ID, "res", RESOURCE_TYPE, "v1", result);
+            
+            verify(aiResourceVersionPersistService).updateStatus(NAMESPACE_ID, "res", RESOURCE_TYPE,
+                "v1", AiResourceConstants.VERSION_STATUS_REVIEWED);
+        }
+    }
+    
+    // ---- doRedraft ----
+    
+    @Test
+    void doRedraftShouldTransitionReviewedToDraft() throws NacosException {
+        AiResource meta = buildMeta("res");
+        ResourceVersionInfo vInfo = new ResourceVersionInfo();
+        vInfo.setReviewingVersion("v1");
+        vInfo.setLabels(new HashMap<>());
+        meta.setVersionInfo(JacksonUtils.toJson(vInfo));
+        when(aiResourcePersistService.find(NAMESPACE_ID, "res", RESOURCE_TYPE)).thenReturn(meta);
+        
+        AiResourceVersion v = new AiResourceVersion();
+        v.setVersion("v1");
+        v.setStatus(AiResourceConstants.VERSION_STATUS_REVIEWED);
+        when(aiResourceVersionPersistService.find(NAMESPACE_ID, "res", RESOURCE_TYPE, "v1"))
+            .thenReturn(v);
+        when(aiResourcePersistService.updateMetaCas(eq(NAMESPACE_ID), eq("res"), eq(RESOURCE_TYPE),
+            eq(1L), any())).thenReturn(true);
+        
+        manager.doRedraft(NAMESPACE_ID, "res", RESOURCE_TYPE, "v1");
+        
+        verify(aiResourceVersionPersistService).updateStatus(NAMESPACE_ID, "res", RESOURCE_TYPE,
+            "v1", AiResourceConstants.VERSION_STATUS_DRAFT);
+        // Verify meta pointers updated: reviewingVersion cleared, editingVersion set
+        ArgumentCaptor<AiResource> metaCaptor = ArgumentCaptor.forClass(AiResource.class);
+        verify(aiResourcePersistService).updateMetaCas(eq(NAMESPACE_ID), eq("res"),
+            eq(RESOURCE_TYPE), eq(1L), metaCaptor.capture());
+        String updatedVersionInfo = metaCaptor.getValue().getVersionInfo();
+        assertTrue(updatedVersionInfo.contains("\"editingVersion\":\"v1\""));
+        assertFalse(updatedVersionInfo.contains("\"reviewingVersion\":\"v1\""));
+    }
+    
+    @Test
+    void doRedraftShouldThrowWhenVersionNotReviewed() {
+        AiResource meta = buildMeta("res");
+        meta.setVersionInfo("{\"labels\":{},\"onlineCnt\":0}");
+        when(aiResourcePersistService.find(NAMESPACE_ID, "res", RESOURCE_TYPE)).thenReturn(meta);
+        
+        AiResourceVersion v = new AiResourceVersion();
+        v.setVersion("v1");
+        v.setStatus(AiResourceConstants.VERSION_STATUS_DRAFT);
+        when(aiResourceVersionPersistService.find(NAMESPACE_ID, "res", RESOURCE_TYPE, "v1"))
+            .thenReturn(v);
+        
+        NacosApiException ex = assertThrows(NacosApiException.class,
+            () -> manager.doRedraft(NAMESPACE_ID, "res", RESOURCE_TYPE, "v1"));
+        assertEquals(NacosException.INVALID_PARAM, ex.getErrCode());
+    }
+    
+    @Test
+    void doRedraftShouldThrowWhenVersionNotFound() {
+        AiResource meta = buildMeta("res");
+        meta.setVersionInfo("{\"labels\":{},\"onlineCnt\":0}");
+        when(aiResourcePersistService.find(NAMESPACE_ID, "res", RESOURCE_TYPE)).thenReturn(meta);
+        when(aiResourceVersionPersistService.find(NAMESPACE_ID, "res", RESOURCE_TYPE, "v99"))
+            .thenReturn(null);
+        
+        NacosApiException ex = assertThrows(NacosApiException.class,
+            () -> manager.doRedraft(NAMESPACE_ID, "res", RESOURCE_TYPE, "v99"));
+        assertEquals(NacosException.NOT_FOUND, ex.getErrCode());
+    }
+    
     // ---- resolveBaseVersion ----
     
     @Test
@@ -1373,6 +1479,11 @@ class AiResourceManagerTest {
         ResourceVersionInfo info = new ResourceVersionInfo();
         info.setEditingVersion("v1");
         info.setLabels(new HashMap<>());
+        AiResourceVersion existing = new AiResourceVersion();
+        existing.setVersion("v1");
+        existing.setStatus(AiResourceConstants.VERSION_STATUS_DRAFT);
+        when(aiResourceVersionPersistService.find(NAMESPACE_ID, "res", RESOURCE_TYPE, "v1"))
+            .thenReturn(existing);
         when(aiResourcePersistService.updateMetaCas(eq(NAMESPACE_ID), eq("res"), eq(RESOURCE_TYPE),
             eq(1L), any()))
             .thenReturn(true);
@@ -1382,6 +1493,40 @@ class AiResourceManagerTest {
             AiResourceConstants.VERSION_STATUS_REVIEWING);
         assertNull(info.getEditingVersion());
         assertEquals("v1", info.getReviewingVersion());
+    }
+    
+    @Test
+    void moveToReviewingShouldRejectNonDraftVersion() {
+        AiResource meta = buildMeta("res");
+        ResourceVersionInfo info = new ResourceVersionInfo();
+        info.setReviewingVersion("v1");
+        info.setLabels(new HashMap<>());
+        AiResourceVersion existing = new AiResourceVersion();
+        existing.setVersion("v1");
+        existing.setStatus(AiResourceConstants.VERSION_STATUS_ONLINE);
+        when(aiResourceVersionPersistService.find(NAMESPACE_ID, "res", RESOURCE_TYPE, "v1"))
+            .thenReturn(existing);
+        NacosApiException ex = assertThrows(NacosApiException.class,
+            () -> manager.moveToReviewing(NAMESPACE_ID, "res", RESOURCE_TYPE, "v1", meta, info));
+        assertEquals(NacosException.INVALID_PARAM, ex.getErrCode());
+        verify(aiResourceVersionPersistService, never()).updateStatus(NAMESPACE_ID, "res",
+            RESOURCE_TYPE, "v1", AiResourceConstants.VERSION_STATUS_REVIEWING);
+        assertEquals("v1", info.getReviewingVersion());
+    }
+    
+    @Test
+    void moveToReviewingShouldRejectMissingVersion() {
+        AiResource meta = buildMeta("res");
+        ResourceVersionInfo info = new ResourceVersionInfo();
+        info.setEditingVersion("v1");
+        info.setLabels(new HashMap<>());
+        when(aiResourceVersionPersistService.find(NAMESPACE_ID, "res", RESOURCE_TYPE, "v1"))
+            .thenReturn(null);
+        NacosApiException ex = assertThrows(NacosApiException.class,
+            () -> manager.moveToReviewing(NAMESPACE_ID, "res", RESOURCE_TYPE, "v1", meta, info));
+        assertEquals(NacosException.INVALID_PARAM, ex.getErrCode());
+        verify(aiResourceVersionPersistService, never()).updateStatus(NAMESPACE_ID, "res",
+            RESOURCE_TYPE, "v1", AiResourceConstants.VERSION_STATUS_REVIEWING);
     }
     
     // ---- writePipelineInfoInProgress / clearPipelineInfo ----
@@ -1549,11 +1694,11 @@ class AiResourceManagerTest {
     @Test
     void doForcePublishShouldSetVersionOnline() throws NacosException {
         AiResource meta = buildMeta("res");
-        meta.setVersionInfo("{\"editingVersion\":\"v1\",\"labels\":{},\"onlineCnt\":0}");
+        meta.setVersionInfo("{\"reviewingVersion\":\"v1\",\"labels\":{},\"onlineCnt\":0}");
         when(aiResourcePersistService.find(NAMESPACE_ID, "res", RESOURCE_TYPE)).thenReturn(meta);
         AiResourceVersion v = new AiResourceVersion();
         v.setVersion("v1");
-        v.setStatus(AiResourceConstants.VERSION_STATUS_DRAFT);
+        v.setStatus(AiResourceConstants.VERSION_STATUS_REVIEWED);
         when(aiResourceVersionPersistService.find(NAMESPACE_ID, "res", RESOURCE_TYPE, "v1"))
             .thenReturn(v);
         when(aiResourcePersistService.updateMetaCas(eq(NAMESPACE_ID), eq("res"), eq(RESOURCE_TYPE),
@@ -1585,6 +1730,44 @@ class AiResourceManagerTest {
         AiResourceVersion v = new AiResourceVersion();
         v.setVersion("v1");
         v.setStatus(AiResourceConstants.VERSION_STATUS_ONLINE);
+        when(aiResourceVersionPersistService.find(NAMESPACE_ID, "res", RESOURCE_TYPE, "v1"))
+            .thenReturn(v);
+        NacosApiException ex = assertThrows(NacosApiException.class,
+            () -> manager.doForcePublish(NAMESPACE_ID, "res", RESOURCE_TYPE, "v1", true));
+        assertEquals(NacosException.INVALID_PARAM, ex.getErrCode());
+    }
+    
+    @Test
+    void doForcePublishShouldAllowLegacyRejectedDraft() throws NacosException {
+        AiResource meta = buildMeta("res");
+        meta.setVersionInfo("{\"editingVersion\":\"v1\",\"labels\":{},\"onlineCnt\":0}");
+        when(aiResourcePersistService.find(NAMESPACE_ID, "res", RESOURCE_TYPE)).thenReturn(meta);
+        AiResourceVersion v = new AiResourceVersion();
+        v.setVersion("v1");
+        v.setStatus(AiResourceConstants.VERSION_STATUS_DRAFT);
+        v.setPublishPipelineInfo(
+            "{\"executionId\":\"e1\",\"status\":\"REJECTED\",\"pipeline\":[]}");
+        when(aiResourceVersionPersistService.find(NAMESPACE_ID, "res", RESOURCE_TYPE, "v1"))
+            .thenReturn(v);
+        when(aiResourcePersistService.updateMetaCas(eq(NAMESPACE_ID), eq("res"), eq(RESOURCE_TYPE),
+            eq(1L), any()))
+            .thenReturn(true);
+        AiResourceVersion result =
+            manager.doForcePublish(NAMESPACE_ID, "res", RESOURCE_TYPE, "v1", true);
+        assertNotNull(result);
+        verify(aiResourceVersionPersistService).updateStatus(NAMESPACE_ID, "res", RESOURCE_TYPE,
+            "v1", AiResourceConstants.VERSION_STATUS_ONLINE);
+    }
+    
+    @Test
+    void doForcePublishShouldThrowWhenDraftWithHistoricalPipeline() {
+        AiResource meta = buildMeta("res");
+        when(aiResourcePersistService.find(NAMESPACE_ID, "res", RESOURCE_TYPE)).thenReturn(meta);
+        AiResourceVersion v = new AiResourceVersion();
+        v.setVersion("v1");
+        v.setStatus(AiResourceConstants.VERSION_STATUS_DRAFT);
+        v.setPublishPipelineInfo(
+            "{\"executionId\":\"e1\",\"status\":\"REJECTED\",\"pipeline\":[],\"historical\":true}");
         when(aiResourceVersionPersistService.find(NAMESPACE_ID, "res", RESOURCE_TYPE, "v1"))
             .thenReturn(v);
         NacosApiException ex = assertThrows(NacosApiException.class,

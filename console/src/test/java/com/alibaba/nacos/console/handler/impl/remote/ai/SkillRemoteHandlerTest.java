@@ -354,4 +354,18 @@ class SkillRemoteHandlerTest {
         
         verify(skillMaintainerService).forcePublish(NAMESPACE_ID, SKILL_NAME, "v1", true);
     }
+    
+    @Test
+    void testRedraft() throws NacosException {
+        SkillPublishForm form = new SkillPublishForm();
+        form.setNamespaceId(NAMESPACE_ID);
+        form.setSkillName(SKILL_NAME);
+        form.setVersion("v1");
+        when(skillMaintainerService.redraft(eq(NAMESPACE_ID), eq(SKILL_NAME), eq("v1")))
+            .thenReturn(true);
+        
+        skillRemoteHandler.redraft(form);
+        
+        verify(skillMaintainerService).redraft(NAMESPACE_ID, SKILL_NAME, "v1");
+    }
 }

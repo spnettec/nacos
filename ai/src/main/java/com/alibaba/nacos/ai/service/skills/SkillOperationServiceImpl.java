@@ -826,30 +826,9 @@ public class SkillOperationServiceImpl implements SkillOperationService {
      */
     @Override
     public void deleteDraft(String namespaceId, String name) throws NacosException {
-        AiResource meta = resourceManager.requireMeta(namespaceId, name, RESOURCE_TYPE_SKILL);
-        VisibilityHelper.checkWritableResource(meta);
-        ResourceVersionInfo info = AiResourceManager.requireVersionInfo(meta);
-        String editing = info.getEditingVersion();
-        if (StringUtils.isBlank(editing)) {
-            return;
-        }
-        // Read version row upfront (need status check and storage info before modifying)
-        AiResourceVersion v =
-            resourceManager.findVersion(namespaceId, name, RESOURCE_TYPE_SKILL, editing);
-        
-        // Delete in reverse order of creation (storage -> version -> meta):
-        // 1) meta: clear editingVersion reference first
-        info.setEditingVersion(null);
-        resourceManager.updateVersionInfoCas(namespaceId, meta, info);
-        
-        // 2) version row, then storage files
-        if (v != null && AiResourceConstants.VERSION_STATUS_DRAFT.equalsIgnoreCase(v.getStatus())) {
-            resourceManager.deleteVersion(namespaceId, name, RESOURCE_TYPE_SKILL, editing);
-            deleteSkillStorageForVersion(namespaceId, name, editing, v.getStorage());
-        }
-        AiResourceTraceService.logSuccess(RESOURCE_TYPE_SKILL, name, editing,
-            AiResourceTraceService.OP_DELETE_DRAFT,
-            VisibilityHelper.resolveCurrentIdentity(), VisibilityHelper.resolveClientIp());
+        resourceManager.doDeleteDraft(namespaceId, name, RESOURCE_TYPE_SKILL,
+            v -> deleteSkillStorageForVersion(namespaceId, name, v.getVersion(),
+                v.getStorage()));
     }
     
     /**
@@ -975,6 +954,11 @@ public class SkillOperationServiceImpl implements SkillOperationService {
             manifest.getLabels().put(AiResourceConstants.LABEL_LATEST, version);
         }
         manifestService.write(namespaceId, name, manifest);
+    }
+    
+    @Override
+    public void redraft(String namespaceId, String name, String version) throws NacosException {
+        resourceManager.doRedraft(namespaceId, name, RESOURCE_TYPE_SKILL, version);
     }
     
     /**

@@ -272,6 +272,18 @@ public class AgentSpecAdminController {
     }
     
     /**
+     * Re-edit a reviewed agentspec version, transitioning it back to draft for modification.
+     */
+    @PostMapping("/redraft")
+    @Secured(action = ActionTypes.WRITE, signType = SignType.AI, apiType = ApiType.ADMIN_API)
+    public Result<String> redraft(AgentSpecPublishForm form) throws NacosException {
+        form.validate();
+        agentSpecOperationService.redraft(form.getNamespaceId(), form.getAgentSpecName(),
+            form.getVersion());
+        return Result.success("ok");
+    }
+    
+    /**
      * Update runtime route labels without changing version status.
      */
     @PutMapping("/labels")

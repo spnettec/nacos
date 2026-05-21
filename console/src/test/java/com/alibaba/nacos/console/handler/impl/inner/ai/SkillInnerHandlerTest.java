@@ -388,4 +388,17 @@ class SkillInnerHandlerTest {
         
         verify(skillOperationService).forcePublish(NAMESPACE_ID, SKILL_NAME, "v1", false);
     }
+    
+    @Test
+    void testRedraft() throws NacosException {
+        SkillPublishForm form = new SkillPublishForm();
+        form.setNamespaceId(NAMESPACE_ID);
+        form.setSkillName(SKILL_NAME);
+        form.setVersion("v1");
+        doNothing().when(skillOperationService).redraft(eq(NAMESPACE_ID), eq(SKILL_NAME), eq("v1"));
+        
+        skillInnerHandler.redraft(form);
+        
+        verify(skillOperationService).redraft(NAMESPACE_ID, SKILL_NAME, "v1");
+    }
 }

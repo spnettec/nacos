@@ -242,6 +242,17 @@ public class ConsolePromptController {
     }
     
     /**
+     * Re-edit a reviewed prompt version, transitioning it back to draft status.
+     */
+    @PostMapping("/redraft")
+    @Secured(action = ActionTypes.WRITE, signType = SignType.AI, apiType = ApiType.CONSOLE_API)
+    public Result<String> redraft(PromptVersionPublishForm form) throws NacosException {
+        form.validate();
+        promptProxy.redraft(form.getNamespaceId(), form.getPromptKey(), form.getVersion());
+        return Result.success("ok");
+    }
+    
+    /**
      * Online a prompt version.
      */
     @PostMapping("/online")

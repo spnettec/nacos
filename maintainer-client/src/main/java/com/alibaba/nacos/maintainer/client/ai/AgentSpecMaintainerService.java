@@ -330,6 +330,17 @@ public interface AgentSpecMaintainerService {
         throws NacosException;
     
     /**
+     * Re-edit a reviewed agent spec version, transitioning it back to draft status.
+     *
+     * @param namespaceId   namespace ID
+     * @param agentSpecName agent spec name
+     * @param version       version to re-edit
+     * @return true if redraft success
+     * @throws NacosException if fail to redraft
+     */
+    boolean redraft(String namespaceId, String agentSpecName, String version) throws NacosException;
+    
+    /**
      * Update runtime labels mapping JSON.
      *
      * @param namespaceId    namespace ID

@@ -17,6 +17,7 @@
 package com.alibaba.nacos.console.controller.v3.ai;
 
 import com.alibaba.nacos.ai.constant.Constants;
+import com.alibaba.nacos.ai.form.skills.admin.SkillPublishForm;
 import com.alibaba.nacos.api.ai.model.skills.Skill;
 import com.alibaba.nacos.api.ai.model.skills.SkillMeta;
 import com.alibaba.nacos.api.ai.model.skills.SkillSummary;
@@ -36,6 +37,7 @@ import org.springframework.core.env.StandardEnvironment;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -142,6 +144,24 @@ class ConsoleSkillControllerTest {
             response.getContentAsString(), new TypeReference<>() {
             });
         assertEquals("ok", result.getData());
+    }
+    
+    @Test
+    void testRedraftSuccess() throws Exception {
+        doNothing().when(skillProxy).redraft(any(SkillPublishForm.class));
+        
+        MockHttpServletRequestBuilder builder = MockMvcRequestBuilders.post(
+            Constants.Skills.CONSOLE_PATH + "/redraft").param("namespaceId", "test-ns")
+            .param("skillName", "test-skill").param("version", "v1");
+        
+        MockHttpServletResponse response = mockMvc.perform(builder).andReturn().getResponse();
+        String content = response.getContentAsString();
+        Result<String> result = JacksonUtils.toObj(content, new TypeReference<>() {
+        });
+        
+        assertEquals(ErrorCode.SUCCESS.getCode(), result.getCode());
+        assertEquals("ok", result.getData());
+        verify(skillProxy).redraft(any(SkillPublishForm.class));
     }
     
     @Test

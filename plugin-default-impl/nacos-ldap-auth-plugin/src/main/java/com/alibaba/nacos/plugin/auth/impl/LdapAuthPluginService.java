@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2018 Alibaba Group Holding Ltd.
+ * Copyright 1999-2026 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,13 @@
 
 package com.alibaba.nacos.plugin.auth.impl;
 
-import com.alibaba.nacos.plugin.auth.impl.authenticate.LdapAuthenticationManager;
+import com.alibaba.nacos.plugin.auth.impl.authenticate.IAuthenticationManager;
 import com.alibaba.nacos.plugin.auth.impl.constant.AuthConstants;
+import com.alibaba.nacos.plugin.auth.impl.ldap.LdapPluginDependencyChecker;
 import com.alibaba.nacos.sys.utils.ApplicationUtils;
 
 /**
- * ldap auth plugin service.
+ * LDAP auth plugin service.
  *
  * @author onewe
  */
@@ -35,7 +36,9 @@ public class LdapAuthPluginService extends NacosAuthPluginService {
     @Override
     protected void checkNacosAuthManager() {
         if (null == authenticationManager) {
-            authenticationManager = ApplicationUtils.getBean(LdapAuthenticationManager.class);
+            authenticationManager = ApplicationUtils.getBean(
+                LdapPluginDependencyChecker.LDAP_AUTHENTICATION_MANAGER_BEAN_NAME,
+                IAuthenticationManager.class);
         }
     }
 }
