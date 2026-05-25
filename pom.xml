@@ -353,6 +353,7 @@
                         <exclude>.qoder/**</exclude>
                         <exclude>.tools/**</exclude>
                         <exclude>skills/**</exclude>
+                        <exclude>.codegraph/**</exclude>
                     </excludes>
                 </configuration>
                 <executions>
