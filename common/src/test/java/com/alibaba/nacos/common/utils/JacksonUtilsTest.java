@@ -18,7 +18,6 @@ package com.alibaba.nacos.common.utils;
 
 import com.alibaba.nacos.api.common.Constants;
 import com.alibaba.nacos.api.exception.runtime.NacosDeserializationException;
-import com.alibaba.nacos.api.exception.runtime.NacosSerializationException;
 import com.alibaba.nacos.common.model.RestResult;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;

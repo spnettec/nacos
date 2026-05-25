@@ -92,7 +92,7 @@ class Md5ComparatorDelegateTest {
             .thenReturn(Collections.singletonList(nacosMd5Comparator));
         Constructor constructor = Md5ComparatorDelegate.class.getDeclaredConstructor();
         constructor.setAccessible(true);
-        Field field = Md5ComparatorDelegate.class.getDeclaredField("INSTANCE");
+        Field field = Md5ComparatorDelegate.class.getDeclaredField("instance");
         field.setAccessible(true);
         Md5ComparatorDelegate delegate = (Md5ComparatorDelegate) constructor.newInstance();
         field.set(null, delegate);

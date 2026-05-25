@@ -54,7 +54,7 @@ class ControlManagerCenterTest {
     private void resetRuleStorageProxy() {
         try {
             //reset instance for reload spi
-            Field instanceRuleStorageProxy = RuleStorageProxy.class.getDeclaredField("INSTANCE");
+            Field instanceRuleStorageProxy = RuleStorageProxy.class.getDeclaredField("instance");
             Constructor<RuleStorageProxy> constructor =
                 RuleStorageProxy.class.getDeclaredConstructor();
             constructor.setAccessible(true);

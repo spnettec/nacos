@@ -37,7 +37,7 @@ public class Md5ComparatorDelegate {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(Md5ComparatorDelegate.class);
     
-    private static volatile Md5ComparatorDelegate INSTANCE = new Md5ComparatorDelegate();
+    private static volatile Md5ComparatorDelegate instance = new Md5ComparatorDelegate();
     
     private String md5ComparatorType = EnvUtil.getProperty("nacos.config.cache.type", "nacos");
     
@@ -70,7 +70,7 @@ public class Md5ComparatorDelegate {
     }
     
     public static Md5ComparatorDelegate getInstance() {
-        return INSTANCE;
+        return instance;
     }
     
     public Map<String, ConfigListenState> compareMd5(HttpServletRequest request,

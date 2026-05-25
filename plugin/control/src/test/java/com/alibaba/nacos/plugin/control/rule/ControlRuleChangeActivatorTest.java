@@ -101,7 +101,7 @@ class ControlRuleChangeActivatorTest {
     }
     
     private void resetRuleStorageProxy() throws Exception {
-        Field instance = RuleStorageProxy.class.getDeclaredField("INSTANCE");
+        Field instance = RuleStorageProxy.class.getDeclaredField("instance");
         Constructor<RuleStorageProxy> constructor = RuleStorageProxy.class.getDeclaredConstructor();
         constructor.setAccessible(true);
         setStaticFinalField(instance, constructor.newInstance());
