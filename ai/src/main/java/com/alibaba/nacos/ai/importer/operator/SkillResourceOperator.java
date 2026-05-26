@@ -20,6 +20,7 @@ import com.alibaba.nacos.ai.model.AiResource;
 import com.alibaba.nacos.ai.service.resource.AiResourceManager;
 import com.alibaba.nacos.ai.service.resource.ResourceVersionInfo;
 import com.alibaba.nacos.ai.service.skills.SkillOperationService;
+import com.alibaba.nacos.ai.service.skills.SkillUploadRequest;
 import com.alibaba.nacos.ai.utils.SkillZipParser;
 import com.alibaba.nacos.api.ai.model.importer.AiResourceImportResultItem;
 import com.alibaba.nacos.api.ai.model.importer.AiResourceImportResultStatus;
@@ -54,6 +55,9 @@ public class SkillResourceOperator implements AiResourceOperator {
     private static final String METADATA_ARTIFACT_URL = "artifactUrl";
     
     private static final String METADATA_SOURCE = "source";
+    
+    private static final String WORKING_VERSION_SKIP_MESSAGE =
+        "Skipped because a working version (editing/reviewing) already exists.";
     
     private final SkillOperationService skillOperationService;
     
@@ -99,15 +103,35 @@ public class SkillResourceOperator implements AiResourceOperator {
     public AiResourceImportResultItem importResource(String namespaceId,
         AiResourceImportArtifact artifact, boolean overwriteExisting) throws NacosException {
         Skill skill = parseSkill(namespaceId, artifact);
+        AiResource meta = resourceManager.findMeta(namespaceId, skill.getName(), resourceType());
+        if (!overwriteExisting && hasWorkingVersion(AiResourceManager.requireVersionInfo(meta))) {
+            return skippedWorkingVersionItem(artifact, skill);
+        }
         String version = resolveVersion(artifact);
-        String skillName = skillOperationService.uploadSkillFromZip(namespaceId,
-            artifact.getPayload(), overwriteExisting, version);
+        SkillUploadRequest request = SkillUploadRequest.builder()
+            .namespaceId(namespaceId)
+            .zipBytes(artifact.getPayload())
+            .overwrite(overwriteExisting)
+            .targetVersion(version)
+            .build();
+        String skillName = skillOperationService.uploadSkillFromZip(request);
         syncSource(namespaceId, skillName, artifact);
         AiResourceImportResultItem result = new AiResourceImportResultItem();
         result.setExternalId(artifact.getExternalId());
         result.setResourceName(skillName);
         result.setVersion(version);
         result.setStatus(AiResourceImportResultStatus.SUCCESS);
+        return result;
+    }
+    
+    private AiResourceImportResultItem skippedWorkingVersionItem(
+        AiResourceImportArtifact artifact, Skill skill) {
+        AiResourceImportResultItem result = new AiResourceImportResultItem();
+        result.setExternalId(artifact.getExternalId());
+        result.setResourceName(skill.getName());
+        result.setVersion(resolveVersion(artifact));
+        result.setStatus(AiResourceImportResultStatus.SKIPPED);
+        result.setWarnings(Collections.singletonList(WORKING_VERSION_SKIP_MESSAGE));
         return result;
     }
     

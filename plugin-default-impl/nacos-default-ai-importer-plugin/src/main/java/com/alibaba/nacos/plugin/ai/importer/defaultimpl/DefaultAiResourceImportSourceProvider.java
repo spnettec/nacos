@@ -21,6 +21,7 @@ import com.alibaba.nacos.api.exception.api.NacosApiException;
 import com.alibaba.nacos.api.model.v2.ErrorCode;
 import com.alibaba.nacos.common.utils.StringUtils;
 import com.alibaba.nacos.plugin.ai.importer.AiResourceImportConstants;
+import com.alibaba.nacos.plugin.ai.importer.defaultimpl.http.DefaultImportHttpClient;
 import com.alibaba.nacos.plugin.ai.importer.defaultimpl.mcp.McpRegistryImportServiceBuilder;
 import com.alibaba.nacos.plugin.ai.importer.defaultimpl.skill.SkillsShImportServiceBuilder;
 import com.alibaba.nacos.plugin.ai.importer.defaultimpl.skill.SkillWellKnownImportServiceBuilder;
@@ -30,7 +31,9 @@ import com.alibaba.nacos.plugin.ai.importer.spi.AiResourceImportSourceProvider;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -108,7 +111,8 @@ public class DefaultAiResourceImportSourceProvider implements AiResourceImportSo
         if (!getBoolean(properties, SKILL_WELL_KNOWN_PREFIX + "enabled", false)) {
             return null;
         }
-        String endpoint = getString(properties, SKILL_WELL_KNOWN_PREFIX, "url", "endpoint", null);
+        String endpoint = getString(properties, SKILL_WELL_KNOWN_PREFIX, "url", "endpoint",
+            null);
         if (StringUtils.isBlank(endpoint)) {
             throw invalidConfig(
                 "Skill well-known import source url must not be empty when enabled.");
@@ -162,6 +166,28 @@ public class DefaultAiResourceImportSourceProvider implements AiResourceImportSo
             DEFAULT_MAX_ITEM_COUNT));
         source.setMaxArtifactSize(getLong(properties, prefix + "max-artifact-size",
             DEFAULT_MAX_ARTIFACT_SIZE));
+        applySecurityOptions(properties, prefix, source);
+    }
+    
+    private void applySecurityOptions(Properties properties, String prefix,
+        AiResourceImportSource source) {
+        Map<String, String> sourceProperties = new LinkedHashMap<>(2);
+        putConfiguredProperty(properties, prefix, DefaultImportHttpClient.PROPERTY_ALLOW_HTTP,
+            DefaultImportHttpClient.PROPERTY_ALLOW_HTTP_CAMEL, sourceProperties);
+        putConfiguredProperty(properties, prefix,
+            DefaultImportHttpClient.PROPERTY_ALLOW_PRIVATE_NETWORK,
+            DefaultImportHttpClient.PROPERTY_ALLOW_PRIVATE_NETWORK_CAMEL, sourceProperties);
+        if (!sourceProperties.isEmpty()) {
+            source.setProperties(sourceProperties);
+        }
+    }
+    
+    private void putConfiguredProperty(Properties properties, String prefix, String kebabKey,
+        String camelKey, Map<String, String> sourceProperties) {
+        String value = getString(properties, prefix, kebabKey, camelKey, null);
+        if (StringUtils.isNotBlank(value)) {
+            sourceProperties.put(kebabKey, value);
+        }
     }
     
     private String getString(Properties properties, String prefix, String kebabKey,

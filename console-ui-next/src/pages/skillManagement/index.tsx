@@ -111,7 +111,8 @@ export default function SkillManagementPage() {
   };
 
   const handleDetail = (name: string) => {
-    navigate(`/skill/${encodeURIComponent(name)}`);
+    const params = new URLSearchParams({ namespaceId });
+    navigate(`/skill/${encodeURIComponent(name)}?${params}`);
   };
 
   const handleDelete = async () => {
@@ -518,7 +519,7 @@ export default function SkillManagementPage() {
         namespaceId={namespaceId}
         onSuccess={(name) => {
           loadData();
-          navigate(`/skill/${encodeURIComponent(name)}`);
+          handleDetail(name);
         }}
       />
 
