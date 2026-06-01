@@ -29,6 +29,7 @@ import com.alibaba.nacos.common.notify.listener.Subscriber;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -41,6 +42,7 @@ import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -54,25 +56,29 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class NacosAgentSpecCacheHolderTest {
-    
-    private static final String SPEC_NAME = "test-agent";
-    
+
+    private static final AtomicLong SPEC_SEQUENCE = new AtomicLong();
+
     @Mock
     private AiClientProxy aiClientProxy;
-    
+
     private NacosAgentSpecCacheHolder cacheHolder;
-    
+
     private final List<MockAgentSpecEventSubscriber> registeredSubscribers = new ArrayList<>();
-    
+
+    private String specName;
+
     @BeforeEach
-    void setUp() {
+    void setUp(TestInfo testInfo) {
+        specName = testInfo.getTestMethod().orElseThrow().getName() + "-"
+            + SPEC_SEQUENCE.incrementAndGet();
         Properties properties = new Properties();
         properties.put(AiConstants.AI_AGENTSPEC_CACHE_UPDATE_INTERVAL, "60000");
         NotifyCenter.registerToPublisher(AgentSpecChangedEvent.class, 16384);
         cacheHolder = new NacosAgentSpecCacheHolder(aiClientProxy,
             NacosClientProperties.PROTOTYPE.derive(properties));
     }
-    
+
     @AfterEach
     void tearDown() throws NacosException {
         for (MockAgentSpecEventSubscriber each : registeredSubscribers) {
@@ -82,224 +88,232 @@ class NacosAgentSpecCacheHolderTest {
         cacheHolder.shutdown();
         NotifyCenter.deregisterPublisher(AgentSpecChangedEvent.class);
     }
-    
+
     @Test
     void queryAgentSpecShouldReturnAgentSpec() throws Exception {
         AgentSpec spec = new AgentSpec();
-        spec.setName(SPEC_NAME);
+        spec.setName(specName);
         AgentSpecQueryResponse response = new AgentSpecQueryResponse(spec, "md5a", "1.0.0");
-        when(aiClientProxy.queryAgentSpec(SPEC_NAME, null, null, null))
+        when(aiClientProxy.queryAgentSpec(specName, null, null, null))
             .thenReturn(response);
-        
-        AgentSpec result = cacheHolder.queryAgentSpec(SPEC_NAME);
-        
+
+        AgentSpec result = cacheHolder.queryAgentSpec(specName);
+
         assertNotNull(result);
-        assertEquals(SPEC_NAME, result.getName());
+        assertEquals(specName, result.getName());
     }
-    
+
     @Test
     void queryAgentSpecShouldReturnNullWhenNotFound() throws Exception {
-        when(aiClientProxy.queryAgentSpec(SPEC_NAME, null, null, null))
+        when(aiClientProxy.queryAgentSpec(specName, null, null, null))
             .thenThrow(new NacosException(NacosException.NOT_FOUND, "not found"));
-        
-        AgentSpec result = cacheHolder.queryAgentSpec(SPEC_NAME);
-        
+
+        AgentSpec result = cacheHolder.queryAgentSpec(specName);
+
         assertNull(result);
     }
-    
+
     @Test
     void queryAgentSpecShouldThrowWhenBlankName() {
         assertThrows(NacosException.class, () -> cacheHolder.queryAgentSpec(""));
     }
-    
+
     @Test
     void subscribeAgentSpecShouldReturnNullAndScheduleWhenNotFound() throws Exception {
-        when(aiClientProxy.queryAgentSpec(SPEC_NAME, null, null, null))
+        when(aiClientProxy.queryAgentSpec(specName, null, null, null))
             .thenThrow(new NacosException(NacosException.NOT_FOUND, "not found"));
-        
-        AgentSpec result = cacheHolder.subscribeAgentSpec(SPEC_NAME);
-        
+
+        AgentSpec result = cacheHolder.subscribeAgentSpec(specName);
+
         assertNull(result);
         assertEquals(1, getUpdateTaskMap().size());
     }
-    
+
     @Test
     void subscribeAgentSpecShouldCacheButNotPublishEvent() throws Exception {
         AgentSpec spec = new AgentSpec();
-        spec.setName(SPEC_NAME);
+        spec.setName(specName);
         AgentSpecQueryResponse response = new AgentSpecQueryResponse(spec, "md5a", "1.0.0");
-        when(aiClientProxy.queryAgentSpec(SPEC_NAME, null, null, null))
+        when(aiClientProxy.queryAgentSpec(specName, null, null, null))
             .thenReturn(response);
         MockAgentSpecEventSubscriber subscriber = registerMockSubscriber();
-        
-        AgentSpec result = cacheHolder.subscribeAgentSpec(SPEC_NAME);
-        
+
+        AgentSpec result = cacheHolder.subscribeAgentSpec(specName);
+
         assertNotNull(result);
-        assertEquals("md5a", getMd5Cache().get(SPEC_NAME));
+        assertEquals("md5a", getMd5Cache().get(specName));
         // Initial subscribe must NOT publish event; the caller (NacosAiService)
         // is responsible for the first listener notification to avoid double-invocation.
         assertFalse(subscriber.await(200),
             "Initial subscribe should not publish event via NotifyCenter");
         assertFalse(subscriber.invokedMark.get());
     }
-    
+
     @Test
     void subscribeAgentSpecShouldThrowWhenBlankName() {
         assertThrows(NacosException.class, () -> cacheHolder.subscribeAgentSpec(""));
     }
-    
+
     @Test
     void updaterShouldIgnoreWhenNotModified() throws Exception {
         AgentSpec spec = new AgentSpec();
-        spec.setName(SPEC_NAME);
+        spec.setName(specName);
         AgentSpecQueryResponse response = new AgentSpecQueryResponse(spec, "md5a", "1.0.0");
-        when(aiClientProxy.queryAgentSpec(SPEC_NAME, null, null, null))
+        when(aiClientProxy.queryAgentSpec(specName, null, null, null))
             .thenReturn(response);
-        when(aiClientProxy.queryAgentSpec(SPEC_NAME, null, null, "md5a"))
+        when(aiClientProxy.queryAgentSpec(specName, null, null, "md5a"))
             .thenThrow(new NacosException(NacosException.NOT_MODIFIED, "up to date"));
-        cacheHolder.subscribeAgentSpec(SPEC_NAME);
+        cacheHolder.subscribeAgentSpec(specName);
         MockAgentSpecEventSubscriber subscriber = registerMockSubscriber();
-        
+
         Runnable updater = getOnlyUpdater();
         updater.run();
-        
-        assertEquals("md5a", getMd5Cache().get(SPEC_NAME));
+
+        assertEquals("md5a", getMd5Cache().get(specName));
         assertFalse(subscriber.await(200));
         assertFalse(subscriber.invokedMark.get());
     }
-    
+
     @Test
     void updaterShouldEvictCacheWhenNotFound() throws Exception {
         AgentSpec spec = new AgentSpec();
-        spec.setName(SPEC_NAME);
+        spec.setName(specName);
         AgentSpecQueryResponse response = new AgentSpecQueryResponse(spec, "md5a", "1.0.0");
-        when(aiClientProxy.queryAgentSpec(SPEC_NAME, null, null, null))
+        when(aiClientProxy.queryAgentSpec(specName, null, null, null))
             .thenReturn(response);
-        when(aiClientProxy.queryAgentSpec(SPEC_NAME, null, null, "md5a"))
+        when(aiClientProxy.queryAgentSpec(specName, null, null, "md5a"))
             .thenThrow(new NacosException(NacosException.NOT_FOUND, "not found"));
-        cacheHolder.subscribeAgentSpec(SPEC_NAME);
+        cacheHolder.subscribeAgentSpec(specName);
         MockAgentSpecEventSubscriber subscriber = registerMockSubscriber();
-        
+
         Runnable updater = getOnlyUpdater();
         updater.run();
-        
-        assertNull(getMd5Cache().get(SPEC_NAME));
+
+        assertNull(getMd5Cache().get(specName));
         assertFalse(subscriber.await(200));
     }
-    
+
     @Test
     void updaterShouldPublishEventWhenMd5Changed() throws Exception {
         AgentSpec spec1 = new AgentSpec();
-        spec1.setName(SPEC_NAME);
+        spec1.setName(specName);
         AgentSpec spec2 = new AgentSpec();
-        spec2.setName(SPEC_NAME);
+        spec2.setName(specName);
         spec2.setDescription("updated");
         AgentSpecQueryResponse first = new AgentSpecQueryResponse(spec1, "md5a", "1.0.0");
         AgentSpecQueryResponse second = new AgentSpecQueryResponse(spec2, "md5b", "1.0.1");
-        when(aiClientProxy.queryAgentSpec(SPEC_NAME, null, null, null))
+        when(aiClientProxy.queryAgentSpec(specName, null, null, null))
             .thenReturn(first);
-        when(aiClientProxy.queryAgentSpec(SPEC_NAME, null, null, "md5a"))
+        when(aiClientProxy.queryAgentSpec(specName, null, null, "md5a"))
             .thenReturn(second);
-        cacheHolder.subscribeAgentSpec(SPEC_NAME);
+        cacheHolder.subscribeAgentSpec(specName);
         MockAgentSpecEventSubscriber subscriber = registerMockSubscriber();
-        
+
         Runnable updater = getOnlyUpdater();
         updater.run();
-        
-        assertEquals("md5b", getMd5Cache().get(SPEC_NAME));
+
+        assertEquals("md5b", getMd5Cache().get(specName));
         assertTrue(subscriber.await(5000));
         assertTrue(subscriber.invokedMark.get());
     }
-    
+
     @Test
     void unsubscribeAgentSpecShouldCancelTaskAndRemoveCache() throws Exception {
         AgentSpec spec = new AgentSpec();
-        spec.setName(SPEC_NAME);
+        spec.setName(specName);
         AgentSpecQueryResponse response = new AgentSpecQueryResponse(spec, "md5a", "1.0.0");
-        when(aiClientProxy.queryAgentSpec(SPEC_NAME, null, null, null))
+        when(aiClientProxy.queryAgentSpec(specName, null, null, null))
             .thenReturn(response);
-        cacheHolder.subscribeAgentSpec(SPEC_NAME);
-        
-        cacheHolder.unsubscribeAgentSpec(SPEC_NAME);
-        
+        cacheHolder.subscribeAgentSpec(specName);
+
+        cacheHolder.unsubscribeAgentSpec(specName);
+
         assertTrue(getUpdateTaskMap().isEmpty());
-        assertNull(getMd5Cache().get(SPEC_NAME));
-        verify(aiClientProxy, never()).queryAgentSpec(SPEC_NAME, null, null, "md5a");
+        assertNull(getMd5Cache().get(specName));
+        verify(aiClientProxy, never()).queryAgentSpec(specName, null, null, "md5a");
     }
-    
+
     @Test
     void subscribeAgentSpecShouldThrowOnUnexpectedException() throws Exception {
-        when(aiClientProxy.queryAgentSpec(SPEC_NAME, null, null, null))
+        when(aiClientProxy.queryAgentSpec(specName, null, null, null))
             .thenThrow(new NacosException(NacosException.SERVER_ERROR, "server error"));
-        
-        assertThrows(NacosException.class, () -> cacheHolder.subscribeAgentSpec(SPEC_NAME));
+
+        assertThrows(NacosException.class, () -> cacheHolder.subscribeAgentSpec(specName));
     }
-    
+
     @Test
     void updaterShouldIgnoreGeneralExceptionAndKeepCache() throws Exception {
         AgentSpec spec = new AgentSpec();
-        spec.setName(SPEC_NAME);
+        spec.setName(specName);
         AgentSpecQueryResponse response = new AgentSpecQueryResponse(spec, "md5a", "1.0.0");
-        when(aiClientProxy.queryAgentSpec(SPEC_NAME, null, null, null))
+        when(aiClientProxy.queryAgentSpec(specName, null, null, null))
             .thenReturn(response);
-        when(aiClientProxy.queryAgentSpec(SPEC_NAME, null, null, "md5a"))
+        when(aiClientProxy.queryAgentSpec(specName, null, null, "md5a"))
             .thenThrow(new NacosException(NacosException.SERVER_ERROR, "server error"));
-        cacheHolder.subscribeAgentSpec(SPEC_NAME);
-        
+        cacheHolder.subscribeAgentSpec(specName);
+
         Runnable updater = getOnlyUpdater();
         updater.run();
-        
-        assertNotNull(getMd5Cache().get(SPEC_NAME));
+
+        assertNotNull(getMd5Cache().get(specName));
         assertEquals(1, getUpdateTaskMap().size());
     }
-    
+
     @SuppressWarnings("unchecked")
     private Map<String, String> getMd5Cache() throws Exception {
         Field field = NacosAgentSpecCacheHolder.class.getDeclaredField("md5Cache");
         field.setAccessible(true);
         return (Map<String, String>) field.get(cacheHolder);
     }
-    
+
     @SuppressWarnings("unchecked")
     private Map<String, Object> getUpdateTaskMap() throws Exception {
         Field field = NacosAgentSpecCacheHolder.class.getDeclaredField("updateTaskMap");
         field.setAccessible(true);
         return (Map<String, Object>) field.get(cacheHolder);
     }
-    
+
     private Runnable getOnlyUpdater() throws Exception {
         Object updater = getUpdateTaskMap().values().iterator().next();
         return (Runnable) updater;
     }
-    
+
     private MockAgentSpecEventSubscriber registerMockSubscriber() {
-        MockAgentSpecEventSubscriber subscriber = new MockAgentSpecEventSubscriber();
+        MockAgentSpecEventSubscriber subscriber = new MockAgentSpecEventSubscriber(specName);
         NotifyCenter.registerSubscriber(subscriber);
         registeredSubscribers.add(subscriber);
         return subscriber;
     }
-    
+
     private static class MockAgentSpecEventSubscriber
         extends Subscriber<AgentSpecChangedEvent> {
-        
+
+        private final String expectedAgentSpecName;
         private final AtomicBoolean invokedMark = new AtomicBoolean(false);
         private volatile CountDownLatch latch = new CountDownLatch(1);
-        
+
+        MockAgentSpecEventSubscriber(String expectedAgentSpecName) {
+            this.expectedAgentSpecName = expectedAgentSpecName;
+        }
+
         @Override
         public void onEvent(AgentSpecChangedEvent event) {
+            if (!expectedAgentSpecName.equals(event.getAgentSpecName())) {
+                return;
+            }
             invokedMark.set(true);
             latch.countDown();
         }
-        
+
         @Override
         public Class<? extends Event> subscribeType() {
             return AgentSpecChangedEvent.class;
         }
-        
+
         boolean await(long timeoutMs) throws InterruptedException {
             return latch.await(timeoutMs, TimeUnit.MILLISECONDS);
         }
-        
+
         void reset() {
             invokedMark.set(false);
             latch = new CountDownLatch(1);

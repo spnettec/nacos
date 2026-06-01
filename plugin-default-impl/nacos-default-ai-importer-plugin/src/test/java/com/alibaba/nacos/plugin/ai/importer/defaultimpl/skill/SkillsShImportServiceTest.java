@@ -61,14 +61,14 @@ import static org.mockito.Mockito.verifyNoInteractions;
  */
 @ExtendWith(MockitoExtension.class)
 class SkillsShImportServiceTest {
-    
+
     private static final String ENDPOINT = "https://skills.sh";
-    
+
     @Mock
     private HttpClient httpClient;
-    
+
     private SkillsShImportService importService;
-    
+
     @BeforeEach
     void setUp() throws Exception {
         lenient().when(httpClient.send(any(HttpRequest.class),
@@ -77,15 +77,15 @@ class SkillsShImportServiceTest {
         importService = new SkillsShImportService(new DefaultImportHttpClient(httpClient,
             host -> new InetAddress[] {InetAddress.getByName("93.184.216.34")}));
     }
-    
+
     @Test
     void testSearchReturnsSkillsShCandidates() throws Exception {
         AiResourceImportContext context = newContext();
         context.setQuery("pdf");
         context.setLimit(2);
-        
+
         AiResourceImportCandidatePage result = importService.search(context);
-        
+
         assertEquals(1, result.getItems().size());
         assertFalse(result.isHasMore());
         assertEquals("openai/skills/pdf", result.getItems().get(0).getExternalId());
@@ -98,32 +98,44 @@ class SkillsShImportServiceTest {
             result.getItems().get(0).getMetadata().get("repository"));
         assertEquals("3330", result.getItems().get(0).getMetadata().get("installs"));
     }
-    
+
     @Test
     void testSearchUsesDefaultQueryWhenQueryIsBlank() throws Exception {
         AiResourceImportContext context = newContext();
         context.setLimit(12);
-        
+
         AiResourceImportCandidatePage result = importService.search(context);
-        
+
         assertEquals(1, result.getItems().size());
         assertEquals("openai/skills/pdf", result.getItems().get(0).getExternalId());
     }
-    
+
+    @Test
+    void testSearchSkipsUnsupportedRepositorySource() throws Exception {
+        AiResourceImportContext context = newContext();
+        context.setQuery("skill");
+        context.setLimit(30);
+
+        AiResourceImportCandidatePage result = importService.search(context);
+
+        assertEquals(1, result.getItems().size());
+        assertEquals("openai/skills/pdf", result.getItems().get(0).getExternalId());
+    }
+
     @Test
     void testSearchRejectsOneCharacterQuery() {
         AiResourceImportContext context = newContext();
         context.setQuery("p");
-        
+
         assertThrows(NacosException.class, () -> importService.search(context));
         verifyNoInteractions(httpClient);
     }
-    
+
     @Test
     void testFetchReturnsSkillZipArtifact() throws Exception {
         AiResourceImportArtifact result = importService.fetch(newContext(),
             item("openai/skills/pdf"));
-        
+
         assertEquals(SkillsShImportService.RESOURCE_TYPE_SKILL, result.getResourceType());
         assertEquals(AiResourceImportPayloadKind.SKILL_ZIP, result.getPayloadKind());
         assertEquals("openai/skills/pdf", result.getExternalId());
@@ -135,7 +147,7 @@ class SkillsShImportServiceTest {
         assertZipEntryContains(result.getPayload(), "pdf/SKILL.md", "name: pdf");
         assertZipEntryContains(result.getPayload(), "pdf/agents/openai.yaml", "PDF Skill");
     }
-    
+
     @Test
     void testFetchUsesSelectedItemMetadata() throws Exception {
         AiResourceImportItem item = new AiResourceImportItem();
@@ -144,34 +156,34 @@ class SkillsShImportServiceTest {
         metadata.put("repositorySource", "openai/skills");
         metadata.put("skillId", "pdf");
         item.setMetadata(metadata);
-        
+
         AiResourceImportArtifact result = importService.fetch(newContext(), item);
-        
+
         assertEquals("PDF Skill", result.getName());
         assertEquals("openai/skills/pdf", result.getExternalId());
         assertZipEntryContains(result.getPayload(), "pdf/SKILL.md", "name: pdf");
     }
-    
+
     @Test
     void testFetchRejectsMissingSkillMarkdown() {
         assertThrows(NacosException.class,
             () -> importService.fetch(newContext(), item("openai/skills/missing-md")));
     }
-    
+
     @Test
     void testSearchRejectsMissingEndpoint() {
         AiResourceImportContext context = newContext();
         context.getSource().setEndpoint(null);
-        
+
         assertThrows(NacosException.class, () -> importService.search(context));
     }
-    
+
     @Test
     void testSupportedResourceTypeAndImporterType() {
         assertEquals(SkillsShImportServiceBuilder.IMPORTER_TYPE, importService.importerType());
         assertFalse(importService.supportedResourceTypes().isEmpty());
     }
-    
+
     private AiResourceImportContext newContext() {
         AiResourceImportContext context = new AiResourceImportContext();
         context.setNamespaceId("public");
@@ -182,24 +194,29 @@ class SkillsShImportServiceTest {
         context.setSource(source);
         return context;
     }
-    
+
     private AiResourceImportItem item(String externalId) {
         AiResourceImportItem item = new AiResourceImportItem();
         item.setExternalId(externalId);
         item.setName("pdf");
         return item;
     }
-    
+
     private String searchJson() {
         return "{\"query\":\"pdf\",\"skills\":["
             + "{\"id\":\"openai/skills/pdf\","
             + "\"skillId\":\"pdf\","
             + "\"name\":\"pdf\","
             + "\"installs\":3330,"
-            + "\"source\":\"openai/skills\"}"
+            + "\"source\":\"openai/skills\"},"
+            + "{\"id\":\"skills.volces.com/find-skills-skill\","
+            + "\"skillId\":\"find-skills-skill\","
+            + "\"name\":\"find-skills-skill\","
+            + "\"installs\":123,"
+            + "\"source\":\"skills.volces.com\"}"
             + "]}";
     }
-    
+
     private String downloadJson() {
         return "{\"files\":["
             + "{\"path\":\"SKILL.md\","
@@ -208,19 +225,19 @@ class SkillsShImportServiceTest {
             + "\"contents\":\"interface:\\n  display_name: PDF Skill\\n\"}"
             + "],\"hash\":\"snapshot-hash\"}";
     }
-    
+
     private String missingMarkdownDownloadJson() {
         return "{\"files\":["
             + "{\"path\":\"README.md\","
             + "\"contents\":\"# Missing markdown\"}"
             + "],\"hash\":\"snapshot-hash\"}";
     }
-    
+
     private HttpResponse<byte[]> responseFor(HttpRequest request) {
         URI uri = request.uri();
         if ("/api/search".equals(uri.getPath())) {
-            assertTrue("q=pdf&limit=2".equals(uri.getQuery())
-                || "q=skill&limit=12".equals(uri.getQuery()));
+            assertTrue("q=pdf&limit=30".equals(uri.getQuery())
+                || "q=skill&limit=30".equals(uri.getQuery()));
             return response(200, searchJson());
         }
         if ("/api/download/openai/skills/pdf".equals(uri.getPath())) {
@@ -231,55 +248,55 @@ class SkillsShImportServiceTest {
         }
         return response(404, "");
     }
-    
+
     private HttpResponse<byte[]> response(int status, String body) {
         Map<String, java.util.List<String>> headers = new HashMap<>(1);
         headers.put("Content-Type", Collections.singletonList("application/json"));
         byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
         return new HttpResponse<>() {
-            
+
             @Override
             public int statusCode() {
                 return status;
             }
-            
+
             @Override
             public HttpRequest request() {
                 return null;
             }
-            
+
             @Override
             public Optional<HttpResponse<byte[]>> previousResponse() {
                 return Optional.empty();
             }
-            
+
             @Override
             public HttpHeaders headers() {
                 return HttpHeaders.of(headers, (key, value) -> true);
             }
-            
+
             @Override
             public byte[] body() {
                 return bytes;
             }
-            
+
             @Override
             public Optional<SSLSession> sslSession() {
                 return Optional.empty();
             }
-            
+
             @Override
             public URI uri() {
                 return null;
             }
-            
+
             @Override
             public HttpClient.Version version() {
                 return HttpClient.Version.HTTP_1_1;
             }
         };
     }
-    
+
     private void assertZipEntryContains(byte[] zipBytes, String entryName, String expected)
         throws Exception {
         try (ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(zipBytes),
