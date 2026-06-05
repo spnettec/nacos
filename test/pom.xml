@@ -31,10 +31,9 @@
     <name>nacos-test ${project.version}</name>
     <url>https://nacos.io</url>
     <modules>
-        <module>config-test</module>
-        <module>naming-test</module>
-        <module>core-test</module>
         <module>openapi-test</module>
+        <module>java-sdk-test</module>
+        <module>maintainer-sdk-test</module>
     </modules>
 
     <dependencies>

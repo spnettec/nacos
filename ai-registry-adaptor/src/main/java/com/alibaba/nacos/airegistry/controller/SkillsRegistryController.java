@@ -46,24 +46,24 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 @RestController
 @ConditionalOnProperty(name = "nacos.ai.skill.registry.enabled", havingValue = "true")
 public class SkillsRegistryController {
-    
+
     private static final String BASE_PATH = "/registry";
-    
+
     private static final String WELL_KNOWN_AGENT_SKILLS =
         BASE_PATH + "/{namespaceId}/.well-known/agent-skills";
-    
+
     private static final String WELL_KNOWN_SKILLS = BASE_PATH + "/{namespaceId}/.well-known/skills";
-    
+
     private static final String APPLICATION_ZIP_VALUE = "application/zip";
-    
+
     private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
-    
+
     private final NacosSkillsRegistryService nacosSkillsRegistryService;
-    
+
     public SkillsRegistryController(NacosSkillsRegistryService nacosSkillsRegistryService) {
         this.nacosSkillsRegistryService = nacosSkillsRegistryService;
     }
-    
+
     /**
      * Expose well-known index.json for the skills CLI.
      *
@@ -78,7 +78,7 @@ public class SkillsRegistryController {
         throws NacosException {
         return nacosSkillsRegistryService.buildAgentSkillsIndex(namespaceId);
     }
-    
+
     /**
      * Expose legacy well-known index.json for v0.1-compatible clients.
      *
@@ -93,7 +93,7 @@ public class SkillsRegistryController {
         throws NacosException {
         return nacosSkillsRegistryService.buildLegacySkillsIndex(namespaceId);
     }
-    
+
     /**
      * Expose CLI-compatible search results under the adaptor endpoint.
      *
@@ -115,7 +115,7 @@ public class SkillsRegistryController {
             buildSourceBaseUrl(request,
                 namespaceId));
     }
-    
+
     /**
      * Return the exported SKILL.md for a namespace skill.
      *
@@ -142,7 +142,7 @@ public class SkillsRegistryController {
         return content == null ? ResponseEntity.notFound().build()
             : ResponseEntity.ok().contentType(MediaType.TEXT_PLAIN).body(content);
     }
-    
+
     /**
      * Return an exported skill archive for v0.2 well-known discovery.
      *
@@ -168,7 +168,7 @@ public class SkillsRegistryController {
                 .contentType(MediaType.parseMediaType(APPLICATION_ZIP_VALUE))
                 .body(content);
     }
-    
+
     /**
      * Return an exported text resource for a namespace skill.
      *
@@ -197,7 +197,7 @@ public class SkillsRegistryController {
         return content == null ? ResponseEntity.notFound().build()
             : ResponseEntity.ok().contentType(MediaType.TEXT_PLAIN).body(content);
     }
-    
+
     private String buildSourceBaseUrl(HttpServletRequest request, String namespaceId) {
         return ServletUriComponentsBuilder.fromRequestUri(request)
             .replacePath(BASE_PATH + "/{namespaceId}")
@@ -205,7 +205,7 @@ public class SkillsRegistryController {
             .buildAndExpand(namespaceId)
             .toUriString();
     }
-    
+
     private String extractFilePath(HttpServletRequest request) {
         String pathWithinMapping =
             (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
@@ -216,9 +216,6 @@ public class SkillsRegistryController {
         if (StringUtils.isBlank(extracted)) {
             return extracted;
         }
-        while (extracted.startsWith("/")) {
-            extracted = extracted.substring(1);
-        }
-        return extracted;
+        return extracted.replaceFirst("^/+", "");
     }
 }

@@ -67,15 +67,15 @@ import java.util.Objects;
 @RequestMapping(Constants.OPS_CONTROLLER_V3_ADMIN_PATH)
 @ExtractorManager.Extractor(httpExtractor = ConfigDefaultHttpParamExtractor.class)
 public class ConfigOpsControllerV3 {
-    
+
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfigOpsControllerV3.class);
-    
+
     private final DumpService dumpService;
-    
+
     public ConfigOpsControllerV3(DumpService dumpService) {
         this.dumpService = dumpService;
     }
-    
+
     /**
      * Manually trigger dump of a local configuration file.
      */
@@ -95,7 +95,7 @@ public class ConfigOpsControllerV3 {
                 e.getMessage());
         }
     }
-    
+
     @Since("3.0.0")
     @PutMapping(value = "/log")
     @Secured(resource = Constants.OPS_CONTROLLER_V3_ADMIN_PATH, action = ActionTypes.WRITE,
@@ -114,7 +114,7 @@ public class ConfigOpsControllerV3 {
                 null);
         }
     }
-    
+
     /**
      * Can only run select statements and is a direct query to the native Derby database without any additional logic.
      *
@@ -144,7 +144,7 @@ public class ConfigOpsControllerV3 {
                     "Derby ops is disabled, please set `nacos.config.derby.ops.enabled=true` to enabled this feature.",
                     null);
             }
-            
+
             LocalDataSourceServiceImpl dataSourceService =
                 (LocalDataSourceServiceImpl) DynamicDataSource.getInstance()
                     .getDataSource();
@@ -165,7 +165,7 @@ public class ConfigOpsControllerV3 {
                 null);
         }
     }
-    
+
     /**
      * Import Derby data from other Derby database.
      *
@@ -208,27 +208,32 @@ public class ConfigOpsControllerV3 {
                 response.setResult(result);
             });
         }, response);
-        
+
         return convertToResult(response);
     }
-    
+
     /**
      * Ensure backward compatibility.
      */
     private DeferredResult<Result<String>> convertToResult(
         DeferredResult<RestResult<String>> restResult) {
         DeferredResult<Result<String>> wrappedResponse = new DeferredResult<>();
-        restResult.onCompletion(() -> {
-            if (restResult.getResult() != null) {
-                RestResult<String> originalResult = (RestResult<String>) restResult.getResult();
-                Result<String> newResult =
-                    new Result<>(originalResult.getCode(), originalResult.getMessage(),
-                        originalResult.getData());
-                
-                wrappedResponse.setResult(newResult);
-            }
-        });
-        
+        restResult.onCompletion(() -> copyRestResult(restResult, wrappedResponse));
+        copyRestResult(restResult, wrappedResponse);
+
         return wrappedResponse;
+    }
+
+    @SuppressWarnings("unchecked")
+    private void copyRestResult(DeferredResult<RestResult<String>> restResult,
+        DeferredResult<Result<String>> wrappedResponse) {
+        if (wrappedResponse.hasResult() || restResult.getResult() == null) {
+            return;
+        }
+        RestResult<String> originalResult = (RestResult<String>) restResult.getResult();
+        Result<String> newResult =
+            new Result<>(originalResult.getCode(), originalResult.getMessage(),
+                originalResult.getData());
+        wrappedResponse.setResult(newResult);
     }
 }

@@ -17,23 +17,11 @@
 package com.alibaba.nacos.test.adminapi.ai.a2a;
 
 import com.alibaba.nacos.api.model.v2.ErrorCode;
-import com.alibaba.nacos.common.http.HttpRestResult;
-import com.alibaba.nacos.common.http.client.NacosRestTemplate;
-import com.alibaba.nacos.common.http.client.request.DefaultHttpClientRequest;
-import com.alibaba.nacos.common.http.param.Header;
 import com.alibaba.nacos.common.http.param.Query;
-import com.alibaba.nacos.common.utils.JacksonUtils;
-import tools.jackson.databind.JsonNode;
-import org.apache.hc.client5.http.config.RequestConfig;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
-import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import com.alibaba.nacos.test.adminapi.ai.AiAdminApiBaseITCase;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import tools.jackson.databind.JsonNode;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -44,46 +32,25 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Integration tests for A2A admin APIs ({@code /nacos/v3/admin/ai/a2a}).
  *
- * <p>These tests run against an already started standalone server (default
- * {@code 127.0.0.1:8848}) and assume auth is disabled in the local environment.
+ * <p>Scenario coverage:
+ * <ul>
+ *     <li>Expected capability: legacy and v1 agent cards can be registered, normalized, queried by version/latest,
+ *     updated to a new latest version, listed by blur search, and enumerated by version.</li>
+ *     <li>Boundary/validation: namespace defaults to public; register defaults registrationType to URL; update allows
+ *     omitted registrationType; invalid search, missing agentName, invalid registrationType, empty card, malformed
+ *     JSON, and incomplete legacy/v1 endpoint definitions are rejected with HTTP 400.</li>
+ *     <li>Exception/error handling: absent agents return a controlled not-found result and delete is tolerant of
+ *     absent resources.</li>
+ * </ul>
+ *
+ * @author xiweng.yy
  */
-public class A2aAdminApiOpenApiITCase {
-    
-    private static final Logger LOGGER = LoggerFactory.getLogger(A2aAdminApiOpenApiITCase.class);
-    
-    private static final String NACOS_HOST = System.getProperty("nacos.host", "127.0.0.1");
-    
-    private static final String NACOS_PORT = System.getProperty("nacos.port", "8848");
-    
-    private static final String BASE_URL = "http://" + NACOS_HOST + ":" + NACOS_PORT;
-    
-    private static final String A2A_ADMIN_PATH = "/nacos/v3/admin/ai/a2a";
-    
-    private static final String A2A_ADMIN_LIST_PATH = A2A_ADMIN_PATH + "/list";
-    
-    private static final String A2A_ADMIN_VERSION_LIST_PATH = A2A_ADMIN_PATH + "/version/list";
-    
-    private static final String DEFAULT_NAMESPACE = "public";
-    
+public class A2aAdminApiOpenApiITCase extends AiAdminApiBaseITCase {
+
     private static final String REGISTRATION_TYPE_URL = "URL";
-    
+
     private static final String SEARCH_BLUR = "blur";
-    
-    private CloseableHttpClient httpClient;
-    
-    private NacosRestTemplate nacosRestTemplate;
-    
-    @BeforeEach
-    public void setUp() throws Exception {
-        httpClient = HttpClientBuilder.create().build();
-        nacosRestTemplate = new NacosRestTemplate(LOGGER, new DefaultHttpClientRequest(httpClient, RequestConfig.DEFAULT));
-    }
-    
-    @AfterEach
-    public void tearDown() throws Exception {
-        nacosRestTemplate.close();
-    }
-    
+
     @Test
     public void testRegisterLegacyAgentCardAndGetAgentCardSuccess() throws Exception {
         String agentName = "openapi-legacy-" + UUID.randomUUID();
@@ -93,7 +60,7 @@ public class A2aAdminApiOpenApiITCase {
             JsonNode register = registerAgent(agentName, version, REGISTRATION_TYPE_URL, legacyAgentCard);
             assertEquals(ErrorCode.SUCCESS.getCode(), register.get("code").asInt(), register.toString());
             assertEquals("ok", register.get("data").asText());
-            
+
             JsonNode queryResult = getAgentCard(agentName, version, REGISTRATION_TYPE_URL);
             assertEquals(ErrorCode.SUCCESS.getCode(), queryResult.get("code").asInt(), queryResult.toString());
             JsonNode data = queryResult.get("data");
@@ -109,10 +76,10 @@ public class A2aAdminApiOpenApiITCase {
             assertEquals("JSONRPC", supportedInterfaces.get(0).get("protocolBinding").asText());
             assertEquals("1.0", supportedInterfaces.get(0).get("protocolVersion").asText());
         } finally {
-            deleteAgent(agentName, version, REGISTRATION_TYPE_URL);
+            deleteAgentQuietly(agentName, version, REGISTRATION_TYPE_URL);
         }
     }
-    
+
     @Test
     public void testRegisterV1AgentCardAndGetAgentCardSuccess() throws Exception {
         String agentName = "openapi-v1-" + UUID.randomUUID();
@@ -122,7 +89,7 @@ public class A2aAdminApiOpenApiITCase {
             JsonNode register = registerAgent(agentName, version, REGISTRATION_TYPE_URL, v1AgentCard);
             assertEquals(ErrorCode.SUCCESS.getCode(), register.get("code").asInt(), register.toString());
             assertEquals("ok", register.get("data").asText());
-            
+
             JsonNode queryResult = getAgentCard(agentName, version, REGISTRATION_TYPE_URL);
             assertEquals(ErrorCode.SUCCESS.getCode(), queryResult.get("code").asInt(), queryResult.toString());
             JsonNode data = queryResult.get("data");
@@ -143,43 +110,60 @@ public class A2aAdminApiOpenApiITCase {
                     "additionalInterfaces should be generated for v1 card");
             assertEquals("GRPC", additionalInterfaces.get(0).get("transport").asText());
         } finally {
-            deleteAgent(agentName, version, REGISTRATION_TYPE_URL);
+            deleteAgentQuietly(agentName, version, REGISTRATION_TYPE_URL);
         }
     }
-    
+
     @Test
     public void testUpdateAgentCardAndListApisSuccess() throws Exception {
         String agentName = "openapi-update-" + UUID.randomUUID();
         String v1 = "3.0.0";
         String v2 = "3.1.0";
         try {
-            JsonNode register = registerAgent(agentName, v1, REGISTRATION_TYPE_URL, buildV1AgentCard(agentName, v1, "1.0"));
+            JsonNode register = registerAgent(agentName, v1, null, buildV1AgentCard(agentName, v1, "1.0"));
             assertEquals(ErrorCode.SUCCESS.getCode(), register.get("code").asInt(), register.toString());
-            
+
             JsonNode updateResult = updateAgentCard(agentName, v2, REGISTRATION_TYPE_URL,
                     buildV1AgentCard(agentName, v2, "1.0"), true);
             assertEquals(ErrorCode.SUCCESS.getCode(), updateResult.get("code").asInt(), updateResult.toString());
             assertEquals("ok", updateResult.get("data").asText());
-            
+
             JsonNode latest = getAgentCard(agentName, null, REGISTRATION_TYPE_URL);
             assertEquals(ErrorCode.SUCCESS.getCode(), latest.get("code").asInt(), latest.toString());
             assertEquals(v2, latest.get("data").get("version").asText());
-            
+
             JsonNode versionList = listAgentVersions(agentName, REGISTRATION_TYPE_URL);
             assertEquals(ErrorCode.SUCCESS.getCode(), versionList.get("code").asInt(), versionList.toString());
             assertTrue(versionList.get("data").isArray() && versionList.get("data").size() >= 2);
-            
+
             JsonNode listResult = listAgents(agentName, SEARCH_BLUR, 1, 10);
             assertEquals(ErrorCode.SUCCESS.getCode(), listResult.get("code").asInt(), listResult.toString());
             JsonNode pageItems = listResult.get("data").get("pageItems");
             assertTrue(pageItems.isArray() && pageItems.size() >= 1);
             assertEquals(agentName, pageItems.get(0).get("name").asText());
         } finally {
-            deleteAgent(agentName, v1, REGISTRATION_TYPE_URL);
-            deleteAgent(agentName, v2, REGISTRATION_TYPE_URL);
+            deleteAgentQuietly(agentName, v1, REGISTRATION_TYPE_URL);
+            deleteAgentQuietly(agentName, v2, REGISTRATION_TYPE_URL);
         }
     }
-    
+
+    @Test
+    public void testGetListAndVersionListValidationAndNotFoundErrors() throws Exception {
+        assertError(getRaw(ADMIN_A2A_PATH, Query.newInstance().addParam("namespaceId", DEFAULT_NAMESPACE)),
+                400, ErrorCode.PARAMETER_MISSING, "name");
+        assertError(getRaw(ADMIN_A2A_LIST_PATH, Query.newInstance().addParam("search", "invalid")
+                .addParam("pageNo", "1").addParam("pageSize", "10")), 400,
+                ErrorCode.PARAMETER_VALIDATE_ERROR, "search");
+        assertError(getRaw(ADMIN_A2A_VERSION_LIST_PATH, Query.newInstance()
+                .addParam("namespaceId", DEFAULT_NAMESPACE)), 400, ErrorCode.PARAMETER_MISSING,
+                "name");
+
+        String absentAgent = "openapi-absent-" + UUID.randomUUID();
+        assertError(getRaw(ADMIN_A2A_PATH, Query.newInstance().addParam("agentName", absentAgent)
+                .addParam("namespaceId", DEFAULT_NAMESPACE)), 404, ErrorCode.AGENT_NOT_FOUND,
+                "Agent not found");
+    }
+
     @Test
     public void testRegisterInvalidAgentCardReturnsBadRequest() throws Exception {
         String agentName = "openapi-invalid-" + UUID.randomUUID();
@@ -188,7 +172,7 @@ public class A2aAdminApiOpenApiITCase {
                 "{\"name\":\"" + agentName + "\",\"version\":\"" + version + "\"}");
         assertBadRequestContains(form, "agentCard.supportedInterfaces");
     }
-    
+
     @Test
     public void testRegisterLegacyAgentCardMissingProtocolVersionReturnsBadRequest() throws Exception {
         String agentName = "openapi-legacy-missing-" + UUID.randomUUID();
@@ -199,7 +183,7 @@ public class A2aAdminApiOpenApiITCase {
         Map<String, String> form = buildAgentCardForm(agentName, version, REGISTRATION_TYPE_URL, invalidLegacy);
         assertBadRequestContains(form, "agentCard.supportedInterfaces");
     }
-    
+
     @Test
     public void testRegisterV1AgentCardMissingProtocolVersionReturnsBadRequest() throws Exception {
         String agentName = "openapi-v1-missing-pv-" + UUID.randomUUID();
@@ -210,7 +194,7 @@ public class A2aAdminApiOpenApiITCase {
         Map<String, String> form = buildAgentCardForm(agentName, version, REGISTRATION_TYPE_URL, invalidV1);
         assertBadRequestContains(form, "agentCard.supportedInterfaces");
     }
-    
+
     @Test
     public void testRegisterInvalidRegistrationTypeReturnsBadRequest() throws Exception {
         String agentName = "openapi-invalid-reg-" + UUID.randomUUID();
@@ -219,7 +203,7 @@ public class A2aAdminApiOpenApiITCase {
                 buildV1AgentCard(agentName, version, "1.0"));
         assertBadRequestContains(form, "registrationType");
     }
-    
+
     @Test
     public void testRegisterMalformedAgentCardJsonReturnsBadRequest() throws Exception {
         String agentName = "openapi-invalid-json-" + UUID.randomUUID();
@@ -227,7 +211,7 @@ public class A2aAdminApiOpenApiITCase {
         Map<String, String> form = buildAgentCardForm(agentName, version, REGISTRATION_TYPE_URL, "{");
         assertBadRequestContains(form, "Can't be parsed");
     }
-    
+
     @Test
     public void testRegisterEmptyAgentCardReturnsBadRequest() throws Exception {
         String agentName = "openapi-empty-card-" + UUID.randomUUID();
@@ -235,106 +219,49 @@ public class A2aAdminApiOpenApiITCase {
         Map<String, String> form = buildAgentCardForm(agentName, version, REGISTRATION_TYPE_URL, "");
         assertBadRequestContains(form, "agentCard");
     }
-    
+
     private JsonNode registerAgent(String agentName, String version, String registrationType, String agentCard)
             throws Exception {
-        String url = BASE_URL + A2A_ADMIN_PATH;
         Map<String, String> form = buildAgentCardForm(agentName, version, registrationType, agentCard);
-        HttpRestResult<String> restResult = nacosRestTemplate.postForm(url, Header.EMPTY, form, String.class);
-        assertTrue(restResult.ok(), "register HTTP status should be 2xx, body=" + restResult.getData());
-        return JacksonUtils.toObj(restResult.getData());
+        if (null == registrationType) {
+            form.remove("registrationType");
+        }
+        return postFormOk(ADMIN_A2A_PATH, form);
     }
-    
+
     private JsonNode updateAgentCard(String agentName, String version, String registrationType, String agentCard,
             boolean setAsLatest) throws Exception {
-        String url = BASE_URL + A2A_ADMIN_PATH;
         Map<String, String> form = buildAgentCardForm(agentName, version, registrationType, agentCard);
         form.put("setAsLatest", String.valueOf(setAsLatest));
-        HttpRestResult<String> restResult = nacosRestTemplate.putForm(url, Header.EMPTY, form, String.class);
-        assertTrue(restResult.ok(), "update HTTP status should be 2xx, body=" + restResult.getData());
-        return JacksonUtils.toObj(restResult.getData());
+        return putFormOk(ADMIN_A2A_PATH, form);
     }
-    
+
     private JsonNode getAgentCard(String agentName, String version, String registrationType) throws Exception {
-        String url = BASE_URL + A2A_ADMIN_PATH;
         Query query = Query.newInstance().addParam("agentName", agentName).addParam("namespaceId", DEFAULT_NAMESPACE)
                 .addParam("registrationType", registrationType);
         if (null != version) {
             query.addParam("version", version);
         }
-        HttpRestResult<String> restResult = nacosRestTemplate.get(url, Header.EMPTY, query, String.class);
-        assertTrue(restResult.ok(), "get HTTP status should be 2xx, body=" + restResult.getData());
-        return JacksonUtils.toObj(restResult.getData());
+        return getJsonOk(ADMIN_A2A_PATH, query);
     }
-    
+
     private JsonNode listAgentVersions(String agentName, String registrationType) throws Exception {
-        String url = BASE_URL + A2A_ADMIN_VERSION_LIST_PATH;
         Query query = Query.newInstance().addParam("agentName", agentName).addParam("namespaceId", DEFAULT_NAMESPACE)
                 .addParam("registrationType", registrationType);
-        HttpRestResult<String> restResult = nacosRestTemplate.get(url, Header.EMPTY, query, String.class);
-        assertTrue(restResult.ok(), "version list HTTP status should be 2xx, body=" + restResult.getData());
-        return JacksonUtils.toObj(restResult.getData());
+        return getJsonOk(ADMIN_A2A_VERSION_LIST_PATH, query);
     }
-    
+
     private JsonNode listAgents(String agentName, String search, int pageNo, int pageSize) throws Exception {
-        String url = BASE_URL + A2A_ADMIN_LIST_PATH;
         Query query = Query.newInstance().addParam("namespaceId", DEFAULT_NAMESPACE).addParam("agentName", agentName)
                 .addParam("search", search).addParam("pageNo", String.valueOf(pageNo))
                 .addParam("pageSize", String.valueOf(pageSize));
-        HttpRestResult<String> restResult = nacosRestTemplate.get(url, Header.EMPTY, query, String.class);
-        assertTrue(restResult.ok(), "list HTTP status should be 2xx, body=" + restResult.getData());
-        return JacksonUtils.toObj(restResult.getData());
+        return getJsonOk(ADMIN_A2A_LIST_PATH, query);
     }
-    
-    private void deleteAgent(String agentName, String version, String registrationType) throws Exception {
-        String url = BASE_URL + A2A_ADMIN_PATH;
-        Query query = Query.newInstance().addParam("agentName", agentName).addParam("namespaceId", DEFAULT_NAMESPACE)
-                .addParam("registrationType", registrationType);
-        if (null != version) {
-            query.addParam("version", version);
-        }
-        HttpRestResult<String> restResult = nacosRestTemplate.delete(url, Header.EMPTY, query, String.class);
-        if (!restResult.ok()) {
-            LOGGER.warn("delete agent non-OK: code={} body={}", restResult.getCode(), restResult.getData());
-        }
-    }
-    
+
     private void assertBadRequestContains(Map<String, String> form, String expectedText) throws Exception {
-        HttpRestResult<String> restResult = nacosRestTemplate.postForm(BASE_URL + A2A_ADMIN_PATH, Header.EMPTY, form,
-                String.class);
-        assertEquals(400, restResult.getCode(), "expect bad request, body=" + restResult.getData());
-        String message = String.valueOf(restResult.getMessage());
-        String body = String.valueOf(restResult.getData());
-        assertTrue(message.contains(expectedText) || body.contains(expectedText),
-                "expected message should contain `" + expectedText + "`, actual=" + body);
-    }
-    
-    private Map<String, String> buildAgentCardForm(String agentName, String version, String registrationType,
-            String agentCard) {
-        Map<String, String> form = new LinkedHashMap<>();
-        form.put("agentName", agentName);
-        form.put("version", version);
-        form.put("namespaceId", DEFAULT_NAMESPACE);
-        form.put("registrationType", registrationType);
-        form.put("agentCard", agentCard);
-        return form;
-    }
-    
-    private String buildLegacyAgentCard(String agentName, String version) {
-        return String.format("{\"name\":\"%s\",\"version\":\"%s\",\"description\":\"legacy-%s\","
-                        + "\"protocolVersion\":\"1.0\",\"preferredTransport\":\"JSONRPC\","
-                        + "\"url\":\"https://example.com/%s/jsonrpc\","
-                        + "\"additionalInterfaces\":[{\"url\":\"https://example.com/%s/grpc\",\"transport\":\"GRPC\"}],"
-                        + "\"capabilities\":{\"streaming\":true,\"extendedAgentCard\":true}}",
-                agentName, version, agentName, agentName, agentName);
-    }
-    
-    private String buildV1AgentCard(String agentName, String version, String protocolVersion) {
-        return String.format("{\"name\":\"%s\",\"version\":\"%s\",\"description\":\"v1-%s\","
-                        + "\"supportedInterfaces\":["
-                        + "{\"url\":\"https://example.com/%s/jsonrpc\",\"protocolBinding\":\"JSONRPC\",\"protocolVersion\":\"%s\"},"
-                        + "{\"url\":\"https://example.com/%s/grpc\",\"protocolBinding\":\"GRPC\",\"protocolVersion\":\"%s\"}"
-                        + "],\"capabilities\":{\"streaming\":true,\"extendedAgentCard\":true}}",
-                agentName, version, agentName, agentName, protocolVersion, agentName, protocolVersion);
+        HttpResponse response = postRaw(ADMIN_A2A_PATH, queryFrom(form));
+        assertEquals(400, response.code(), response.body());
+        assertTrue(response.body().contains(expectedText),
+                "expected message should contain `" + expectedText + "`, actual=" + response.body());
     }
 }

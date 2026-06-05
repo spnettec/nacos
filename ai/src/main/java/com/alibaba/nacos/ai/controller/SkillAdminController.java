@@ -16,7 +16,6 @@
 
 package com.alibaba.nacos.ai.controller;
 
-import com.alibaba.nacos.api.annotation.Since;
 import com.alibaba.nacos.ai.constant.Constants;
 import com.alibaba.nacos.ai.form.AiResourceFilterableForm;
 import com.alibaba.nacos.ai.form.skills.admin.SkillBizTagsUpdateForm;
@@ -29,15 +28,17 @@ import com.alibaba.nacos.ai.form.skills.admin.SkillPublishForm;
 import com.alibaba.nacos.ai.form.skills.admin.SkillScopeForm;
 import com.alibaba.nacos.ai.form.skills.admin.SkillSubmitForm;
 import com.alibaba.nacos.ai.form.skills.admin.SkillUpdateForm;
-import com.alibaba.nacos.api.ai.model.skills.BatchUploadResult;
 import com.alibaba.nacos.ai.param.SkillHttpParamExtractor;
+import com.alibaba.nacos.ai.param.SkillListHttpParamExtractor;
 import com.alibaba.nacos.ai.service.skills.SkillOperationService;
 import com.alibaba.nacos.ai.service.skills.SkillUploadRequest;
 import com.alibaba.nacos.ai.utils.SkillRequestUtil;
+import com.alibaba.nacos.api.ai.model.skills.BatchUploadResult;
 import com.alibaba.nacos.api.ai.model.skills.Skill;
 import com.alibaba.nacos.api.ai.model.skills.SkillMeta;
 import com.alibaba.nacos.api.ai.model.skills.SkillSummary;
 import com.alibaba.nacos.api.annotation.NacosApi;
+import com.alibaba.nacos.api.annotation.Since;
 import com.alibaba.nacos.api.common.ApiType;
 import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.model.Page;
@@ -75,13 +76,13 @@ import static com.alibaba.nacos.plugin.auth.constant.Constants.Tag.ALLOW_ANONYMO
 @RequestMapping(Constants.Skills.ADMIN_PATH)
 @ExtractorManager.Extractor(httpExtractor = SkillHttpParamExtractor.class)
 public class SkillAdminController {
-    
+
     private final SkillOperationService skillOperationService;
-    
+
     public SkillAdminController(SkillOperationService skillOperationService) {
         this.skillOperationService = skillOperationService;
     }
-    
+
     /**
      * Get skill detail for admin (includes version governance info and all version summaries).
      *
@@ -97,7 +98,7 @@ public class SkillAdminController {
         return Result.success(
             skillOperationService.getSkillDetail(form.getNamespaceId(), form.getSkillName()));
     }
-    
+
     /**
      * Get specific version detail of a skill for viewing or editing.
      *
@@ -114,7 +115,7 @@ public class SkillAdminController {
             skillOperationService.getSkillVersionDetail(form.getNamespaceId(), form.getSkillName(),
                 form.getVersion()));
     }
-    
+
     /**
      * Download a specific version of a skill as ZIP file.
      *
@@ -132,7 +133,7 @@ public class SkillAdminController {
                 form.getVersion());
         return SkillRequestUtil.buildSkillZipResponse(skill);
     }
-    
+
     /**
      * Delete skill.
      *
@@ -148,7 +149,7 @@ public class SkillAdminController {
         skillOperationService.deleteSkill(form.getNamespaceId(), form.getSkillName());
         return Result.success("ok");
     }
-    
+
     /**
      * List skills for admin (includes governance metadata: status, tags, labels, etc.).
      *
@@ -161,6 +162,7 @@ public class SkillAdminController {
     @GetMapping("/list")
     @Secured(action = ActionTypes.READ, signType = SignType.AI, apiType = ApiType.ADMIN_API,
         tags = {ALLOW_ANONYMOUS})
+    @ExtractorManager.Extractor(httpExtractor = SkillListHttpParamExtractor.class)
     public Result<Page<SkillSummary>> listSkills(SkillListForm skillListForm,
         AiResourceFilterableForm filterableForm, PageForm pageForm) throws NacosException {
         skillListForm.validate();
@@ -173,7 +175,7 @@ public class SkillAdminController {
                 filterableForm.getOwner(), filterableForm.getScope(), filterableForm.getBizTag(),
                 pageForm.getPageNo(), pageForm.getPageSize()));
     }
-    
+
     /**
      * Upload skill from zip file.
      *
@@ -207,7 +209,7 @@ public class SkillAdminController {
         String skillName = skillOperationService.uploadSkillFromZip(uploadRequest);
         return Result.success(skillName);
     }
-    
+
     /**
      * Batch upload multiple skills from a single zip file. The zip must contain one-level subdirectories,
      * each with its own SKILL.md. Uses best-effort strategy.
@@ -234,7 +236,7 @@ public class SkillAdminController {
             skillOperationService.batchUploadSkillsFromZip(namespaceId, zipBytes, overwrite);
         return Result.success(result);
     }
-    
+
     /**
      * Create draft: {@code skillCard} required unless {@code basedOnVersion} is set (fork from existing version).
      */
@@ -248,7 +250,7 @@ public class SkillAdminController {
             form.getCommitMsg());
         return Result.success(v);
     }
-    
+
     /**
      * Update current draft content.
      */
@@ -261,7 +263,7 @@ public class SkillAdminController {
         skillOperationService.updateDraft(form.getNamespaceId(), skill, form.getCommitMsg());
         return Result.success("ok");
     }
-    
+
     /**
      * Delete current draft version.
      */
@@ -273,7 +275,7 @@ public class SkillAdminController {
         skillOperationService.deleteDraft(form.getNamespaceId(), form.getSkillName());
         return Result.success("ok");
     }
-    
+
     /**
      * Submit a version for pipeline review.
      */
@@ -286,7 +288,7 @@ public class SkillAdminController {
             form.getVersion());
         return Result.success(result);
     }
-    
+
     /**
      * Publish an approved reviewing version.
      */
@@ -300,7 +302,7 @@ public class SkillAdminController {
             updateLatest);
         return Result.success("ok");
     }
-    
+
     /**
      * Force-publish a skill version, bypassing pipeline validation. Accepts draft, reviewing, and reviewed versions.
      * Only admin users can call this endpoint.
@@ -317,7 +319,7 @@ public class SkillAdminController {
             form.getVersion(), updateLatest);
         return Result.success("ok");
     }
-    
+
     /**
      * Re-edit a reviewed version, transitioning it back to draft for modification.
      */
@@ -330,7 +332,7 @@ public class SkillAdminController {
             form.getVersion());
         return Result.success("ok");
     }
-    
+
     /**
      * Update runtime route labels without changing version status.
      */
@@ -343,7 +345,7 @@ public class SkillAdminController {
         skillOperationService.updateLabels(form.getNamespaceId(), form.getSkillName(), labels);
         return Result.success("ok");
     }
-    
+
     /**
      * Update skill biz tags without changing version status.
      */
@@ -356,7 +358,7 @@ public class SkillAdminController {
             form.getBizTags());
         return Result.success("ok");
     }
-    
+
     /**
      * Online operation (version-level or skill-level by scope).
      */
@@ -370,7 +372,7 @@ public class SkillAdminController {
             form.getVersion(), true);
         return Result.success("ok");
     }
-    
+
     /**
      * Update skill visibility scope (PUBLIC or PRIVATE).
      *
@@ -387,7 +389,7 @@ public class SkillAdminController {
             form.getScope());
         return Result.success("ok");
     }
-    
+
     /**
      * Offline operation (version-level or skill-level by scope).
      */

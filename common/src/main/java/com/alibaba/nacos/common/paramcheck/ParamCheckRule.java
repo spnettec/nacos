@@ -22,50 +22,52 @@ package com.alibaba.nacos.common.paramcheck;
  * @author zhuoguang
  */
 public class ParamCheckRule {
-    
+
     public int maxNamespaceShowNameLength = 256;
-    
+
     public String namespaceShowNamePatternString = "^[^@#$%^&*]+$";
-    
+
     public int maxNamespaceIdLength = 64;
-    
+
     public String namespaceIdPatternString = "^[\\w-]+";
-    
+
     public int maxDataIdLength = 256;
-    
+
     public String dataIdPatternString = "^[a-zA-Z0-9-_:\\.]*$";
-    
+
     public int maxServiceNameLength = 512;
-    
+
     public String serviceNamePatternString = "^(?!@).((?!@@)[^\\u4E00-\\u9FA5\\s])*$";
-    
+
     public int maxGroupLength = 128;
-    
+
     public String groupPatternString = "^[a-zA-Z0-9-_:\\.]*$";
-    
+
     public int maxClusterLength = 64;
-    
+
     public String clusterPatternString = "^[0-9a-zA-Z-_]+$";
-    
+
     public int maxIpLength = 128;
-    
+
     public String ipPatternString = "^[^\\u4E00-\\u9FA5\\s]*$";
-    
+
     public int maxPort = 65535;
-    
+
     public int minPort = 0;
-    
+
     public int maxMetadataLength = 1024;
-    
+
     public String agentNamePatternString = "^[\\x20-\\x7E]+$";
-    
+
     public int maxAgentNameLength = 64;
-    
+
     public String skillNamePatternString = "^[a-z0-9]([a-z0-9-]*[a-z0-9])?$";
-    
+
+    public String skillSearchNamePatternString = "^[a-z0-9-]+$";
+
     public int maxSkillNameLength = 64;
-    
+
     public String mcpNamePatternString = "^[a-zA-Z0-9-_\\/\\.]+$";
-    
+
     public int maxMcpNameLength = 128;
 }

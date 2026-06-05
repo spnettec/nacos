@@ -31,6 +31,7 @@ import com.alibaba.nacos.ai.form.skills.admin.SkillSubmitForm;
 import com.alibaba.nacos.ai.form.skills.admin.SkillUpdateForm;
 import com.alibaba.nacos.api.ai.model.skills.BatchUploadResult;
 import com.alibaba.nacos.ai.param.SkillHttpParamExtractor;
+import com.alibaba.nacos.ai.param.SkillListHttpParamExtractor;
 import com.alibaba.nacos.ai.service.skills.SkillUploadRequest;
 import com.alibaba.nacos.ai.utils.SkillRequestUtil;
 import com.alibaba.nacos.api.ai.model.skills.Skill;
@@ -71,13 +72,13 @@ import static com.alibaba.nacos.plugin.auth.constant.Constants.Resource.CONSOLE_
 @RequestMapping(Constants.Skills.CONSOLE_PATH)
 @ExtractorManager.Extractor(httpExtractor = SkillHttpParamExtractor.class)
 public class ConsoleSkillController {
-    
+
     private final SkillProxy skillProxy;
-    
+
     public ConsoleSkillController(SkillProxy skillProxy) {
         this.skillProxy = skillProxy;
     }
-    
+
     /**
      * Get skill.
      *
@@ -92,7 +93,7 @@ public class ConsoleSkillController {
         form.validate();
         return Result.success(skillProxy.getSkill(form));
     }
-    
+
     /**
      * Get specific version detail of a skill for viewing or editing.
      *
@@ -107,7 +108,7 @@ public class ConsoleSkillController {
         form.validate();
         return Result.success(skillProxy.getSkillVersion(form));
     }
-    
+
     /**
      * Download a specific version of a skill as ZIP file.
      *
@@ -123,7 +124,7 @@ public class ConsoleSkillController {
         Skill skill = skillProxy.downloadSkillVersion(form);
         return SkillRequestUtil.buildSkillZipResponse(skill);
     }
-    
+
     /**
      * Delete skill.
      *
@@ -139,7 +140,7 @@ public class ConsoleSkillController {
         skillProxy.deleteSkill(form);
         return Result.success("ok");
     }
-    
+
     /**
      * List skills.
      *
@@ -151,6 +152,7 @@ public class ConsoleSkillController {
     @Since("3.2.1")
     @GetMapping("/list")
     @Secured(action = ActionTypes.READ, signType = SignType.AI, apiType = ApiType.CONSOLE_API)
+    @ExtractorManager.Extractor(httpExtractor = SkillListHttpParamExtractor.class)
     public Result<Page<SkillSummary>> listSkills(SkillListForm skillListForm,
         AiResourceFilterableForm filterableForm, PageForm pageForm) throws NacosException {
         skillListForm.validate();
@@ -158,7 +160,7 @@ public class ConsoleSkillController {
         pageForm.validate();
         return Result.success(skillProxy.listSkills(skillListForm, filterableForm, pageForm));
     }
-    
+
     /**
      * Upload skill from zip file.
      *
@@ -192,7 +194,7 @@ public class ConsoleSkillController {
         String skillName = skillProxy.uploadSkillFromZip(uploadRequest);
         return Result.success(skillName);
     }
-    
+
     /**
      * Batch upload multiple skills from a single zip file. The zip must contain one-level subdirectories,
      * each with its own SKILL.md. Uses best-effort strategy.
@@ -219,7 +221,7 @@ public class ConsoleSkillController {
             skillProxy.batchUploadSkillsFromZip(namespaceId, zipBytes, overwrite);
         return Result.success(result);
     }
-    
+
     /**
      * Create draft. {@link SkillDraftCreateForm#prepareCreateDraftRequest()} validates here; handler only delegates.
      */
@@ -230,7 +232,7 @@ public class ConsoleSkillController {
         form.prepareCreateDraftRequest();
         return Result.success(skillProxy.createDraft(form));
     }
-    
+
     /**
      * Update current draft content.
      */
@@ -242,7 +244,7 @@ public class ConsoleSkillController {
         skillProxy.updateDraft(form);
         return Result.success("ok");
     }
-    
+
     /**
      * Delete current draft version.
      */
@@ -254,7 +256,7 @@ public class ConsoleSkillController {
         skillProxy.deleteDraft(form);
         return Result.success("ok");
     }
-    
+
     /**
      * Submit a version for pipeline review.
      */
@@ -265,7 +267,7 @@ public class ConsoleSkillController {
         form.validate();
         return Result.success(skillProxy.submit(form));
     }
-    
+
     /**
      * Publish an approved reviewing version.
      */
@@ -277,7 +279,7 @@ public class ConsoleSkillController {
         skillProxy.publish(form);
         return Result.success("ok");
     }
-    
+
     /**
      * Force-publish a skill version, bypassing pipeline validation. Accepts draft, reviewing, and reviewed versions.
      * Restricted to admin users only (apiType = ADMIN_API enforces global admin check).
@@ -292,7 +294,7 @@ public class ConsoleSkillController {
         skillProxy.forcePublish(form);
         return Result.success("ok");
     }
-    
+
     /**
      * Re-edit a reviewed skill version, transitioning it back to draft status.
      */
@@ -304,7 +306,7 @@ public class ConsoleSkillController {
         skillProxy.redraft(form);
         return Result.success("ok");
     }
-    
+
     /**
      * Update runtime route labels without changing version status.
      */
@@ -316,7 +318,7 @@ public class ConsoleSkillController {
         skillProxy.updateLabels(form);
         return Result.success("ok");
     }
-    
+
     /**
      * Update skill biz tags without changing version status.
      */
@@ -328,7 +330,7 @@ public class ConsoleSkillController {
         skillProxy.updateBizTags(form);
         return Result.success("ok");
     }
-    
+
     /**
      * Online operation (version-level or skill-level by scope).
      */
@@ -340,7 +342,7 @@ public class ConsoleSkillController {
         skillProxy.online(form);
         return Result.success("ok");
     }
-    
+
     /**
      * Offline operation (version-level or skill-level by scope).
      */
@@ -352,7 +354,7 @@ public class ConsoleSkillController {
         skillProxy.offline(form);
         return Result.success("ok");
     }
-    
+
     /**
      * Update skill visibility scope (PUBLIC or PRIVATE).
      */

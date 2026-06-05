@@ -17,6 +17,9 @@
 package com.alibaba.nacos.ai.controller;
 
 import com.alibaba.nacos.ai.constant.Constants;
+import com.alibaba.nacos.ai.form.AiResourceFilterableForm;
+import com.alibaba.nacos.ai.form.skills.admin.SkillListForm;
+import com.alibaba.nacos.ai.param.SkillListHttpParamExtractor;
 import com.alibaba.nacos.ai.service.skills.SkillOperationService;
 import com.alibaba.nacos.api.ai.model.skills.Skill;
 import com.alibaba.nacos.api.ai.model.skills.SkillMeta;
@@ -26,6 +29,8 @@ import com.alibaba.nacos.api.model.Page;
 import com.alibaba.nacos.api.model.v2.ErrorCode;
 import com.alibaba.nacos.api.model.v2.Result;
 import com.alibaba.nacos.common.utils.JacksonUtils;
+import com.alibaba.nacos.core.model.form.PageForm;
+import com.alibaba.nacos.core.paramcheck.ExtractorManager;
 import com.alibaba.nacos.sys.env.EnvUtil;
 import tools.jackson.core.type.TypeReference;
 import jakarta.servlet.ServletException;
@@ -72,18 +77,18 @@ import static org.mockito.Mockito.when;
 @ContextConfiguration(classes = MockServletContext.class)
 @WebAppConfiguration
 class SkillAdminControllerTest {
-    
+
     private static final String SKILL_ADMIN_PATH = Constants.Skills.ADMIN_PATH;
-    
+
     private SkillAdminController skillAdminController;
-    
+
     private MockMvc mockMvc;
-    
+
     private ConfigurableEnvironment cachedEnvironment;
-    
+
     @Mock
     private SkillOperationService skillOperationService;
-    
+
     @BeforeEach
     void setUp() {
         cachedEnvironment = EnvUtil.getEnvironment();
@@ -91,19 +96,19 @@ class SkillAdminControllerTest {
         skillAdminController = new SkillAdminController(skillOperationService);
         mockMvc = MockMvcBuilders.standaloneSetup(skillAdminController).build();
     }
-    
+
     @AfterEach
     void tearDown() {
         EnvUtil.setEnvironment(cachedEnvironment);
     }
-    
+
     @Test
     void testGetSkillWithoutSkillName() throws Throwable {
         MockHttpServletRequestBuilder builder = MockMvcRequestBuilders.get(SKILL_ADMIN_PATH);
         assertServletException(NacosApiException.class, () -> mockMvc.perform(builder).andReturn(),
             "Required parameter 'skillName' type String is not present");
     }
-    
+
     @Test
     void testGetSkillSuccess() throws Exception {
         SkillMeta detail = new SkillMeta();
@@ -121,7 +126,7 @@ class SkillAdminControllerTest {
         assertEquals(ErrorCode.SUCCESS.getCode(), result.getCode());
         assertNotNull(result.getData());
     }
-    
+
     @Test
     void testGetSkillVersionSuccess() throws Exception {
         Skill skill = new Skill();
@@ -140,7 +145,7 @@ class SkillAdminControllerTest {
         assertEquals(ErrorCode.SUCCESS.getCode(), result.getCode());
         assertEquals("test-skill", result.getData().getName());
     }
-    
+
     @Test
     void testDeleteSkillSuccess() throws Exception {
         doNothing().when(skillOperationService).deleteSkill(eq("public"), eq("test-skill"));
@@ -150,14 +155,14 @@ class SkillAdminControllerTest {
         assertEquals(200, response.getStatus());
         verify(skillOperationService).deleteSkill("public", "test-skill");
     }
-    
+
     @Test
     void testDeleteSkillWithoutSkillName() throws Throwable {
         MockHttpServletRequestBuilder builder = MockMvcRequestBuilders.delete(SKILL_ADMIN_PATH);
         assertServletException(NacosApiException.class, () -> mockMvc.perform(builder).andReturn(),
             "Required parameter 'skillName' type String is not present");
     }
-    
+
     @Test
     void testListSkillsSuccess() throws Exception {
         Page<SkillSummary> page = new Page<>();
@@ -180,7 +185,18 @@ class SkillAdminControllerTest {
         assertEquals(ErrorCode.SUCCESS.getCode(), result.getCode());
         assertEquals(1, result.getData().getTotalCount());
     }
-    
+
+    @Test
+    void testListSkillsUsesListParamExtractor() throws Exception {
+        ExtractorManager.Extractor extractor = SkillAdminController.class
+            .getMethod("listSkills", SkillListForm.class,
+                AiResourceFilterableForm.class, PageForm.class)
+            .getAnnotation(ExtractorManager.Extractor.class);
+
+        assertNotNull(extractor);
+        assertEquals(SkillListHttpParamExtractor.class, extractor.httpExtractor());
+    }
+
     @Test
     void testListSkillsWithOwnerFilter() throws Exception {
         Page<SkillSummary> page = new Page<>();
@@ -200,7 +216,7 @@ class SkillAdminControllerTest {
         verify(skillOperationService).listSkills("public", null, null, null, "alice", null, null, 1,
             10);
     }
-    
+
     @Test
     void testListSkillsWithScopeFilter() throws Exception {
         Page<SkillSummary> page = new Page<>();
@@ -217,7 +233,7 @@ class SkillAdminControllerTest {
         verify(skillOperationService).listSkills("public", null, null, null, null, "PRIVATE", null,
             1, 10);
     }
-    
+
     @Test
     void testListSkillsWithInvalidScope() throws Throwable {
         MockHttpServletRequestBuilder builder =
@@ -226,7 +242,7 @@ class SkillAdminControllerTest {
         assertServletException(NacosApiException.class, () -> mockMvc.perform(builder).andReturn(),
             "must be PUBLIC or PRIVATE");
     }
-    
+
     @Test
     void testListSkillsWithIllegalSearch() throws Throwable {
         MockHttpServletRequestBuilder builder =
@@ -235,7 +251,7 @@ class SkillAdminControllerTest {
         assertServletException(NacosApiException.class, () -> mockMvc.perform(builder).andReturn(),
             "Request parameter `search` should be `accurate` or `blur`.");
     }
-    
+
     @Test
     void testListSkillsWithIllegalPage() throws Throwable {
         MockHttpServletRequestBuilder builder =
@@ -244,7 +260,7 @@ class SkillAdminControllerTest {
         assertServletException(NacosApiException.class, () -> mockMvc.perform(builder).andReturn(),
             "pageNo");
     }
-    
+
     @Test
     void testCreateDraftSuccess() throws Exception {
         when(skillOperationService.createDraft(eq("public"), eq("test-skill"), isNull(), isNull(),
@@ -261,7 +277,7 @@ class SkillAdminControllerTest {
             });
         assertEquals("v1", result.getData());
     }
-    
+
     @Test
     void testCreateDraftForkSuccess() throws Exception {
         when(skillOperationService.createDraft(eq("public"), eq("test-skill"), eq("v1"), isNull(),
@@ -276,7 +292,7 @@ class SkillAdminControllerTest {
             });
         assertEquals("v2", result.getData());
     }
-    
+
     @Test
     void testCreateDraftRejectsSkillCardWithOnlyFrontmatter() throws Throwable {
         String skillCard = "{\"name\":\"test-skill\",\"description\":\"d\","
@@ -287,7 +303,7 @@ class SkillAdminControllerTest {
         assertServletException(NacosApiException.class, () -> mockMvc.perform(builder).andReturn(),
             "markdown body should not be empty");
     }
-    
+
     @Test
     void testUpdateDraftRejectsSkillCardWithOnlyFrontmatter() throws Throwable {
         String skillCard = "{\"name\":\"test-skill\",\"description\":\"d\","
@@ -298,7 +314,7 @@ class SkillAdminControllerTest {
         assertServletException(NacosApiException.class, () -> mockMvc.perform(builder).andReturn(),
             "markdown body should not be empty");
     }
-    
+
     @Test
     void testDeleteDraftSuccess() throws Exception {
         doNothing().when(skillOperationService).deleteDraft(eq("public"), eq("test-skill"));
@@ -309,7 +325,7 @@ class SkillAdminControllerTest {
         assertEquals(200, response.getStatus());
         verify(skillOperationService).deleteDraft("public", "test-skill");
     }
-    
+
     @Test
     void testSubmitSuccess() throws Exception {
         when(skillOperationService.submit(eq("public"), eq("test-skill"), eq("v1")))
@@ -324,7 +340,7 @@ class SkillAdminControllerTest {
             });
         assertEquals("pipeline-123", result.getData());
     }
-    
+
     @Test
     void testUpdateBizTagsSuccess() throws Exception {
         doNothing().when(skillOperationService).updateBizTags(eq("public"), eq("test-skill"),
@@ -336,7 +352,7 @@ class SkillAdminControllerTest {
         assertEquals(200, response.getStatus());
         verify(skillOperationService).updateBizTags("public", "test-skill", "[\"retail\"]");
     }
-    
+
     @Test
     void testPublishSuccess() throws Exception {
         doNothing().when(skillOperationService).publish(eq("public"), eq("test-skill"), eq("v1"),
@@ -348,7 +364,7 @@ class SkillAdminControllerTest {
         assertEquals(200, response.getStatus());
         verify(skillOperationService).publish("public", "test-skill", "v1", true);
     }
-    
+
     @Test
     void testUpdateLabelsSuccess() throws Exception {
         doNothing().when(skillOperationService).updateLabels(eq("public"), eq("test-skill"),
@@ -361,7 +377,7 @@ class SkillAdminControllerTest {
         assertEquals(200, response.getStatus());
         verify(skillOperationService).updateLabels(eq("public"), eq("test-skill"), any(Map.class));
     }
-    
+
     @Test
     void testOnlineSuccess() throws Exception {
         doNothing().when(skillOperationService)
@@ -374,7 +390,7 @@ class SkillAdminControllerTest {
         verify(skillOperationService).changeOnlineStatus("public", "test-skill", "version", "v1",
             true);
     }
-    
+
     @Test
     void testOfflineSuccess() throws Exception {
         doNothing().when(skillOperationService)
@@ -387,7 +403,7 @@ class SkillAdminControllerTest {
         verify(skillOperationService).changeOnlineStatus("public", "test-skill", "version", "v1",
             false);
     }
-    
+
     @Test
     void testUpdateScopeSuccess() throws Exception {
         doNothing().when(skillOperationService).updateScope(anyString(), anyString(), anyString());
@@ -398,7 +414,7 @@ class SkillAdminControllerTest {
         assertEquals(200, response.getStatus());
         verify(skillOperationService).updateScope("public", "test-skill", "PUBLIC");
     }
-    
+
     @Test
     void testForcePublishSuccess() throws Exception {
         doNothing().when(skillOperationService).forcePublish(eq("public"), eq("test-skill"),
@@ -410,7 +426,7 @@ class SkillAdminControllerTest {
         assertEquals(200, response.getStatus());
         verify(skillOperationService).forcePublish("public", "test-skill", "v1", true);
     }
-    
+
     private void assertServletException(Class<? extends Exception> expectedException,
         Executable executable,
         String expectedMessage) throws Throwable {

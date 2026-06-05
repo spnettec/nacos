@@ -30,40 +30,42 @@ import java.util.regex.Pattern;
  * @author zhuoguang
  */
 public class DefaultParamChecker extends AbstractParamChecker {
-    
+
     private Pattern namespaceShowNamePattern;
-    
+
     private Pattern namespaceIdPattern;
-    
+
     private Pattern dataIdPattern;
-    
+
     private Pattern serviceNamePattern;
-    
+
     private Pattern groupPattern;
-    
+
     private Pattern clusterPattern;
-    
+
     private Pattern ipPattern;
-    
+
     private Pattern mcpNamePattern;
-    
+
     private Pattern agentNamePattern;
 
     private Pattern skillNamePattern;
 
+    private Pattern skillSearchNamePattern;
+
     private static final String CHECKER_TYPE = "default";
-    
+
     private static final String MAX_METADATA_LENGTH_PROP_NAME =
         "nacos.naming.service.metadata.length";
-    
+
     private static final String MAX_METADATA_LENGTH_ENV_NAME =
         "NACOS_NAMING_SERVICE_METADATA_LENGTH";
-    
+
     @Override
     public String getCheckerType() {
         return CHECKER_TYPE;
     }
-    
+
     @Override
     public ParamCheckResponse checkParamInfoList(List<ParamInfo> paramInfos) {
         ParamCheckResponse paramCheckResponse = new ParamCheckResponse();
@@ -80,14 +82,14 @@ public class DefaultParamChecker extends AbstractParamChecker {
         paramCheckResponse.setSuccess(true);
         return paramCheckResponse;
     }
-    
+
     @Override
     public void initParamCheckRule() {
         this.paramCheckRule = new ParamCheckRule();
         initFormatPattern();
         replaceParamCheckRuleByEnv();
     }
-    
+
     private void initFormatPattern() {
         this.namespaceShowNamePattern =
             Pattern.compile(this.paramCheckRule.namespaceShowNamePatternString);
@@ -100,8 +102,10 @@ public class DefaultParamChecker extends AbstractParamChecker {
         this.mcpNamePattern = Pattern.compile(this.paramCheckRule.mcpNamePatternString);
         this.agentNamePattern = Pattern.compile(this.paramCheckRule.agentNamePatternString);
         this.skillNamePattern = Pattern.compile(this.paramCheckRule.skillNamePatternString);
+        this.skillSearchNamePattern =
+            Pattern.compile(this.paramCheckRule.skillSearchNamePatternString);
     }
-    
+
     /**
      * if environment variables exists, it will be replaced.
      */
@@ -112,7 +116,7 @@ public class DefaultParamChecker extends AbstractParamChecker {
             this.paramCheckRule.maxMetadataLength = NumberUtils.toInt(maxMetadataLength);
         }
     }
-    
+
     /**
      * Check param info format.
      *
@@ -177,10 +181,14 @@ public class DefaultParamChecker extends AbstractParamChecker {
         if (!paramCheckResponse.isSuccess()) {
             return paramCheckResponse;
         }
+        paramCheckResponse = checkSkillSearchNameFormat(paramInfo.getSkillSearchName());
+        if (!paramCheckResponse.isSuccess()) {
+            return paramCheckResponse;
+        }
         paramCheckResponse.setSuccess(true);
         return paramCheckResponse;
     }
-    
+
     /**
      * Check namespace show name format.
      *
@@ -209,7 +217,7 @@ public class DefaultParamChecker extends AbstractParamChecker {
         paramCheckResponse.setSuccess(true);
         return paramCheckResponse;
     }
-    
+
     /**
      * Check namespace id format.
      *
@@ -238,7 +246,7 @@ public class DefaultParamChecker extends AbstractParamChecker {
         paramCheckResponse.setSuccess(true);
         return paramCheckResponse;
     }
-    
+
     /**
      * Check data id format.
      *
@@ -267,7 +275,7 @@ public class DefaultParamChecker extends AbstractParamChecker {
         paramCheckResponse.setSuccess(true);
         return paramCheckResponse;
     }
-    
+
     /**
      * Check service name format.
      *
@@ -297,7 +305,7 @@ public class DefaultParamChecker extends AbstractParamChecker {
         paramCheckResponse.setSuccess(true);
         return paramCheckResponse;
     }
-    
+
     /**
      * Check group format.
      *
@@ -326,7 +334,7 @@ public class DefaultParamChecker extends AbstractParamChecker {
         paramCheckResponse.setSuccess(true);
         return paramCheckResponse;
     }
-    
+
     /**
      * Check cluster format.
      *
@@ -349,7 +357,7 @@ public class DefaultParamChecker extends AbstractParamChecker {
         paramCheckResponse.setSuccess(true);
         return paramCheckResponse;
     }
-    
+
     /**
      * Check single cluster format.
      *
@@ -362,7 +370,7 @@ public class DefaultParamChecker extends AbstractParamChecker {
             paramCheckResponse.setSuccess(true);
             return paramCheckResponse;
         }
-        
+
         if (cluster.length() > paramCheckRule.maxClusterLength) {
             paramCheckResponse.setSuccess(false);
             paramCheckResponse.setMessage(
@@ -379,7 +387,7 @@ public class DefaultParamChecker extends AbstractParamChecker {
         paramCheckResponse.setSuccess(true);
         return paramCheckResponse;
     }
-    
+
     /**
      * Check ip format.
      *
@@ -408,7 +416,7 @@ public class DefaultParamChecker extends AbstractParamChecker {
         paramCheckResponse.setSuccess(true);
         return paramCheckResponse;
     }
-    
+
     /**
      * Check port format.
      *
@@ -441,7 +449,7 @@ public class DefaultParamChecker extends AbstractParamChecker {
         paramCheckResponse.setSuccess(true);
         return paramCheckResponse;
     }
-    
+
     /**
      * Check metadata format.
      *
@@ -473,7 +481,7 @@ public class DefaultParamChecker extends AbstractParamChecker {
         paramCheckResponse.setSuccess(true);
         return paramCheckResponse;
     }
-    
+
     /**
      * Check mcp name format.
      *
@@ -502,7 +510,7 @@ public class DefaultParamChecker extends AbstractParamChecker {
         paramCheckResponse.setSuccess(true);
         return paramCheckResponse;
     }
-    
+
     /**
      * Check agent name format.
      *
@@ -559,6 +567,39 @@ public class DefaultParamChecker extends AbstractParamChecker {
         if (skillName.contains("--")) {
             paramCheckResponse.setSuccess(false);
             paramCheckResponse.setMessage("Skill name must not contain consecutive hyphens (--)");
+            return paramCheckResponse;
+        }
+        paramCheckResponse.setSuccess(true);
+        return paramCheckResponse;
+    }
+
+    /**
+     * Check skill search name format.
+     *
+     * @param skillSearchName skill search name
+     * @return the param check response
+     */
+    public ParamCheckResponse checkSkillSearchNameFormat(String skillSearchName) {
+        ParamCheckResponse paramCheckResponse = new ParamCheckResponse();
+        if (StringUtils.isBlank(skillSearchName)) {
+            paramCheckResponse.setSuccess(true);
+            return paramCheckResponse;
+        }
+        if (skillSearchName.length() > paramCheckRule.maxSkillNameLength) {
+            paramCheckResponse.setSuccess(false);
+            paramCheckResponse.setMessage("Skill search name must be 1-64 characters");
+            return paramCheckResponse;
+        }
+        if (!skillSearchNamePattern.matcher(skillSearchName).matches()) {
+            paramCheckResponse.setSuccess(false);
+            paramCheckResponse.setMessage(
+                "Skill search name may only contain lowercase letters, numbers, and hyphens");
+            return paramCheckResponse;
+        }
+        if (skillSearchName.contains("--")) {
+            paramCheckResponse.setSuccess(false);
+            paramCheckResponse
+                .setMessage("Skill search name must not contain consecutive hyphens (--)");
             return paramCheckResponse;
         }
         paramCheckResponse.setSuccess(true);
