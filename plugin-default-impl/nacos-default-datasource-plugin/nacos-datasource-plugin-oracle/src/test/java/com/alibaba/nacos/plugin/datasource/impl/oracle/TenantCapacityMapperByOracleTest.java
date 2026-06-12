@@ -137,7 +137,9 @@ class TenantCapacityMapperByOracleTest {
         Object maxAggrCount = 3;
         Object maxSize = 1;
         Object createTime = new Timestamp(System.currentTimeMillis());
+        Object id = 100L;
         
+        context.putUpdateParameter(FieldConstant.ID, id);
         context.putUpdateParameter(FieldConstant.TENANT_ID, tenantId);
         context.putUpdateParameter(FieldConstant.GROUP_ID, group);
         context.putUpdateParameter(FieldConstant.QUOTA, quota);
@@ -152,11 +154,11 @@ class TenantCapacityMapperByOracleTest {
         
         MapperResult mapperResult = tenantCapacityMapperByOracle.insertTenantCapacity(context);
         assertEquals(mapperResult.getSql(),
-            "INSERT INTO tenant_capacity (tenant_id, quota, usage, max_size, max_aggr_count, max_aggr_size, "
-                + "gmt_create, gmt_modified) SELECT ?, ?, count(*), ?, ?, ?, ?, ? FROM config_info WHERE tenant_id=?");
+            "INSERT INTO tenant_capacity (id, tenant_id, quota, usage, max_size, max_aggr_count, max_aggr_size, "
+                + "gmt_create, gmt_modified) SELECT ?, ?, ?, count(*), ?, ?, ?, ?, ? FROM config_info WHERE tenant_id=?");
         assertArrayEquals(
-            new Object[] {tenantId, quota, maxSize, maxAggrCount, maxAggrSize, createTime, modified,
-                tenantId},
+            new Object[] {id, tenantId, quota, maxSize, maxAggrCount, maxAggrSize, createTime,
+                modified, tenantId},
             mapperResult.getParamList().toArray());
     }
 }

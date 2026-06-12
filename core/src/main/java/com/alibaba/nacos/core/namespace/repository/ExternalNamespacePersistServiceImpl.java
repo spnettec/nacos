@@ -18,11 +18,13 @@ package com.alibaba.nacos.core.namespace.repository;
 
 import com.alibaba.nacos.core.namespace.model.TenantInfo;
 import com.alibaba.nacos.core.utils.Loggers;
+import com.alibaba.nacos.common.utils.UuidUtils;
 import com.alibaba.nacos.persistence.configuration.condition.ConditionOnExternalStorage;
 import com.alibaba.nacos.persistence.datasource.DataSourceService;
 import com.alibaba.nacos.persistence.datasource.DynamicDataSource;
 import com.alibaba.nacos.plugin.datasource.MapperManager;
 import com.alibaba.nacos.plugin.datasource.constants.CommonConstant;
+import com.alibaba.nacos.plugin.datasource.constants.DataSourceConstant;
 import com.alibaba.nacos.plugin.datasource.constants.TableConstant;
 import com.alibaba.nacos.plugin.datasource.mapper.TenantInfoMapper;
 import com.alibaba.nacos.sys.env.EnvUtil;
@@ -35,6 +37,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -50,15 +53,15 @@ import static com.alibaba.nacos.core.namespace.repository.NamespaceRowMapperInje
 @Conditional(value = ConditionOnExternalStorage.class)
 @Service("externalOtherPersistServiceImpl")
 public class ExternalNamespacePersistServiceImpl implements NamespacePersistService {
-    
+
     private final DataSourceService dataSourceService;
-    
+
     protected JdbcTemplate jt;
-    
+
     protected TransactionTemplate tjt;
-    
+
     private final MapperManager mapperManager;
-    
+
     public ExternalNamespacePersistServiceImpl() {
         this.dataSourceService = DynamicDataSource.getInstance().getDataSource();
         this.jt = dataSourceService.getJdbcTemplate();
@@ -67,7 +70,7 @@ public class ExternalNamespacePersistServiceImpl implements NamespacePersistServ
             .getProperty(CommonConstant.NACOS_PLUGIN_DATASOURCE_LOG, Boolean.class, false);
         this.mapperManager = MapperManager.instance(isDataSourceLogEnable);
     }
-    
+
     @Override
     public void insertTenantInfoAtomic(String kp, String tenantId, String tenantName,
         String tenantDesc,
@@ -75,17 +78,26 @@ public class ExternalNamespacePersistServiceImpl implements NamespacePersistServ
         try {
             TenantInfoMapper tenantInfoMapper = mapperManager
                 .findMapper(dataSourceService.getDataSourceType(), TableConstant.TENANT_INFO);
-            jt.update(tenantInfoMapper.insert(Arrays
-                .asList("kp", "tenant_id", "tenant_name", "tenant_desc", "create_source",
-                    "gmt_create",
-                    "gmt_modified")),
-                kp, tenantId, tenantName, tenantDesc, createResource, time, time);
+            List<String> columns = new ArrayList<>(
+                Arrays.asList("kp", "tenant_id", "tenant_name", "tenant_desc", "create_source",
+                    "gmt_create", "gmt_modified"));
+            List<Object> args = new ArrayList<>(
+                Arrays.asList(kp, tenantId, tenantName, tenantDesc, createResource, time, time));
+            if (isOracle()) {
+                columns.add("id");
+                args.add(UuidUtils.nextId());
+            }
+            jt.update(tenantInfoMapper.insert(columns), args.toArray());
         } catch (DataAccessException e) {
             Loggers.CLUSTER.error("[db-error] " + e, e);
             throw e;
         }
     }
-    
+
+    private boolean isOracle() {
+        return DataSourceConstant.ORACLE.equals(dataSourceService.getDataSourceType());
+    }
+
     @Override
     public void removeTenantInfoAtomic(final String kp, final String tenantId) {
         try {
@@ -97,7 +109,7 @@ public class ExternalNamespacePersistServiceImpl implements NamespacePersistServ
             throw e;
         }
     }
-    
+
     @Override
     public void updateTenantNameAtomic(String kp, String tenantId, String tenantName,
         String tenantDesc) {
@@ -114,7 +126,7 @@ public class ExternalNamespacePersistServiceImpl implements NamespacePersistServ
             throw e;
         }
     }
-    
+
     @Override
     public List<TenantInfo> findTenantByKp(String kp) {
         TenantInfoMapper tenantInfoMapper = mapperManager
@@ -134,7 +146,7 @@ public class ExternalNamespacePersistServiceImpl implements NamespacePersistServ
             throw new RuntimeException(e);
         }
     }
-    
+
     @Override
     public TenantInfo findTenantByKp(String kp, String tenantId) {
         TenantInfoMapper tenantInfoMapper = mapperManager
@@ -154,7 +166,7 @@ public class ExternalNamespacePersistServiceImpl implements NamespacePersistServ
             throw new RuntimeException(e);
         }
     }
-    
+
     @Override
     public String generateLikeArgument(String s) {
         String underscore = "_";
@@ -169,7 +181,7 @@ public class ExternalNamespacePersistServiceImpl implements NamespacePersistServ
             return s;
         }
     }
-    
+
     @Override
     public boolean isExistTable(String tableName) {
         String sql = String.format("SELECT COUNT(*) FROM %s ", tableName);
@@ -180,7 +192,7 @@ public class ExternalNamespacePersistServiceImpl implements NamespacePersistServ
             return false;
         }
     }
-    
+
     @Override
     public int tenantInfoCountByTenantId(String tenantId) {
         if (Objects.isNull(tenantId)) {

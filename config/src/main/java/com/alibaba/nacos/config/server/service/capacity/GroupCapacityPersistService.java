@@ -17,6 +17,7 @@
 package com.alibaba.nacos.config.server.service.capacity;
 
 import com.alibaba.nacos.common.utils.CollectionUtils;
+import com.alibaba.nacos.common.utils.UuidUtils;
 import com.alibaba.nacos.config.server.model.capacity.Capacity;
 import com.alibaba.nacos.config.server.model.capacity.GroupCapacity;
 import com.alibaba.nacos.config.server.utils.TimeUtils;
@@ -24,6 +25,7 @@ import com.alibaba.nacos.persistence.datasource.DataSourceService;
 import com.alibaba.nacos.persistence.datasource.DynamicDataSource;
 import com.alibaba.nacos.plugin.datasource.MapperManager;
 import com.alibaba.nacos.plugin.datasource.constants.CommonConstant;
+import com.alibaba.nacos.plugin.datasource.constants.DataSourceConstant;
 import com.alibaba.nacos.plugin.datasource.constants.FieldConstant;
 import com.alibaba.nacos.plugin.datasource.constants.TableConstant;
 import com.alibaba.nacos.plugin.datasource.mapper.ConfigInfoMapper;
@@ -55,18 +57,18 @@ import static com.alibaba.nacos.config.server.utils.LogUtil.FATAL_LOG;
  */
 @Service
 public class GroupCapacityPersistService {
-    
+
     static final String CLUSTER = "";
-    
+
     private static final GroupCapacityRowMapper GROUP_CAPACITY_ROW_MAPPER =
         new GroupCapacityRowMapper();
-    
+
     private JdbcTemplate jdbcTemplate;
-    
+
     private DataSourceService dataSourceService;
-    
+
     private MapperManager mapperManager;
-    
+
     /**
      * init.
      */
@@ -79,9 +81,9 @@ public class GroupCapacityPersistService {
                 false);
         this.mapperManager = MapperManager.instance(isDataSourceLogEnable);
     }
-    
+
     static final class GroupCapacityRowMapper implements RowMapper<GroupCapacity> {
-        
+
         @Override
         public GroupCapacity mapRow(ResultSet rs, int rowNum) throws SQLException {
             GroupCapacity groupCapacity = new GroupCapacity();
@@ -95,7 +97,7 @@ public class GroupCapacityPersistService {
             return groupCapacity;
         }
     }
-    
+
     public GroupCapacity getGroupCapacity(String groupId) {
         GroupCapacityMapper groupCapacityMapper =
             mapperManager.findMapper(dataSourceService.getDataSourceType(),
@@ -111,11 +113,11 @@ public class GroupCapacityPersistService {
         }
         return list.get(0);
     }
-    
+
     public Capacity getClusterCapacity() {
         return getGroupCapacity(CLUSTER);
     }
-    
+
     /**
      * Insert GroupCapacity into db.
      *
@@ -135,7 +137,10 @@ public class GroupCapacityPersistService {
         context.putUpdateParameter(FieldConstant.MAX_AGGR_COUNT, capacity.getMaxAggrCount());
         context.putUpdateParameter(FieldConstant.GMT_CREATE, capacity.getGmtCreate());
         context.putUpdateParameter(FieldConstant.GMT_MODIFIED, capacity.getGmtModified());
-        
+        if (isOracle()) {
+            context.putUpdateParameter(FieldConstant.ID, UuidUtils.nextId());
+        }
+
         context.putWhereParameter(FieldConstant.GROUP_ID, capacity.getGroupName());
         if (CLUSTER.equals(capacity.getGroupName())) {
             mapperResult = groupCapacityMapper.insertIntoSelect(context);
@@ -146,7 +151,7 @@ public class GroupCapacityPersistService {
         return jdbcTemplate.update(mapperResult.getSql(),
             mapperResult.getParamList().toArray()) > 0;
     }
-    
+
     public int getClusterUsage() {
         Capacity clusterCapacity = getClusterCapacity();
         if (clusterCapacity != null) {
@@ -162,7 +167,11 @@ public class GroupCapacityPersistService {
         }
         return result.intValue();
     }
-    
+
+    private boolean isOracle() {
+        return DataSourceConstant.ORACLE.equals(dataSourceService.getDataSourceType());
+    }
+
     /**
      * Increment UsageWithDefaultQuotaLimit.
      *
@@ -188,7 +197,7 @@ public class GroupCapacityPersistService {
             throw e;
         }
     }
-    
+
     /**
      * Increment UsageWithQuotaLimit.
      *
@@ -210,10 +219,10 @@ public class GroupCapacityPersistService {
         } catch (CannotGetJdbcConnectionException e) {
             FATAL_LOG.error("[db-error]", e);
             throw e;
-            
+
         }
     }
-    
+
     /**
      * Increment Usage.
      *
@@ -237,7 +246,7 @@ public class GroupCapacityPersistService {
             throw e;
         }
     }
-    
+
     /**
      * Decrement Usage.
      *
@@ -260,7 +269,7 @@ public class GroupCapacityPersistService {
             throw e;
         }
     }
-    
+
     /**
      * Update GroupCapacity.
      *
@@ -294,11 +303,11 @@ public class GroupCapacityPersistService {
         }
         columnList.add("gmt_modified");
         argList.add(TimeUtils.getCurrentTime());
-        
+
         List<String> whereList = CollectionUtils.list();
         whereList.add("group_id");
         argList.add(group);
-        
+
         GroupCapacityMapper groupCapacityMapper =
             mapperManager.findMapper(dataSourceService.getDataSourceType(),
                 TableConstant.GROUP_CAPACITY);
@@ -310,15 +319,15 @@ public class GroupCapacityPersistService {
             throw e;
         }
     }
-    
+
     public boolean updateQuota(String group, Integer quota) {
         return updateGroupCapacity(group, quota, null, null, null);
     }
-    
+
     public boolean updateMaxSize(String group, Integer maxSize) {
         return updateGroupCapacity(group, null, maxSize, null, null);
     }
-    
+
     /**
      * Correct Usage.
      *
@@ -355,7 +364,7 @@ public class GroupCapacityPersistService {
             }
         }
     }
-    
+
     /**
      * Get group capacity list, noly has id and groupId value.
      *
@@ -367,11 +376,11 @@ public class GroupCapacityPersistService {
         GroupCapacityMapper groupCapacityMapper =
             mapperManager.findMapper(dataSourceService.getDataSourceType(),
                 TableConstant.GROUP_CAPACITY);
-        
+
         MapperContext context = new MapperContext();
         context.putWhereParameter(FieldConstant.ID, lastId);
         context.setPageSize(pageSize);
-        
+
         MapperResult mapperResult = groupCapacityMapper.selectGroupInfoBySize(context);
         try {
             return jdbcTemplate.query(mapperResult.getSql(), mapperResult.getParamList().toArray(),
@@ -386,7 +395,7 @@ public class GroupCapacityPersistService {
             throw e;
         }
     }
-    
+
     /**
      * Delete GroupCapacity.
      *
@@ -409,6 +418,6 @@ public class GroupCapacityPersistService {
             FATAL_LOG.error("[db-error]", e);
             throw e;
         }
-        
+
     }
 }

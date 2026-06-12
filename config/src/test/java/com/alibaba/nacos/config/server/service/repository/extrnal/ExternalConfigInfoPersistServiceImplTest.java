@@ -593,7 +593,7 @@ class ExternalConfigInfoPersistServiceImplTest {
         String srcUser = "srcUser";
         externalConfigInfoPersistService.createPsForInsertConfigInfo(srcIp, srcUser, configInfo,
             configAdvanceInfo,
-            mockConnection, configInfoMapper);
+            mockConnection, configInfoMapper, null);
         Mockito.verify(preparedStatement, times(14)).setString(anyInt(), anyString());
     }
     
@@ -609,7 +609,7 @@ class ExternalConfigInfoPersistServiceImplTest {
             .thenReturn(preparedStatement);
         
         externalConfigInfoPersistService.createPsForInsertConfigInfo("srcIp", "srcUser",
-            configInfo, null, mockConnection, configInfoMapper);
+            configInfo, null, mockConnection, configInfoMapper, null);
         
         Mockito.verify(preparedStatement, times(14)).setString(anyInt(), nullable(String.class));
     }

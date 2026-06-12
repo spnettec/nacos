@@ -105,6 +105,7 @@ public class TenantCapacityMapperByOracle extends AbstractMapperByOracle
     @Override
     public MapperResult insertTenantCapacity(MapperContext context) {
         List<Object> paramList = new ArrayList<>();
+        paramList.add(context.getUpdateParameter(FieldConstant.ID));
         paramList.add(context.getUpdateParameter(FieldConstant.TENANT_ID));
         paramList.add(context.getUpdateParameter(FieldConstant.QUOTA));
         paramList.add(context.getUpdateParameter(FieldConstant.MAX_SIZE));
@@ -115,8 +116,8 @@ public class TenantCapacityMapperByOracle extends AbstractMapperByOracle
         paramList.add(context.getWhereParameter(FieldConstant.TENANT_ID));
         
         return new MapperResult(
-            "INSERT INTO tenant_capacity (tenant_id, quota, usage, max_size, max_aggr_count, max_aggr_size, "
-                + "gmt_create, gmt_modified) SELECT ?, ?, count(*), ?, ?, ?, ?, ? FROM config_info WHERE tenant_id=?",
+            "INSERT INTO tenant_capacity (id, tenant_id, quota, usage, max_size, max_aggr_count, max_aggr_size, "
+                + "gmt_create, gmt_modified) SELECT ?, ?, ?, count(*), ?, ?, ?, ?, ? FROM config_info WHERE tenant_id=?",
             paramList);
     }
 }

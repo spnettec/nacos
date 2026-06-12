@@ -74,7 +74,9 @@ class GroupCapacityMapperByOracleTest {
         Object maxAggrSize = 10;
         Object maxAggrCount = 3;
         Object maxSize = 1;
+        Object id = 100L;
         
+        context.putUpdateParameter(FieldConstant.ID, id);
         context.putUpdateParameter(FieldConstant.GROUP_ID, group);
         context.putUpdateParameter(FieldConstant.QUOTA, quota);
         context.putUpdateParameter(FieldConstant.MAX_SIZE, maxSize);
@@ -86,11 +88,12 @@ class GroupCapacityMapperByOracleTest {
         
         MapperResult mapperResult = groupCapacityMapperByOracle.insertIntoSelect(context);
         assertEquals(mapperResult.getSql(),
-            "INSERT INTO group_capacity (group_id, quota, usage, max_size, max_aggr_count, max_aggr_size, gmt_create, gmt_modified) "
-                + "VALUES (?, ?, (SELECT COUNT(*) FROM config_info), ?, ?, ?, ?, ?)");
+            "INSERT INTO group_capacity (id, group_id, quota, usage, max_size, max_aggr_count, max_aggr_size, gmt_create, gmt_modified) "
+                + "VALUES (?, ?, ?, (SELECT COUNT(*) FROM config_info), ?, ?, ?, ?, ?)");
         
         assertArrayEquals(
-            new Object[] {group, quota, maxSize, maxAggrCount, maxAggrSize, createTime, modified},
+            new Object[] {id, group, quota, maxSize, maxAggrCount, maxAggrSize, createTime,
+                modified},
             mapperResult.getParamList().toArray());
     }
     
@@ -103,7 +106,9 @@ class GroupCapacityMapperByOracleTest {
         Object maxSize = 1;
         Object createTime = new Timestamp(System.currentTimeMillis());
         Object modified = new Timestamp(System.currentTimeMillis());
+        Object id = 101L;
         
+        context.putUpdateParameter(FieldConstant.ID, id);
         context.putUpdateParameter(FieldConstant.GROUP_ID, group);
         context.putUpdateParameter(FieldConstant.QUOTA, quota);
         context.putUpdateParameter(FieldConstant.MAX_SIZE, maxSize);
@@ -114,10 +119,10 @@ class GroupCapacityMapperByOracleTest {
         
         MapperResult mapperResult = groupCapacityMapperByOracle.insertIntoSelectByWhere(context);
         assertEquals(mapperResult.getSql(),
-            "INSERT INTO group_capacity (group_id, quota, usage, max_size, max_aggr_count, max_aggr_size, gmt_create, "
-                + "gmt_modified) VALUES (?, ?, (SELECT COUNT(*) FROM config_info WHERE group_id=? AND tenant_id = 'public'), ?, ?, ?, ?, ?)");
+            "INSERT INTO group_capacity (id, group_id, quota, usage, max_size, max_aggr_count, max_aggr_size, gmt_create, "
+                + "gmt_modified) VALUES (?, ?, ?, (SELECT COUNT(*) FROM config_info WHERE group_id=? AND tenant_id = 'public'), ?, ?, ?, ?, ?)");
         assertArrayEquals(
-            new Object[] {group, quota, group, maxSize, maxAggrCount, maxAggrSize, createTime,
+            new Object[] {id, group, quota, group, maxSize, maxAggrCount, maxAggrSize, createTime,
                 modified},
             mapperResult.getParamList().toArray());
     }
