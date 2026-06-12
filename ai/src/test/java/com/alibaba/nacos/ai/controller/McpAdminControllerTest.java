@@ -27,26 +27,25 @@ import com.alibaba.nacos.api.model.v2.ErrorCode;
 import com.alibaba.nacos.api.model.v2.Result;
 import com.alibaba.nacos.common.utils.JacksonUtils;
 import com.alibaba.nacos.sys.env.EnvUtil;
+import tools.jackson.core.type.TypeReference;
 import jakarta.servlet.ServletException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.function.Executable;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import tools.jackson.core.type.TypeReference;
 
 import java.util.UUID;
 
@@ -58,7 +57,7 @@ import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@ExtendWith({SpringExtension.class, MockitoExtension.class})
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = MockServletContext.class)
 @WebAppConfiguration
 class McpAdminControllerTest {
@@ -66,7 +65,7 @@ class McpAdminControllerTest {
     private static final String MCP_SERVER_SPEC =
         "{\"protocol\":\"stdio\",\"frontProtocol\":\"stdio\",\"name\":\"nacos-mcp-server\","
             + "\"id\":\"\",\"description\":\"nacos local mcp server(test version)\",\"versionDetail\":{\"version\":\"1.0.0\"},"
-            + "\"enabled\":true,\"localServerConfig\":{}}";
+            + "\"enabled\":true,\"localServerConfig\":{}}'";
     
     private static final String MCP_RESOURCE_SPEC =
         "{\"resources\":[{\"name\":\"readme\",\"uri\":\"file:///README.md\",\"description\":\"test resource\"}]}";
@@ -77,7 +76,7 @@ class McpAdminControllerTest {
     
     private ConfigurableEnvironment cachedEnvironment;
     
-    @Mock
+    @MockitoBean
     private McpServerOperationService mcpServerOperationService;
     
     @BeforeEach

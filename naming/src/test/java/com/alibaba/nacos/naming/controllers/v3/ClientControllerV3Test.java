@@ -31,6 +31,7 @@ import com.alibaba.nacos.naming.core.v2.pojo.InstancePublishInfo;
 import com.alibaba.nacos.naming.core.v2.pojo.Service;
 import com.alibaba.nacos.naming.misc.UtilsAndCommons;
 import com.alibaba.nacos.naming.model.form.ClientServiceForm;
+import tools.jackson.databind.JsonNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,12 +46,12 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.node.ObjectNode;
 
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -65,24 +66,24 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class ClientControllerV3Test extends BaseTest {
-
+    
     private static final String URL = UtilsAndCommons.CLIENT_CONTROLLER_V3_ADMIN_PATH;
-
+    
     @InjectMocks
     ClientControllerV3 clientControllerV3;
-
+    
     @Mock
     private ClientManager clientManager;
-
+    
     @Mock
     private ClientService clientServiceV2Impl;
-
+    
     private MockMvc mockmvc;
-
+    
     private IpPortBasedClient ipPortBasedClient;
-
+    
     private ConnectionBasedClient connectionBasedClient;
-
+    
     @BeforeEach
     public void before() {
         when(clientManager.allClientId())
@@ -92,7 +93,7 @@ class ClientControllerV3Test extends BaseTest {
         ipPortBasedClient = new IpPortBasedClient("127.0.0.1:8080#test1", false);
         connectionBasedClient = new ConnectionBasedClient("test2", true, 1L);
     }
-
+    
     @Test
     void testGetClientList() throws Exception {
         MockHttpServletRequestBuilder mockHttpServletRequestBuilder =
@@ -103,7 +104,7 @@ class ClientControllerV3Test extends BaseTest {
         JsonNode jsonNode = JacksonUtils.toObj(response.getContentAsString()).get("data");
         assertEquals(0, jsonNode.size());
     }
-
+    
     @Test
     void testGetClientDetail() throws Exception {
         when(clientManager.getClient("test1")).thenReturn(ipPortBasedClient);
@@ -114,16 +115,16 @@ class ClientControllerV3Test extends BaseTest {
             mockmvc.perform(mockHttpServletRequestBuilder).andReturn().getResponse();
         assertEquals(200, response.getStatus());
     }
-
+    
     @Test
     void testGetPublishedServiceList() throws Exception {
         List<ClientServiceInfo> serviceList = new LinkedList<>();
         serviceList.add(new ClientServiceInfo());
         serviceList.get(0).setServiceName("test");
-
+        
         when(clientManager.getClient("test1")).thenReturn(connectionBasedClient);
         when(clientServiceV2Impl.getPublishedServiceList("test1")).thenReturn(serviceList);
-
+        
         Service service = Service.newService("test", "test", "test");
         connectionBasedClient.addServiceInstance(service,
             new InstancePublishInfo("127.0.0.1", 8848));
@@ -133,46 +134,46 @@ class ClientControllerV3Test extends BaseTest {
         mockmvc.perform(mockHttpServletRequestBuilder)
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.length()").value(1));
     }
-
+    
     @Test
     void testGetSubscribeServiceList() throws Exception {
         List<ClientServiceInfo> serviceList = new LinkedList<>();
         serviceList.add(new ClientServiceInfo());
         serviceList.get(0).setServiceName("test");
         when(clientServiceV2Impl.getSubscribeServiceList("test1")).thenReturn(serviceList);
-
+        
         Result<List<ClientServiceInfo>> actual =
             clientControllerV3.getSubscribeServiceList("test1");
-
+        
         assertEquals(1, actual.getData().size());
         assertEquals("test", actual.getData().get(0).getServiceName());
     }
-
+    
     @Test
     void testGetSubscribeServiceListWhenClientMissing() {
         when(clientManager.contains("missing")).thenReturn(false);
-
+        
         NacosApiException actual = assertThrows(NacosApiException.class,
             () -> clientControllerV3.getSubscribeServiceList("missing"));
-
+        
         assertEquals(404, actual.getErrCode());
     }
-
+    
     @Test
     void testGetPublishedClientList() throws Exception {
         String baseTestKey = "nacos-getPublishedClientList-test";
         // single instance
         final Service service = Service.newService(baseTestKey, baseTestKey, baseTestKey);
-
+        
         final List<ClientPublisherInfo> serviceList = new LinkedList<>();
         serviceList.add(new ClientPublisherInfo());
         serviceList.get(0).setClientId("test1");
-
+        
         when(clientManager.getClient("test1")).thenReturn(connectionBasedClient);
         when(clientManager.getClient("test")).thenReturn(connectionBasedClient);
         connectionBasedClient.addServiceInstance(service,
             new InstancePublishInfo("127.0.0.1", 8848));
-
+        
         when(clientServiceV2Impl.getPublishedClientList(baseTestKey, baseTestKey, baseTestKey,
             "127.0.0.1",
             8848)).thenReturn(serviceList);
@@ -183,7 +184,7 @@ class ClientControllerV3Test extends BaseTest {
         mockmvc.perform(mockHttpServletRequestBuilder)
             .andExpect(MockMvcResultMatchers.jsonPath("$.data.length()").value(1));
     }
-
+    
     @Test
     void testGetSubscribeClientList() throws Exception {
         ClientServiceForm clientServiceForm = new ClientServiceForm();
@@ -197,24 +198,24 @@ class ClientControllerV3Test extends BaseTest {
         subscriberList.get(0).setClientId("test1");
         when(clientServiceV2Impl.getSubscribeClientList("namespace", "group", "service",
             "127.0.0.1", 8848)).thenReturn(subscriberList);
-
+        
         Result<List<ClientSubscriberInfo>> actual =
             clientControllerV3.getSubscribeClientList(clientServiceForm);
-
+        
         assertEquals(1, actual.getData().size());
         assertEquals("test1", actual.getData().get(0).getClientId());
     }
-
+    
     @Test
     void testGetResponsibleServer4Client() {
-        ObjectNode responsibleServer = JacksonUtils.createEmptyJsonNode();
+        Map<String, Object> responsibleServer = new HashMap<>();
         responsibleServer.put("responsibleServer", "server-a");
         when(clientServiceV2Impl.getResponsibleServer4Client("127.0.0.1", "8848"))
             .thenReturn(responsibleServer);
-
-        Result<ObjectNode> actual =
+        
+        Result<Map<String, Object>> actual =
             clientControllerV3.getResponsibleServer4Client("127.0.0.1", "8848");
-
-        assertEquals("server-a", actual.getData().get("responsibleServer").asText());
+        
+        assertEquals("server-a", actual.getData().get("responsibleServer").toString());
     }
 }

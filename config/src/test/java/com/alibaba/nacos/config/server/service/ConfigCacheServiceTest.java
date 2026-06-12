@@ -30,13 +30,13 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.mockito.stubbing.OngoingStubbing;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.io.IOException;
@@ -64,7 +64,7 @@ class ConfigCacheServiceTest {
     
     MockedStatic<ConfigDiskServiceFactory> configDiskServiceFactoryMockedStatic;
     
-    @Mock
+    @MockitoBean
     ConfigDiskService configDiskService;
     
     MockedStatic<EnvUtil> envUtilMockedStatic;

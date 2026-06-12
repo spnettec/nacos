@@ -96,7 +96,13 @@ class LdapPluginConfigurationTest {
             config.ldapAuthenticatoinManager(ldapTemplate, userService, tokenManager, roleService);
         GlobalAuthenticationConfigurerAdapter adapter = config.authenticationConfigurer(provider);
         AuthenticationManagerBuilder builder =
-            new AuthenticationManagerBuilder(new NoOpObjectPostProcessor());
+            new AuthenticationManagerBuilder(new ObjectPostProcessor<Object>() {
+                
+                @Override
+                public <O> O postProcess(O object) {
+                    return null;
+                }
+            });
         
         adapter.init(builder);
         

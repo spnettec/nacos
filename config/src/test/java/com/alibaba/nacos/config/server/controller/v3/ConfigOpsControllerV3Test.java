@@ -34,26 +34,22 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.web.context.request.async.DeferredResult;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.request.async.DeferredResult;
 
 import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
@@ -61,77 +57,68 @@ import java.util.concurrent.CompletableFuture;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
-@ExtendWith({SpringExtension.class, MockitoExtension.class})
-@MockitoSettings(strictness = Strictness.LENIENT)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = MockServletContext.class)
 @WebAppConfiguration
 class ConfigOpsControllerV3Test {
-
-    @InjectMocks
+    
     ConfigOpsControllerV3 configOpsControllerV3;
-
-    @Mock
+    
+    @MockitoBean
     DumpService dumpService;
-
+    
     MockedStatic<DatasourceConfiguration> datasourceConfigurationMockedStatic;
-
+    
     MockedStatic<DynamicDataSource> dynamicDataSourceMockedStatic;
-
+    
     MockedStatic<ApplicationUtils> applicationUtilsMockedStatic;
-
+    
     private MockMvc mockMvc;
-
-    @Mock
+    
+    @MockitoBean
     private ServletContext servletContext;
-
+    
     @AfterEach
     void after() {
-        if (datasourceConfigurationMockedStatic != null) {
-            datasourceConfigurationMockedStatic.close();
-        }
-        if (dynamicDataSourceMockedStatic != null) {
-            dynamicDataSourceMockedStatic.close();
-        }
-        if (applicationUtilsMockedStatic != null) {
-            applicationUtilsMockedStatic.close();
-        }
+        datasourceConfigurationMockedStatic.close();
+        dynamicDataSourceMockedStatic.close();
+        applicationUtilsMockedStatic.close();
         ConfigCommonConfig.getInstance().setDerbyOpsEnabled(false);
     }
-
+    
     @BeforeEach
     void init() {
         when(servletContext.getContextPath()).thenReturn("/nacos");
-        ReflectionTestUtils.setField(configOpsControllerV3, "dumpService", dumpService);
+        configOpsControllerV3 = new ConfigOpsControllerV3(dumpService);
         mockMvc = MockMvcBuilders.standaloneSetup(configOpsControllerV3).build();
-
+        
         datasourceConfigurationMockedStatic = Mockito.mockStatic(DatasourceConfiguration.class);
         dynamicDataSourceMockedStatic = Mockito.mockStatic(DynamicDataSource.class);
         applicationUtilsMockedStatic = Mockito.mockStatic(ApplicationUtils.class);
     }
-
+    
     @Test
     void testUpdateLocalCacheFromStore() throws Exception {
-
+        
         MockHttpServletRequestBuilder builder =
             MockMvcRequestBuilders.post(Constants.OPS_CONTROLLER_V3_ADMIN_PATH + "/localCache");
         int actualValue = mockMvc.perform(builder).andReturn().getResponse().getStatus();
         assertEquals(200, actualValue);
     }
-
+    
     @Test
     void testSetLogLevel() throws Exception {
-
+        
         MockHttpServletRequestBuilder builder = MockMvcRequestBuilders
             .put(Constants.OPS_CONTROLLER_V3_ADMIN_PATH + "/log").param("logName", "test")
             .param("logLevel", "test");
         int actualValue = mockMvc.perform(builder).andReturn().getResponse().getStatus();
         assertEquals(200, actualValue);
     }
-
+    
     @Test
     void testDerbyOps() throws Exception {
         ConfigCommonConfig.getInstance().setDerbyOpsEnabled(true);
@@ -144,23 +131,23 @@ class ConfigOpsControllerV3Test {
         when(dataSource.getDataSource()).thenReturn(dataSourceService);
         JdbcTemplate template = Mockito.mock(JdbcTemplate.class);
         when(dataSourceService.getJdbcTemplate()).thenReturn(template);
-        when(template.queryForList(anyString())).thenReturn(new ArrayList<>());
-
+        when(template.queryForList("SELECT * FROM TEST")).thenReturn(new ArrayList<>());
+        
         MockHttpServletRequestBuilder builder =
             MockMvcRequestBuilders.get(Constants.OPS_CONTROLLER_V3_ADMIN_PATH + "/derby")
                 .param("sql", "SELECT * FROM TEST");
         String actualValue =
             mockMvc.perform(builder).andReturn().getResponse().getContentAsString();
         assertEquals("0", JacksonUtils.toObj(actualValue).get("code").toString());
-
+        
     }
-
+    
     @Test
     void testImportDerby() throws Exception {
         ConfigCommonConfig.getInstance().setDerbyOpsEnabled(true);
         datasourceConfigurationMockedStatic.when(DatasourceConfiguration::isEmbeddedStorage)
             .thenReturn(true);
-
+        
         applicationUtilsMockedStatic.when(() -> ApplicationUtils.getBean(DatabaseOperate.class))
             .thenReturn(Mockito.mock(DatabaseOperate.class));
         MockMultipartFile file =
@@ -171,7 +158,7 @@ class ConfigOpsControllerV3Test {
         int actualValue = mockMvc.perform(builder).andReturn().getResponse().getStatus();
         assertEquals(200, actualValue);
     }
-
+    
     @Test
     void testDerbyOpsNotEmbedded() throws Exception {
         ConfigCommonConfig.getInstance().setDerbyOpsEnabled(true);
@@ -185,7 +172,7 @@ class ConfigOpsControllerV3Test {
             mockMvc.perform(builder).andReturn().getResponse().getContentAsString();
         assertEquals("30000", JacksonUtils.toObj(actualValue).get("code").toString());
     }
-
+    
     @Test
     void testDerbyOpsNonSelectSql() throws Exception {
         ConfigCommonConfig.getInstance().setDerbyOpsEnabled(true);
@@ -200,18 +187,18 @@ class ConfigOpsControllerV3Test {
             mockMvc.perform(builder).andReturn().getResponse().getContentAsString();
         assertEquals("30000", JacksonUtils.toObj(actualValue).get("code").toString());
     }
-
+    
     @Test
     void testDerbyOpsNonSelectSqlDirectly() {
         ConfigCommonConfig.getInstance().setDerbyOpsEnabled(true);
         datasourceConfigurationMockedStatic.when(DatasourceConfiguration::isEmbeddedStorage)
             .thenReturn(true);
         mockLocalDataSource();
-
+        
         assertEquals(30000,
             configOpsControllerV3.derbyOps("DELETE FROM TEST").getCode());
     }
-
+    
     @Test
     void testDerbyOpsDisabled() throws Exception {
         ConfigCommonConfig.getInstance().setDerbyOpsEnabled(false);
@@ -225,7 +212,7 @@ class ConfigOpsControllerV3Test {
             mockMvc.perform(builder).andReturn().getResponse().getContentAsString();
         assertEquals("30000", JacksonUtils.toObj(actualValue).get("code").toString());
     }
-
+    
     @Test
     void testUpdateLocalCacheFromStoreError() throws Exception {
         doThrow(new RuntimeException("dump error")).when(dumpService).dumpAll();
@@ -236,7 +223,7 @@ class ConfigOpsControllerV3Test {
             mockMvc.perform(builder).andReturn().getResponse().getContentAsString();
         assertEquals("30000", JacksonUtils.toObj(actualValue).get("code").toString());
     }
-
+    
     @Test
     void testImportDerbyNotEmbedded() throws Exception {
         ConfigCommonConfig.getInstance().setDerbyOpsEnabled(true);
@@ -252,7 +239,7 @@ class ConfigOpsControllerV3Test {
             mockMvc.perform(builder).andReturn().getResponse().getStatus();
         assertEquals(200, actualValue);
     }
-
+    
     @Test
     void testImportDerbyDisabled() throws Exception {
         ConfigCommonConfig.getInstance().setDerbyOpsEnabled(false);
@@ -268,7 +255,7 @@ class ConfigOpsControllerV3Test {
             mockMvc.perform(builder).andReturn().getResponse().getStatus();
         assertEquals(200, actualValue);
     }
-
+    
     @Test
     void testDerbyOpsWithExistingLimit() throws Exception {
         ConfigCommonConfig.getInstance().setDerbyOpsEnabled(true);
@@ -293,7 +280,7 @@ class ConfigOpsControllerV3Test {
             mockMvc.perform(builder).andReturn().getResponse().getContentAsString();
         assertEquals("0", JacksonUtils.toObj(actualValue).get("code").toString());
     }
-
+    
     @Test
     void testDerbyOpsException() throws Exception {
         ConfigCommonConfig.getInstance().setDerbyOpsEnabled(true);
@@ -318,7 +305,7 @@ class ConfigOpsControllerV3Test {
         assertEquals("30000",
             JacksonUtils.toObj(actualValue).get("code").toString());
     }
-
+    
     @Test
     void testSetLogLevelError() throws Exception {
         try (MockedStatic<LogUtil> logUtilMockedStatic = Mockito.mockStatic(LogUtil.class)) {
@@ -330,27 +317,27 @@ class ConfigOpsControllerV3Test {
                 .param("logLevel", "INVALID_LEVEL");
             String actualValue =
                 mockMvc.perform(builder).andReturn().getResponse().getContentAsString();
-
+            
             assertEquals("30000", JacksonUtils.toObj(actualValue).get("code").toString());
         }
     }
-
+    
     @Test
     void testImportDerbyWithSuccessCallback() throws Exception {
         ConfigCommonConfig.getInstance().setDerbyOpsEnabled(true);
         datasourceConfigurationMockedStatic.when(DatasourceConfiguration::isEmbeddedStorage)
             .thenReturn(true);
-
+        
         DatabaseOperate mockDbOperate = Mockito.mock(DatabaseOperate.class);
         applicationUtilsMockedStatic.when(() -> ApplicationUtils.getBean(DatabaseOperate.class))
             .thenReturn(mockDbOperate);
-
+        
         CompletableFuture<com.alibaba.nacos.common.model.RestResult<String>> future =
             new CompletableFuture<>();
         when(mockDbOperate.dataImport(any())).thenReturn(future);
         future.complete(
             com.alibaba.nacos.common.model.RestResultUtils.success("import success"));
-
+        
         MockMultipartFile file =
             new MockMultipartFile("file", "test.sql", "text/plain",
                 "INSERT INTO test VALUES(1)".getBytes());
@@ -360,22 +347,22 @@ class ConfigOpsControllerV3Test {
         int status = mockMvc.perform(builder).andReturn().getResponse().getStatus();
         assertEquals(200, status);
     }
-
+    
     @Test
     void testImportDerbyWithFailureCallback() throws Exception {
         ConfigCommonConfig.getInstance().setDerbyOpsEnabled(true);
         datasourceConfigurationMockedStatic.when(DatasourceConfiguration::isEmbeddedStorage)
             .thenReturn(true);
-
+        
         DatabaseOperate mockDbOperate = Mockito.mock(DatabaseOperate.class);
         applicationUtilsMockedStatic.when(() -> ApplicationUtils.getBean(DatabaseOperate.class))
             .thenReturn(mockDbOperate);
-
+        
         CompletableFuture<com.alibaba.nacos.common.model.RestResult<String>> future =
             new CompletableFuture<>();
         when(mockDbOperate.dataImport(any())).thenReturn(future);
         future.completeExceptionally(new RuntimeException("import failed"));
-
+        
         MockMultipartFile file =
             new MockMultipartFile("file", "test.sql", "text/plain",
                 "INSERT INTO test VALUES(1)".getBytes());
@@ -385,7 +372,7 @@ class ConfigOpsControllerV3Test {
         int status = mockMvc.perform(builder).andReturn().getResponse().getStatus();
         assertEquals(200, status);
     }
-
+    
     @Test
     @SuppressWarnings("unchecked")
     void testConvertToResultCopiesCompletedRestResult() {
@@ -393,43 +380,43 @@ class ConfigOpsControllerV3Test {
         DeferredResult<Result<String>> wrappedResult =
             ReflectionTestUtils.invokeMethod(configOpsControllerV3, "convertToResult", restResult);
         restResult.setResult(RestResultUtils.success("ok"));
-
+        
         Runnable completionCallback =
             (Runnable) ReflectionTestUtils.getField(restResult, "completionCallback");
         completionCallback.run();
-
+        
         Result<String> result = (Result<String>) wrappedResult.getResult();
         assertEquals(200, result.getCode());
         assertEquals("ok", result.getData());
     }
-
+    
     @Test
     @SuppressWarnings("unchecked")
     void testConvertToResultCopiesPreCompletedRestResult() {
         DeferredResult<RestResult<String>> restResult = new DeferredResult<>();
         restResult.setResult(RestResultUtils.failed("pre-set failure"));
-
+        
         DeferredResult<Result<String>> wrappedResult =
             ReflectionTestUtils.invokeMethod(configOpsControllerV3, "convertToResult", restResult);
-
+        
         Result<String> result = (Result<String>) wrappedResult.getResult();
         assertEquals(500, result.getCode());
         assertEquals("pre-set failure", result.getMessage());
     }
-
+    
     @Test
     void testConvertToResultIgnoresNullRestResult() {
         DeferredResult<RestResult<String>> restResult = new DeferredResult<>();
         DeferredResult<Result<String>> wrappedResult =
             ReflectionTestUtils.invokeMethod(configOpsControllerV3, "convertToResult", restResult);
-
+        
         Runnable completionCallback =
             (Runnable) ReflectionTestUtils.getField(restResult, "completionCallback");
         completionCallback.run();
-
+        
         assertNull(wrappedResult.getResult());
     }
-
+    
     private void mockLocalDataSource() {
         DynamicDataSource dataSource = Mockito.mock(DynamicDataSource.class);
         dynamicDataSourceMockedStatic.when(DynamicDataSource::getInstance)

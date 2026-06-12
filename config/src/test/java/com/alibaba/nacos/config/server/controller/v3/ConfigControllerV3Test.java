@@ -33,44 +33,36 @@ import com.alibaba.nacos.config.server.model.ConfigMetadata;
 import com.alibaba.nacos.config.server.model.ConfigRequestInfo;
 import com.alibaba.nacos.config.server.model.event.ConfigDataChangeEvent;
 import com.alibaba.nacos.config.server.service.ConfigDetailService;
-import com.alibaba.nacos.config.server.service.ConfigMigrateService;
 import com.alibaba.nacos.config.server.service.ConfigOperationService;
 import com.alibaba.nacos.config.server.service.listener.ConfigListenerStateDelegate;
-import com.alibaba.nacos.config.server.service.repository.ConfigInfoBetaPersistService;
 import com.alibaba.nacos.config.server.service.repository.ConfigInfoGrayPersistService;
 import com.alibaba.nacos.config.server.service.repository.ConfigInfoPersistService;
 import com.alibaba.nacos.config.server.utils.YamlParserUtil;
 import com.alibaba.nacos.config.server.utils.ZipUtils;
 import com.alibaba.nacos.core.namespace.repository.NamespacePersistService;
-import com.alibaba.nacos.config.server.utils.PropertyUtil;
 import com.alibaba.nacos.sys.env.EnvUtil;
-import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
-import tools.jackson.databind.JsonNode;
 import jakarta.servlet.ServletContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.multipart.MultipartFile;
+import tools.jackson.databind.JsonNode;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -89,62 +81,46 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
-@ExtendWith({SpringExtension.class, MockitoExtension.class})
-@MockitoSettings(strictness = Strictness.LENIENT)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = MockServletContext.class)
 @WebAppConfiguration
 class ConfigControllerV3Test {
     
-    @InjectMocks
     ConfigControllerV3 configControllerV3;
     
     private MockMvc mockmvc;
     
-    @Mock
+    @MockitoBean
     private ServletContext servletContext;
     
-    @Mock
+    @MockitoBean
     private ConfigInfoPersistService configInfoPersistService;
     
-    @Mock
-    private ConfigInfoBetaPersistService configInfoBetaPersistService;
-    
-    @Mock
+    @MockitoBean
     private ConfigInfoGrayPersistService configInfoGrayPersistService;
     
-    @Mock
+    @MockitoBean
     private NamespacePersistService namespacePersistService;
     
-    @Mock
+    @MockitoBean
     private ConfigOperationService configOperationService;
     
-    @Mock
+    @MockitoBean
     private ConfigListenerStateDelegate configListenerStateDelegate;
     
-    @Mock
+    @MockitoBean
     private ConfigDetailService configDetailService;
-    
-    @Mock
-    private ConfigMigrateService configMigrateService;
     
     @BeforeEach
     void setUp() {
         EnvUtil.setEnvironment(new StandardEnvironment());
         when(servletContext.getContextPath()).thenReturn("/nacos");
-        ReflectionTestUtils.setField(configControllerV3, "configListenerStateDelegate",
-            configListenerStateDelegate);
-        ReflectionTestUtils.setField(configControllerV3, "configInfoPersistService",
-            configInfoPersistService);
-        ReflectionTestUtils.setField(configControllerV3, "configInfoBetaPersistService",
-            configInfoBetaPersistService);
-        ReflectionTestUtils.setField(configControllerV3, "configInfoGrayPersistService",
-            configInfoGrayPersistService);
-        ReflectionTestUtils.setField(configControllerV3, "namespacePersistService",
-            namespacePersistService);
-        ReflectionTestUtils.setField(configControllerV3, "configOperationService",
-            configOperationService);
-        ReflectionTestUtils.setField(configControllerV3, "configMigrateService",
-            configMigrateService);
+        configControllerV3 =
+            new ConfigControllerV3(configOperationService,
+                configInfoPersistService, configDetailService,
+                configInfoGrayPersistService,
+                namespacePersistService,
+                configListenerStateDelegate);
         mockmvc = MockMvcBuilders.standaloneSetup(configControllerV3).build();
     }
     
@@ -348,16 +324,16 @@ class ConfigControllerV3Test {
     @Test
     void testQueryBeta() throws Exception {
         
-        ConfigInfoGrayWrapper configInfoBetaWrapper = new ConfigInfoGrayWrapper();
-        configInfoBetaWrapper.setDataId("test");
-        configInfoBetaWrapper.setGroup("test");
-        configInfoBetaWrapper.setContent("test");
-        configInfoBetaWrapper.setGrayName("beta");
-        configInfoBetaWrapper.setGrayRule(
+        ConfigInfoGrayWrapper configInfoGrayWrapper = new ConfigInfoGrayWrapper();
+        configInfoGrayWrapper.setDataId("test");
+        configInfoGrayWrapper.setGroup("test");
+        configInfoGrayWrapper.setContent("test");
+        configInfoGrayWrapper.setGrayName("beta");
+        configInfoGrayWrapper.setGrayRule(
             "{\"type\":\"beta\",\"version\":\"1.0.0\",\"expr\":\"127.0.0.1,127.0.0.2\",\"priority\":-1000}");
         when(configInfoGrayPersistService.findConfigInfo4Gray("test", "test", "public", "beta"))
             .thenReturn(
-                configInfoBetaWrapper);
+                configInfoGrayWrapper);
         
         MockHttpServletRequestBuilder builder =
             MockMvcRequestBuilders.get(Constants.CONFIG_ADMIN_V3_PATH + "/beta")
@@ -368,16 +344,16 @@ class ConfigControllerV3Test {
             mockmvc.perform(builder).andReturn().getResponse().getContentAsString();
         String code = JacksonUtils.toObj(actualValue).get("code").toString();
         String data = JacksonUtils.toObj(actualValue).get("data").toString();
-        ConfigGrayInfo resConfigInfoBetaWrapper = JacksonUtils.toObj(data, ConfigGrayInfo.class);
+        ConfigGrayInfo resConfigInfoGrayWrapper = JacksonUtils.toObj(data, ConfigGrayInfo.class);
         
         assertEquals("0", code);
-        assertEquals(configInfoBetaWrapper.getDataId(), resConfigInfoBetaWrapper.getDataId());
-        assertEquals(configInfoBetaWrapper.getGroup(), resConfigInfoBetaWrapper.getGroupName());
-        assertEquals(configInfoBetaWrapper.getContent(), resConfigInfoBetaWrapper.getContent());
-        assertEquals(configInfoBetaWrapper.getGrayName(), resConfigInfoBetaWrapper.getGrayName());
+        assertEquals(configInfoGrayWrapper.getDataId(), resConfigInfoGrayWrapper.getDataId());
+        assertEquals(configInfoGrayWrapper.getGroup(), resConfigInfoGrayWrapper.getGroupName());
+        assertEquals(configInfoGrayWrapper.getContent(), resConfigInfoGrayWrapper.getContent());
+        assertEquals(configInfoGrayWrapper.getGrayName(), resConfigInfoGrayWrapper.getGrayName());
         assertEquals(
             "{\"type\":\"beta\",\"version\":\"1.0.0\",\"expr\":\"127.0.0.1,127.0.0.2\",\"priority\":-1000}",
-            resConfigInfoBetaWrapper.getGrayRule());
+            resConfigInfoGrayWrapper.getGrayRule());
         
     }
     
@@ -512,7 +488,7 @@ class ConfigControllerV3Test {
             when(configInfoPersistService.batchInsertOrUpdate(anyList(), anyString(), anyString(),
                 any(),
                 any())).thenReturn(map);
-
+            
             MockMultipartHttpServletRequestBuilder builder = MockMvcRequestBuilders.multipart(
                 Constants.CONFIG_ADMIN_V3_PATH + "/import").file(file).param("src_user", "test")
                 .param("namespace", "public").param("policy", "ABORT");
@@ -810,7 +786,7 @@ class ConfigControllerV3Test {
             map.put("succCount", 1);
             when(configInfoPersistService.batchInsertOrUpdate(anyList(), anyString(), anyString(),
                 any(), any())).thenReturn(map);
-
+            
             MockMultipartHttpServletRequestBuilder builder = MockMvcRequestBuilders.multipart(
                 Constants.CONFIG_ADMIN_V3_PATH + "/import").file(file).param("src_user", "test")
                 .param("namespaceId", "public").param("policy", "ABORT");
@@ -845,7 +821,7 @@ class ConfigControllerV3Test {
         try (MockedStatic<ZipUtils> zipUtilsMockedStatic = Mockito.mockStatic(ZipUtils.class)) {
             zipUtilsMockedStatic.when(() -> ZipUtils.unzip(eq(file.getBytes())))
                 .thenReturn(unziped);
-
+            
             MockMultipartHttpServletRequestBuilder builder = MockMvcRequestBuilders.multipart(
                 Constants.CONFIG_ADMIN_V3_PATH + "/import").file(file).param("src_user", "test")
                 .param("namespaceId", "").param("policy", "ABORT");
@@ -993,27 +969,6 @@ class ConfigControllerV3Test {
     }
     
     @Test
-    void testStopBetaWithGrayCompatibleModel() throws Exception {
-        try (MockedStatic<PropertyUtil> propertyUtilMock =
-            Mockito.mockStatic(PropertyUtil.class)) {
-            propertyUtilMock.when(PropertyUtil::isGrayCompatibleModel).thenReturn(true);
-            ReflectionTestUtils.setField(configControllerV3, "oldTableVersion", true);
-            
-            MockHttpServletRequestBuilder builder =
-                MockMvcRequestBuilders.delete(Constants.CONFIG_ADMIN_V3_PATH + "/beta")
-                    .param("dataId", "test").param("groupName", "test")
-                    .param("namespaceId", "");
-            
-            String actualValue =
-                mockmvc.perform(builder).andReturn().getResponse().getContentAsString();
-            String code = JacksonUtils.toObj(actualValue).get("code").toString();
-            assertEquals("0", code);
-            Mockito.verify(configInfoBetaPersistService)
-                .removeConfigInfo4Beta("test", "test", "public");
-        }
-    }
-    
-    @Test
     void testImportConfigWithBlankSrcUser() throws Exception {
         List<ZipUtils.ZipItem> zipItems = new ArrayList<>();
         zipItems.add(new ZipUtils.ZipItem("group/data.json", "content"));
@@ -1042,7 +997,7 @@ class ConfigControllerV3Test {
             when(configInfoPersistService.batchInsertOrUpdate(
                 anyList(), anyString(), anyString(), any(), any()))
                 .thenReturn(map);
-
+            
             MockMultipartHttpServletRequestBuilder builder = MockMvcRequestBuilders.multipart(
                 Constants.CONFIG_ADMIN_V3_PATH + "/import").file(file)
                 .param("src_user", "")
@@ -1075,7 +1030,7 @@ class ConfigControllerV3Test {
                 .thenReturn(unziped);
             when(namespacePersistService.tenantInfoCountByTenantId("public"))
                 .thenReturn(1);
-
+            
             MockMultipartHttpServletRequestBuilder builder = MockMvcRequestBuilders.multipart(
                 Constants.CONFIG_ADMIN_V3_PATH + "/import").file(file)
                 .param("src_user", "test")

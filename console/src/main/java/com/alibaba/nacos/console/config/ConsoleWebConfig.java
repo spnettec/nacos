@@ -22,6 +22,7 @@ import com.alibaba.nacos.console.filter.NacosConsoleAuthFilter;
 import com.alibaba.nacos.console.filter.XssFilter;
 import com.alibaba.nacos.core.code.ControllerMethodsCache;
 import com.alibaba.nacos.core.paramcheck.ParamCheckerFilter;
+import jakarta.annotation.PostConstruct;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.jackson.autoconfigure.JsonMapperBuilderCustomizer;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -33,8 +34,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
-
-import jakarta.annotation.PostConstruct;
 
 import java.util.TimeZone;
 
@@ -129,9 +128,8 @@ public class ConsoleWebConfig {
     }
     
     @Bean
-    public JsonMapperBuilderCustomizer jacksonObjectMapperCustomization() {
-        return jacksonObjectMapperBuilder -> jacksonObjectMapperBuilder
-                .defaultTimeZone(TimeZone.getDefault());
+    public JsonMapperBuilderCustomizer jacksonJsonMapperCustomization() {
+        return jsonMapperBuilder -> jsonMapperBuilder.defaultTimeZone(TimeZone.getDefault());
     }
     
     @Bean

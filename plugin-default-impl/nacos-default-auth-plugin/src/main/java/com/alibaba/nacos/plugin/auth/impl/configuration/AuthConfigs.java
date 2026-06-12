@@ -29,12 +29,12 @@ import com.alibaba.nacos.plugin.auth.constant.Constants;
 import com.alibaba.nacos.plugin.auth.impl.constant.AuthConstants;
 import com.alibaba.nacos.sys.env.EnvUtil;
 import com.alibaba.nacos.sys.utils.PropertiesUtil;
+import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
-import jakarta.annotation.PostConstruct;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -95,7 +95,7 @@ public class AuthConfigs extends Subscriber<ServerConfigChangeEvent> {
         NotifyCenter.registerSubscriber(this);
         refreshPluginProperties();
     }
-
+    
     /**
      * Validate auth config.
      *
@@ -118,7 +118,7 @@ public class AuthConfigs extends Subscriber<ServerConfigChangeEvent> {
                 AuthErrorCode.EMPTY_IDENTITY.getMsg());
         }
     }
-
+    
     private void refreshPluginProperties() {
         try {
             Map<String, Properties> newProperties = new HashMap<>(1);

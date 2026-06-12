@@ -34,12 +34,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.lang.reflect.Method;
@@ -53,8 +50,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
-@ExtendWith({SpringExtension.class, MockitoExtension.class})
-@MockitoSettings(strictness = Strictness.LENIENT)
+@ExtendWith(SpringExtension.class)
 class CapacityManagementAspectTest {
     
     final Boolean mockProceedingJoinPointResult = true;
@@ -65,26 +61,26 @@ class CapacityManagementAspectTest {
     
     final String mockTenant = "mockTenant";
     
-    @Mock
+    @MockitoBean
     private ConfigForm configForm;
     
-    @Mock
+    @MockitoBean
     private ConfigRequestInfo configRequestInfo;
     
-    @Mock
+    @MockitoBean
     ProceedingJoinPoint proceedingJoinPoint;
     
-    @Mock
+    @MockitoBean
     ProceedingJoinPoint localMockProceedingJoinPoint;
     
     RuntimeException mockException = new RuntimeException("mock exception");
     
     CapacityManagementAspect capacityManagementAspect;
     
-    @Mock
+    @MockitoBean
     CapacityService capacityService;
     
-    @Mock
+    @MockitoBean
     ConfigInfoPersistService configInfoPersistService;
     
     MockedStatic<PropertyUtil> propertyUtilMockedStatic;
@@ -115,12 +111,8 @@ class CapacityManagementAspectTest {
     @AfterEach
     void after() {
         // Close static mocks
-        if (propertyUtilMockedStatic != null) {
-            propertyUtilMockedStatic.close();
-        }
-        if (envUtilMockedStatic != null) {
-            envUtilMockedStatic.close();
-        }
+        propertyUtilMockedStatic.close();
+        envUtilMockedStatic.close();
     }
     
     @Test

@@ -19,7 +19,6 @@ package com.alibaba.nacos.config.server.service.dump;
 import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.config.server.manager.TaskManager;
 import com.alibaba.nacos.config.server.model.event.ConfigDataChangeEvent;
-import com.alibaba.nacos.config.server.service.ConfigMigrateService;
 import com.alibaba.nacos.config.server.service.dump.disk.ConfigDiskService;
 import com.alibaba.nacos.config.server.service.dump.disk.ConfigDiskServiceFactory;
 import com.alibaba.nacos.config.server.service.dump.task.DumpAllTask;
@@ -39,12 +38,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -59,35 +55,26 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 
-@ExtendWith({SpringExtension.class, MockitoExtension.class})
-@MockitoSettings(strictness = Strictness.LENIENT)
+@ExtendWith(SpringExtension.class)
 class DumpServiceTest {
     
-    private static final String BETA_TABLE_NAME = "config_info_beta";
-    
-    private static final String TAG_TABLE_NAME = "config_info_tag";
-    
-    @Mock
+    @MockitoBean
     DefaultHistoryConfigCleaner defaultHistoryConfigCleaner = new DefaultHistoryConfigCleaner();
     
-    @Mock
+    @MockitoBean
     ConfigInfoPersistService configInfoPersistService;
     
-    @Mock
-    
+    @MockitoBean
     NamespacePersistService namespacePersistService;
     
-    @Mock
+    @MockitoBean
     HistoryConfigInfoPersistService historyConfigInfoPersistService;
     
-    @Mock
+    @MockitoBean
     ConfigInfoGrayPersistService configInfoGrayPersistService;
     
-    @Mock
+    @MockitoBean
     ServerMemberManager memberManager;
-    
-    @Mock
-    ConfigMigrateService configMigrateService;
     
     MockedStatic<EnvUtil> envUtilMockedStatic;
     
@@ -97,12 +84,12 @@ class DumpServiceTest {
     
     MockedStatic<HistoryConfigCleanerManager> historyConfigCleanerManagerMockedStatic;
     
-    @Mock
+    @MockitoBean
     private DataSourceService dataSourceService;
     
     private DumpService dumpService;
     
-    @Mock
+    @MockitoBean
     private TaskManager dumpTaskMgr;
     
     @BeforeEach
@@ -118,8 +105,7 @@ class DumpServiceTest {
         ReflectionTestUtils.setField(DynamicDataSource.getInstance(), "basicDataSourceService",
             dataSourceService);
         dumpService = new ExternalDumpService(configInfoPersistService, namespacePersistService,
-            historyConfigInfoPersistService, configInfoGrayPersistService, memberManager,
-            configMigrateService);
+            historyConfigInfoPersistService, configInfoGrayPersistService, memberManager);
         configExecutorMocked = Mockito.mockStatic(ConfigExecutor.class);
         historyConfigCleanerManagerMockedStatic =
             Mockito.mockStatic(HistoryConfigCleanerManager.class);
@@ -131,18 +117,10 @@ class DumpServiceTest {
     
     @AfterEach
     void after() {
-        if (envUtilMockedStatic != null) {
-            envUtilMockedStatic.close();
-        }
-        if (configExecutorMocked != null) {
-            configExecutorMocked.close();
-        }
-        if (propertyUtilMockedStatic != null) {
-            propertyUtilMockedStatic.close();
-        }
-        if (historyConfigCleanerManagerMockedStatic != null) {
-            historyConfigCleanerManagerMockedStatic.close();
-        }
+        envUtilMockedStatic.close();
+        configExecutorMocked.close();
+        propertyUtilMockedStatic.close();
+        historyConfigCleanerManagerMockedStatic.close();
         ReflectionTestUtils.setField(ConfigDiskServiceFactory.class, "configDiskService", null);
     }
     
@@ -180,9 +158,6 @@ class DumpServiceTest {
             () -> ConfigExecutor.scheduleConfigChangeTask(any(Runnable.class), anyInt(),
                 any(TimeUnit.class)))
             .thenAnswer(invocation -> null);
-        Mockito.when(namespacePersistService.isExistTable(BETA_TABLE_NAME)).thenReturn(true);
-        Mockito.when(namespacePersistService.isExistTable(TAG_TABLE_NAME)).thenReturn(true);
-        
         Mockito.when(configInfoPersistService.findConfigMaxId()).thenReturn(300L);
         dumpService.init();
         

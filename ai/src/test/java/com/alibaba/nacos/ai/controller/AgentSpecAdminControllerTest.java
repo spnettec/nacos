@@ -32,13 +32,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.function.Executable;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
@@ -63,7 +62,7 @@ import static org.mockito.Mockito.when;
  *
  * @author nacos
  */
-@ExtendWith({SpringExtension.class, MockitoExtension.class})
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = MockServletContext.class)
 @WebAppConfiguration
 class AgentSpecAdminControllerTest {
@@ -76,7 +75,7 @@ class AgentSpecAdminControllerTest {
     
     private ConfigurableEnvironment cachedEnvironment;
     
-    @Mock
+    @MockitoBean
     private AgentSpecOperationService agentSpecOperationService;
     
     @BeforeEach
@@ -150,7 +149,8 @@ class AgentSpecAdminControllerTest {
             .forcePublish(eq("public"), eq("test-agentspec"), eq("v1"), eq(true));
         MockHttpServletRequestBuilder builder =
             MockMvcRequestBuilders.post(AGENTSPEC_ADMIN_PATH + "/force-publish")
-                .param("agentSpecName", "test-agentspec").param("version", "v1");
+                .param("agentSpecName", "test-agentspec").param("version", "v1")
+                .param("updateLatestLabel", "false");
         MockHttpServletResponse response = mockMvc.perform(builder).andReturn().getResponse();
         assertEquals(200, response.getStatus());
         verify(agentSpecOperationService).forcePublish("public", "test-agentspec", "v1", true);

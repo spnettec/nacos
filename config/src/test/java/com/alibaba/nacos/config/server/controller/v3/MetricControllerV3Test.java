@@ -29,31 +29,22 @@ import com.alibaba.nacos.core.cluster.Member;
 import com.alibaba.nacos.core.cluster.ServerMemberManager;
 import com.alibaba.nacos.core.remote.Connection;
 import com.alibaba.nacos.core.remote.ConnectionManager;
-import tools.jackson.databind.JsonNode;
 import com.alibaba.nacos.sys.env.EnvUtil;
-import jakarta.servlet.ServletContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.MockedStatic;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
 import org.springframework.core.env.StandardEnvironment;
-import org.springframework.mock.web.MockServletContext;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.context.web.WebAppConfiguration;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.slf4j.Logger;
+import tools.jackson.databind.JsonNode;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -71,13 +62,9 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
-@ExtendWith({SpringExtension.class, MockitoExtension.class})
-@MockitoSettings(strictness = Strictness.LENIENT)
-@ContextConfiguration(classes = MockServletContext.class)
-@WebAppConfiguration
+@ExtendWith(MockitoExtension.class)
 class MetricControllerV3Test {
     
-    @InjectMocks
     MetricsControllerV3 metricsControllerV3;
     
     private MockMvc mockMvc;
@@ -88,16 +75,11 @@ class MetricControllerV3Test {
     @Mock
     private ConnectionManager connectionManager;
     
-    @Mock
-    private ServletContext servletContext;
-    
     @BeforeEach
     void setUp() {
         System.setProperty("nacos.core.auth.admin.enabled", "false");
         EnvUtil.setEnvironment(new StandardEnvironment());
-        when(servletContext.getContextPath()).thenReturn("/nacos");
-        ReflectionTestUtils.setField(metricsControllerV3, "serverMemberManager", memberManager);
-        ReflectionTestUtils.setField(metricsControllerV3, "connectionManager", connectionManager);
+        metricsControllerV3 = new MetricsControllerV3(memberManager, connectionManager);
         mockMvc = MockMvcBuilders.standaloneSetup(metricsControllerV3).build();
     }
     

@@ -33,13 +33,13 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.ArrayList;
@@ -65,17 +65,17 @@ import static org.mockito.ArgumentMatchers.eq;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class ConfigSubServiceTest {
     
-    @Mock
+    @MockitoBean
     ServerMemberManager serverMemberManager;
     
     MockedStatic<EnvUtil> envUtilMockedStatic;
     
     MockedStatic<HttpClientManager> httpClientManagerMockedStatic;
     
-    @Mock
+    @MockitoBean
     NacosRestTemplate nacosRestTemplate;
     
-    @Mock
+    @MockitoBean
     NacosAsyncRestTemplate nacosAsyncRestTemplate;
     
     private ConfigSubService configSubService;

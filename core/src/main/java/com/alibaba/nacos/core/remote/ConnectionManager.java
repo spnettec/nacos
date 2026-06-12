@@ -33,10 +33,10 @@ import com.alibaba.nacos.plugin.control.connection.request.ConnectionCheckReques
 import com.alibaba.nacos.plugin.control.connection.response.ConnectionCheckResponse;
 import com.alibaba.nacos.plugin.control.connection.rule.ConnectionControlRule;
 import com.alibaba.nacos.sys.env.EnvUtil;
+import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
-import jakarta.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -261,7 +261,7 @@ public class ConnectionManager {
             runtimeConnectionEjector.doEject();
             MetricsMonitor.getLongConnectionMonitor().set(connections.size());
         }, 1000L, 3000L, TimeUnit.MILLISECONDS);
-
+        
         Boolean enabled =
             EnvUtil.getProperty("nacos.metric.grpc.server.connection.enabled", Boolean.class, true);
         if (enabled) {

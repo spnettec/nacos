@@ -22,9 +22,9 @@ import com.alibaba.nacos.core.distributed.distro.DistroProtocol;
 import com.alibaba.nacos.naming.misc.GlobalConfig;
 import com.alibaba.nacos.naming.misc.GlobalExecutor;
 import com.alibaba.nacos.naming.misc.SwitchDomain;
+import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Service;
 
-import jakarta.annotation.PostConstruct;
 import java.util.Optional;
 
 /**
@@ -37,9 +37,9 @@ import java.util.Optional;
 public class ServerStatusManager {
     
     private final GlobalConfig globalConfig;
-
+    
     private final DistroProtocol distroProtocol;
-
+    
     private final ProtocolManager protocolManager;
     
     private final SwitchDomain switchDomain;

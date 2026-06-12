@@ -39,12 +39,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.Properties;
@@ -60,28 +57,27 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@ExtendWith({SpringExtension.class, MockitoExtension.class})
-@MockitoSettings(strictness = Strictness.LENIENT)
+@ExtendWith(SpringExtension.class)
 class ConfigChangeAspectTest {
     
     ConfigChangeAspect configChangeAspect;
     
     ConfigChangeConfigs configChangeConfigs;
     
-    @Mock
+    @MockitoBean
     ConfigChangePluginService configChangePluginService;
     
     MockedStatic<PropertiesUtil> propertiesStatic;
     
     MockedStatic<RequestUtil> requestUtilMockedStatic;
     
-    @Mock
+    @MockitoBean
     private ProceedingJoinPoint pjp;
     
-    @Mock
+    @MockitoBean
     private ConfigForm configForm;
     
-    @Mock
+    @MockitoBean
     private ConfigRequestInfo configRequestInfo;
     
     @BeforeEach
@@ -117,12 +113,8 @@ class ConfigChangeAspectTest {
         RequestContextHolder.getContext().getBasicContext().setRequestProtocol(null);
         RequestContextHolder.getContext().getBasicContext().setRequestTarget(null);
         
-        if (propertiesStatic != null) {
-            propertiesStatic.close();
-        }
-        if (requestUtilMockedStatic != null) {
-            requestUtilMockedStatic.close();
-        }
+        propertiesStatic.close();
+        requestUtilMockedStatic.close();
         ConfigChangePluginManager.reset();
     }
     
@@ -196,7 +188,7 @@ class ConfigChangeAspectTest {
         assertFalse(Boolean.parseBoolean(
             configChangeConfigs.getPluginProperties("mockedConfigChangeService")
                 .getProperty("enabled")));
-
+        
         Mockito.when(configChangePluginService.executeType())
             .thenReturn(ConfigChangeExecuteTypes.EXECUTE_BEFORE_TYPE);
         Mockito.when(configChangePluginService.getServiceType())
@@ -241,6 +233,7 @@ class ConfigChangeAspectTest {
         
         Object result = configChangeAspect.publishOrUpdateConfigAround(pjp);
         
+        verify(configChangePluginService, Mockito.timeout(1000).times(1)).execute(any(), any());
         assertEquals(false, result);
     }
     

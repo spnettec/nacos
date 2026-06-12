@@ -55,19 +55,19 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author xiweng.yy
  */
 public class SkillClientOpenApiITCase extends AiOpenApiBaseITCase {
-
+    
     private static final String SKILL_CLIENT_PATH = nacosPath(Constants.Skills.CLIENT_PATH);
-
+    
     private static final String SKILL_ADMIN_PATH = nacosPath(Constants.Skills.ADMIN_PATH);
-
+    
     @Test
     public void testDownloadSkillByLatestVersionAndLabel() throws Exception {
         String skillName = randomSkillName("skill");
         publishSkill(skillName, "1.0.0", null, "Use the v1 skill body.", "guide v1");
         addCleanup(() -> deleteSkill(skillName));
         publishSkill(skillName, "2.0.0", "1.0.0", "Use the v2 skill body.", "guide v2");
-        updateLabels(skillName, "{\"stable\":\"1.0.0\",\"latest\":\"2.0.0\"}");
-
+        updateLabels(skillName, "{\"stable\":\"1.0.0\"}");
+        
         assertSkillZip(Query.newInstance().addParam("name", skillName), skillName, "2.0.0",
                 "Use the v2 skill body.", "guide v2");
         assertSkillZip(Query.newInstance().addParam("name", skillName).addParam("version", "1.0.0"),
@@ -77,32 +77,32 @@ public class SkillClientOpenApiITCase extends AiOpenApiBaseITCase {
         assertSkillZip(Query.newInstance().addParam("name", skillName).addParam("version", "2.0.0")
                 .addParam("label", "stable"), skillName, "2.0.0", "Use the v2 skill body.", "guide v2");
     }
-
+    
     @Test
     public void testDownloadSkillMissingNameReturnsBadRequest() throws Exception {
         assertError(getRaw(SKILL_CLIENT_PATH + "?namespaceId=" + DEFAULT_NAMESPACE), 400,
                 ErrorCode.PARAMETER_MISSING, "Skill name is required");
     }
-
+    
     @Test
     public void testDownloadSkillInvalidNameReturnsBadRequest() throws Exception {
         Query query = Query.newInstance().addParam("name", "invalid_name");
         assertError(getRaw(SKILL_CLIENT_PATH, query), 400, ErrorCode.PARAMETER_VALIDATE_ERROR,
                 "Skill name may only contain lowercase letters, numbers, and hyphens");
     }
-
+    
     @Test
     public void testDownloadSkillUnknownResourceReturnsNotFoundResultBody() throws Exception {
         Query query = Query.newInstance().addParam("name", randomSkillName("absent"));
         assertError(getRaw(SKILL_CLIENT_PATH, query), 404, ErrorCode.RESOURCE_NOT_FOUND, "Skill not found");
     }
-
+    
     @Test
     public void testDownloadSkillUnknownVersionAndLabelReturnNotFoundResultBody() throws Exception {
         String skillName = randomSkillName("missing");
         publishSkill(skillName, "1.0.0", null, "Only one online skill body.", "guide");
         addCleanup(() -> deleteSkill(skillName));
-
+        
         assertError(getRaw(SKILL_CLIENT_PATH,
                 Query.newInstance().addParam("name", skillName).addParam("version", "9.9.9")),
                 404, ErrorCode.RESOURCE_NOT_FOUND, "Skill version not found");
@@ -110,7 +110,7 @@ public class SkillClientOpenApiITCase extends AiOpenApiBaseITCase {
                 Query.newInstance().addParam("name", skillName).addParam("label", "missing")),
                 404, ErrorCode.RESOURCE_NOT_FOUND, "Skill version not found");
     }
-
+    
     private void publishSkill(String skillName, String version, String basedOnVersion, String body,
             String guideContent) throws Exception {
         if (null == basedOnVersion) {
@@ -128,11 +128,10 @@ public class SkillClientOpenApiITCase extends AiOpenApiBaseITCase {
         Map<String, String> form = new LinkedHashMap<>();
         form.put("skillName", skillName);
         form.put("version", version);
-        form.put("updateLatestLabel", "true");
         JsonNode published = postFormOk(SKILL_ADMIN_PATH + "/force-publish", form);
         assertEquals("ok", published.get("data").asText(), published.toString());
     }
-
+    
     private void updateLabels(String skillName, String labels) throws Exception {
         Map<String, String> form = new LinkedHashMap<>();
         form.put("skillName", skillName);
@@ -140,18 +139,18 @@ public class SkillClientOpenApiITCase extends AiOpenApiBaseITCase {
         JsonNode root = putFormOk(SKILL_ADMIN_PATH + "/labels", form);
         assertEquals("ok", root.get("data").asText(), root.toString());
     }
-
+    
     private void deleteSkill(String skillName) throws Exception {
         deleteQuietly(SKILL_ADMIN_PATH, Query.newInstance().addParam("skillName", skillName));
     }
-
+    
     private Map<String, String> buildSkillDraftForm(String skillName, String version, String body,
             String guideContent) {
         Map<String, String> form = buildSkillUpdateForm(skillName, body, guideContent);
         form.put("targetVersion", version);
         return form;
     }
-
+    
     private Map<String, String> buildSkillForkForm(String skillName, String version, String basedOnVersion) {
         Map<String, String> form = new LinkedHashMap<>();
         form.put("skillName", skillName);
@@ -160,14 +159,14 @@ public class SkillClientOpenApiITCase extends AiOpenApiBaseITCase {
         form.put("commitMsg", "openapi skill client it");
         return form;
     }
-
+    
     private Map<String, String> buildSkillUpdateForm(String skillName, String body, String guideContent) {
         Map<String, String> form = new LinkedHashMap<>();
         form.put("skillCard", buildSkillCard(skillName, body, guideContent));
         form.put("commitMsg", "openapi skill client it");
         return form;
     }
-
+    
     private String buildSkillCard(String skillName, String body, String guideContent) {
         Map<String, Object> card = new LinkedHashMap<>();
         card.put("name", skillName);
@@ -183,7 +182,7 @@ public class SkillClientOpenApiITCase extends AiOpenApiBaseITCase {
         card.put("resource", resources);
         return JacksonUtils.toJson(card);
     }
-
+    
     private void assertSkillZip(Query query, String skillName, String version, String body, String guideContent)
             throws Exception {
         ByteResponse response = getRawBytes(SKILL_CLIENT_PATH, query);
@@ -199,7 +198,7 @@ public class SkillClientOpenApiITCase extends AiOpenApiBaseITCase {
         assertTrue(skillMd.contains(body), skillMd);
         assertEquals(guideContent, entries.get(skillName + "/references/guide.md"));
     }
-
+    
     private Map<String, String> unzipTextEntries(byte[] body) throws Exception {
         Map<String, String> result = new LinkedHashMap<>();
         try (ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(body))) {
@@ -212,7 +211,7 @@ public class SkillClientOpenApiITCase extends AiOpenApiBaseITCase {
         }
         return result;
     }
-
+    
     private byte[] readEntry(ZipInputStream zis) throws Exception {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         byte[] buffer = new byte[1024];
@@ -222,7 +221,7 @@ public class SkillClientOpenApiITCase extends AiOpenApiBaseITCase {
         }
         return output.toByteArray();
     }
-
+    
     private String randomSkillName(String scenario) {
         return "oit-" + scenario + "-" + UUID.randomUUID().toString().substring(0, 8);
     }

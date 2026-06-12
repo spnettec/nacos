@@ -35,13 +35,11 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -64,19 +62,18 @@ import static org.mockito.Mockito.when;
  *
  * @author shiyiyue
  */
-@ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT)
+@ExtendWith(SpringExtension.class)
 public class EmbeddedConfigInfoGrayPersistServiceImplTest {
     
     private EmbeddedConfigInfoGrayPersistServiceImpl embeddedConfigInfoGrayPersistService;
     
-    @Mock
+    @MockitoBean
     private DataSourceService dataSourceService;
     
-    @Mock
+    @MockitoBean
     private IdGeneratorManager idGeneratorManager;
     
-    @Mock
+    @MockitoBean
     private HistoryConfigInfoPersistService historyConfigInfoPersistService;
     
     MockedStatic<EnvUtil> envUtilMockedStatic;
@@ -85,10 +82,10 @@ public class EmbeddedConfigInfoGrayPersistServiceImplTest {
     
     MockedStatic<DynamicDataSource> dynamicDataSourceMockedStatic;
     
-    @Mock
+    @MockitoBean
     DynamicDataSource dynamicDataSource;
     
-    @Mock
+    @MockitoBean
     DatabaseOperate databaseOperate;
     
     /**

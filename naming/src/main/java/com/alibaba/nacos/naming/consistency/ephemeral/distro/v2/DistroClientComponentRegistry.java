@@ -24,9 +24,8 @@ import com.alibaba.nacos.core.distributed.distro.component.DistroTransportAgent;
 import com.alibaba.nacos.core.distributed.distro.task.DistroTaskEngineHolder;
 import com.alibaba.nacos.naming.core.v2.client.manager.ClientManager;
 import com.alibaba.nacos.naming.core.v2.client.manager.ClientManagerDelegate;
-import org.springframework.stereotype.Component;
-
 import jakarta.annotation.PostConstruct;
+import org.springframework.stereotype.Component;
 
 /**
  * Distro component registry for v2.

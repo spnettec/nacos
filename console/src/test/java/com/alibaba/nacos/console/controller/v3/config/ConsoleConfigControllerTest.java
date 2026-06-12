@@ -36,6 +36,8 @@ import com.alibaba.nacos.config.server.model.form.ConfigFormV3;
 import com.alibaba.nacos.config.server.utils.RequestUtil;
 import com.alibaba.nacos.console.proxy.config.ConfigProxy;
 import com.alibaba.nacos.sys.env.EnvUtil;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -57,8 +59,6 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import tools.jackson.core.type.TypeReference;
-import tools.jackson.databind.ObjectMapper;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -358,19 +358,19 @@ public class ConsoleConfigControllerTest {
         int actualStatus = response.getStatus();
         
         assertEquals(200, actualStatus);
-
+        
     }
-
+    
     @Test
     void testExportConfigV2WithoutIds() throws Exception {
         String dataId = "dataId2.json";
         String group = "group2";
         String tenant = "tenant234";
         String appname = "appname2";
-
+        
         byte[] serializedData = new byte[] {1, 2, 3};
         ResponseEntity<byte[]> responseEntity = new ResponseEntity<>(serializedData, HttpStatus.OK);
-
+        
         Mockito
             .when(configProxy.exportConfigV2(eq(dataId), eq(group), eq(tenant), eq(appname),
                 isNull()))
@@ -379,11 +379,11 @@ public class ConsoleConfigControllerTest {
             MockMvcRequestBuilders.get("/v3/console/cs/config/export2")
                 .param("dataId", dataId).param("groupName", group).param("tenant", tenant)
                 .param("appName", appname);
-
+        
         MockHttpServletResponse response = mockmvc.perform(builder).andReturn().getResponse();
         assertEquals(200, response.getStatus());
     }
-
+    
     @Test
     void testImportAndPublishConfig() throws Exception {
         String srcUser = "testUser";
@@ -404,7 +404,7 @@ public class ConsoleConfigControllerTest {
                 eq(mockFile), eq(srcIp),
                 eq(requestIpApp)))
             .thenReturn(expectedResult);
-
+        
         MockMultipartHttpServletRequestBuilder builder =
             MockMvcRequestBuilders.multipart("/v3/console/cs/config/import")
                 .file(mockFile).param("srcUser", "").param("namespaceId", namespaceId)
@@ -438,7 +438,7 @@ public class ConsoleConfigControllerTest {
         
         when(configProxy.cloneConfig(eq("testUser"), eq("testNamespace"),
             argThat(new ArgumentMatcher<List<SameNamespaceCloneConfigBean>>() {
-
+                
                 @Override
                 public boolean matches(List<SameNamespaceCloneConfigBean> argument) {
                     return argument != null && argument.size() == 1 && "testDataId".equals(
@@ -464,7 +464,7 @@ public class ConsoleConfigControllerTest {
         
         verify(configProxy).cloneConfig(any(), eq("testNamespace"),
             argThat(new ArgumentMatcher<List<SameNamespaceCloneConfigBean>>() {
-
+                
                 @Override
                 public boolean matches(List<SameNamespaceCloneConfigBean> argument) {
                     return argument != null && argument.size() == 1 && "testDataId".equals(

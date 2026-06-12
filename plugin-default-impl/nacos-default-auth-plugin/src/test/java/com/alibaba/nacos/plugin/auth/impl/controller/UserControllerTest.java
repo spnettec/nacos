@@ -24,7 +24,6 @@ import com.alibaba.nacos.plugin.auth.impl.constant.AuthSystemTypes;
 import com.alibaba.nacos.plugin.auth.impl.token.TokenManagerDelegate;
 import com.alibaba.nacos.plugin.auth.impl.users.NacosUser;
 import com.alibaba.nacos.sys.env.EnvUtil;
-import tools.jackson.databind.JsonNode;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.AfterEach;
@@ -43,7 +42,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Map;
 
+import static com.alibaba.nacos.api.common.Constants.ACCESS_TOKEN;
+import static com.alibaba.nacos.api.common.Constants.GLOBAL_ADMIN;
+import static com.alibaba.nacos.api.common.Constants.TOKEN_TTL;
+import static com.alibaba.nacos.api.common.Constants.USERNAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -77,7 +81,7 @@ class UserControllerTest {
     
     @Mock
     private TokenManagerDelegate tokenManagerDelegate;
-
+    
     @InjectMocks
     private UserController userController;
     
@@ -114,11 +118,14 @@ class UserControllerTest {
         when(authConfigs.getNacosAuthSystemType()).thenReturn(AuthSystemTypes.NACOS.name());
         when(tokenManagerDelegate.getTokenTtlInSeconds(anyString())).thenReturn(18000L);
         Object actual = userController.login("nacos", "nacos", response, request);
-        assertTrue(actual instanceof JsonNode);
-        String actualString = actual.toString();
-        assertTrue(actualString.contains("\"accessToken\":\"1234567890\""));
-        assertTrue(actualString.contains("\"tokenTtl\":18000"));
-        assertTrue(actualString.contains("\"globalAdmin\":true"));
+        Map<?, ?> map = (Map<?, ?>) actual;
+        assertTrue(map.containsKey(ACCESS_TOKEN));
+        assertTrue(map.containsKey(TOKEN_TTL));
+        assertTrue(map.containsKey(GLOBAL_ADMIN));
+        assertEquals(user.getToken(), map.get(ACCESS_TOKEN));
+        assertEquals(18000L, map.get(TOKEN_TTL));
+        assertEquals(true, map.get(GLOBAL_ADMIN));
+        assertEquals(user.getUserName(), map.get(USERNAME));
     }
     
     @Test
@@ -130,10 +137,10 @@ class UserControllerTest {
         
         Object actual = userController.login("nacos", "nacos", response, request);
         
-        assertTrue(actual instanceof JsonNode);
+        assertTrue(actual instanceof Map);
         String actualString = actual.toString();
-        assertTrue(actualString.contains("\"accessToken\":\"1234567890\""));
-        assertTrue(actualString.contains("\"globalAdmin\":false"));
+        assertTrue(actualString.contains("accessToken=1234567890"));
+        assertTrue(actualString.contains("globalAdmin=false"));
     }
     
     @Test

@@ -36,17 +36,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
 import org.mockito.stubbing.Answer;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.mock.web.MockServletContext;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.sql.Connection;
@@ -67,9 +64,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
-@ExtendWith({SpringExtension.class, MockitoExtension.class})
+@ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-@ContextConfiguration(classes = MockServletContext.class)
 class GroupCapacityPersistServiceTest {
     
     MockedStatic<TimeUtils> timeUtilsMockedStatic;
@@ -88,9 +84,7 @@ class GroupCapacityPersistServiceTest {
     
     @AfterEach
     void after() {
-        if (timeUtilsMockedStatic != null) {
-            timeUtilsMockedStatic.close();
-        }
+        timeUtilsMockedStatic.close();
     }
     
     @BeforeEach
@@ -342,13 +336,14 @@ class GroupCapacityPersistServiceTest {
         String group = "test";
         argList.add(group);
         
-        when(jdbcTemplate.update(anyString(), any(Object[].class)))
+        when(jdbcTemplate.update(anyString(), any(Object.class)))
             .thenAnswer((Answer<Integer>) invocationOnMock -> {
-                Object[] args = java.util.Arrays.copyOfRange(invocationOnMock.getArguments(), 1,
-                    invocationOnMock.getArguments().length);
-                if (args[0].equals(quota) && args[1].equals(maxSize)
-                    && args[2].equals(maxAggrCount) && args[3].equals(maxAggrSize)
-                    && args[4].equals(timestamp) && args[5].equals(group)) {
+                if (invocationOnMock.getArgument(1).equals(quota)
+                    && invocationOnMock.getArgument(2).equals(maxSize)
+                    && invocationOnMock.getArgument(3).equals(maxAggrCount)
+                    && invocationOnMock.getArgument(4).equals(maxAggrSize)
+                    && invocationOnMock.getArgument(5).equals(timestamp)
+                    && invocationOnMock.getArgument(6).equals(group)) {
                     return 1;
                 }
                 return 0;
@@ -356,7 +351,7 @@ class GroupCapacityPersistServiceTest {
         assertTrue(service.updateGroupCapacity(group, quota, maxSize, maxAggrCount, maxAggrSize));
         
         //mock get connection fail
-        when(jdbcTemplate.update(anyString(), any(Object[].class)))
+        when(jdbcTemplate.update(anyString(), any(Object.class)))
             .thenThrow(new CannotGetJdbcConnectionException("conn fail"));
         try {
             service.updateGroupCapacity(group, quota, maxSize, maxAggrCount, maxAggrSize);

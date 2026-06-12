@@ -122,12 +122,12 @@ class ConsoleWebConfigTest {
         assertEquals(1, registration.getUrlPatterns().size());
         assertEquals("/*", registration.getUrlPatterns().iterator().next());
     }
-
+    
     @Test
-    void jacksonObjectMapperCustomization() {
-        assertNotNull(consoleWebConfig.jacksonObjectMapperCustomization());
+    void jacksonJsonMapperCustomization() {
+        assertNotNull(consoleWebConfig.jacksonJsonMapperCustomization());
         JsonMapper.Builder builder = Mockito.mock(JsonMapper.Builder.class);
-        consoleWebConfig.jacksonObjectMapperCustomization().customize(builder);
+        consoleWebConfig.jacksonJsonMapperCustomization().customize(builder);
         verify(builder).defaultTimeZone(TimeZone.getDefault());
     }
     

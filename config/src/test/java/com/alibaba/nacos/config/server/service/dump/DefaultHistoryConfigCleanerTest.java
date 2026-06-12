@@ -25,12 +25,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.lang.reflect.Method;
@@ -40,14 +37,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 
-@ExtendWith({SpringExtension.class, MockitoExtension.class})
-@MockitoSettings(strictness = Strictness.LENIENT)
+@ExtendWith(SpringExtension.class)
 public class DefaultHistoryConfigCleanerTest {
     
     private DefaultHistoryConfigCleaner defaultHistoryConfigCleaner =
         new DefaultHistoryConfigCleaner();
     
-    @Mock
+    @MockitoBean
     private HistoryConfigInfoPersistService historyConfigInfoPersistService;
     
     MockedStatic<ApplicationUtils> applicationUtilsMockedStatic;
@@ -75,15 +71,9 @@ public class DefaultHistoryConfigCleanerTest {
      */
     @AfterEach
     public void end() {
-        if (applicationUtilsMockedStatic != null) {
-            applicationUtilsMockedStatic.close();
-        }
-        if (configExecutorMocked != null) {
-            configExecutorMocked.close();
-        }
-        if (envUtilMockedStatic != null) {
-            envUtilMockedStatic.close();
-        }
+        applicationUtilsMockedStatic.close();
+        configExecutorMocked.close();
+        envUtilMockedStatic.close();
     }
     
     @Test

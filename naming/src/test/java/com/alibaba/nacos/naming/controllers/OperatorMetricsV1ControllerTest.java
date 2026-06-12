@@ -18,16 +18,17 @@ package com.alibaba.nacos.naming.controllers;
 
 import com.alibaba.nacos.naming.cluster.ServerStatus;
 import org.junit.jupiter.api.Test;
-import tools.jackson.databind.node.ObjectNode;
+
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class OperatorMetricsV1ControllerTest {
-
+    
     @Test
     void testMetricsReturnsUpStatus() {
-        ObjectNode result = new OperatorMetricsV1Controller().metrics();
-
-        assertEquals(ServerStatus.UP.name(), result.get("status").asText());
+        Map<String, String> result = new OperatorMetricsV1Controller().metrics();
+        
+        assertEquals(ServerStatus.UP.name(), result.get("status"));
     }
 }
