@@ -65,7 +65,7 @@ class McpAdminControllerTest {
     private static final String MCP_SERVER_SPEC =
         "{\"protocol\":\"stdio\",\"frontProtocol\":\"stdio\",\"name\":\"nacos-mcp-server\","
             + "\"id\":\"\",\"description\":\"nacos local mcp server(test version)\",\"versionDetail\":{\"version\":\"1.0.0\"},"
-            + "\"enabled\":true,\"localServerConfig\":{}}'";
+            + "\"enabled\":true,\"localServerConfig\":{}}";
     
     private static final String MCP_RESOURCE_SPEC =
         "{\"resources\":[{\"name\":\"readme\",\"uri\":\"file:///README.md\",\"description\":\"test resource\"}]}";
