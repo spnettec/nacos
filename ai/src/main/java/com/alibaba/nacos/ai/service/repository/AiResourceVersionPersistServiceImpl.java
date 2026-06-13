@@ -111,15 +111,15 @@ public class AiResourceVersionPersistServiceImpl implements AiResourceVersionPer
     }
 
     private void fillInsertStatement(PreparedStatement ps, AiResourceVersion version) throws java.sql.SQLException {
-            ps.setString(1, version.getType());
-            ps.setString(2, version.getAuthor());
-            ps.setString(3, version.getName());
-            ps.setString(4, version.getDesc());
-            ps.setString(5, version.getStatus());
-            ps.setString(6, version.getVersion());
-            ps.setString(7, normalizeNamespaceId(version.getNamespaceId()));
-            ps.setString(8, version.getStorage());
-            ps.setString(9, version.getPublishPipelineInfo());
+        ps.setString(1, version.getType());
+        ps.setString(2, version.getAuthor());
+        ps.setString(3, version.getName());
+        ps.setString(4, version.getDesc());
+        ps.setString(5, version.getStatus());
+        ps.setString(6, version.getVersion());
+        ps.setString(7, normalizeNamespaceId(version.getNamespaceId()));
+        ps.setString(8, version.getStorage());
+        ps.setString(9, version.getPublishPipelineInfo());
     }
 
     private boolean isOracle() {

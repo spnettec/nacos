@@ -56,9 +56,9 @@ public class DatasourceConfiguration
         DatasourceConfiguration.embeddedStorage = embeddedStorage;
     }
     
-    private void loadDatasourceConfiguration() {
+    private void loadDatasourceConfiguration(ConfigurableApplicationContext applicationContext) {
         // External data sources are used by default in cluster mode
-        String platform = DatasourcePlatformUtil.getDatasourcePlatform("");
+        String platform = DatasourcePlatformUtil.getDatasourcePlatform(applicationContext.getEnvironment(), "");
         boolean useExternalStorage =
             !PersistenceConstant.EMPTY_DATASOURCE_PLATFORM.equalsIgnoreCase(platform)
                 && !PersistenceConstant.DERBY
@@ -87,6 +87,6 @@ public class DatasourceConfiguration
     
     @Override
     public void initialize(final ConfigurableApplicationContext applicationContext) {
-        loadDatasourceConfiguration();
+        loadDatasourceConfiguration(applicationContext);
     }
 }

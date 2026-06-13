@@ -350,8 +350,8 @@
                         <exclude>README.md</exclude>
                         <exclude>.github/**/*</exclude>
                         <exclude>doc/*</exclude>
-                        <exclude>derby.log</exclude>
-                        <exclude>logs/*</exclude>
+                        <exclude>**/derby.log</exclude>
+                        <exclude>**/logs/*</exclude>
                         <exclude>**/target/**</exclude>
                         <exclude>src/main/resources/static/**</exclude>
                         <exclude>**/istio/model/**</exclude>

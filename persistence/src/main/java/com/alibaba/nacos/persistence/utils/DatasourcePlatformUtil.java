@@ -19,6 +19,9 @@ package com.alibaba.nacos.persistence.utils;
 import com.alibaba.nacos.common.utils.StringUtils;
 import com.alibaba.nacos.persistence.constants.PersistenceConstant;
 import com.alibaba.nacos.sys.env.EnvUtil;
+import org.springframework.core.env.Environment;
+
+import java.util.Locale;
 
 /**
  * get datasource platform util.
@@ -26,6 +29,12 @@ import com.alibaba.nacos.sys.env.EnvUtil;
  * @author lixiaoshuang
  */
 public class DatasourcePlatformUtil {
+
+    private static final String DATASOURCE_TYPE_PROPERTY = "DB_TYPE";
+
+    private static final String EMPTY_DATASOURCE_TYPE = "NONE";
+
+    private static final String PLATFORM_PROPERTY_SUFFIX = ".PLATFORM";
     
     /**
      * get datasource platform.
@@ -42,8 +51,41 @@ public class DatasourcePlatformUtil {
             platform = EnvUtil.getProperty(PersistenceConstant.DATASOURCE_PLATFORM_PROPERTY_OLD);
         }
         if (StringUtils.isBlank(platform)) {
+            platform = EnvUtil.getProperty(DATASOURCE_TYPE_PROPERTY);
+        }
+        return normalizeDatasourcePlatform(platform, defaultPlatform);
+    }
+
+    /**
+     * get datasource platform from Spring Environment.
+     * @param environment environment
+     * @param defaultPlatform default platform
+     * @return datasource platform
+     */
+    public static String getDatasourcePlatform(Environment environment, String defaultPlatform) {
+        String platform = environment.getProperty(PersistenceConstant.DATASOURCE_PLATFORM_PROPERTY_NEW);
+        if (StringUtils.isBlank(platform)) {
+            platform = environment.getProperty(PersistenceConstant.DATASOURCE_PLATFORM_PROPERTY);
+        }
+        if (StringUtils.isBlank(platform)) {
+            platform = environment.getProperty(PersistenceConstant.DATASOURCE_PLATFORM_PROPERTY_OLD);
+        }
+        if (StringUtils.isBlank(platform)) {
+            platform = environment.getProperty(DATASOURCE_TYPE_PROPERTY);
+        }
+        if (StringUtils.isBlank(platform) || platform.contains("${")) {
+            String dataSourceType = environment.getProperty(DATASOURCE_TYPE_PROPERTY);
+            if (StringUtils.isNotBlank(dataSourceType) && !EMPTY_DATASOURCE_TYPE.equalsIgnoreCase(dataSourceType)) {
+                platform = environment.getProperty(dataSourceType + PLATFORM_PROPERTY_SUFFIX);
+            }
+        }
+        return normalizeDatasourcePlatform(platform, defaultPlatform);
+    }
+
+    private static String normalizeDatasourcePlatform(String platform, String defaultPlatform) {
+        if (StringUtils.isBlank(platform) || EMPTY_DATASOURCE_TYPE.equalsIgnoreCase(platform)) {
             return defaultPlatform;
         }
-        return platform;
+        return platform.toLowerCase(Locale.ROOT);
     }
 }

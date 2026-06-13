@@ -112,19 +112,19 @@ public class AiResourcePersistServiceImpl implements AiResourcePersistService {
     }
 
     private void fillInsertStatement(PreparedStatement ps, AiResource resource) throws java.sql.SQLException {
-            ps.setString(1, resource.getName());
-            ps.setString(2, resource.getType());
-            ps.setString(3, resource.getDesc());
-            ps.setString(4, resource.getStatus());
-            ps.setString(5, normalizeNamespaceId(resource.getNamespaceId()));
-            ps.setString(6, resource.getBizTags());
-            ps.setString(7, resource.getExt());
-            ps.setString(8, resource.getFrom() == null ? "local" : resource.getFrom());
-            ps.setString(9, resource.getVersionInfo());
-            ps.setLong(10, resource.getMetaVersion() == null ? 1L : resource.getMetaVersion());
-            ps.setString(11, resource.getScope() == null ? VisibilityConstants.SCOPE_PRIVATE
-                : resource.getScope());
-            ps.setString(12, resource.getOwner() == null ? "" : resource.getOwner());
+        ps.setString(1, resource.getName());
+        ps.setString(2, resource.getType());
+        ps.setString(3, resource.getDesc());
+        ps.setString(4, resource.getStatus());
+        ps.setString(5, normalizeNamespaceId(resource.getNamespaceId()));
+        ps.setString(6, resource.getBizTags());
+        ps.setString(7, resource.getExt());
+        ps.setString(8, resource.getFrom() == null ? "local" : resource.getFrom());
+        ps.setString(9, resource.getVersionInfo());
+        ps.setLong(10, resource.getMetaVersion() == null ? 1L : resource.getMetaVersion());
+        ps.setString(11, resource.getScope() == null ? VisibilityConstants.SCOPE_PRIVATE
+            : resource.getScope());
+        ps.setString(12, resource.getOwner() == null ? "" : resource.getOwner());
     }
 
     private boolean isOracle() {
