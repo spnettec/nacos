@@ -116,12 +116,12 @@
  
         <!-- JRaft dependency start -->
         <dependency>
-            <groupId>com.alipay.sofa</groupId>
+            <groupId>${jraft.groupId}</groupId>
             <artifactId>jraft-core</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>com.alipay.sofa</groupId>
+            <groupId>${jraft.groupId}</groupId>
             <artifactId>rpc-grpc-impl</artifactId>
         </dependency>
         <!-- JRaft dependency end -->
