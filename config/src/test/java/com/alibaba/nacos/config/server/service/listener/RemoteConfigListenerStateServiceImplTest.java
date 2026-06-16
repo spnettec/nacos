@@ -26,6 +26,7 @@ import com.alibaba.nacos.common.utils.JacksonUtils;
 import com.alibaba.nacos.config.server.service.notify.HttpClientManager;
 import com.alibaba.nacos.core.cluster.Member;
 import com.alibaba.nacos.core.cluster.ServerMemberManager;
+import com.alibaba.nacos.plugin.auth.constant.Constants.Auth;
 import com.alibaba.nacos.sys.env.EnvUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,6 +36,8 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.mock.env.MockEnvironment;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -52,36 +55,40 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class RemoteConfigListenerStateServiceImplTest {
-    
+
     @Mock
     private ServerMemberManager memberManager;
-    
+
     @Mock
     private NacosRestTemplate nacosRestTemplate;
-    
+
     private MockedStatic<HttpClientManager> httpClientManagerMockedStatic;
-    
-    private MockedStatic<EnvUtil> envUtilMockedStatic;
-    
+
     private MockedStatic<NacosAuthConfigHolder> authConfigHolderMockedStatic;
-    
-    @Mock
+
     private NacosAuthConfigHolder nacosAuthConfigHolder;
-    
+
     @Mock
     private NacosAuthConfig nacosAuthConfig;
-    
+
     private RemoteConfigListenerStateServiceImpl service;
-    
+
+    private ConfigurableEnvironment cachedEnvironment;
+
     @BeforeEach
     void setUp() {
+        cachedEnvironment = EnvUtil.getEnvironment();
+        MockEnvironment environment = new MockEnvironment();
+        environment.setProperty(Auth.NACOS_CORE_AUTH_ENABLED, "false");
+        environment.setProperty(Auth.NACOS_CORE_AUTH_ADMIN_ENABLED, "false");
+        EnvUtil.setEnvironment(environment);
+        EnvUtil.setContextPath("/nacos");
+        nacosAuthConfigHolder = Mockito.mock(NacosAuthConfigHolder.class);
         httpClientManagerMockedStatic =
             Mockito.mockStatic(HttpClientManager.class);
         httpClientManagerMockedStatic
             .when(HttpClientManager::getNacosRestTemplate)
             .thenReturn(nacosRestTemplate);
-        envUtilMockedStatic = Mockito.mockStatic(EnvUtil.class);
-        envUtilMockedStatic.when(EnvUtil::getContextPath).thenReturn("/nacos");
         authConfigHolderMockedStatic =
             Mockito.mockStatic(NacosAuthConfigHolder.class);
         authConfigHolderMockedStatic
@@ -91,20 +98,19 @@ class RemoteConfigListenerStateServiceImplTest {
             .thenReturn(nacosAuthConfig);
         service = new RemoteConfigListenerStateServiceImpl(memberManager);
     }
-    
+
     @AfterEach
     void tearDown() {
         if (httpClientManagerMockedStatic != null) {
             httpClientManagerMockedStatic.close();
         }
-        if (envUtilMockedStatic != null) {
-            envUtilMockedStatic.close();
-        }
         if (authConfigHolderMockedStatic != null) {
             authConfigHolderMockedStatic.close();
         }
+        EnvUtil.setContextPath(null);
+        EnvUtil.setEnvironment(cachedEnvironment);
     }
-    
+
     @Test
     void testGetListenerStateWithNoMembers() {
         when(memberManager.allMembersWithoutSelf())
@@ -116,7 +122,7 @@ class RemoteConfigListenerStateServiceImplTest {
             result.getQueryType());
         assertEquals(0, result.getListenersStatus().size());
     }
-    
+
     @Test
     void testGetListenerStateWithMember() throws Exception {
         Member member = new Member();
@@ -125,7 +131,7 @@ class RemoteConfigListenerStateServiceImplTest {
         List<Member> members = new ArrayList<>();
         members.add(member);
         when(memberManager.allMembersWithoutSelf()).thenReturn(members);
-        
+
         ConfigListenerInfo info = new ConfigListenerInfo();
         info.setListenersStatus(new HashMap<>());
         info.getListenersStatus().put("1.2.3.4", "md5abc");
@@ -136,13 +142,13 @@ class RemoteConfigListenerStateServiceImplTest {
         restResult.setData(json);
         doReturn(restResult).when(nacosRestTemplate)
             .get(anyString(), any(), any(), eq(String.class));
-        
+
         ConfigListenerInfo result =
             service.getListenerState("d", "g", "ns");
         assertNotNull(result);
         assertEquals("md5abc", result.getListenersStatus().get("1.2.3.4"));
     }
-    
+
     @Test
     void testGetListenerStateWithFailedResponse() throws Exception {
         Member member = new Member();
@@ -151,19 +157,19 @@ class RemoteConfigListenerStateServiceImplTest {
         List<Member> members = new ArrayList<>();
         members.add(member);
         when(memberManager.allMembersWithoutSelf()).thenReturn(members);
-        
+
         HttpRestResult<String> restResult = new HttpRestResult<>();
         restResult.setCode(500);
         restResult.setMessage("error");
         doReturn(restResult).when(nacosRestTemplate)
             .get(anyString(), any(), any(), eq(String.class));
-        
+
         ConfigListenerInfo result =
             service.getListenerState("d", "g", "ns");
         assertNotNull(result);
         assertEquals(0, result.getListenersStatus().size());
     }
-    
+
     @Test
     void testGetListenerStateWithException() throws Exception {
         Member member = new Member();
@@ -172,16 +178,16 @@ class RemoteConfigListenerStateServiceImplTest {
         List<Member> members = new ArrayList<>();
         members.add(member);
         when(memberManager.allMembersWithoutSelf()).thenReturn(members);
-        
+
         doThrow(new RuntimeException("connect error")).when(nacosRestTemplate)
             .get(anyString(), any(), any(), eq(String.class));
-        
+
         ConfigListenerInfo result =
             service.getListenerState("d", "g", "ns");
         assertNotNull(result);
         assertEquals(0, result.getListenersStatus().size());
     }
-    
+
     @Test
     void testGetListenerStateByIpWithNoMembers() {
         when(memberManager.allMembersWithoutSelf())
@@ -192,7 +198,7 @@ class RemoteConfigListenerStateServiceImplTest {
         assertEquals(ConfigListenerInfo.QUERY_TYPE_IP,
             result.getQueryType());
     }
-    
+
     @Test
     void testGetListenerStateByIpWithMember() throws Exception {
         Member member = new Member();
@@ -201,7 +207,7 @@ class RemoteConfigListenerStateServiceImplTest {
         List<Member> members = new ArrayList<>();
         members.add(member);
         when(memberManager.allMembersWithoutSelf()).thenReturn(members);
-        
+
         ConfigListenerInfo info = new ConfigListenerInfo();
         info.setListenersStatus(new HashMap<>());
         info.getListenersStatus().put("gk1", "md5val");
@@ -212,7 +218,7 @@ class RemoteConfigListenerStateServiceImplTest {
         restResult.setData(json);
         doReturn(restResult).when(nacosRestTemplate)
             .get(anyString(), any(), any(), eq(String.class));
-        
+
         ConfigListenerInfo result =
             service.getListenerStateByIp("1.2.3.4");
         assertNotNull(result);

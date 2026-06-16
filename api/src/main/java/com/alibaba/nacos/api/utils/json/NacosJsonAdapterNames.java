@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2025 Alibaba Group Holding Ltd.
+ * Copyright 1999-2026 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,21 +14,30 @@
  * limitations under the License.
  */
 
-package com.alibaba.nacos.ai.utils;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+package com.alibaba.nacos.api.utils.json;
 
 /**
- * AI module log util.
+ * Standard names for Nacos JSON adapters.
  *
  * @author nacos
  */
-public class AiLogUtil {
+public final class NacosJsonAdapterNames {
     
     /**
-     * AI resource trace log for auditing AI resource version operations.
+     * Automatically select the best available adapter.
      */
-    public static final Logger TRACE_LOG =
-        LoggerFactory.getLogger("com.alibaba.nacos.ai.resource.trace");
+    public static final String AUTO = "auto";
+    
+    /**
+     * Jackson 2 adapter name.
+     */
+    public static final String JACKSON2 = "jackson2";
+    
+    /**
+     * Jackson 3 adapter name.
+     */
+    public static final String JACKSON3 = "jackson3";
+    
+    private NacosJsonAdapterNames() {
+    }
 }

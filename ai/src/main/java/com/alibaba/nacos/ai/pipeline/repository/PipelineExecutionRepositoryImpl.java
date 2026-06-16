@@ -117,7 +117,6 @@ public class PipelineExecutionRepositoryImpl implements PipelineExecutionReposit
         }
         return DynamicDataSource.getInstance().getDataSource().getDataSourceType();
     }
-
     String buildSingleLatestSql() {
         return appendFirstRowClause("SELECT * FROM pipeline_execution "
             + "WHERE resource_type=? AND resource_name=? AND namespace_id=? AND version=? "
@@ -214,13 +213,10 @@ public class PipelineExecutionRepositoryImpl implements PipelineExecutionReposit
             }
             sql.append(" ORDER BY create_time DESC");
             
+            String pageSql = appendPageClause(sql.toString(), offset, limit);
             List<PipelineExecution> executions =
-                getJdbcTemplate().query(sql.toString(), ROW_MAPPER, params.toArray());
-            if (executions.isEmpty() || offset >= executions.size()) {
-                return Collections.emptyList();
-            }
-            int toIndex = Math.min(executions.size(), offset + limit);
-            return new ArrayList<>(executions.subList(offset, toIndex));
+                getJdbcTemplate().query(pageSql, ROW_MAPPER, params.toArray());
+            return executions.isEmpty() ? Collections.emptyList() : executions;
         } catch (DataAccessException e) {
             LOGGER.warn("Failed to query pipeline_execution table (table may not exist): {}",
                 e.getMessage());

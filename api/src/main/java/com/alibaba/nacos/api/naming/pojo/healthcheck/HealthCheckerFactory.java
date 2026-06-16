@@ -18,7 +18,6 @@ package com.alibaba.nacos.api.naming.pojo.healthcheck;
 
 import com.alibaba.nacos.api.exception.runtime.NacosDeserializationException;
 import com.alibaba.nacos.api.exception.runtime.NacosSerializationException;
-import com.alibaba.nacos.api.naming.pojo.healthcheck.AbstractHealthChecker.None;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.ObjectMapper;
@@ -54,15 +53,6 @@ public class HealthCheckerFactory {
         Class<? extends AbstractHealthChecker> extendHealthCheckerClass,
         String typeName) {
         healthCheckerMAPPER = healthCheckerMAPPER.rebuild().registerSubtypes(new NamedType(extendHealthCheckerClass, typeName)).build();
-    }
-    
-    /**
-     * Create default {@link None} health checker.
-     *
-     * @return new none health checker
-     */
-    public static None createNoneHealthChecker() {
-        return new None();
     }
     
     /**
