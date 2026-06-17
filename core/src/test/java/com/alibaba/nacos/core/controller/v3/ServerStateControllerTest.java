@@ -28,6 +28,8 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 import java.util.Collections;
 import java.util.Map;
@@ -93,9 +95,11 @@ class ServerStateControllerTest {
     void testReadinessSuccess() throws Exception {
         when(holder.checkReadiness()).thenReturn(new ReadinessResult(true, "OK"));
         
-        Result<String> result = serverStateController.readiness();
+        ResponseEntity<Result<String>> response = serverStateController.readiness();
+        Result<String> result = response.getBody();
         
         assertNotNull(result);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(0, result.getCode().intValue());
         assertEquals("ok", result.getData());
     }
@@ -105,9 +109,11 @@ class ServerStateControllerTest {
         when(holder.checkReadiness())
             .thenReturn(new ReadinessResult(false, "module1 not in readiness"));
         
-        Result<String> result = serverStateController.readiness();
+        ResponseEntity<Result<String>> response = serverStateController.readiness();
+        Result<String> result = response.getBody();
         
         assertNotNull(result);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
         assertEquals(30000, result.getCode().intValue());
         assertEquals("module1 not in readiness", result.getMessage());
     }

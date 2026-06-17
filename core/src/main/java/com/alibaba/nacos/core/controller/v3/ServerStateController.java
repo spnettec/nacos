@@ -23,6 +23,8 @@ import com.alibaba.nacos.api.model.v2.Result;
 import com.alibaba.nacos.core.cluster.health.ModuleHealthCheckerHolder;
 import com.alibaba.nacos.core.cluster.health.ReadinessResult;
 import com.alibaba.nacos.core.service.NacosServerStateService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -78,11 +80,12 @@ public class ServerStateController {
      */
     @Since("3.0.0")
     @GetMapping("/readiness")
-    public Result<String> readiness() throws NacosException {
+    public ResponseEntity<Result<String>> readiness() throws NacosException {
         ReadinessResult result = ModuleHealthCheckerHolder.getInstance().checkReadiness();
         if (result.isSuccess()) {
-            return Result.success("ok");
+            return ResponseEntity.ok(Result.success("ok"));
         }
-        return Result.failure(result.getResultMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(Result.failure(result.getResultMessage()));
     }
 }
