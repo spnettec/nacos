@@ -133,9 +133,9 @@
         <commons-io.version>2.14.0</commons-io.version>
         <commons-collections.version>3.2.2</commons-collections.version>
         <commons-collections4.version>4.5.0</commons-collections4.version>
-        <slf4j-api.version>2.0.13</slf4j-api.version>
-        <logback.version>1.5.32</logback.version>
-        <log4j.version>2.25.4</log4j.version>
+        <slf4j-api.version>2.0.18</slf4j-api.version>
+        <logback.version>1.5.34</logback.version>
+        <log4j.version>2.26.0</log4j.version>
         
         <mysql-connector-java.version>8.2.0</mysql-connector-java.version>
         <postgresql.version>42.7.11</postgresql.version>
