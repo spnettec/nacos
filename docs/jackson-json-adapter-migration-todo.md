@@ -58,6 +58,40 @@ Last updated: 2026-06-16.
   - `mvn -pl common -am -Dtest=Jackson2JsonAdapterTest,Jackson3JsonAdapterTest -Dsurefire.failIfNoSpecifiedTests=false clean test`
   - `common/target/site/jacoco/jacoco.csv`: Jackson 2 and Jackson 3 adapter
     source files have `LINE_MISSED=0`.
+- 2026-06-16, stage 4 API cleanup:
+  - `mvn -pl api spotless:apply`
+  - `mvn -pl api spotless:check`
+  - `mvn -pl api -DskipTests compile`
+  - `mvn -pl api -Dtest=HealthCheckerFactoryTest,ConfigInfoTest test`
+  - `api/target/site/jacoco/jacoco.csv`: `HealthCheckerFactory` and
+    `ConfigBasicInfo` have `LINE_MISSED=0`.
+  - `mvn -pl api apache-rat:check`
+  - `mvn -pl api dependency:tree -Dincludes=com.fasterxml.jackson.core`
+- 2026-06-16, stage 5 common gRPC JSON cleanup:
+  - `mvn -pl common spotless:apply`
+  - `mvn -pl common spotless:check`
+  - `mvn -pl common -am -Dtest=GrpcUtilsTest,ByteBufferInputStreamTest -Dsurefire.failIfNoSpecifiedTests=false test`
+  - `common/target/site/jacoco/jacoco.csv`: `GrpcUtils` and
+    `ByteBufferInputStream` have `LINE_MISSED=0`.
+  - `mvn -pl common apache-rat:check`
+- 2026-06-17, stage 6 common response type cleanup:
+  - `mvn -pl common spotless:apply`
+  - `mvn -pl common spotless:check`
+  - `mvn -pl common -am -Dtest=AbstractNacosRestTemplateTest -Dsurefire.failIfNoSpecifiedTests=false test`
+  - `common/target/site/jacoco/jacoco.csv`: `AbstractNacosRestTemplate` has
+    `LINE_MISSED=0`.
+  - `mvn -pl common apache-rat:check`
+- 2026-06-17, stage 7 client HTTP response JSON cleanup:
+  - `mvn -pl client spotless:apply`
+  - `mvn -pl client spotless:check`
+  - `mvn -pl client -am -Dtest=NamingHttpClientProxyTest,AiHttpClientProxyTest -Dsurefire.failIfNoSpecifiedTests=false test`
+  - `client/target/site/jacoco/jacoco.xml`: changed response parsing lines in
+    `NamingHttpClientProxy` and `AiHttpClientProxy` have covered instructions;
+    the classes still have pre-existing uncovered legacy branches.
+  - `rg "com\\.fasterxml\\.jackson\\.core\\.type\\.TypeReference|com\\.fasterxml\\.jackson\\.databind\\.JsonNode|new TypeReference|JsonNode" client/src/main/java/com/alibaba/nacos/client/naming/remote/http/NamingHttpClientProxy.java client/src/main/java/com/alibaba/nacos/client/ai/remote/AiHttpClientProxy.java`
+    returns no matches.
+  - `mvn -pl client apache-rat:check`
+  - `mvn apache-rat:check -DskipTests`
 
 ## Implementation Principles
 
@@ -198,7 +232,7 @@ Last updated: 2026-06-16.
 
 ### 3. Clean `nacos-api` Main Dependencies
 
-- `[ ]` Replace databind serializer annotations in public API models.
+- `[x]` Replace databind serializer annotations in public API models.
   - Files:
     - `api/src/main/java/com/alibaba/nacos/api/config/model/ConfigBasicInfo.java`
   - Plan:
@@ -208,7 +242,7 @@ Last updated: 2026-06-16.
   - Validation:
     - Model serialization unit test for `id` remains string-valued.
 
-- `[ ]` Migrate `HealthCheckerFactory` to neutral JSON.
+- `[x]` Migrate `HealthCheckerFactory` to neutral JSON.
   - Files:
     - `api/src/main/java/com/alibaba/nacos/api/naming/pojo/healthcheck/HealthCheckerFactory.java`
     - `api/src/main/java/com/alibaba/nacos/api/naming/pojo/healthcheck/HealthCheckType.java`
@@ -220,7 +254,7 @@ Last updated: 2026-06-16.
     - Health checker serialize / deserialize tests with built-in and registered
       custom subtype.
 
-- `[ ]` Remove Jackson core/databind from `api` main dependencies.
+- `[x]` Remove Jackson core/databind from `api` main dependencies.
   - Files:
     - `api/pom.xml`
   - Plan:
@@ -234,36 +268,38 @@ Last updated: 2026-06-16.
 
 ### 4. Migrate Common and Client Runtime Usage
 
-- `[ ]` Replace Jackson `ByteBufferBackedInputStream`.
+- `[x]` Replace Jackson `ByteBufferBackedInputStream`.
   - Files:
     - `common/src/main/java/com/alibaba/nacos/common/remote/client/grpc/GrpcUtils.java`
     - New helper such as
       `common/src/main/java/com/alibaba/nacos/common/utils/ByteBufferInputStream.java`
   - Plan:
-    - Add a small Nacos-owned `InputStream` over `ByteBuffer` or switch to a
-      byte-array path if the copy is acceptable.
-    - Use neutral `JsonUtils.toObj(...)` in the parse path.
+    - Add a small Nacos-owned `InputStream` over `ByteBuffer`.
+    - Use neutral `JsonUtils` in the gRPC payload serialization and parse
+      paths.
   - Validation:
     - Existing gRPC payload conversion tests.
+    - Unit tests for the Nacos-owned `ByteBufferInputStream`.
 
-- `[ ]` Remove `JavaType` from `AbstractNacosRestTemplate`.
+- `[x]` Remove `JavaType` from `AbstractNacosRestTemplate`.
   - Files:
     - `common/src/main/java/com/alibaba/nacos/common/http/client/AbstractNacosRestTemplate.java`
   - Plan:
-    - Replace `JacksonUtils.constructJavaType(responseType).getRawClass()` with
-      neutral raw-class resolution for `Class`, `ParameterizedType`, and common
-      response types.
+    - Replace `JacksonUtils.constructJavaType(responseType).getRawClass()`
+      with neutral raw-class resolution for `Class`, `ParameterizedType`, and
+      unsupported `Type` fallback.
   - Validation:
     - HTTP response handler selection unit tests.
 
-- `[ ]` Migrate client HTTP response parsing from Jackson `TypeReference`.
+- `[x]` Migrate client HTTP response parsing from Jackson `TypeReference`.
   - Files:
     - `client/src/main/java/com/alibaba/nacos/client/naming/remote/http/NamingHttpClientProxy.java`
     - `client/src/main/java/com/alibaba/nacos/client/ai/remote/AiHttpClientProxy.java`
   - Plan:
     - Replace `TypeReference<T>` with `NacosTypeReference<T>`.
-    - Replace `JacksonUtils.toObj(...)` with `JsonUtils.toObj(...)`.
-    - Replace simple `JsonNode` reads with DTOs or `Map<String, Object>`.
+    - Replace HTTP response `JacksonUtils.toObj(...)` calls with
+      `JsonUtils.toObj(...)`.
+    - Replace simple `JsonNode` reads with `Map<String, Object>`.
   - Validation:
     - Naming HTTP proxy tests.
     - AI HTTP proxy tests.

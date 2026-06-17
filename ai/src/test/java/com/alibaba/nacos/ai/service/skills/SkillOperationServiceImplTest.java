@@ -300,6 +300,22 @@ class SkillOperationServiceImplTest {
     }
     
     @Test
+    void testUploadSkillFromZipStripsWrapperDirectoryFromStorage()
+        throws NacosException, IOException {
+        String namespaceId = "test-namespace";
+        byte[] zipBytes = createZipBytesWithWrapperDirectoryResources();
+        when(aiResourcePersistService.find(eq(namespaceId), anyString(), anyString()))
+            .thenReturn(null);
+        
+        String result = uploadSkill(namespaceId, zipBytes);
+        
+        assertEquals("test-skill", result);
+        verify(aiResourceVersionPersistService).insert(argThat(inserted -> inserted != null
+            && inserted.getStorage().contains("\"references/readme.md\"")
+            && !inserted.getStorage().contains("upload-wrapper")));
+    }
+    
+    @Test
     void testUploadSkillFromZipWithCommitMsgCreatesDraftDesc()
         throws NacosException, IOException {
         String namespaceId = "test-namespace";
@@ -395,9 +411,8 @@ class SkillOperationServiceImplTest {
     }
     
     @Test
-    void testUploadSkillFromZipWithOverwriteCreatesDraftForExistingSkillWithoutEditing()
-        throws NacosException,
-        IOException {
+    void testUploadSkillFromZipWithOverwriteRejectsWhenReviewingVersionExists()
+        throws IOException {
         String namespaceId = "test-namespace";
         byte[] zipBytes = createValidZipBytes();
         AiResource meta = new AiResource();
@@ -407,25 +422,12 @@ class SkillOperationServiceImplTest {
         meta.setStatus("enable");
         meta.setMetaVersion(2L);
         meta.setVersionInfo("{\"reviewingVersion\":\"v2\",\"labels\":{},\"onlineCnt\":1}");
-        Page<com.alibaba.nacos.ai.model.AiResourceVersion> versions = new Page<>();
-        com.alibaba.nacos.ai.model.AiResourceVersion v1 =
-            new com.alibaba.nacos.ai.model.AiResourceVersion();
-        v1.setVersion("v2");
-        versions.setPageItems(List.of(v1));
         when(aiResourcePersistService.find(eq(namespaceId), eq("test-skill"), anyString()))
             .thenReturn(meta);
-        when(aiResourceVersionPersistService.list(eq(namespaceId), eq("test-skill"), anyString(),
-            isNull(), anyInt(), anyInt()))
-            .thenReturn(versions);
-        when(aiResourcePersistService.updateMetaCas(eq(namespaceId), eq("test-skill"), anyString(),
-            eq(2L), any()))
-            .thenReturn(true);
         
-        String result = uploadSkill(namespaceId, zipBytes, true);
-        
-        assertEquals("test-skill", result);
-        verify(aiResourceVersionPersistService).insert(argThat(inserted -> inserted != null
-            && "test-skill".equals(inserted.getName()) && "3.0.6".equals(inserted.getVersion())));
+        NacosApiException exception = assertThrows(NacosApiException.class,
+            () -> uploadSkill(namespaceId, zipBytes, true));
+        assertEquals(NacosException.CONFLICT, exception.getErrCode());
     }
     
     @Test
@@ -779,6 +781,28 @@ class SkillOperationServiceImplTest {
                 zos.write(metaJson.getBytes());
                 zos.closeEntry();
             }
+        }
+        return baos.toByteArray();
+    }
+    
+    private byte[] createZipBytesWithWrapperDirectoryResources() throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (ZipOutputStream zos = new ZipOutputStream(baos)) {
+            ZipEntry entry = new ZipEntry("upload-wrapper/SKILL.md");
+            zos.putNextEntry(entry);
+            String skillMd = "---\n"
+                + "name: test-skill\n"
+                + "description: Test skill description\n"
+                + "version: 3.0.6\n"
+                + "---\n\n"
+                + "This is a test instruction";
+            zos.write(skillMd.getBytes());
+            zos.closeEntry();
+            
+            entry = new ZipEntry("upload-wrapper/references/readme.md");
+            zos.putNextEntry(entry);
+            zos.write("# Readme".getBytes());
+            zos.closeEntry();
         }
         return baos.toByteArray();
     }

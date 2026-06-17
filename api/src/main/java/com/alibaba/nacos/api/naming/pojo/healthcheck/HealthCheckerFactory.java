@@ -16,13 +16,11 @@
 
 package com.alibaba.nacos.api.naming.pojo.healthcheck;
 
-import com.alibaba.nacos.api.exception.runtime.NacosDeserializationException;
-import com.alibaba.nacos.api.exception.runtime.NacosSerializationException;
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.DeserializationFeature;
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.json.JsonMapper;
-import tools.jackson.databind.jsontype.NamedType;
+import com.alibaba.nacos.api.naming.pojo.healthcheck.AbstractHealthChecker.None;
+import com.alibaba.nacos.api.naming.pojo.healthcheck.impl.Http;
+import com.alibaba.nacos.api.naming.pojo.healthcheck.impl.Mysql;
+import com.alibaba.nacos.api.naming.pojo.healthcheck.impl.Tcp;
+import com.alibaba.nacos.api.utils.json.JsonUtils;
 
 /**
  * health checker factory.
@@ -31,8 +29,12 @@ import tools.jackson.databind.jsontype.NamedType;
  */
 public class HealthCheckerFactory {
     
-    private static ObjectMapper healthCheckerMAPPER = JsonMapper.builder()
-            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES).build();
+    static {
+        registerSubType(Http.class, Http.TYPE);
+        registerSubType(Mysql.class, Mysql.TYPE);
+        registerSubType(Tcp.class, Tcp.TYPE);
+        registerSubType(None.class, None.TYPE);
+    }
     
     /**
      * Register new sub type of health checker to factory for serialize and deserialize.
@@ -52,7 +54,7 @@ public class HealthCheckerFactory {
     public static void registerSubType(
         Class<? extends AbstractHealthChecker> extendHealthCheckerClass,
         String typeName) {
-        healthCheckerMAPPER = healthCheckerMAPPER.rebuild().registerSubtypes(new NamedType(extendHealthCheckerClass, typeName)).build();
+        JsonUtils.registerSubtype(AbstractHealthChecker.class, extendHealthCheckerClass, typeName);
     }
     
     /**
@@ -62,24 +64,16 @@ public class HealthCheckerFactory {
      * @return new instance
      */
     public static AbstractHealthChecker deserialize(String jsonString) {
-        try {
-            return healthCheckerMAPPER.readValue(jsonString, AbstractHealthChecker.class);
-        } catch (JacksonException e) {
-            throw new NacosDeserializationException(AbstractHealthChecker.class, e);
-        }
+        return JsonUtils.toObj(jsonString, AbstractHealthChecker.class);
     }
     
     /**
      * Serialize an instance of health checker to json.
      *
      * @param healthChecker health checker instance
-     * @return son string after serializing
+     * @return json string after serializing
      */
     public static String serialize(AbstractHealthChecker healthChecker) {
-        try {
-            return healthCheckerMAPPER.writeValueAsString(healthChecker);
-        } catch (JacksonException e) {
-            throw new NacosSerializationException(healthChecker.getClass(), e);
-        }
+        return JsonUtils.toJson(healthChecker);
     }
 }
