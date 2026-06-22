@@ -57,12 +57,17 @@ public class NacosMaintainerClientHolder extends MemberChangeListener {
     private static final String REMOTE_AI_SERVER_ADDR_KEY =
         "nacos.console.remote.ai.server-addr";
 
+    private static final String REMOTE_AI_SERVER_PORT_KEY =
+        "nacos.console.remote.ai.port";
+
     private static final String REMOTE_AI_SERVER_CONTEXT_PATH_KEY =
         "nacos.console.remote.ai.context-path";
 
     private static final String DEFAULT_REMOTE_SERVER_CONTEXT_PATH = "/nacos";
 
     private static final String DEFAULT_REMOTE_AI_SERVER_CONTEXT_PATH = "/";
+
+    private static final String DEFAULT_REMOTE_AI_SERVER_PORT = "9080";
 
     private static final String PATH_SEPARATOR = "/";
 
@@ -102,12 +107,34 @@ public class NacosMaintainerClientHolder extends MemberChangeListener {
         Properties properties = new Properties();
         String aiServerAddr = StringUtils.trim(getPropertyOrEnv(REMOTE_AI_SERVER_ADDR_KEY, null));
         properties.setProperty(PropertyKeyConst.SERVER_ADDR,
-            StringUtils.isBlank(aiServerAddr) ? fallbackServerAddr : aiServerAddr);
+            StringUtils.isBlank(aiServerAddr) ? fallbackServerAddr : resolveAiServerAddr(aiServerAddr));
         String aiContextPath = resolveContextPath(REMOTE_AI_SERVER_CONTEXT_PATH_KEY,
             StringUtils.isBlank(aiServerAddr) ? fallbackContextPath
                 : DEFAULT_REMOTE_AI_SERVER_CONTEXT_PATH);
         properties.setProperty(PropertyKeyConst.CONTEXT_PATH, aiContextPath);
         return properties;
+    }
+
+    static String resolveAiServerAddr(String aiServerAddr) {
+        String remoteAiServerPort = StringUtils.trim(
+            getPropertyOrEnv(REMOTE_AI_SERVER_PORT_KEY, DEFAULT_REMOTE_AI_SERVER_PORT));
+        if (StringUtils.isBlank(aiServerAddr) || StringUtils.isBlank(remoteAiServerPort)) {
+            return aiServerAddr;
+        }
+        StringBuilder result = new StringBuilder(aiServerAddr.length() + remoteAiServerPort.length() + 1);
+        int start = 0;
+        for (int i = 0; i <= aiServerAddr.length(); i++) {
+            if (i == aiServerAddr.length() || aiServerAddr.charAt(i) == ','
+                || aiServerAddr.charAt(i) == ';') {
+                result.append(appendPortIfMissing(aiServerAddr.substring(start, i),
+                    remoteAiServerPort));
+                if (i < aiServerAddr.length()) {
+                    result.append(aiServerAddr.charAt(i));
+                }
+                start = i + 1;
+            }
+        }
+        return result.toString();
     }
 
     static String resolveRemoteContextPath() {
@@ -141,6 +168,32 @@ public class NacosMaintainerClientHolder extends MemberChangeListener {
 
     private static String toEnvName(String key) {
         return key.replace('.', '_').replace('-', '_').toUpperCase(Locale.ROOT);
+    }
+
+    private static String appendPortIfMissing(String serverAddr, String port) {
+        String trimmedServerAddr = StringUtils.trim(serverAddr);
+        if (StringUtils.isBlank(trimmedServerAddr) || hasPort(trimmedServerAddr)) {
+            return serverAddr;
+        }
+        int schemeIndex = trimmedServerAddr.indexOf("://");
+        int searchStart = schemeIndex < 0 ? 0 : schemeIndex + 3;
+        int pathIndex = trimmedServerAddr.indexOf(PATH_SEPARATOR, searchStart);
+        int insertIndex = pathIndex < 0 ? trimmedServerAddr.length() : pathIndex;
+        return trimmedServerAddr.substring(0, insertIndex) + ":" + port
+            + trimmedServerAddr.substring(insertIndex);
+    }
+
+    private static boolean hasPort(String serverAddr) {
+        int schemeIndex = serverAddr.indexOf("://");
+        int searchStart = schemeIndex < 0 ? 0 : schemeIndex + 3;
+        int pathIndex = serverAddr.indexOf(PATH_SEPARATOR, searchStart);
+        String authority = pathIndex < 0 ? serverAddr.substring(searchStart)
+            : serverAddr.substring(searchStart, pathIndex);
+        int lastColonIndex = authority.lastIndexOf(':');
+        if (lastColonIndex < 0) {
+            return false;
+        }
+        return authority.indexOf(']') < 0 || lastColonIndex > authority.indexOf(']');
     }
 
     public NamingMaintainerService getNamingMaintainerService() {
