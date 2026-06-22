@@ -206,12 +206,20 @@ public class GrpcBiStreamRequestAcceptor extends BiRequestStreamGrpc.BiRequestSt
                     if (setUpRequest.getAbilityTable() != null) {
                         // finish register, tell client has set up successfully
                         // async response without client ack
+                        Loggers.REMOTE_DIGEST.info("[{}]Send setup ack request, server abilities={}",
+                            connectionId, NacosAbilityManagerHolder.getInstance()
+                                .getCurrentNodeAbilities(AbilityMode.SERVER));
                         connection.sendRequestNoAck(new SetupAckRequest(
                             NacosAbilityManagerHolder.getInstance()
                                 .getCurrentNodeAbilities(AbilityMode.SERVER)));
+                    } else {
+                        Loggers.REMOTE_DIGEST.warn(
+                            "[{}]Skip setup ack request because client ability table is null",
+                            connectionId);
                     }
                 } catch (Exception e) {
-                    // nothing to do
+                    Loggers.REMOTE_DIGEST.warn("[{}]Send setup ack request error,error={}",
+                        connectionId, e);
                 }
             }
         } else if (parseObj instanceof Response) {

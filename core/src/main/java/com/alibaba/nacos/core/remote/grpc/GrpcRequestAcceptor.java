@@ -226,9 +226,8 @@ public class GrpcRequestAcceptor extends RequestGrpc.RequestImplBase {
                 response.getErrorCode(), null, request.getModule(), System.nanoTime() - startTime);
         } catch (Throwable e) {
             Loggers.REMOTE_DIGEST
-                .error("[{}] Fail to handle request from connection [{}], error message :{}",
-                    "grpc", connectionId,
-                    e);
+                .error("[{}] Fail to handle request from connection [{}], type={}, error={}",
+                    "grpc", connectionId, type, e.toString(), e);
             Payload payloadResponse = GrpcUtils.convert(ErrorResponse.build(e));
             traceIfNecessary(payloadResponse, false);
             responseObserver.onNext(payloadResponse);

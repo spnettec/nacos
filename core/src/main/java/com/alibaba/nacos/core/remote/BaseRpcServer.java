@@ -21,8 +21,10 @@ import com.alibaba.nacos.common.remote.PayloadRegistry;
 import com.alibaba.nacos.core.remote.tls.RpcServerSslContextRefresherHolder;
 import com.alibaba.nacos.core.utils.Loggers;
 import com.alibaba.nacos.sys.env.EnvUtil;
+import com.alibaba.nacos.sys.utils.ApplicationUtils;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
+import org.springframework.context.ApplicationContext;
 
 /**
  * abstract rpc server .
@@ -44,6 +46,11 @@ public abstract class BaseRpcServer {
         String serverName = getClass().getSimpleName();
         Loggers.REMOTE.info("Nacos {} Rpc server starting at port {}", serverName,
             getServicePort());
+        if (parentRpcServerExists()) {
+            Loggers.REMOTE.info("Nacos {} Rpc server at port {} already started in parent context",
+                serverName, getServicePort());
+            return;
+        }
         
         startServer();
         
@@ -66,6 +73,19 @@ public abstract class BaseRpcServer {
             }
         }));
         
+    }
+
+    private boolean parentRpcServerExists() {
+        ApplicationContext context = ApplicationUtils.getApplicationContext();
+        if (context == null || context.getParent() == null) {
+            return false;
+        }
+        try {
+            BaseRpcServer parentServer = context.getParent().getBean(getClass());
+            return parentServer != this;
+        } catch (Exception ignored) {
+            return false;
+        }
     }
     
     /**

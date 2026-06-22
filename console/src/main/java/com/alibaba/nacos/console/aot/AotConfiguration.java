@@ -16,8 +16,6 @@
 
 package com.alibaba.nacos.console.aot;
 
-import org.rocksdb.NativeLibraryLoader;
-
 import java.lang.reflect.Field;
 
 /**
@@ -33,17 +31,19 @@ public class AotConfiguration {
      * To help find rocksdb inner fields' value.
      */
     public static String reflectToNativeLibraryLoader() {
-        Class<NativeLibraryLoader> clazz = NativeLibraryLoader.class;
         try {
+            Class<?> clazz = Class.forName("org.rocksdb.NativeLibraryLoader", false,
+                    Thread.currentThread().getContextClassLoader());
             Field jniLibraryFileNameField = clazz.getDeclaredField("jniLibraryFileName");
             jniLibraryFileNameField.setAccessible(true);
             Field fallbackJniLibraryFileNameField =
                 clazz.getDeclaredField("fallbackJniLibraryFileName");
             fallbackJniLibraryFileNameField.setAccessible(true);
             return (String) jniLibraryFileNameField.get(null);
-        } catch (NoSuchFieldException
-            | IllegalAccessException e) {
+        } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new RuntimeException(e);
+        } catch (ClassNotFoundException | LinkageError e) {
+            return "";
         }
     }
     

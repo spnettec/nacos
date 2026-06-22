@@ -27,7 +27,6 @@ import com.alibaba.nacos.plugin.auth.exception.AccessException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
-import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageConversionException;
@@ -136,9 +135,8 @@ public class NacosApiExceptionHandler {
     }
     
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    @ExceptionHandler(
-        value = {DataAccessException.class, ServletException.class, IOException.class})
-    public Result<String> handleDataAccessException(Exception e) {
+    @ExceptionHandler(value = {ServletException.class, IOException.class})
+    public Result<String> handleWebInfrastructureException(Exception e) {
         LOGGER.error("got exception. {} {}", e.getMessage(), ExceptionUtil.getAllExceptionMsg(e));
         return Result.failure(ErrorCode.DATA_ACCESS_ERROR, e.getMessage());
     }

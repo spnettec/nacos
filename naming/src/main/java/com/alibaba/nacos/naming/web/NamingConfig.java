@@ -17,11 +17,21 @@
 package com.alibaba.nacos.naming.web;
 
 import com.alibaba.nacos.core.code.ControllerMethodsCache;
+import com.alibaba.nacos.naming.controllers.OperatorMetricsV1Controller;
+import com.alibaba.nacos.naming.controllers.v3.ClientControllerV3;
+import com.alibaba.nacos.naming.controllers.v3.ClusterControllerV3;
+import com.alibaba.nacos.naming.controllers.v3.HealthControllerV3;
+import com.alibaba.nacos.naming.controllers.v3.InstanceControllerV3;
+import com.alibaba.nacos.naming.controllers.v3.InstanceOpenApiController;
+import com.alibaba.nacos.naming.controllers.v3.OperatorControllerV3;
+import com.alibaba.nacos.naming.controllers.v3.ServiceControllerV3;
 import com.alibaba.nacos.core.web.NacosWebBean;
 import jakarta.annotation.PostConstruct;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.Set;
 
 /**
  * Naming spring configuration.
@@ -54,6 +64,10 @@ public class NamingConfig {
     
     @PostConstruct
     public void init() {
+        methodsCache.initClassMethod(Set.of(OperatorMetricsV1Controller.class,
+                ClientControllerV3.class, ClusterControllerV3.class, HealthControllerV3.class,
+                InstanceControllerV3.class, InstanceOpenApiController.class, OperatorControllerV3.class,
+                ServiceControllerV3.class));
         methodsCache.initClassMethod("com.alibaba.nacos.naming.controllers");
     }
     

@@ -64,6 +64,7 @@ import org.slf4j.LoggerFactory;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -256,6 +257,8 @@ public abstract class GrpcClient extends RpcClient {
             // receive connection unregister response here,not check response is success.
             return (Response) GrpcUtils.parse(response);
         } catch (Exception e) {
+            LOGGER.error("[{}] Server check failed, server {}:{}, timeout={}ms",
+                GrpcClient.this.getName(), ip, port, clientConfig.serverCheckTimeOut(), e);
             LoggerUtils.printIfErrorEnabled(LOGGER,
                 "Server check fail, please check server {}, port {} is available, error ={}", ip,
                 port, e);
@@ -279,12 +282,20 @@ public abstract class GrpcClient extends RpcClient {
                 LoggerUtils.printIfDebugEnabled(LOGGER,
                     "[{}]Stream server request receive, original info: {}",
                     grpcConn.getConnectionId(), payload.toString());
+                LoggerUtils.printIfInfoEnabled(LOGGER,
+                    "[{}]Stream server request receive, type={}, bodySize={}",
+                    grpcConn.getConnectionId(), payload.getMetadata().getType(),
+                    payload.getBody().getValue().size());
                 try {
                     Object parseBody = GrpcUtils.parse(payload);
                     final Request request = (Request) parseBody;
                     if (request != null) {
                         try {
                             if (request instanceof SetupAckRequest) {
+                                LoggerUtils.printIfInfoEnabled(LOGGER,
+                                    "[{}]Receive setup ack request, abilities={}",
+                                    grpcConn.getConnectionId(),
+                                    ((SetupAckRequest) request).getAbilityTable());
                                 // there is no connection ready this time
                                 setupRequestHandler.requestReply(request, null);
                                 return;
@@ -310,8 +321,8 @@ public abstract class GrpcClient extends RpcClient {
                     }
                 } catch (Exception e) {
                     LoggerUtils.printIfErrorEnabled(LOGGER,
-                        "[{}]Error to process server push response: {}",
-                        grpcConn.getConnectionId(), payload.getBody().getValue().toStringUtf8());
+                        "[{}]Error to process server push response: {}, error={}",
+                        grpcConn.getConnectionId(), payload.getBody().getValue().toStringUtf8(), e);
                     // remove and notify
                     recAbilityContext.release(null);
                 }
@@ -381,6 +392,9 @@ public abstract class GrpcClient extends RpcClient {
             
             Response response = serverCheck(serverInfo.getServerIp(), port, newChannelStubTemp);
             if (!(response instanceof ServerCheckResponse)) {
+                LOGGER.error("[{}] Server check returned unexpected response, server {}:{}, responseType={}, response={}",
+                    GrpcClient.this.getName(), serverInfo.getServerIp(), port,
+                    response == null ? "null" : response.getClass().getName(), response);
                 shuntDownChannel(managedChannel);
                 return null;
             }
@@ -426,6 +440,8 @@ public abstract class GrpcClient extends RpcClient {
                     TimeUnit.MILLISECONDS);
                 // if no server abilities receiving, then reconnect
                 if (!recAbilityContext.check(grpcConn)) {
+                    LOGGER.error("[{}] Server ability negotiation failed, server {}:{}, connectionId={}",
+                        GrpcClient.this.getName(), serverInfo.getServerIp(), port, connectionId);
                     return null;
                 }
             } else {
@@ -540,14 +556,13 @@ public abstract class GrpcClient extends RpcClient {
          */
         public boolean check(Connection connection) {
             if (!connection.isAbilitiesSet()) {
-                LOGGER.error(
-                    "Client don't receive server abilities table even empty table but server supports ability negotiation."
+                LOGGER.warn(
+                    "Client didn't receive server abilities table even empty table but server supports ability negotiation."
+                        + " Continue with an empty server ability table as a native-compatible fallback."
                         + " You can check if it is need to adjust the timeout of ability negotiation by property: {}"
-                        + " if always fail to connect.",
+                        + " if this happens on JVM.",
                     GrpcConstants.GRPC_CHANNEL_CAPABILITY_NEGOTIATION_TIMEOUT);
-                connection.setAbandon(true);
-                connection.close();
-                return false;
+                connection.setAbilityTable(Collections.emptyMap());
             }
             return true;
         }
@@ -601,6 +616,7 @@ public abstract class GrpcClient extends RpcClient {
     
     private ManagedChannelBuilder buildChannel(String serverIp, int port,
         Optional<SslContext> sslContext) {
+        configureNativeNettyDefaults();
         if (sslContext.isPresent()) {
             return NettyChannelBuilder.forAddress(serverIp, port)
                 .negotiationType(NegotiationType.TLS)
@@ -609,6 +625,14 @@ public abstract class GrpcClient extends RpcClient {
         } else {
             return ManagedChannelBuilder.forAddress(serverIp, port).usePlaintext();
         }
+    }
+
+    private static void configureNativeNettyDefaults() {
+        if (System.getProperty("org.graalvm.nativeimage.imagecode") == null) {
+            return;
+        }
+        System.setProperty("io.grpc.netty.shaded.io.netty.noUnsafe",
+            System.getProperty("io.grpc.netty.shaded.io.netty.noUnsafe", "true"));
     }
     
     /**

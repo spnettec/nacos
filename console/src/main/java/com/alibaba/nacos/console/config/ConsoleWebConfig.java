@@ -44,7 +44,7 @@ import java.util.TimeZone;
  * @author nkorange
  * @since 1.2.0
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class ConsoleWebConfig {
     
     private final ControllerMethodsCache methodsCache;

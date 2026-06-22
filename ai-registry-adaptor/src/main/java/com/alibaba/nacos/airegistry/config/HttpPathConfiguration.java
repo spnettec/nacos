@@ -30,7 +30,7 @@ import org.springframework.security.web.firewall.StrictHttpFirewall;
  *
  * @author xinluo
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class HttpPathConfiguration {
     
     @Bean

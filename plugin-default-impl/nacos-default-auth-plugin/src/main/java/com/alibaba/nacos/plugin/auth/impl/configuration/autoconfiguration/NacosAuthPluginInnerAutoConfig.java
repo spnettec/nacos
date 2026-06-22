@@ -30,7 +30,7 @@ import org.springframework.context.annotation.Import;
  *
  * @author xiweng.yy
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @Conditional(ConditionOnInnerDatasource.class)
 @Import({NacosAuthPluginPersistenceConfig.class, NacosAuthPluginInnerServiceConfig.class,
     NacosAuthPluginCoreConfig.class, NacosAuthPluginWebConfig.class})

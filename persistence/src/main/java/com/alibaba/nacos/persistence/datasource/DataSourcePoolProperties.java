@@ -75,10 +75,12 @@ public class DataSourcePoolProperties {
     
     public void setUsername(final String username) {
         dataSource.setUsername(username);
+        dataSource.addDataSourceProperty("user", username);
     }
     
     public void setPassword(final String password) {
         dataSource.setPassword(password);
+        dataSource.addDataSourceProperty("password", password);
     }
 
     public void setTestQuery(final String testQuery) {

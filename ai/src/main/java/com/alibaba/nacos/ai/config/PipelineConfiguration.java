@@ -35,7 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  * @author kiro
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class PipelineConfiguration {
     
     @Bean

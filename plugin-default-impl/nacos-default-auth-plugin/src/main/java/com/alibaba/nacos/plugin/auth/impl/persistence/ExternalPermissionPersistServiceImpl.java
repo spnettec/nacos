@@ -39,29 +39,41 @@ import static com.alibaba.nacos.plugin.auth.impl.persistence.AuthRowMapperManage
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>
  */
 public class ExternalPermissionPersistServiceImpl implements PermissionPersistService {
-    
+
     private static final Logger LOGGER = LoggerFactory.getLogger("com.alibaba.nacos.persistence");
-    
+
     private JdbcTemplate jt;
-    
+
     private String dataSourceType = "";
-    
+
     private static final String PATTERN_STR = "*";
-    
+
     @PostConstruct
     protected void init() {
+        ensureDataSourceInitialized();
+    }
+
+    private void ensureDataSourceInitialized() {
+        if (jt != null) {
+            return;
+        }
         DataSourceService dataSource = DynamicDataSource.getInstance().getDataSource();
         jt = dataSource.getJdbcTemplate();
         dataSourceType = dataSource.getDataSourceType();
     }
-    
+
+    private JdbcTemplate getJdbcTemplate() {
+        ensureDataSourceInitialized();
+        return jt;
+    }
+
     @Override
     public Page<PermissionInfo> getPermissions(String role, int pageNo, int pageSize) {
         AuthPaginationHelper<PermissionInfo> helper = createPaginationHelper();
-        
+
         String sqlCountRows = "SELECT count(*) FROM permissions WHERE ";
         String sqlFetchRows = "SELECT role,resource,action FROM permissions WHERE ";
-        
+
         String where = " role= ? ";
         List<String> params = new ArrayList<>();
         if (StringUtils.isNotBlank(role)) {
@@ -69,26 +81,26 @@ public class ExternalPermissionPersistServiceImpl implements PermissionPersistSe
         } else {
             where = " 1=1 ";
         }
-        
+
         try {
             Page<PermissionInfo> pageInfo =
                 helper.fetchPage(sqlCountRows + where, sqlFetchRows + where,
                     params.toArray(), pageNo, pageSize, PERMISSION_ROW_MAPPER);
-            
+
             if (pageInfo == null) {
                 pageInfo = new Page<>();
                 pageInfo.setTotalCount(0);
                 pageInfo.setPageItems(new ArrayList<>());
             }
-            
+
             return pageInfo;
-            
+
         } catch (CannotGetJdbcConnectionException e) {
             LOGGER.error("[db-error] " + e.toString(), e);
             throw e;
         }
     }
-    
+
     /**
      * Execute add permission operation.
      *
@@ -98,17 +110,17 @@ public class ExternalPermissionPersistServiceImpl implements PermissionPersistSe
      */
     @Override
     public void addPermission(String role, String resource, String action) {
-        
+
         String sql = "INSERT INTO permissions (role, resource, action) VALUES (?, ?, ?)";
-        
+
         try {
-            jt.update(sql, role, resource, action);
+            getJdbcTemplate().update(sql, role, resource, action);
         } catch (CannotGetJdbcConnectionException e) {
             LOGGER.error("[db-error] " + e.toString(), e);
             throw e;
         }
     }
-    
+
     /**
      * Execute delete permission operation.
      *
@@ -118,49 +130,49 @@ public class ExternalPermissionPersistServiceImpl implements PermissionPersistSe
      */
     @Override
     public void deletePermission(String role, String resource, String action) {
-        
+
         String sql = "DELETE FROM permissions WHERE role=? AND resource=? AND action=?";
         try {
-            jt.update(sql, role, resource, action);
+            getJdbcTemplate().update(sql, role, resource, action);
         } catch (CannotGetJdbcConnectionException e) {
             LOGGER.error("[db-error] " + e.toString(), e);
             throw e;
         }
     }
-    
+
     @Override
     public Page<PermissionInfo> findPermissionsLike4Page(String role, int pageNo, int pageSize) {
         AuthPaginationHelper<PermissionInfo> helper = createPaginationHelper();
-        
+
         String sqlCountRows = "SELECT count(*) FROM permissions ";
         String sqlFetchRows = "SELECT role,resource,action FROM permissions ";
-        
+
         StringBuilder where = new StringBuilder(" WHERE 1=1");
         List<String> params = new ArrayList<>();
         if (StringUtils.isNotBlank(role)) {
             where.append(" AND role LIKE ?");
             params.add(generateLikeArgument(role));
         }
-        
+
         try {
             Page<PermissionInfo> pageInfo =
                 helper.fetchPage(sqlCountRows + where, sqlFetchRows + where,
                     params.toArray(), pageNo, pageSize, PERMISSION_ROW_MAPPER);
-            
+
             if (pageInfo == null) {
                 pageInfo = new Page<>();
                 pageInfo.setTotalCount(0);
                 pageInfo.setPageItems(new ArrayList<>());
             }
-            
+
             return pageInfo;
-            
+
         } catch (CannotGetJdbcConnectionException e) {
             LOGGER.error("[db-error] " + e.toString(), e);
             throw e;
         }
     }
-    
+
     @Override
     public String generateLikeArgument(String s) {
         String underscore = "_";
@@ -175,9 +187,10 @@ public class ExternalPermissionPersistServiceImpl implements PermissionPersistSe
             return s;
         }
     }
-    
+
     @Override
     public <E> AuthPaginationHelper<E> createPaginationHelper() {
+        ensureDataSourceInitialized();
         return new AuthExternalPaginationHelperImpl<E>(jt, dataSourceType);
     }
 }

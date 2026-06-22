@@ -41,7 +41,7 @@ import org.springframework.context.annotation.Primary;
  *
  * @author misselvexu
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(McpCacheIndexProperties.class)
 public class McpServerIndexConfiguration {
     

@@ -25,7 +25,7 @@ import org.springframework.context.annotation.Configuration;
  *
  * @author xiweng.yy
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class McpConfiguration {
     
     private final ControllerMethodsCache methodsCache;

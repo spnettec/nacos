@@ -31,7 +31,7 @@ import org.springframework.context.annotation.Configuration;
  *
  * @author xiweng.yy
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = Constants.NACOS_DUPLICATE_BEAN_ENHANCEMENT_ENABLED,
     havingValue = "true", matchIfMissing = true)
 @EnabledInnerHandler

@@ -20,7 +20,7 @@ import com.alibaba.nacos.plugin.auth.impl.condition.ConditionOnRemoteDatasource;
 import com.alibaba.nacos.plugin.auth.impl.configuration.core.NacosAuthPluginCoreConfig;
 import com.alibaba.nacos.plugin.auth.impl.configuration.core.NacosAuthPluginRemoteServiceConfig;
 import com.alibaba.nacos.plugin.auth.impl.configuration.persistence.NacosAuthPluginPersistenceConfig;
-import com.alibaba.nacos.plugin.auth.impl.configuration.web.NacosAuthPluginControllerConfig;
+import com.alibaba.nacos.plugin.auth.impl.configuration.web.NacosAuthPluginWebConfig;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -30,10 +30,10 @@ import org.springframework.context.annotation.Import;
  *
  * @author xiweng.yy
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @Conditional(ConditionOnRemoteDatasource.class)
 @Import({NacosAuthPluginPersistenceConfig.class, NacosAuthPluginRemoteServiceConfig.class,
-    NacosAuthPluginCoreConfig.class, NacosAuthPluginControllerConfig.class})
+    NacosAuthPluginCoreConfig.class, NacosAuthPluginWebConfig.class})
 public class NacosAuthPluginRemoteAutoConfig {
     
 }

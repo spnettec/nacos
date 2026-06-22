@@ -49,7 +49,7 @@ public class NacosUserServiceDirectImpl extends AbstractCachedUserService
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = getCachedUserMap().get(username);
-        if (!authConfigs.isCachingEnabled()) {
+        if (!authConfigs.isCachingEnabled() || user == null) {
             user = getUser(username);
         }
         if (user == null) {

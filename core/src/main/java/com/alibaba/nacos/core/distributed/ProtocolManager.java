@@ -30,6 +30,7 @@ import com.alibaba.nacos.core.utils.ClassUtils;
 import com.alibaba.nacos.sys.utils.ApplicationUtils;
 import jakarta.annotation.PreDestroy;
 import org.springframework.beans.factory.DisposableBean;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
@@ -84,6 +85,10 @@ public class ProtocolManager extends MemberChangeListener implements DisposableB
     }
     
     public CPProtocol getCpProtocol() {
+        ProtocolManager parentProtocolManager = getParentProtocolManager();
+        if (parentProtocolManager != null) {
+            return parentProtocolManager.getCpProtocol();
+        }
         if (!cpInit) {
             synchronized (cpLock) {
                 if (!cpInit) {
@@ -96,6 +101,10 @@ public class ProtocolManager extends MemberChangeListener implements DisposableB
     }
     
     public APProtocol getApProtocol() {
+        ProtocolManager parentProtocolManager = getParentProtocolManager();
+        if (parentProtocolManager != null) {
+            return parentProtocolManager.getApProtocol();
+        }
         if (!apInit) {
             synchronized (apLock) {
                 if (!apInit) {
@@ -177,6 +186,19 @@ public class ProtocolManager extends MemberChangeListener implements DisposableB
         if (Objects.nonNull(cpProtocol)) {
             ProtocolExecutor
                 .cpMemberChange(() -> cpProtocol.memberChange(toCPMembersInfo(event.getMembers())));
+        }
+    }
+
+    private ProtocolManager getParentProtocolManager() {
+        ApplicationContext context = ApplicationUtils.getApplicationContext();
+        if (context == null || context.getParent() == null) {
+            return null;
+        }
+        try {
+            ProtocolManager protocolManager = context.getParent().getBean(ProtocolManager.class);
+            return protocolManager == this ? null : protocolManager;
+        } catch (Exception ignored) {
+            return null;
         }
     }
 }

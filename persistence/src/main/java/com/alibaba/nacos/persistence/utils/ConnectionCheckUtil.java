@@ -34,7 +34,10 @@ public class ConnectionCheckUtil {
         try (java.sql.Connection connection = ds.getConnection()) {
             connection.isClosed();
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed to check datasource connection: jdbcUrl=" + ds.getJdbcUrl()
+                    + ", username=" + ds.getUsername() + ", passwordSet=" + (ds.getPassword() != null)
+                    + ", driverPropertiesUser=" + ds.getDataSourceProperties().get("user")
+                    + ", driverPropertiesPasswordSet=" + ds.getDataSourceProperties().containsKey("password"), e);
         }
     }
 }

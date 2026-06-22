@@ -196,19 +196,27 @@ public abstract class BaseGrpcServer extends BaseRpcServer {
     
     protected void handleCommonRequest(Payload grpcRequest,
         StreamObserver<Payload> responseObserver) {
-        if (!invokeSourceAllowCheck(grpcRequest)) {
-            Payload payloadResponse =
-                GrpcUtils.convert(ErrorResponse.build(NacosException.BAD_GATEWAY,
-                    String.format(" invoke %s from %s is forbidden",
-                        grpcRequest.getMetadata().getType(),
-                        this.getSource())));
-            responseObserver.onNext(payloadResponse);
-            
-            responseObserver.onCompleted();
-            MetricsMonitor.recordGrpcRequestEvent(grpcRequest.getMetadata().getType(), false,
-                NacosException.BAD_GATEWAY, null, null, 0);
-        } else {
-            grpcCommonRequestAcceptor.request(grpcRequest, responseObserver);
+        try {
+            if (!invokeSourceAllowCheck(grpcRequest)) {
+                Payload payloadResponse =
+                    GrpcUtils.convert(ErrorResponse.build(NacosException.BAD_GATEWAY,
+                        String.format(" invoke %s from %s is forbidden",
+                            grpcRequest.getMetadata().getType(),
+                            this.getSource())));
+                responseObserver.onNext(payloadResponse);
+
+                responseObserver.onCompleted();
+                MetricsMonitor.recordGrpcRequestEvent(grpcRequest.getMetadata().getType(), false,
+                    NacosException.BAD_GATEWAY, null, null, 0);
+            } else {
+                grpcCommonRequestAcceptor.request(grpcRequest, responseObserver);
+            }
+        } catch (Throwable throwable) {
+            Loggers.REMOTE_DIGEST.error(
+                "[grpc] Unexpected failure while handling request, type={}, source={}, connectionId={}, error={}",
+                grpcRequest.getMetadata().getType(), getSource(),
+                GrpcServerConstants.CONTEXT_KEY_CONN_ID.get(), throwable.toString(), throwable);
+            throw throwable;
         }
     }
     

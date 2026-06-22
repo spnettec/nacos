@@ -32,6 +32,28 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>nacos-config</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>nacos-persistence</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>nacos-datasource-plugin</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>nacos-encryption-plugin</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>nacos-config-plugin</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>nacos-control-plugin</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -40,6 +62,48 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>nacos-core</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>nacos-consistency</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>nacos-persistence</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>nacos-trace-plugin</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>nacos-control-plugin</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>nacos-config-plugin</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>nacos-encryption-plugin</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>nacos-datasource-plugin</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>nacos-custom-environment-plugin</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.github.heyoulin.sofa-jraft</groupId>
+                    <artifactId>jraft-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.github.heyoulin.sofa-jraft</groupId>
+                    <artifactId>rpc-grpc-impl</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -49,10 +113,21 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>nacos-ai</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>nacos-config</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>nacos-naming</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>nacos-lock</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -61,14 +136,17 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>nacos-istio</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>nacos-prometheus</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>nacos-k8s-sync</artifactId>
+            <optional>true</optional>
         </dependency>
         
         <dependency>
@@ -182,6 +260,7 @@
                     <groupId>${project.groupId}</groupId>
                     <artifactId>nacos-default-plugin-all</artifactId>
                     <version>${project.version}</version>
+                    <optional>true</optional>
                 </dependency>
             </dependencies>
         </profile>

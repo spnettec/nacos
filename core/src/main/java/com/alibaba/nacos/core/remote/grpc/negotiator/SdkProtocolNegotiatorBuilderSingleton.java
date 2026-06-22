@@ -69,7 +69,8 @@ public class SdkProtocolNegotiatorBuilderSingleton
      */
     @Override
     protected Pair<String, ProtocolNegotiatorBuilder> defaultBuilderPair() {
-        return Pair.with(TYPE_PROPERTY_KEY, new SdkDefaultTlsProtocolNegotiatorBuilder());
+        SdkDefaultTlsProtocolNegotiatorBuilder builder = new SdkDefaultTlsProtocolNegotiatorBuilder();
+        return Pair.with(builder.type(), builder);
     }
     
     /**

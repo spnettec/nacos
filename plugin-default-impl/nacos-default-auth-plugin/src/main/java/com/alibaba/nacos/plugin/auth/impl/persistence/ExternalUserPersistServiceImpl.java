@@ -39,22 +39,34 @@ import static com.alibaba.nacos.plugin.auth.impl.persistence.AuthRowMapperManage
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>
  */
 public class ExternalUserPersistServiceImpl implements UserPersistService {
-    
+
     private static final Logger LOGGER = LoggerFactory.getLogger("com.alibaba.nacos.persistence");
-    
+
     private JdbcTemplate jt;
-    
+
     private String dataSourceType = "";
-    
+
     private static final String PATTERN_STR = "*";
-    
+
     @PostConstruct
     protected void init() {
+        ensureDataSourceInitialized();
+    }
+
+    private void ensureDataSourceInitialized() {
+        if (jt != null) {
+            return;
+        }
         DataSourceService dataSource = DynamicDataSource.getInstance().getDataSource();
         jt = dataSource.getJdbcTemplate();
         dataSourceType = dataSource.getDataSourceType();
     }
-    
+
+    private JdbcTemplate getJdbcTemplate() {
+        ensureDataSourceInitialized();
+        return jt;
+    }
+
     /**
      * Execute create user operation.
      *
@@ -64,15 +76,15 @@ public class ExternalUserPersistServiceImpl implements UserPersistService {
     @Override
     public void createUser(String username, String password) {
         String sql = "INSERT INTO users (username, password, enabled) VALUES (?, ?, ?)";
-        
+
         try {
-            jt.update(sql, username, password, true);
+            getJdbcTemplate().update(sql, username, password, true);
         } catch (CannotGetJdbcConnectionException e) {
             LOGGER.error("[db-error] " + e.toString(), e);
             throw e;
         }
     }
-    
+
     /**
      * Execute delete user operation.
      *
@@ -82,13 +94,13 @@ public class ExternalUserPersistServiceImpl implements UserPersistService {
     public void deleteUser(String username) {
         String sql = "DELETE FROM users WHERE username=?";
         try {
-            jt.update(sql, username);
+            getJdbcTemplate().update(sql, username);
         } catch (CannotGetJdbcConnectionException e) {
             LOGGER.error("[db-error] " + e.toString(), e);
             throw e;
         }
     }
-    
+
     /**
      * Execute update user password operation.
      *
@@ -98,13 +110,14 @@ public class ExternalUserPersistServiceImpl implements UserPersistService {
     @Override
     public void updateUserPassword(String username, String password) {
         try {
-            jt.update("UPDATE users SET password = ? WHERE username=?", password, username);
+            getJdbcTemplate().update("UPDATE users SET password = ? WHERE username=?", password,
+                username);
         } catch (CannotGetJdbcConnectionException e) {
             LOGGER.error("[db-error] " + e.toString(), e);
             throw e;
         }
     }
-    
+
     /**
      * Execute find user by username operation.
      *
@@ -115,7 +128,7 @@ public class ExternalUserPersistServiceImpl implements UserPersistService {
     public User findUserByUsername(String username) {
         String sql = "SELECT username,password FROM users WHERE username=? ";
         try {
-            return this.jt.queryForObject(sql, new Object[] {username}, USER_ROW_MAPPER);
+            return getJdbcTemplate().queryForObject(sql, USER_ROW_MAPPER, username);
         } catch (CannotGetJdbcConnectionException e) {
             LOGGER.error("[db-error] " + e.toString(), e);
             throw e;
@@ -126,23 +139,23 @@ public class ExternalUserPersistServiceImpl implements UserPersistService {
             throw new RuntimeException(e);
         }
     }
-    
+
     @Override
     public Page<User> getUsers(int pageNo, int pageSize, String username) {
-        
+
         AuthPaginationHelper<User> helper = createPaginationHelper();
-        
+
         String sqlCountRows = "SELECT count(*) FROM users ";
-        
+
         String sqlFetchRows = "SELECT username,password FROM users ";
-        
+
         StringBuilder where = new StringBuilder(" WHERE 1 = 1 ");
         List<String> params = new ArrayList<>();
         if (StringUtils.isNotBlank(username)) {
             where.append(" AND username = ? ");
             params.add(username);
         }
-        
+
         try {
             Page<User> pageInfo = helper.fetchPage(sqlCountRows + where, sqlFetchRows + where,
                 params.toArray(), pageNo,
@@ -158,27 +171,27 @@ public class ExternalUserPersistServiceImpl implements UserPersistService {
             throw e;
         }
     }
-    
+
     @Override
     public List<String> findUserLikeUsername(String username) {
         String sql = "SELECT username FROM users WHERE username LIKE ?";
-        List<String> users = this.jt.queryForList(sql,
-            new String[] {String.format("%%%s%%", username)}, String.class);
+        List<String> users = getJdbcTemplate().queryForList(sql, String.class,
+            String.format("%%%s%%", username));
         return users;
     }
-    
+
     @Override
     public Page<User> findUsersLike4Page(String username, int pageNo, int pageSize) {
         String sqlCountRows = "SELECT count(*) FROM users ";
         String sqlFetchRows = "SELECT username,password FROM users ";
-        
+
         StringBuilder where = new StringBuilder(" WHERE 1 = 1 ");
         List<String> params = new ArrayList<>();
         if (StringUtils.isNotBlank(username)) {
             where.append(" AND username LIKE ? ");
             params.add(generateLikeArgument(username));
         }
-        
+
         AuthPaginationHelper<User> helper = createPaginationHelper();
         try {
             return helper.fetchPage(sqlCountRows + where, sqlFetchRows + where, params.toArray(),
@@ -189,7 +202,7 @@ public class ExternalUserPersistServiceImpl implements UserPersistService {
             throw e;
         }
     }
-    
+
     @Override
     public String generateLikeArgument(String s) {
         String underscore = "_";
@@ -204,9 +217,10 @@ public class ExternalUserPersistServiceImpl implements UserPersistService {
             return s;
         }
     }
-    
+
     @Override
     public <E> AuthPaginationHelper<E> createPaginationHelper() {
+        ensureDataSourceInitialized();
         return new AuthExternalPaginationHelperImpl<>(jt, dataSourceType);
     }
 }

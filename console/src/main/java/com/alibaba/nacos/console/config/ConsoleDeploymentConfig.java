@@ -27,7 +27,7 @@ import org.springframework.context.annotation.Configuration;
  *
  * @author xiweng.yy
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @EnabledRemoteHandler
 public class ConsoleDeploymentConfig {
     

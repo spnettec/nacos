@@ -175,6 +175,20 @@
     <!-- == -->
     <!-- =========================================================Build plugins================================================ -->
     <!-- == -->
+    <distributionManagement>
+        <snapshotRepository>
+            <id>yofc-maven-snapshot</id>
+            <name>YOFC Snapshots Repository</name>
+            <url>https://mesmaven.yofc.com/repository/yofc-snapshot/</url>
+            <uniqueVersion>false</uniqueVersion>
+        </snapshotRepository>
+        <repository>
+            <id>yofc-maven-release</id>
+            <name>YOFC Releases Repository</name>
+            <url>https://mesmaven.yofc.com/repository/yofc-release/</url>
+            <uniqueVersion>false</uniqueVersion>
+        </repository>
+    </distributionManagement>
     <build>
         <pluginManagement>
             <plugins>
@@ -189,11 +203,6 @@
                     <configuration>
                         <attach>false</attach>
                     </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>org.sonatype.central</groupId>
-                    <artifactId>central-publishing-maven-plugin</artifactId>
-                    <version>${central.publishing.maven.version}</version>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -512,14 +521,6 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.sonatype.central</groupId>
-                <artifactId>central-publishing-maven-plugin</artifactId>
-                <extensions>true</extensions>
-                <configuration>
-                    <publishingServerId>central</publishingServerId>
-                </configuration>
             </plugin>
         </plugins>
     </build>
@@ -1153,13 +1154,21 @@
     </dependencyManagement>
     <repositories>
         <repository>
-            <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
-        </repository>
-        <repository>
             <id>central-repos1</id>
             <name>Central Repository 2</name>
             <url>https://repo1.maven.org/maven2/</url>
+        </repository>
+        <repository>
+            <id>yofc-maven-public</id>
+            <name>Yofc Public Repository Group</name>
+            <url>https://mesmaven.yofc.com/repository/yofc-public/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
+            </snapshots>
         </repository>
     </repositories>
 </project>

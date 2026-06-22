@@ -26,7 +26,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  *
  * @author xiweng.yy
  */
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = "com.alibaba.nacos.console")
 @PropertySource("classpath:nacos-console.properties")
 @EnableScheduling
 public class NacosConsole {

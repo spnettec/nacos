@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Properties;
 
 /**
@@ -47,33 +48,41 @@ import java.util.Properties;
 @Component
 @EnabledRemoteHandler
 public class NacosMaintainerClientHolder extends MemberChangeListener {
-    
+
     private static final Logger LOGGER = LoggerFactory.getLogger(NacosMaintainerClientHolder.class);
-    
+
     private static final String REMOTE_SERVER_CONTEXT_PATH_KEY =
         "nacos.console.remote.server.context-path";
-    
+
+    private static final String REMOTE_AI_SERVER_ADDR_KEY =
+        "nacos.console.remote.ai.server-addr";
+
+    private static final String REMOTE_AI_SERVER_CONTEXT_PATH_KEY =
+        "nacos.console.remote.ai.context-path";
+
     private static final String DEFAULT_REMOTE_SERVER_CONTEXT_PATH = "/nacos";
-    
+
+    private static final String DEFAULT_REMOTE_AI_SERVER_CONTEXT_PATH = "/";
+
     private static final String PATH_SEPARATOR = "/";
-    
+
     private static final int ROOT_PATH_LENGTH = 1;
-    
+
     private final RemoteServerMemberManager memberManager;
-    
+
     private volatile NamingMaintainerService namingMaintainerService;
-    
+
     private volatile ConfigMaintainerService configMaintainerService;
-    
+
     private volatile AiMaintainerService aiMaintainerService;
-    
+
     public NacosMaintainerClientHolder(RemoteServerMemberManager memberManager)
         throws NacosException {
         this.memberManager = memberManager;
         buildMaintainerService();
         NotifyCenter.registerSubscriber(this);
     }
-    
+
     private void buildMaintainerService() throws NacosException {
         List<String> memberAddress =
             memberManager.allMembers().stream().map(Member::getAddress).toList();
@@ -84,13 +93,33 @@ public class NacosMaintainerClientHolder extends MemberChangeListener {
         properties.setProperty(PropertyKeyConst.CONTEXT_PATH, remoteContextPath);
         namingMaintainerService = NamingMaintainerFactory.createNamingMaintainerService(properties);
         configMaintainerService = ConfigMaintainerFactory.createConfigMaintainerService(properties);
-        aiMaintainerService = AiMaintainerFactory.createAiMaintainerService(properties);
+        aiMaintainerService = AiMaintainerFactory.createAiMaintainerService(
+            buildAiMaintainerProperties(memberAddressString, remoteContextPath));
     }
-    
+
+    private Properties buildAiMaintainerProperties(String fallbackServerAddr,
+        String fallbackContextPath) {
+        Properties properties = new Properties();
+        String aiServerAddr = StringUtils.trim(getPropertyOrEnv(REMOTE_AI_SERVER_ADDR_KEY, null));
+        properties.setProperty(PropertyKeyConst.SERVER_ADDR,
+            StringUtils.isBlank(aiServerAddr) ? fallbackServerAddr : aiServerAddr);
+        String aiContextPath = resolveContextPath(REMOTE_AI_SERVER_CONTEXT_PATH_KEY,
+            StringUtils.isBlank(aiServerAddr) ? fallbackContextPath
+                : DEFAULT_REMOTE_AI_SERVER_CONTEXT_PATH);
+        properties.setProperty(PropertyKeyConst.CONTEXT_PATH, aiContextPath);
+        return properties;
+    }
+
     static String resolveRemoteContextPath() {
-        String remoteContextPath =
-            EnvUtil.getProperty(REMOTE_SERVER_CONTEXT_PATH_KEY, DEFAULT_REMOTE_SERVER_CONTEXT_PATH);
+        return resolveContextPath(REMOTE_SERVER_CONTEXT_PATH_KEY, DEFAULT_REMOTE_SERVER_CONTEXT_PATH);
+    }
+
+    private static String resolveContextPath(String key, String defaultValue) {
+        String remoteContextPath = getPropertyOrEnv(key, defaultValue);
         remoteContextPath = StringUtils.trim(remoteContextPath);
+        if (PATH_SEPARATOR.equals(remoteContextPath)) {
+            return PATH_SEPARATOR;
+        }
         remoteContextPath = ContextPathUtil.normalizeContextPath(remoteContextPath);
         while (remoteContextPath.endsWith(PATH_SEPARATOR)
             && remoteContextPath.length() > ROOT_PATH_LENGTH) {
@@ -98,19 +127,34 @@ public class NacosMaintainerClientHolder extends MemberChangeListener {
         }
         return remoteContextPath;
     }
-    
+
+    private static String getPropertyOrEnv(String key, String defaultValue) {
+        String value = EnvUtil.getProperty(key);
+        if (StringUtils.isBlank(value)) {
+            value = System.getProperty(key);
+        }
+        if (StringUtils.isBlank(value)) {
+            value = System.getenv(toEnvName(key));
+        }
+        return StringUtils.isBlank(value) ? defaultValue : value;
+    }
+
+    private static String toEnvName(String key) {
+        return key.replace('.', '_').replace('-', '_').toUpperCase(Locale.ROOT);
+    }
+
     public NamingMaintainerService getNamingMaintainerService() {
         return namingMaintainerService;
     }
-    
+
     public ConfigMaintainerService getConfigMaintainerService() {
         return configMaintainerService;
     }
-    
+
     public AiMaintainerService getAiMaintainerService() {
         return aiMaintainerService;
     }
-    
+
     @Override
     public void onEvent(MembersChangeEvent event) {
         try {

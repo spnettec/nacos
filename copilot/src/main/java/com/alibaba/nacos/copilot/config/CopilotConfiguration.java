@@ -36,7 +36,7 @@ import org.springframework.context.annotation.Configuration;
  *
  * @author nacos
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(name = "nacos.copilot.enabled", havingValue = "true", matchIfMissing = true)
 @ConditionalOnExpression("'${nacos.deployment.type:merged}' != 'server'")
 @ComponentScan(basePackages = "com.alibaba.nacos.copilot")

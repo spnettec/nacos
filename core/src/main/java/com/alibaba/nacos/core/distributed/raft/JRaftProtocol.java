@@ -39,8 +39,8 @@ import com.alibaba.nacos.core.utils.Loggers;
 import com.alipay.sofa.jraft.Node;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -162,7 +162,11 @@ public class JRaftProtocol extends AbstractConsistencyProtocol<RaftConfig, Reque
     
     @Override
     public void addRequestProcessors(Collection<RequestProcessor4CP> processors) {
-        raftServer.createMultiRaftGroup(processors);
+        List<RequestProcessor4CP> missingProcessors = processors.stream()
+            .filter(processor -> raftServer.findTupleByGroup(processor.group()) == null).toList();
+        if (!missingProcessors.isEmpty()) {
+            raftServer.createMultiRaftGroup(missingProcessors);
+        }
     }
     
     @Override

@@ -32,13 +32,15 @@ public abstract class AbstractNacosDuplicateBeanPostProcessor
     private final ConfigurableApplicationContext coreContext;
     
     protected AbstractNacosDuplicateBeanPostProcessor(ConfigurableApplicationContext context) {
-        coreContext = null == context.getParent() ? context
-            : (ConfigurableApplicationContext) context.getParent();
+        coreContext = null == context.getParent() ? null : (ConfigurableApplicationContext) context.getParent();
     }
     
     @Override
     public Object postProcessBeforeInstantiation(Class<?> beanClass, String beanName)
         throws BeansException {
+        if (coreContext == null) {
+            return null;
+        }
         if (!coreContext.containsBean(beanName)) {
             return null;
         }
