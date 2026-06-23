@@ -16,6 +16,7 @@
 
 package com.alibaba.nacos.core.aot;
 
+import com.alibaba.nacos.consistency.snapshot.LocalFileMeta;
 import com.alibaba.nacos.core.plugin.model.PluginStateSnapshot;
 import org.springframework.aot.hint.MemberCategory;
 import org.springframework.aot.hint.RuntimeHints;
@@ -27,15 +28,18 @@ import org.springframework.aot.hint.RuntimeHintsRegistrar;
  * @author heyoulin
  */
 public class NacosCoreRuntimeHints implements RuntimeHintsRegistrar {
-    
+
     @Override
     public void registerHints(RuntimeHints hints, ClassLoader classLoader) {
-        hints.reflection()
-            .registerType(PluginStateSnapshot.class,
-                MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
-                MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS,
-                MemberCategory.INTROSPECT_PUBLIC_METHODS,
-                MemberCategory.INVOKE_PUBLIC_METHODS, MemberCategory.DECLARED_FIELDS);
+        registerJacksonType(hints, LocalFileMeta.class);
+        registerJacksonType(hints, PluginStateSnapshot.class);
         hints.serialization().registerType(PluginStateSnapshot.class);
+    }
+
+    private void registerJacksonType(RuntimeHints hints, Class<?> type) {
+        hints.reflection().registerType(type, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
+                MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS,
+                MemberCategory.INTROSPECT_PUBLIC_METHODS, MemberCategory.INVOKE_PUBLIC_METHODS,
+                MemberCategory.DECLARED_FIELDS);
     }
 }
