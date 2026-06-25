@@ -40,7 +40,7 @@ import com.alibaba.nacos.common.remote.client.RpcClientStatus;
 import com.alibaba.nacos.common.remote.client.RpcClientTlsConfig;
 import com.alibaba.nacos.common.remote.client.ServerListFactory;
 import com.alibaba.nacos.common.remote.client.ServerRequestHandler;
-import com.alibaba.nacos.common.utils.JacksonUtils;
+import com.alibaba.nacos.api.utils.json.JsonUtils;
 import com.alibaba.nacos.common.utils.LoggerUtils;
 import com.alibaba.nacos.common.utils.StringUtils;
 import com.alibaba.nacos.common.utils.ThreadFactoryBuilder;
@@ -61,10 +61,7 @@ import io.grpc.stub.StreamObserver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -210,15 +207,7 @@ public abstract class GrpcClient extends RpcClient {
     private ManagedChannel createNewManagedChannel(String serverIp, int serverPort) {
         LOGGER.info("grpc client connection server: {} ip, serverPort: {}, grpcTslConfig: {}",
             serverIp, serverPort,
-            JacksonUtils.toJson(clientConfig.tlsConfig()));
-
-        try {
-            InetAddress inet = InetAddress.getByName(serverIp);
-            serverIp = inet.getHostAddress();
-        } catch (UnknownHostException ignored) {
-            LOGGER.error("invalid ip->{}", serverIp);
-        }
-
+            JsonUtils.toJson(clientConfig.tlsConfig()));
         ManagedChannelBuilder<?> managedChannelBuilder =
             buildChannel(serverIp, serverPort, buildSslContext()).executor(
                 grpcExecutor).compressorRegistry(CompressorRegistry.getDefaultInstance())
@@ -257,8 +246,6 @@ public abstract class GrpcClient extends RpcClient {
             // receive connection unregister response here,not check response is success.
             return (Response) GrpcUtils.parse(response);
         } catch (Exception e) {
-            LOGGER.error("[{}] Server check failed, server {}:{}, timeout={}ms",
-                GrpcClient.this.getName(), ip, port, clientConfig.serverCheckTimeOut(), e);
             LoggerUtils.printIfErrorEnabled(LOGGER,
                 "Server check fail, please check server {}, port {} is available, error ={}", ip,
                 port, e);
@@ -276,26 +263,18 @@ public abstract class GrpcClient extends RpcClient {
         final BiRequestStreamGrpc.BiRequestStreamStub streamStub,
         final GrpcConnection grpcConn) {
         return streamStub.requestBiStream(new StreamObserver<Payload>() {
-
+            
             @Override
             public void onNext(Payload payload) {
                 LoggerUtils.printIfDebugEnabled(LOGGER,
                     "[{}]Stream server request receive, original info: {}",
                     grpcConn.getConnectionId(), payload.toString());
-                LoggerUtils.printIfInfoEnabled(LOGGER,
-                    "[{}]Stream server request receive, type={}, bodySize={}",
-                    grpcConn.getConnectionId(), payload.getMetadata().getType(),
-                    payload.getBody().getValue().size());
                 try {
                     Object parseBody = GrpcUtils.parse(payload);
                     final Request request = (Request) parseBody;
                     if (request != null) {
                         try {
                             if (request instanceof SetupAckRequest) {
-                                LoggerUtils.printIfInfoEnabled(LOGGER,
-                                    "[{}]Receive setup ack request, abilities={}",
-                                    grpcConn.getConnectionId(),
-                                    ((SetupAckRequest) request).getAbilityTable());
                                 // there is no connection ready this time
                                 setupRequestHandler.requestReply(request, null);
                                 return;
@@ -321,8 +300,8 @@ public abstract class GrpcClient extends RpcClient {
                     }
                 } catch (Exception e) {
                     LoggerUtils.printIfErrorEnabled(LOGGER,
-                        "[{}]Error to process server push response: {}, error={}",
-                        grpcConn.getConnectionId(), payload.getBody().getValue().toStringUtf8(), e);
+                        "[{}]Error to process server push response: {}",
+                        grpcConn.getConnectionId(), payload.getBody().getValue().toStringUtf8());
                     // remove and notify
                     recAbilityContext.release(null);
                 }
@@ -392,9 +371,6 @@ public abstract class GrpcClient extends RpcClient {
             
             Response response = serverCheck(serverInfo.getServerIp(), port, newChannelStubTemp);
             if (!(response instanceof ServerCheckResponse)) {
-                LOGGER.error("[{}] Server check returned unexpected response, server {}:{}, responseType={}, response={}",
-                    GrpcClient.this.getName(), serverInfo.getServerIp(), port,
-                    response == null ? "null" : response.getClass().getName(), response);
                 shuntDownChannel(managedChannel);
                 return null;
             }
@@ -440,8 +416,6 @@ public abstract class GrpcClient extends RpcClient {
                     TimeUnit.MILLISECONDS);
                 // if no server abilities receiving, then reconnect
                 if (!recAbilityContext.check(grpcConn)) {
-                    LOGGER.error("[{}] Server ability negotiation failed, server {}:{}, connectionId={}",
-                        GrpcClient.this.getName(), serverInfo.getServerIp(), port, connectionId);
                     return null;
                 }
             } else {
@@ -556,13 +530,14 @@ public abstract class GrpcClient extends RpcClient {
          */
         public boolean check(Connection connection) {
             if (!connection.isAbilitiesSet()) {
-                LOGGER.warn(
-                    "Client didn't receive server abilities table even empty table but server supports ability negotiation."
-                        + " Continue with an empty server ability table as a native-compatible fallback."
+                LOGGER.error(
+                    "Client don't receive server abilities table even empty table but server supports ability negotiation."
                         + " You can check if it is need to adjust the timeout of ability negotiation by property: {}"
-                        + " if this happens on JVM.",
+                        + " if always fail to connect.",
                     GrpcConstants.GRPC_CHANNEL_CAPABILITY_NEGOTIATION_TIMEOUT);
-                connection.setAbilityTable(Collections.emptyMap());
+                connection.setAbandon(true);
+                connection.close();
+                return false;
             }
             return true;
         }
@@ -616,7 +591,6 @@ public abstract class GrpcClient extends RpcClient {
     
     private ManagedChannelBuilder buildChannel(String serverIp, int port,
         Optional<SslContext> sslContext) {
-        configureNativeNettyDefaults();
         if (sslContext.isPresent()) {
             return NettyChannelBuilder.forAddress(serverIp, port)
                 .negotiationType(NegotiationType.TLS)
@@ -625,14 +599,6 @@ public abstract class GrpcClient extends RpcClient {
         } else {
             return ManagedChannelBuilder.forAddress(serverIp, port).usePlaintext();
         }
-    }
-
-    private static void configureNativeNettyDefaults() {
-        if (System.getProperty("org.graalvm.nativeimage.imagecode") == null) {
-            return;
-        }
-        System.setProperty("io.grpc.netty.shaded.io.netty.noUnsafe",
-            System.getProperty("io.grpc.netty.shaded.io.netty.noUnsafe", "true"));
     }
     
     /**

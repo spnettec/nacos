@@ -19,6 +19,8 @@ package com.alibaba.nacos.client.ai.cache;
 import com.alibaba.nacos.api.ai.constant.AiConstants;
 import com.alibaba.nacos.api.ai.model.mcp.McpServerDetailInfo;
 import com.alibaba.nacos.api.exception.NacosException;
+import com.alibaba.nacos.api.exception.runtime.NacosSerializationException;
+import com.alibaba.nacos.api.utils.json.JsonUtils;
 import com.alibaba.nacos.client.ai.event.McpServerChangedEvent;
 import com.alibaba.nacos.client.ai.remote.AiGrpcClient;
 import com.alibaba.nacos.client.ai.utils.CacheKeyUtils;
@@ -27,14 +29,8 @@ import com.alibaba.nacos.common.executor.NameThreadFactory;
 import com.alibaba.nacos.common.lifecycle.Closeable;
 import com.alibaba.nacos.common.notify.NotifyCenter;
 import com.alibaba.nacos.common.utils.StringUtils;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.DeserializationFeature;
-import tools.jackson.databind.MapperFeature;
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.json.JsonMapper;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -56,8 +52,6 @@ public class NacosMcpServerCacheHolder implements Closeable {
     
     private final Map<String, McpServerDetailInfo> mcpServerCache;
     
-    private final ObjectMapper objectMapper;
-    
     private final ScheduledExecutorService updaterExecutor;
     
     private final long updateIntervalMillis;
@@ -68,14 +62,10 @@ public class NacosMcpServerCacheHolder implements Closeable {
         this.aiGrpcClient = aiGrpcClient;
         this.mcpServerCache = new ConcurrentHashMap<>(4);
         this.updateTaskMap = new ConcurrentHashMap<>(4);
-        this.objectMapper = JsonMapper.builder().configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true)
-                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-                .changeDefaultPropertyInclusion(incl -> incl.withValueInclusion(JsonInclude.Include.NON_NULL))
-                .changeDefaultPropertyInclusion(incl -> incl.withContentInclusion(JsonInclude.Include.NON_NULL))
-                .build();
         this.updaterExecutor = new ScheduledThreadPoolExecutor(1,
-                new NameThreadFactory("com.alibaba.nacos.client.ai.mcp.server.updater"));
-        this.updateIntervalMillis = properties.getLong(AiConstants.AI_MCP_SERVER_CACHE_UPDATE_INTERVAL,
+            new NameThreadFactory("com.alibaba.nacos.client.ai.mcp.server.updater"));
+        this.updateIntervalMillis =
+            properties.getLong(AiConstants.AI_MCP_SERVER_CACHE_UPDATE_INTERVAL,
                 AiConstants.DEFAULT_AI_CACHE_UPDATE_INTERVAL);
     }
     
@@ -138,17 +128,17 @@ public class NacosMcpServerCacheHolder implements Closeable {
     private boolean isMcpServerChanged(McpServerDetailInfo oldMcpServer,
         McpServerDetailInfo detailInfo) {
         try {
-            String newJson = objectMapper.writeValueAsString(detailInfo);
+            String newJson = JsonUtils.toCanonicalJson(detailInfo);
             if (null == oldMcpServer) {
                 LOGGER.info("init new mcp service: {} -> {}", detailInfo.getName(), newJson);
                 return true;
             }
-            String oldJson = objectMapper.writeValueAsString(oldMcpServer);
+            String oldJson = JsonUtils.toCanonicalJson(oldMcpServer);
             if (!StringUtils.equals(oldJson, newJson)) {
                 LOGGER.info("mcp service changed: {} -> {}", oldJson, newJson);
                 return true;
             }
-        } catch (JacksonException e) {
+        } catch (NacosSerializationException e) {
             LOGGER.error("Compare mcp server info failed: ", e);
         }
         return false;

@@ -21,7 +21,7 @@ adapter work discussed in issue #14466 and defined by
 `specs/en/sdk/sdk-java-json-adapter-spec.md` /
 `specs/zh-cn/sdk/sdk-java-json-adapter-spec.md`.
 
-Last updated: 2026-06-16.
+Last updated: 2026-06-25.
 
 ## Status Legend
 
@@ -92,6 +92,132 @@ Last updated: 2026-06-16.
     returns no matches.
   - `mvn -pl client apache-rat:check`
   - `mvn apache-rat:check -DskipTests`
+- 2026-06-17, stage 8 maintainer-client HTTP response JSON cleanup:
+  - `mvn -pl maintainer-client spotless:apply`
+  - `mvn -pl maintainer-client spotless:check`
+  - `mvn -pl maintainer-client -am -DskipTests compile`
+  - `mvn -pl maintainer-client -am -Dtest=NacosMaintainerFactoryTest,DefaultServerListManagerTest,A2aMaintainerServiceDefaultMethodsTest,A2aMaintainerServiceImplTest,AgentSpecMaintainerServiceDefaultMethodsTest,AgentSpecMaintainerServiceImplTest,AiMaintainerFactoryTest,AiMaintainerServiceDefaultMethodsTest,NacosAiMaintainerServiceImplTest,PipelineMaintainerServiceImplTest,PromptMaintainerServiceDefaultMethodsTest,PromptMaintainerServiceImplTest,SkillMaintainerServiceDefaultMethodsTest,SkillMaintainerServiceImplTest,ConfigMaintainerFactoryTest,NacosConfigMaintainerServiceImplTest,AbstractCoreMaintainerServiceTest,HttpRequestTest,NacosNamingMaintainerServiceImplTest,NamingMaintainerFactoryTest,ClientHttpProxyTest,HttpClientManagerTest,ParamUtilTest -Dsurefire.failIfNoSpecifiedTests=false clean test`
+  - `maintainer-client/target/site/jacoco/jacoco.xml`: changed response
+    parsing lines in non-Pipeline maintainer-client implementations have
+    covered instructions.
+  - `rg "com\\.fasterxml\\.jackson\\.core\\.type\\.TypeReference|new TypeReference|JacksonUtils\\.toObj" maintainer-client/src/main/java -g '*.java'`
+    returns only the legacy `PipelineMaintainerServiceImpl` `JsonNode`
+    compatibility path.
+  - `mvn -pl maintainer-client apache-rat:check`
+- 2026-06-18, stage 8 maintainer-client CI IT follow-up:
+  - Fixed config maintainer boolean `Result` unwrapping so business failure
+    responses keep the original message instead of becoming a null
+    `Boolean` unboxing failure.
+  - `mvn -pl maintainer-client spotless:apply`
+  - `mvn -pl maintainer-client spotless:check`
+  - `mvn -pl maintainer-client -am -Dtest=NacosConfigMaintainerServiceImplTest -Dsurefire.failIfNoSpecifiedTests=false test`
+  - `mvn -pl maintainer-client -am test` passed when local test HTTP server
+    binding was allowed; the sandboxed attempt failed only on local bind
+    permission in OIDC dependency tests.
+  - `maintainer-client/target/site/jacoco/jacoco.xml`: new config maintainer
+    boolean unwrap lines have no missed instructions.
+- 2026-06-24, stage 8 Copilot OpenAPI IT follow-up:
+  - Treated idempotent Copilot config publish as successful when publish
+    returns `false` but the stored config content already matches the target
+    content.
+  - Fixed Copilot config maintainer-client initialization to pass the current
+    Nacos context path so internal config admin requests target the same
+    `/nacos` context path used by OpenAPI IT.
+  - Treated publish exceptions as idempotent success when the stored config
+    content already matches the target content.
+  - Switched the Copilot console configuration API to reuse the existing
+    console `ConfigProxy` read/write path so standalone OpenAPI IT uses the
+    inner config handler and remote mode keeps the normal maintainer-client
+    holder configuration.
+  - `mvn -pl copilot -Dtest=CopilotConfigStorageTest test`
+  - `mvn -pl copilot spotless:apply`
+  - `mvn -pl copilot spotless:check`
+  - `mvn -pl copilot test`
+  - `mvn -pl console -am -Dtest=ConsoleCopilotConfigControllerTest -Dsurefire.failIfNoSpecifiedTests=false test`
+  - `mvn -pl console spotless:apply`
+  - `mvn -pl console spotless:check`
+- 2026-06-24, stage 9 client runtime cleanup:
+  - Replaced client and maintainer-client selector subtype preload paths with
+    `SelectorFactory.preload()`.
+  - Replaced client JSON pre-warm from `JacksonUtils.createEmptyJsonNode()` to
+    neutral `JsonUtils.preload()`.
+  - Replaced `NacosMcpServerCacheHolder` local Jackson 2 canonical mapper with
+    neutral `JsonUtils.toCanonicalJson(...)`.
+  - `mvn -pl client,maintainer-client -am -Dtest=InitUtilsTest,PreInitUtilsTest,ParamUtilTest,NacosMcpServerCacheHolderTest -Dsurefire.failIfNoSpecifiedTests=false test`
+  - `client/target/site/jacoco/jacoco.csv`: `InitUtils` and `PreInitUtils`
+    have `LINE_MISSED=0`.
+  - `client/target/site/jacoco/jacoco.csv`: `NacosMcpServerCacheHolder` has
+    `LINE_MISSED=0`.
+  - `maintainer-client/target/site/jacoco/jacoco.csv`: `ParamUtil` has
+    `LINE_MISSED=0`.
+  - `mvn -pl client,maintainer-client spotless:apply`
+  - `mvn -pl client,maintainer-client spotless:check`
+- 2026-06-24, stage 10 pipeline API DTO migration:
+  - Moved Pipeline execution DTOs to
+    `com.alibaba.nacos.api.ai.model.pipeline`.
+  - Added API-owned `Checkpoint` DTO and converted plugin checkpoints to API
+    checkpoints when persisting/querying execution results.
+  - Updated AI server Pipeline controller, repository, service, and tests to
+    use the API DTOs.
+  - `mvn -pl api,ai -am -DskipTests compile`
+  - `mvn -pl api,ai -am -Dtest=PipelineModelTest,PipelineNodeResultTest,PipelineNodeResultRoundTripTest,PipelineExecutionStatusTest,PipelineExecutionStatusConsistencyTest,PipelineExecutionRepositoryTest,PipelineExecutionRepositoryImplTest,PipelineQueryServiceTest,PipelineAdminControllerTest,PublishPipelineExecutorTest,PublishPipelineIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false test`
+  - `mvn -pl api,ai,maintainer-client spotless:apply`
+  - `mvn -pl api,ai,maintainer-client spotless:check`
+  - `mvn -pl maintainer-client -am -DskipTests compile`
+  - `mvn -pl api,ai,maintainer-client apache-rat:check`
+  - `api/target/site/jacoco/jacoco.csv`: Pipeline API DTO classes have
+    `LINE_MISSED=0`.
+- 2026-06-25, stage 10 pipeline API DTO migration CI follow-up:
+  - Updated console Pipeline handler/proxy/controller paths and tests to use
+    the API-owned `PipelineExecution` DTO after CI full compile found stale AI
+    module imports.
+  - `mvn -pl console -am -DskipTests compile`
+  - `mvn -pl console spotless:apply`
+  - `mvn -pl console spotless:check`
+  - `mvn -pl console -am -Dtest=ConsolePipelineControllerTest,PipelineProxyTest,PipelineRemoteHandlerTest,PipelineInnerHandlerTest -Dsurefire.failIfNoSpecifiedTests=false test`
+- 2026-06-25, stage 11 typed Pipeline maintainer API:
+  - Changed `PipelineAdminClient` to expose typed
+    `Result<PipelineExecution>` and `Result<Page<PipelineExecution>>`
+    methods while keeping deprecated `JsonNode` compatibility methods in
+    `PipelineMaintainerService`.
+  - Updated console remote Pipeline handler to consume typed maintainer-client
+    methods directly.
+  - `mvn -pl maintainer-client,console,test/maintainer-sdk-test -am -DskipTests compile`
+  - `mvn -pl maintainer-client,console -am -Dtest=PipelineMaintainerServiceImplTest,PipelineRemoteHandlerTest -Dsurefire.failIfNoSpecifiedTests=false test`
+  - `mvn -pl test/maintainer-sdk-test -am -DskipTests test-compile`
+  - `mvn -pl maintainer-client,console,test/maintainer-sdk-test spotless:apply`
+  - `mvn -pl maintainer-client,console,test/maintainer-sdk-test spotless:check`
+  - `mvn -pl maintainer-client,console,test/maintainer-sdk-test apache-rat:check`
+  - `maintainer-client/target/site/jacoco/jacoco.csv`:
+    `PipelineMaintainerServiceImpl` has `LINE_MISSED=0`.
+  - `console/target/site/jacoco/jacoco.csv`: `PipelineRemoteHandler` has
+    `LINE_MISSED=0`.
+  - `rg "com\\.fasterxml\\.jackson\\.core\\.type\\.TypeReference|new TypeReference|JavaType" maintainer-client/src/main/java/com/alibaba/nacos/maintainer/client/ai/PipelineAdminClient.java maintainer-client/src/main/java/com/alibaba/nacos/maintainer/client/ai/PipelineMaintainerService.java maintainer-client/src/main/java/com/alibaba/nacos/maintainer/client/ai/PipelineMaintainerServiceImpl.java console/src/main/java/com/alibaba/nacos/console/handler/impl/remote/ai/PipelineRemoteHandler.java`
+    returns no matches.
+- 2026-06-25, stage 12 dependency matrix and runtime JSON cleanup:
+  - Migrated remaining neutral-compatible main-code `JacksonUtils` usages in
+    `common`, `client`, and `maintainer-client` to `JsonUtils`; remaining
+    `JacksonUtils` usage is limited to the legacy compatibility facade and the
+    deprecated Pipeline `JsonNode` compatibility path.
+  - Added `JacksonAdapterCompatibilityTest` to verify both default adapters are
+    registered by `ServiceLoader`, both are available on the common test
+    classpath, auto mode selects Jackson 3, and explicit Jackson 2 / Jackson 3
+    selection works.
+  - Fixed naming disk cache read/write charset to UTF-8 so Jackson 3 literal
+    non-ASCII JSON and existing UTF-8 cache files are handled consistently.
+  - `mvn -pl common -am -Dtest=JacksonAdapterCompatibilityTest,Jackson2JsonAdapterTest,Jackson3JsonAdapterTest,BeanResponseHandlerTest,RestResultResponseHandlerTest -Dsurefire.failIfNoSpecifiedTests=false test`
+  - `mvn -pl client -am -Dtest=NacosPromptCacheHolderTest,NacosAgentCardCacheHolderTest,AiGrpcClientTest,NamingHttpClientProxyTest,NacosNamingServiceTest,DiskCacheTest,ServiceInfoHolderTest,NamingGrpcClientProxyTest,FailoverReactorTest,ClientWorkerTest,ConfigHttpClientManagerTest -Dsurefire.failIfNoSpecifiedTests=false test`
+  - `mvn -pl maintainer-client -am -Dtest=A2aMaintainerServiceImplTest,SkillMaintainerServiceImplTest,NacosAiMaintainerServiceImplTest,AiMaintainerServiceDefaultMethodsTest,AbstractCoreMaintainerServiceTest,NacosConfigMaintainerServiceImplTest,NacosNamingMaintainerServiceImplTest -Dsurefire.failIfNoSpecifiedTests=false test`
+  - `mvn -pl api dependency:tree -Dincludes=com.fasterxml.jackson.core,tools.jackson.core`
+  - `mvn -pl common dependency:tree -Dincludes=com.fasterxml.jackson.core,tools.jackson.core`
+  - `mvn -pl client dependency:tree -Dincludes=com.fasterxml.jackson.core,tools.jackson.core`
+  - `mvn -pl maintainer-client dependency:tree -Dincludes=com.fasterxml.jackson.core,tools.jackson.core`
+  - `rg "com\\.fasterxml\\.jackson\\.core\\.type\\.TypeReference|com\\.fasterxml\\.jackson\\.databind\\.(JsonNode|ObjectNode|ArrayNode|JavaType|ObjectMapper)|tools\\.jackson\\.databind\\.(JsonNode|ObjectNode|ArrayNode|JavaType|JsonMapper)|new TypeReference|JsonNode|JavaType|ObjectMapper|JsonMapper" api/src/main/java common/src/main/java client/src/main/java maintainer-client/src/main/java -g '*.java'`
+    returns only adapter internals, legacy `JacksonUtils`, and deprecated
+    Pipeline `JsonNode` compatibility methods.
+  - `mvn -pl common,client,maintainer-client spotless:apply`
+  - `mvn -pl common,client,maintainer-client spotless:check`
+  - `mvn -pl common,client,maintainer-client apache-rat:check`
 
 ## Implementation Principles
 
@@ -205,7 +331,7 @@ Last updated: 2026-06-16.
     - Jackson 3 facade and delegate source files have full line coverage in
       the focused `common` module test run.
 
-- `[ ]` Add canonical JSON support.
+- `[x]` Add canonical JSON support.
   - Files:
     - `api/.../JsonUtils.java`
     - `common/.../Jackson2JsonAdapter.java`
@@ -218,7 +344,7 @@ Last updated: 2026-06-16.
   - Validation:
     - Unit tests that property order is stable for simple DTOs and maps.
 
-- `[ ]` Keep and narrow `JacksonUtils`.
+- `[x]` Keep and narrow `JacksonUtils`.
   - Files:
     - `common/src/main/java/com/alibaba/nacos/common/utils/JacksonUtils.java`
   - Plan:
@@ -304,7 +430,7 @@ Last updated: 2026-06-16.
     - Naming HTTP proxy tests.
     - AI HTTP proxy tests.
 
-- `[ ]` Migrate maintainer-client HTTP response parsing.
+- `[x]` Migrate maintainer-client HTTP response parsing.
   - Files:
     - `maintainer-client/src/main/java/com/alibaba/nacos/maintainer/client/remote/ClientHttpProxy.java`
     - `maintainer-client/src/main/java/com/alibaba/nacos/maintainer/client/naming/NacosNamingMaintainerServiceImpl.java`
@@ -317,8 +443,10 @@ Last updated: 2026-06-16.
     - Leave legacy `Pipeline JsonNode` methods until typed DTO APIs are added.
   - Validation:
     - Maintainer-client unit tests.
+    - Changed response parsing lines have no missed JaCoCo instructions in the
+      focused stage 8 test run.
 
-- `[ ]` Migrate subtype preload paths.
+- `[x]` Migrate subtype preload paths.
   - Files:
     - `client/src/main/java/com/alibaba/nacos/client/naming/utils/InitUtils.java`
     - `maintainer-client/src/main/java/com/alibaba/nacos/maintainer/client/utils/ParamUtil.java`
@@ -330,7 +458,7 @@ Last updated: 2026-06-16.
   - Validation:
     - Selector serialization / deserialization tests.
 
-- `[ ]` Replace JSON pre-warm path.
+- `[x]` Replace JSON pre-warm path.
   - Files:
     - `client/src/main/java/com/alibaba/nacos/client/utils/PreInitUtils.java`
   - Plan:
@@ -340,7 +468,7 @@ Last updated: 2026-06-16.
     - Ensure async preload still initializes the selected adapter without
       forcing Jackson 2.
 
-- `[ ]` Migrate MCP cache canonical comparison.
+- `[x]` Migrate MCP cache canonical comparison.
   - Files:
     - `client/src/main/java/com/alibaba/nacos/client/ai/cache/NacosMcpServerCacheHolder.java`
   - Plan:
@@ -352,40 +480,42 @@ Last updated: 2026-06-16.
 
 ### 5. Pipeline Maintainer API Typing
 
-- `[ ]` Move or duplicate pipeline public DTOs into `nacos-api`.
-  - Current files:
-    - `ai/src/main/java/com/alibaba/nacos/ai/pipeline/model/PipelineExecution.java`
-    - `ai/src/main/java/com/alibaba/nacos/ai/pipeline/model/PipelineExecutionResult.java`
-    - `ai/src/main/java/com/alibaba/nacos/ai/pipeline/model/PipelineNodeResult.java`
-    - `ai/src/main/java/com/alibaba/nacos/ai/pipeline/model/PipelineExecutionStatus.java`
-    - `plugin/ai/src/main/java/com/alibaba/nacos/plugin/ai/pipeline/model/Checkpoint.java`
+- `[x]` Move or duplicate pipeline public DTOs into `nacos-api`.
+  - Files:
+    - `api/src/main/java/com/alibaba/nacos/api/ai/model/pipeline/PipelineExecution.java`
+    - `api/src/main/java/com/alibaba/nacos/api/ai/model/pipeline/PipelineExecutionResult.java`
+    - `api/src/main/java/com/alibaba/nacos/api/ai/model/pipeline/PipelineNodeResult.java`
+    - `api/src/main/java/com/alibaba/nacos/api/ai/model/pipeline/PipelineExecutionStatus.java`
+    - `api/src/main/java/com/alibaba/nacos/api/ai/model/pipeline/Checkpoint.java`
   - Plan:
-    - Move shared execution DTOs to an API package such as
+    - Moved shared execution DTOs to
       `com.alibaba.nacos.api.ai.model.pipeline`.
-    - Resolve `PipelineNodeResult -> Checkpoint` first by moving `Checkpoint`
-      to `api` or introducing an API-owned checkpoint DTO.
-    - Update `ai` server code and tests to import the API DTOs.
+    - Introduced an API-owned `Checkpoint` DTO while keeping the plugin
+      `Checkpoint` compatibility type unchanged.
+    - Updated `ai` server code and tests to import the API DTOs.
   - Validation:
     - `ai` unit tests and pipeline repository tests continue to pass.
 
-- `[ ]` Add typed maintainer-client methods.
+- `[x]` Add typed maintainer-client methods.
   - Files:
     - `maintainer-client/src/main/java/com/alibaba/nacos/maintainer/client/ai/PipelineAdminClient.java`
     - `maintainer-client/src/main/java/com/alibaba/nacos/maintainer/client/ai/PipelineMaintainerService.java`
     - `maintainer-client/src/main/java/com/alibaba/nacos/maintainer/client/ai/PipelineMaintainerServiceImpl.java`
   - Plan:
     - Add:
-      - `Result<PipelineExecution> getPipelineExecution(String pipelineId)`
+      - `Result<PipelineExecution> getPipelineDetail(String pipelineId)`
       - `Result<Page<PipelineExecution>> listPipelineExecutions(...)`
     - Keep existing `JsonNode` methods as deprecated compatibility methods.
     - Use `NacosTypeReference<Result<PipelineExecution>>` and
       `NacosTypeReference<Result<Page<PipelineExecution>>>` for parsing.
   - Validation:
     - Maintainer-client pipeline tests for typed and deprecated methods.
+    - Console remote handler tests for typed success, HTTP 200 success, and
+      non-success Result handling.
 
 ### 6. Dependency and Compatibility Matrix
 
-- `[ ]` Adjust dependency management.
+- `[x]` Adjust dependency management.
   - Files:
     - Root `pom.xml`
     - `api/pom.xml`
@@ -402,7 +532,7 @@ Last updated: 2026-06-16.
     - Dependency tree checks for `nacos-api`, `nacos-client`, and
       `nacos-maintainer-client`.
 
-- `[ ]` Add dependency conflict guard tests / samples.
+- `[x]` Add dependency conflict guard tests / samples.
   - Plan:
     - Jackson 2 only: default behavior unchanged.
     - Jackson 3 only: Java 17 / Spring Boot 4 style classpath works.
@@ -415,7 +545,7 @@ Last updated: 2026-06-16.
 
 ### 7. Final Cleanup
 
-- `[ ]` Run a final scan for forbidden public Jackson core/databind exposure.
+- `[x]` Run a final scan for forbidden public Jackson core/databind exposure.
   - Command shape:
     - `rg "com\\.fasterxml\\.jackson\\.(core|databind)|tools\\.jackson|JsonNode|TypeReference|JavaType" api client common maintainer-client plugin -g '*.java'`
   - Expected result:
@@ -423,7 +553,7 @@ Last updated: 2026-06-16.
     - Remaining Jackson 2 exposure is limited to legacy `JacksonUtils` and
       deprecated compatibility methods.
 
-- `[ ]` Update specs if implementation discovers a mismatch.
+- `[x]` Update specs if implementation discovers a mismatch.
   - Files:
     - `specs/en/sdk/sdk-java-json-adapter-spec.md`
     - `specs/zh-cn/sdk/sdk-java-json-adapter-spec.md`
