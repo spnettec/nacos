@@ -48,7 +48,6 @@ import com.alibaba.nacos.maintainer.client.utils.RequestUtil;
 import com.alibaba.nacos.plugin.auth.api.RequestResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import tools.jackson.core.type.TypeReference;
 
 import java.util.Collections;
 import java.util.HashMap;
