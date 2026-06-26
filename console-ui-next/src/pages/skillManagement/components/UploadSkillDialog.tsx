@@ -16,7 +16,7 @@ import {
   buildSkillBatchZipExcludingPrefixes,
   parseSkillUploadEntries,
 } from '@/utils/skillUploadParser';
-import type { SkillUploadPrecheckResult } from '@/types/skill';
+import type { SkillUploadPrecheckRequest, SkillUploadPrecheckResult } from '@/types/skill';
 import type { ParsedSkillUploadEntry } from '@/utils/skillUploadParser';
 
 function isValidZipFile(file: File): boolean {
@@ -50,6 +50,59 @@ function isBatchItemBlocked(item: BatchPrecheckItem): boolean {
 
 function getBatchItemName(item: BatchPrecheckItem): string {
   return item.result?.skillName || item.request?.skillName || item.entryKey;
+}
+
+function getResultTargetVersion(result: SkillUploadPrecheckResult): string {
+  return result.actions[0]?.resultVersion ?? result.resolvedVersion;
+}
+
+function normalizeShortSemverVersion(version: string | undefined): string | undefined {
+  if (!version) {
+    return undefined;
+  }
+  if (/^\d+$/.test(version)) {
+    return `${version}.0.0`;
+  }
+  if (/^\d+\.\d+$/.test(version)) {
+    return `${version}.0`;
+  }
+  return undefined;
+}
+
+function isShortSemverVersion(version: string | undefined): boolean {
+  return normalizeShortSemverVersion(version) !== undefined;
+}
+
+function isUploadedVersionConverted(
+  result: SkillUploadPrecheckResult,
+  targetVersion = getResultTargetVersion(result),
+): boolean {
+  return !!result.parsedVersion
+    && !!targetVersion
+    && result.parsedVersion !== targetVersion
+    && (!result.versionExists || isShortSemverVersion(result.parsedVersion));
+}
+
+function mergeLocalParsedVersion(
+  result: SkillUploadPrecheckResult | null,
+  request?: SkillUploadPrecheckRequest,
+): SkillUploadPrecheckResult | null {
+  const localParsedVersion = request?.parsedVersion?.trim();
+  if (!result || !localParsedVersion) {
+    return result;
+  }
+  const targetVersion = getResultTargetVersion(result);
+  if (result.parsedVersion && result.parsedVersion !== targetVersion) {
+    return result;
+  }
+  if (localParsedVersion === result.parsedVersion) {
+    return result;
+  }
+  return {
+    ...result,
+    parsedVersion: localParsedVersion,
+    versionSource: result.versionSource || request?.versionSource || '',
+  };
 }
 
 interface UploadSkillDialogProps {
@@ -158,6 +211,7 @@ export function UploadSkillDialog({
     (result: SkillUploadPrecheckResult) => {
       const messages: string[] = [];
       const createAction = result.actions.find((item) => item.type === 'CREATE_DRAFT');
+      const targetVersion = getResultTargetVersion(result);
 
       if (result.status === 'FORBIDDEN' || !result.writable) {
         messages.push(t('skill.precheckNoPermission'));
@@ -171,14 +225,30 @@ export function UploadSkillDialog({
         return messages;
       }
 
+      if (isUploadedVersionConverted(result, targetVersion)) {
+        const normalizedVersion = normalizeShortSemverVersion(result.parsedVersion);
+        if (result.versionExists && normalizedVersion && normalizedVersion !== targetVersion) {
+          messages.push(t('skill.precheckVersionNormalizedAndAdjusted', {
+            parsedVersion: result.parsedVersion,
+            normalizedVersion,
+            version: targetVersion,
+          }));
+        } else {
+          messages.push(t('skill.precheckVersionConverted', {
+            parsedVersion: result.parsedVersion,
+            version: targetVersion,
+          }));
+        }
+      }
+
       if (!result.exists) {
         messages.push(t('skill.precheckNewSkill', {
-          version: createAction?.resultVersion ?? result.resolvedVersion,
+          version: targetVersion,
         }));
         return messages;
       }
 
-      if (result.versionExists) {
+      if (result.versionExists && !isUploadedVersionConverted(result, targetVersion)) {
         messages.push(t('skill.precheckVersionExists', {
           version: result.parsedVersion,
         }));
@@ -194,9 +264,10 @@ export function UploadSkillDialog({
       }
 
       messages.push(t('skill.precheckExistingSkillCreateDraft', {
-        version: createAction?.resultVersion ?? result.resolvedVersion,
+        version: targetVersion,
       }));
-      if (createAction && createAction.resultVersion !== result.parsedVersion) {
+      if (createAction && createAction.resultVersion !== result.parsedVersion
+        && !isUploadedVersionConverted(result, createAction.resultVersion)) {
         messages.push(t('skill.precheckCreateVersionAdjusted', {
           parsedVersion: result.parsedVersion,
           version: createAction.resultVersion,
@@ -205,6 +276,37 @@ export function UploadSkillDialog({
       return messages.length > 0
         ? messages
         : [...result.errors, ...result.warnings, t('skill.uploadPrecheckBlocked')];
+    },
+    [t],
+  );
+
+  const getBatchItemDescription = useCallback(
+    (item: BatchPrecheckItem) => {
+      if (item.kind === 'INVALID_SKILL') {
+        return t('skill.batchItemInvalidSkillDesc');
+      }
+      if (item.kind === 'NON_SKILL_FOLDER') {
+        return t('skill.batchItemNonSkillFolderDesc');
+      }
+      if (item.result) {
+        const targetVersion = getResultTargetVersion(item.result);
+        if (isUploadedVersionConverted(item.result, targetVersion)) {
+          const normalizedVersion = normalizeShortSemverVersion(item.result.parsedVersion);
+          if (item.result.versionExists && normalizedVersion && normalizedVersion !== targetVersion) {
+            return t('skill.batchItemVersionNormalizedAndAdjusted', {
+              parsedVersion: item.result.parsedVersion,
+              normalizedVersion,
+              version: targetVersion,
+            });
+          }
+          return t('skill.batchItemVersionConverted', {
+            parsedVersion: item.result.parsedVersion,
+            version: targetVersion,
+          });
+        }
+        return item.result.parsedVersion;
+      }
+      return item.request?.parsedVersion ?? item.entryKey;
     },
     [t],
   );
@@ -294,14 +396,17 @@ export function UploadSkillDialog({
               return entry;
             }
             const result = resultList[cursor++];
-            return result ? { ...entry, result } : entry;
+            return result ? {
+              ...entry,
+              result: mergeLocalParsedVersion(result, entry.request) ?? result,
+            } : entry;
           });
           setPrecheck(null);
           setBatchConflictPolicy('SKIP');
           setBatchPrecheck({ items });
           return;
         }
-        const result = resultList[0] ?? null;
+        const result = mergeLocalParsedVersion(resultList[0] ?? null, validEntries[0]?.request);
         setBatchPrecheck(null);
         setPrecheck(result);
         if (!result || result.actions.length === 0) {
@@ -425,7 +530,10 @@ export function UploadSkillDialog({
     t,
   ]);
 
-  const precheckTargetVersion = precheck?.actions[0]?.resultVersion ?? precheck?.resolvedVersion;
+  const precheckTargetVersion = precheck ? getResultTargetVersion(precheck) : undefined;
+  const precheckVersionConverted = precheck
+    ? isUploadedVersionConverted(precheck, precheckTargetVersion)
+    : false;
   const precheckMessages = precheck ? getPrecheckMessages(precheck) : [];
   const batchItems = batchPrecheck?.items ?? [];
   const batchSkillItems = batchItems.filter((item) => item.kind === 'SKILL');
@@ -509,8 +617,10 @@ export function UploadSkillDialog({
               <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
                 <span className="text-muted-foreground">{t('skill.skillName')}</span>
                 <span className="font-medium break-all">{precheck.skillName}</span>
-                <span className="text-muted-foreground">{t('skill.parsedVersion')}</span>
-                <span>{precheck.parsedVersion}</span>
+                <span className="text-muted-foreground">
+                  {t(precheckVersionConverted ? 'skill.uploadedVersion' : 'skill.parsedVersion')}
+                </span>
+                <span>{precheck.parsedVersion || '-'}</span>
                 <span className="text-muted-foreground">{t('skill.resolvedVersion')}</span>
                 <span>{precheckTargetVersion}</span>
               </div>
@@ -627,11 +737,7 @@ export function UploadSkillDialog({
                       <div className="min-w-0">
                         <p className="truncate font-medium">{getBatchItemName(item)}</p>
                         <p className="text-xs text-muted-foreground truncate">
-                          {item.kind === 'INVALID_SKILL'
-                            ? t('skill.batchItemInvalidSkillDesc')
-                          : item.kind === 'NON_SKILL_FOLDER'
-                            ? t('skill.batchItemNonSkillFolderDesc')
-                            : item.result?.parsedVersion ?? item.request?.parsedVersion ?? item.entryKey}
+                          {getBatchItemDescription(item)}
                         </p>
                       </div>
                       <span className={`shrink-0 text-xs ${

@@ -61,8 +61,6 @@ public class ProtocolManager extends MemberChangeListener implements DisposableB
     
     private final Object apLock = new Object();
     
-    private Set<Member> oldMembers;
-    
     public ProtocolManager(ServerMemberManager memberManager) {
         this.memberManager = memberManager;
         NotifyCenter.registerSubscriber(this);
