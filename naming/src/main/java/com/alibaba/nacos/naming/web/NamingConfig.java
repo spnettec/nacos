@@ -62,6 +62,7 @@ public class NamingConfig {
         this.methodsCache = methodsCache;
     }
     
+    /** Init method caches. */
     @PostConstruct
     public void init() {
         methodsCache.initClassMethod(Set.of(OperatorMetricsV1Controller.class,

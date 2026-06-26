@@ -32,9 +32,6 @@ import com.alibaba.nacos.core.auth.NacosServerAuthConfig;
 import com.alibaba.nacos.naming.constants.FieldsConstants;
 import com.alibaba.nacos.sys.env.EnvUtil;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.MapUtils;
-import com.alibaba.nacos.common.utils.StringUtils;
-import org.apache.commons.collections.CollectionUtils;
 
 import java.util.HashMap;
 import java.util.List;
