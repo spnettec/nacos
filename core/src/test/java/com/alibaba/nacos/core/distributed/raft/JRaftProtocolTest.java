@@ -155,7 +155,7 @@ class JRaftProtocolTest {
     @Test
     void testAddRequestProcessors() {
         raftProtocol.addRequestProcessors(Collections.emptyList());
-        verify(serverMock).createMultiRaftGroup(Collections.emptyList());
+        verify(serverMock, never()).createMultiRaftGroup(Collections.emptyList());
     }
     
     @Test

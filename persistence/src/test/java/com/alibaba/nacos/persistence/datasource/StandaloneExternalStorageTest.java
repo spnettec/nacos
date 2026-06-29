@@ -28,11 +28,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.mock.env.MockEnvironment;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.when;
 
 /**
  * StandaloneExternalStorage unit test.
@@ -50,6 +52,9 @@ class StandaloneExternalStorageTest {
     private DynamicDataSource dataSource;
     
     private MockEnvironment environment;
+
+    @Mock
+    ConfigurableApplicationContext context;
     
     @Mock
     private LocalDataSourceServiceImpl localDataSourceService;
@@ -61,6 +66,7 @@ class StandaloneExternalStorageTest {
     void setUp() throws Exception {
         environment = new MockEnvironment();
         EnvUtil.setEnvironment(environment);
+        when(context.getEnvironment()).thenReturn(environment);
         datasourceConfig = new DatasourceConfiguration();
         dataSource = DynamicDataSource.getInstance();
         ReflectionTestUtils.setField(dataSource, "localDataSourceService", localDataSourceService);
@@ -76,7 +82,7 @@ class StandaloneExternalStorageTest {
         DatasourceConfiguration.setEmbeddedStorage(EnvUtil.getStandaloneMode());
         
         // 模拟初始化
-        datasourceConfig.initialize(null);
+        datasourceConfig.initialize(context);
         
         assertTrue(EnvUtil.getStandaloneMode());
         assertTrue(dataSource.getDataSource() instanceof LocalDataSourceServiceImpl);
@@ -92,7 +98,7 @@ class StandaloneExternalStorageTest {
         DatasourceConfiguration.setEmbeddedStorage(EnvUtil.getStandaloneMode());
         // 模拟初始化
         
-        datasourceConfig.initialize(null);
+        datasourceConfig.initialize(context);
         
         assertTrue(EnvUtil.getStandaloneMode());
         assertTrue(dataSource.getDataSource() instanceof LocalDataSourceServiceImpl);
@@ -108,7 +114,7 @@ class StandaloneExternalStorageTest {
         DatasourceConfiguration.setEmbeddedStorage(EnvUtil.getStandaloneMode());
         // 模拟初始化
         
-        datasourceConfig.initialize(null);
+        datasourceConfig.initialize(context);
         
         assertTrue(EnvUtil.getStandaloneMode());
         assertTrue(dataSource.getDataSource() instanceof ExternalDataSourceServiceImpl);
@@ -124,7 +130,7 @@ class StandaloneExternalStorageTest {
         DatasourceConfiguration.setEmbeddedStorage(EnvUtil.getStandaloneMode());
         // 模拟初始化
         
-        datasourceConfig.initialize(null);
+        datasourceConfig.initialize(context);
         
         assertTrue(EnvUtil.getStandaloneMode());
         assertTrue(dataSource.getDataSource() instanceof ExternalDataSourceServiceImpl);

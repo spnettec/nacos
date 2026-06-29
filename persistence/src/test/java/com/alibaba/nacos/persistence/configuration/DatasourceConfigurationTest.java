@@ -29,6 +29,7 @@ import org.springframework.mock.env.MockEnvironment;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class DatasourceConfigurationTest {
@@ -44,6 +45,7 @@ class DatasourceConfigurationTest {
     void setUp() {
         environment = new MockEnvironment();
         EnvUtil.setEnvironment(environment);
+        when(context.getEnvironment()).thenReturn(environment);
         datasourceConfiguration = new DatasourceConfiguration();
         DatasourceConfiguration.useExternalDb = false;
         DatasourceConfiguration.embeddedStorage = true;

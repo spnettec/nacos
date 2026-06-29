@@ -17,6 +17,7 @@
 package com.alibaba.nacos.core.remote.grpc.negotiator;
 
 import com.alibaba.nacos.common.utils.Pair;
+import com.alibaba.nacos.core.remote.grpc.negotiator.tls.ClusterDefaultTlsProtocolNegotiatorBuilder;
 import com.alibaba.nacos.sys.env.EnvUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -60,7 +61,7 @@ class ClusterProtocolNegotiatorBuilderSingletonTest {
         Pair<String, ProtocolNegotiatorBuilder> defaultPair =
             ClusterProtocolNegotiatorBuilderSingleton.getSingleton().defaultBuilderPair();
         assertNotNull(defaultPair);
-        assertEquals(ClusterProtocolNegotiatorBuilderSingleton.TYPE_PROPERTY_KEY,
+        assertEquals(ClusterDefaultTlsProtocolNegotiatorBuilder.CLUSTER_TYPE_DEFAULT_TLS,
             defaultPair.getFirst());
         assertNotNull(defaultPair.getSecond());
     }
@@ -69,6 +70,6 @@ class ClusterProtocolNegotiatorBuilderSingletonTest {
     void testType() {
         String type = ClusterProtocolNegotiatorBuilderSingleton.getSingleton().type();
         assertNotNull(type);
-        assertEquals(ClusterProtocolNegotiatorBuilderSingleton.TYPE_PROPERTY_KEY, type);
+        assertEquals(ClusterDefaultTlsProtocolNegotiatorBuilder.CLUSTER_TYPE_DEFAULT_TLS, type);
     }
 }

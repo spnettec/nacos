@@ -41,6 +41,9 @@ class NacosDuplicateSpringBeanPostProcessorTest {
     
     @Mock
     ConfigurableApplicationContext context;
+
+    @Mock
+    ConfigurableApplicationContext coreContext;
     
     @Mock
     ConfigurableListableBeanFactory beanFactory;
@@ -50,6 +53,7 @@ class NacosDuplicateSpringBeanPostProcessorTest {
     
     @BeforeEach
     void setUp() {
+        when(context.getParent()).thenReturn(coreContext);
         processor = new NacosDuplicateSpringBeanPostProcessor(context);
     }
     
@@ -57,38 +61,38 @@ class NacosDuplicateSpringBeanPostProcessorTest {
     void testPostProcessBeforeInstantiationNonExist() {
         Class beanClass = LifecycleProcessor.class;
         assertNull(processor.postProcessBeforeInstantiation(beanClass, "lifecycleProcessor"));
-        verify(context, never()).getBean("lifecycleProcessor");
+        verify(coreContext, never()).getBean("lifecycleProcessor");
     }
     
     @Test
     void testPostProcessBeforeInstantiationForContextBean() {
-        when(context.containsBean("lifecycleProcessor")).thenReturn(true);
-        when(context.getBeanFactory()).thenReturn(beanFactory);
+        when(coreContext.containsBean("lifecycleProcessor")).thenReturn(true);
+        when(coreContext.getBeanFactory()).thenReturn(beanFactory);
         when(beanFactory.getBeanDefinition("lifecycleProcessor")).thenReturn(beanDefinition);
         Class beanClass = LifecycleProcessor.class;
         assertNull(processor.postProcessBeforeInstantiation(beanClass, "lifecycleProcessor"));
-        verify(context, never()).getBean("lifecycleProcessor");
+        verify(coreContext, never()).getBean("lifecycleProcessor");
     }
     
     @Test
     void testPostProcessBeforeInstantiationForBootContextBean() {
-        when(context.containsBean("boundConfigurationProperties")).thenReturn(true);
-        when(context.getBeanFactory()).thenReturn(beanFactory);
+        when(coreContext.containsBean("boundConfigurationProperties")).thenReturn(true);
+        when(coreContext.getBeanFactory()).thenReturn(beanFactory);
         when(beanFactory.getBeanDefinition("boundConfigurationProperties"))
             .thenReturn(beanDefinition);
         Class beanClass = BoundConfigurationProperties.class;
         assertNull(
             processor.postProcessBeforeInstantiation(beanClass, "boundConfigurationProperties"));
-        verify(context, never()).getBean("boundConfigurationProperties");
+        verify(coreContext, never()).getBean("boundConfigurationProperties");
     }
     
     @Test
     void testPostProcessBeforeInstantiationForNotContextBean() {
-        when(context.containsBean("testBean")).thenReturn(true);
-        when(context.getBeanFactory()).thenReturn(beanFactory);
+        when(coreContext.containsBean("testBean")).thenReturn(true);
+        when(coreContext.getBeanFactory()).thenReturn(beanFactory);
         when(beanFactory.getBeanDefinition("testBean")).thenReturn(beanDefinition);
         Class beanClass = NacosDuplicateSpringBeanPostProcessorTest.class;
-        when(context.getBean("testBean")).thenReturn(this);
+        when(coreContext.getBean("testBean")).thenReturn(this);
         assertEquals(this, processor.postProcessBeforeInstantiation(beanClass, "testBean"));
     }
 }

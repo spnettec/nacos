@@ -41,6 +41,9 @@ class NacosDuplicateConfigurationBeanPostProcessorTest {
     
     @Mock
     ConfigurableApplicationContext context;
+
+    @Mock
+    ConfigurableApplicationContext coreContext;
     
     @Mock
     ConfigurableListableBeanFactory beanFactory;
@@ -50,6 +53,7 @@ class NacosDuplicateConfigurationBeanPostProcessorTest {
     
     @BeforeEach
     void setUp() {
+        when(context.getParent()).thenReturn(coreContext);
         processor = new NacosDuplicateConfigurationBeanPostProcessor(context);
     }
     
@@ -57,41 +61,41 @@ class NacosDuplicateConfigurationBeanPostProcessorTest {
     void testPostProcessBeforeInstantiationNonExist() {
         Class beanClass = LifecycleProcessor.class;
         assertNull(processor.postProcessBeforeInstantiation(beanClass, "lifecycleProcessor"));
-        verify(context, never()).getBean("lifecycleProcessor");
+        verify(coreContext, never()).getBean("lifecycleProcessor");
     }
     
     @Test
     void testPostProcessBeforeInstantiationForConfigurationAnnotation() {
         String beanName = "com.alibaba.nacos.sys.env.mock.MockAutoConfiguration$MockConfiguration";
-        when(context.containsBean(beanName)).thenReturn(true);
-        when(context.getBeanFactory()).thenReturn(beanFactory);
+        when(coreContext.containsBean(beanName)).thenReturn(true);
+        when(coreContext.getBeanFactory()).thenReturn(beanFactory);
         when(beanFactory.getBeanDefinition(beanName)).thenReturn(beanDefinition);
         Class beanClass = MockAutoConfiguration.MockConfiguration.class;
         MockAutoConfiguration.MockConfiguration existBean =
             new MockAutoConfiguration.MockConfiguration();
-        when(context.getBean(beanName)).thenReturn(existBean);
+        when(coreContext.getBean(beanName)).thenReturn(existBean);
         assertEquals(existBean, processor.postProcessBeforeInstantiation(beanClass, beanName));
     }
     
     @Test
     void testPostProcessBeforeInstantiationForAutoConfigurationAnnotation() {
         String beanName = "com.alibaba.nacos.sys.env.mock.MockAutoConfiguration";
-        when(context.containsBean(beanName)).thenReturn(true);
-        when(context.getBeanFactory()).thenReturn(beanFactory);
+        when(coreContext.containsBean(beanName)).thenReturn(true);
+        when(coreContext.getBeanFactory()).thenReturn(beanFactory);
         when(beanFactory.getBeanDefinition(beanName)).thenReturn(beanDefinition);
         Class beanClass = MockAutoConfiguration.class;
         MockAutoConfiguration existBean = new MockAutoConfiguration();
-        when(context.getBean(beanName)).thenReturn(existBean);
+        when(coreContext.getBean(beanName)).thenReturn(existBean);
         assertEquals(existBean, processor.postProcessBeforeInstantiation(beanClass, beanName));
     }
     
     @Test
     void testPostProcessBeforeInstantiationForNormalBean() {
-        when(context.containsBean("testBean")).thenReturn(true);
-        when(context.getBeanFactory()).thenReturn(beanFactory);
+        when(coreContext.containsBean("testBean")).thenReturn(true);
+        when(coreContext.getBeanFactory()).thenReturn(beanFactory);
         when(beanFactory.getBeanDefinition("testBean")).thenReturn(beanDefinition);
         Class beanClass = NacosDuplicateConfigurationBeanPostProcessor.class;
         assertNull(processor.postProcessBeforeInstantiation(beanClass, "testBean"));
-        verify(context, never()).getBean("testBean");
+        verify(coreContext, never()).getBean("testBean");
     }
 }

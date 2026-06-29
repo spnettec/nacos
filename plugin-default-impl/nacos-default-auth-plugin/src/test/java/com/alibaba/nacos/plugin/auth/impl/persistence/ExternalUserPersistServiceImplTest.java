@@ -122,8 +122,8 @@ class ExternalUserPersistServiceImplTest {
         String sql = "SELECT username,password FROM users WHERE username=? ";
         User user = new User();
         user.setUsername("username");
-        when(jdbcTemplate.queryForObject(eq(sql), any(Object[].class),
-            eq(AuthRowMapperManager.USER_ROW_MAPPER))).thenReturn(user)
+        when(jdbcTemplate.queryForObject(eq(sql), eq(AuthRowMapperManager.USER_ROW_MAPPER),
+            any(Object.class))).thenReturn(user)
             .thenThrow(new EmptyResultDataAccessException(1))
             .thenThrow(new CannotGetJdbcConnectionException("down"))
             .thenThrow(new IllegalStateException("boom"));

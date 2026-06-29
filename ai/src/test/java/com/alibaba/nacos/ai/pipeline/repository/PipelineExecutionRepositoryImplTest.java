@@ -49,16 +49,13 @@ class PipelineExecutionRepositoryImplTest {
     }
     
     @Test
-    void findByResourceWithPageShouldPageInMemoryWithoutLimitOffsetSql() {
-        PipelineExecution first = createExecution("first");
+    void findByResourceWithPageShouldUseLimitOffsetSql() {
         PipelineExecution second = createExecution("second");
-        PipelineExecution third = createExecution("third");
         String expectedSql =
             "SELECT * FROM pipeline_execution WHERE resource_type = ? AND resource_name = ? "
-                + "AND namespace_id = ? AND version = ? ORDER BY create_time DESC";
+                + "AND namespace_id = ? AND version = ? ORDER BY create_time DESC LIMIT 1 OFFSET 1";
         when(jdbcTemplate.query(any(String.class), anyPipelineRowMapper(), eq(QUERY_PARAMS)))
-            .thenReturn(
-                List.of(first, second, third));
+            .thenReturn(List.of(second));
         
         List<PipelineExecution> actual =
             repository.findByResourceWithPage("SKILL", "demo", "public", "v1", 1, 1);
@@ -68,8 +65,8 @@ class PipelineExecutionRepositoryImplTest {
         ArgumentCaptor<String> sqlCaptor = ArgumentCaptor.forClass(String.class);
         verify(jdbcTemplate).query(sqlCaptor.capture(), anyPipelineRowMapper(), eq(QUERY_PARAMS));
         assertEquals(expectedSql, sqlCaptor.getValue());
-        assertTrue(!sqlCaptor.getValue().contains("LIMIT"));
-        assertTrue(!sqlCaptor.getValue().contains("OFFSET"));
+        assertTrue(sqlCaptor.getValue().contains("LIMIT"));
+        assertTrue(sqlCaptor.getValue().contains("OFFSET"));
     }
     
     @SuppressWarnings("unchecked")

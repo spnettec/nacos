@@ -182,8 +182,7 @@ class NacosApiExceptionHandlerTest {
         mockControllerThrowException(new DataIntegrityViolationException("test"));
         ResultActions resultActions = mockMvc.perform(post("/v3/admin/core/namespace"));
         resultActions.andExpect(MockMvcResultMatchers.status().is(NacosApiException.SERVER_ERROR));
-        resultActions
-            .andExpect(new NacosResultErrorCodeMatcher(ErrorCode.DATA_ACCESS_ERROR.getCode()));
+        resultActions.andExpect(new NacosResultErrorCodeMatcher(ErrorCode.SERVER_ERROR.getCode()));
     }
     
     @Test

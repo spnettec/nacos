@@ -28,11 +28,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.mock.env.MockEnvironment;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.when;
 
 /**
  * ClusterExternalStorage unit test.
@@ -50,6 +52,9 @@ class ClusterExternalStorageTest {
     private DynamicDataSource dataSource;
     
     private MockEnvironment environment;
+
+    @Mock
+    ConfigurableApplicationContext context;
     
     @Mock
     private LocalDataSourceServiceImpl localDataSourceService;
@@ -61,6 +66,7 @@ class ClusterExternalStorageTest {
     void setUp() throws Exception {
         environment = new MockEnvironment();
         EnvUtil.setEnvironment(environment);
+        when(context.getEnvironment()).thenReturn(environment);
         datasourceConfig = new DatasourceConfiguration();
         dataSource = DynamicDataSource.getInstance();
         ReflectionTestUtils.setField(dataSource, "localDataSourceService", localDataSourceService);
@@ -77,7 +83,7 @@ class ClusterExternalStorageTest {
         DatasourceConfiguration.setEmbeddedStorage(EnvUtil.getStandaloneMode());
         
         // 模拟初始化
-        datasourceConfig.initialize(null);
+        datasourceConfig.initialize(context);
         
         assertFalse(EnvUtil.getStandaloneMode());
         assertTrue(DatasourceConfiguration.isUseExternalDb());
@@ -93,7 +99,7 @@ class ClusterExternalStorageTest {
         DatasourceConfiguration.setEmbeddedStorage(EnvUtil.getStandaloneMode());
         
         // 模拟初始化
-        datasourceConfig.initialize(null);
+        datasourceConfig.initialize(context);
         
         assertFalse(EnvUtil.getStandaloneMode());
         assertTrue(DatasourceConfiguration.isUseExternalDb());
@@ -109,7 +115,7 @@ class ClusterExternalStorageTest {
         DatasourceConfiguration.setEmbeddedStorage(true);
         
         // 模拟初始化
-        datasourceConfig.initialize(null);
+        datasourceConfig.initialize(context);
         
         assertFalse(EnvUtil.getStandaloneMode());
         assertFalse(DatasourceConfiguration.isUseExternalDb());
@@ -125,7 +131,7 @@ class ClusterExternalStorageTest {
         DatasourceConfiguration.setEmbeddedStorage(EnvUtil.getStandaloneMode());
         
         // 模拟初始化
-        datasourceConfig.initialize(null);
+        datasourceConfig.initialize(context);
         
         assertFalse(EnvUtil.getStandaloneMode());
         assertTrue(DatasourceConfiguration.isUseExternalDb());
