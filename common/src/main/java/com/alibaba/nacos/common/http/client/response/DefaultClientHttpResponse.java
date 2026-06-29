@@ -45,12 +45,6 @@ public class DefaultClientHttpResponse implements HttpClientResponse {
         return this.response.getCode();
     }
 
-    @Override
-    public String getStatusText() {
-        return this.response.getReasonPhrase();
-    }
-
-    @Override
     public Header getHeaders() {
         if (this.responseHeader == null) {
             this.responseHeader = Header.newInstance();

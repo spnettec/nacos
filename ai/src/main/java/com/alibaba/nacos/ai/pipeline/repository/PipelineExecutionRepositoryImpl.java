@@ -48,29 +48,25 @@ import java.util.List;
  * @since 3.2.0
  */
 public class PipelineExecutionRepositoryImpl implements PipelineExecutionRepository {
-    
+
     private static final Logger LOGGER =
         LoggerFactory.getLogger(PipelineExecutionRepositoryImpl.class);
-    
+
     private static final String SQL_INSERT = "INSERT INTO pipeline_execution "
         + "(execution_id, resource_type, resource_name, namespace_id, version, status, pipeline, create_time, update_time) "
         + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-    
+
     private static final String SQL_UPDATE =
         "UPDATE pipeline_execution SET status=?, pipeline=?, update_time=? "
             + "WHERE execution_id=?";
-    
+
     private static final String SQL_FIND_BY_ID =
         "SELECT * FROM pipeline_execution WHERE execution_id=?";
 
-    private static final String SQL_FIND_BY_RESOURCE = "SELECT * FROM pipeline_execution "
-        + "WHERE resource_type=? AND resource_name=? AND namespace_id=? AND version=? "
-        + "ORDER BY create_time DESC";
-
     private static final PipelineExecutionRowMapper ROW_MAPPER = new PipelineExecutionRowMapper();
-    
+
     private final JdbcTemplate injectedJdbcTemplate;
-    
+
     private final String injectedDataSourceType;
     
     /**
@@ -164,25 +160,6 @@ public class PipelineExecutionRepositoryImpl implements PipelineExecutionReposit
             return getJdbcTemplate().queryForObject(SQL_FIND_BY_ID, ROW_MAPPER, executionId);
         } catch (EmptyResultDataAccessException e) {
             return null;
-        } catch (DataAccessException e) {
-            LOGGER.warn("Failed to query pipeline_execution table (table may not exist): {}",
-                e.getMessage());
-            return null;
-        }
-    }
-    
-    @Override
-    public PipelineExecution findByResource(String resourceType, String resourceName,
-        String namespaceId,
-        String version) {
-        try {
-            List<PipelineExecution> executions =
-                getJdbcTemplate().query(SQL_FIND_BY_RESOURCE, ROW_MAPPER,
-                    resourceType, resourceName, namespaceId, version);
-            if (executions.isEmpty()) {
-                return null;
-            }
-            return executions.get(0);
         } catch (DataAccessException e) {
             LOGGER.warn("Failed to query pipeline_execution table (table may not exist): {}",
                 e.getMessage());
