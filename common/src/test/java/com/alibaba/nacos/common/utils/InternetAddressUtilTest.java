@@ -17,6 +17,8 @@
 package com.alibaba.nacos.common.utils;
 
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -191,8 +193,14 @@ public class InternetAddressUtilTest {
     
     @Test
     void testLocalHostIp() {
-        String expected = InternetAddressUtil.PREFER_IPV6_ADDRESSES ? "[::1]" : "127.0.0.1";
-        assertEquals(expected, InternetAddressUtil.localHostIp());
+        try (MockedStatic<InternetAddressUtil> mocked =
+            Mockito.mockStatic(InternetAddressUtil.class, Mockito.CALLS_REAL_METHODS)) {
+            mocked.when(InternetAddressUtil::isPreferIpv6Addresses).thenReturn(false);
+            assertEquals("127.0.0.1", InternetAddressUtil.localHostIp());
+            
+            mocked.when(InternetAddressUtil::isPreferIpv6Addresses).thenReturn(true);
+            assertEquals("[::1]", InternetAddressUtil.localHostIp());
+        }
     }
     
     @Test

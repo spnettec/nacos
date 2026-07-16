@@ -48,9 +48,6 @@ public class DatasourcePlatformUtil {
             platform = EnvUtil.getProperty(PersistenceConstant.DATASOURCE_PLATFORM_PROPERTY);
         }
         if (StringUtils.isBlank(platform)) {
-            platform = EnvUtil.getProperty(PersistenceConstant.DATASOURCE_PLATFORM_PROPERTY_OLD);
-        }
-        if (StringUtils.isBlank(platform)) {
             platform = EnvUtil.getProperty(DATASOURCE_TYPE_PROPERTY);
         }
         return normalizeDatasourcePlatform(platform, defaultPlatform);
@@ -66,9 +63,6 @@ public class DatasourcePlatformUtil {
         String platform = environment.getProperty(PersistenceConstant.DATASOURCE_PLATFORM_PROPERTY_NEW);
         if (StringUtils.isBlank(platform)) {
             platform = environment.getProperty(PersistenceConstant.DATASOURCE_PLATFORM_PROPERTY);
-        }
-        if (StringUtils.isBlank(platform)) {
-            platform = environment.getProperty(PersistenceConstant.DATASOURCE_PLATFORM_PROPERTY_OLD);
         }
         if (StringUtils.isBlank(platform)) {
             platform = environment.getProperty(DATASOURCE_TYPE_PROPERTY);

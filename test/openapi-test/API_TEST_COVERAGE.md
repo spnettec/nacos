@@ -61,9 +61,23 @@ partial set is limited to operations whose remaining success paths mutate
 shared runtime/storage state, require publish-pipeline plugin data, or require
 an external LLM provider.
 
+Plugin management API IT covers detail metadata, request validation, not-found
+responses, rejection of config updates for non-configurable plugins, and the
+built-in `auth:nacos`, `auth:ldap`, and `auth:oidc` configuration contracts. It
+verifies definitions, legacy aliases, effect modes, effective values, source
+metadata, API-side secret masking, and OIDC restart-only update rejection.
+Successful runtime mutation remains partial to avoid carrying
+persisted plugin state into later SDK suites in the shared standalone process;
+full-map replacement, source fallback, effect mode checks, same-source sensitive
+value preservation, and retained-source apply failure/retry are covered in core
+unit tests.
+
 Config scenario rows cover the current 3.3 Config model. Blank or omitted
 namespace inputs are expected to use `public`, and beta/tag gray behavior is
-verified through the current gray model. Removed pre-3.0 compatibility
+verified through the current gray model. Batch delete and export-by-id scenarios
+verify that storage IDs remain scoped by the requested namespace, and clone
+scenarios verify that storage IDs are resolved only within the requested source
+namespace before writing to the target namespace. Removed pre-3.0 compatibility
 migration paths, including empty-tenant storage migration and legacy
 `config_info_beta` / `config_info_tag` old-table migration, are not counted as
 missing OpenAPI IT coverage.

@@ -33,8 +33,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * <ul>
  *     <li>Expected capability: clone copies an existing config id to a target dataId/groupName in the target namespace
  *     and the cloned config can be queried with the original content and type.</li>
- *     <li>Boundary/validation: {@code namespaceId} is required, empty clone lists are rejected with
- *     {@code NO_SELECTED_CONFIG}, and unknown source ids return {@code DATA_EMPTY} without creating data.</li>
+ *     <li>Boundary/validation: {@code namespaceId} is required, omitted {@code sourceNamespaceId} defaults to the
+ *     target namespace, empty clone lists are rejected with {@code NO_SELECTED_CONFIG}, and unknown source ids
+ *     return {@code DATA_EMPTY} without creating data.</li>
  *     <li>Exception/error handling: request-parameter errors return HTTP 400 and business failures keep the v3
  *     {@code Result} envelope instead of leaking HTTP 500.</li>
  * </ul>
@@ -64,6 +65,69 @@ public class ConfigCloneAdminApiOpenApiITCase extends ConfigAdminApiBaseITCase {
 
         JsonNode cloned = queryConfig(targetDataId, targetGroup, DEFAULT_NAMESPACE).get("data");
         assertConfigDetail(cloned, targetDataId, targetGroup, DEFAULT_NAMESPACE, content, ConfigType.JSON.getType());
+    }
+
+    @Test
+    public void testCloneConfigWithSourceNamespace() throws Exception {
+        String sourceNamespaceId = randomNamespaceId("clone_src");
+        String targetNamespaceId = randomNamespaceId("clone_tgt");
+        String sourceDataId = randomDataId("clone-source-ns");
+        String sourceGroup = randomGroupName("clone-source-ns");
+        String targetDataId = randomDataId("clone-target-ns");
+        String targetGroup = randomGroupName("clone-target-ns");
+        String content = "clone-source-namespace-content";
+        createNamespace(sourceNamespaceId);
+        createNamespace(targetNamespaceId);
+        addCleanup(() -> deleteNamespaceQuietly(sourceNamespaceId));
+        addCleanup(() -> deleteNamespaceQuietly(targetNamespaceId));
+        publishConfig(sourceDataId, sourceGroup, sourceNamespaceId, content, ConfigType.JSON.getType(), "clone desc",
+                "");
+        addCleanup(() -> deleteConfigQuietly(sourceDataId, sourceGroup, sourceNamespaceId));
+        addCleanup(() -> deleteConfigQuietly(targetDataId, targetGroup, targetNamespaceId));
+        JsonNode source = queryConfig(sourceDataId, sourceGroup, sourceNamespaceId).get("data");
+
+        String body = "[{\"configId\":" + source.get("id").asText() + ",\"targetDataId\":\""
+                + targetDataId + "\",\"targetGroupName\":\"" + targetGroup + "\"}]";
+        JsonNode root = postJsonOk(ADMIN_CONFIG_CLONE_PATH,
+                Query.newInstance().addParam("namespaceId", targetNamespaceId)
+                        .addParam("sourceNamespaceId", sourceNamespaceId).addParam("policy", "OVERWRITE"),
+                body);
+        assertTrue(root.get("data").get("succCount").asInt() >= 1, root.toString());
+
+        JsonNode cloned = queryConfig(targetDataId, targetGroup, targetNamespaceId).get("data");
+        assertConfigDetail(cloned, targetDataId, targetGroup, targetNamespaceId, content, ConfigType.JSON.getType());
+    }
+
+    @Test
+    public void testCloneConfigSkipsIdsOutsideSourceNamespace() throws Exception {
+        String sourceNamespaceId = randomNamespaceId("clone_src_mismatch");
+        String targetNamespaceId = randomNamespaceId("clone_tgt_mismatch");
+        String otherNamespaceId = randomNamespaceId("clone_other_mismatch");
+        String otherDataId = randomDataId("clone-other-ns");
+        String otherGroup = randomGroupName("clone-other-ns");
+        String targetDataId = randomDataId("clone-target-mismatch");
+        String targetGroup = randomGroupName("clone-target-mismatch");
+        createNamespace(sourceNamespaceId);
+        createNamespace(targetNamespaceId);
+        createNamespace(otherNamespaceId);
+        addCleanup(() -> deleteNamespaceQuietly(sourceNamespaceId));
+        addCleanup(() -> deleteNamespaceQuietly(targetNamespaceId));
+        addCleanup(() -> deleteNamespaceQuietly(otherNamespaceId));
+        publishConfig(otherDataId, otherGroup, otherNamespaceId, "other namespace content");
+        addCleanup(() -> deleteConfigQuietly(otherDataId, otherGroup, otherNamespaceId));
+        addCleanup(() -> deleteConfigQuietly(targetDataId, targetGroup, targetNamespaceId));
+        JsonNode other = queryConfig(otherDataId, otherGroup, otherNamespaceId).get("data");
+
+        String body = "[{\"configId\":" + other.get("id").asText() + ",\"targetDataId\":\""
+                + targetDataId + "\",\"targetGroupName\":\"" + targetGroup + "\"}]";
+        HttpResponse response = postJsonRaw(ADMIN_CONFIG_CLONE_PATH,
+                Query.newInstance().addParam("namespaceId", targetNamespaceId)
+                        .addParam("sourceNamespaceId", sourceNamespaceId),
+                body);
+
+        assertEquals(200, response.code(), response.body());
+        JsonNode root = JacksonUtils.toObj(response.body());
+        assertFailureResult(root, ErrorCode.DATA_EMPTY, "succCount");
     }
 
     @Test

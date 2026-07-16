@@ -30,7 +30,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * <ul>
  *     <li>Expected capability: comma-separated config ids delete multiple existing configs and each deleted config
  *     becomes absent from the detail API.</li>
- *     <li>Boundary/validation: non-existing ids are accepted and ignored, while {@code ids} is required.</li>
+ *     <li>Boundary/validation: non-existing ids are accepted and ignored, ids outside the requested namespace are
+ *     skipped, while {@code ids} is required.</li>
  *     <li>Exception/error handling: missing {@code ids} returns HTTP 400 with the v3 {@code Result} error envelope
  *     instead of HTTP 500.</li>
  * </ul>
@@ -59,6 +60,26 @@ public class ConfigBatchDeleteAdminApiOpenApiITCase extends ConfigAdminApiBaseIT
                 ErrorCode.RESOURCE_NOT_FOUND, "Config not exist");
         assertError(getRaw(ADMIN_CONFIG_PATH, configQuery(secondDataId, groupName, "")), 404,
                 ErrorCode.RESOURCE_NOT_FOUND, "Config not exist");
+    }
+
+    @Test
+    public void testBatchDeleteSkipsIdsOutsideNamespace() throws Exception {
+        String namespaceId = randomNamespaceId("batch-delete-isolation");
+        createNamespace(namespaceId);
+        addCleanup(() -> deleteNamespaceQuietly(namespaceId));
+        String dataId = randomDataId("batch-delete-isolation");
+        String groupName = randomGroupName("batch-delete-isolation");
+        String content = "batch-delete-isolation-content";
+        publishConfig(dataId, groupName, namespaceId, content);
+        addCleanup(() -> deleteConfigQuietly(dataId, groupName, namespaceId));
+        JsonNode config = queryConfig(dataId, groupName, namespaceId).get("data");
+
+        JsonNode root = deleteJsonOk(ADMIN_CONFIG_BATCH_PATH, Query.newInstance()
+                .addParam("ids", config.get("id").asText()).addParam("namespaceId", DEFAULT_NAMESPACE));
+
+        assertTrue(root.get("data").asBoolean(), root.toString());
+        JsonNode remain = queryConfig(dataId, groupName, namespaceId).get("data");
+        assertConfigDetail(remain, dataId, groupName, namespaceId, content, DEFAULT_TYPE);
     }
 
     @Test

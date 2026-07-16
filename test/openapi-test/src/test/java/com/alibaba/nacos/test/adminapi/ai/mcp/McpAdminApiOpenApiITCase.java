@@ -25,7 +25,6 @@ import org.junit.jupiter.api.Test;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
  * Integration tests for MCP admin OpenAPI {@code /nacos/v3/admin/ai/mcp}.
@@ -85,7 +84,7 @@ public class McpAdminApiOpenApiITCase extends AiAdminApiBaseITCase {
         assertPageContains(blurList, "name", mcpName);
 
         deleteJsonOk(ADMIN_MCP_PATH, mcpIdentityQuery(null, mcpId, null));
-        assertMcpServerNotFoundEventually(mcpId);
+        assertMcpServerAbsentEventually(ADMIN_MCP_PATH, mcpId);
     }
 
     @Test
@@ -137,19 +136,7 @@ public class McpAdminApiOpenApiITCase extends AiAdminApiBaseITCase {
                 .addParam("namespaceId", DEFAULT_NAMESPACE).addParam("mcpName", randomAiName("absent-mcp"))
                 .addParam("pageNo", "1").addParam("pageSize", "10")).get("data");
         assertEmptyPageShape(emptyPage);
-        assertFalse(emptyPage.get("pageItems").size() > 0, emptyPage.toString());
+        assertEquals(0, emptyPage.get("pageItems").size(), emptyPage.toString());
     }
 
-    private void assertMcpServerNotFoundEventually(String mcpId) throws Exception {
-        HttpResponse lastResponse = null;
-        for (int i = 0; i < 10; i++) {
-            lastResponse = getRaw(ADMIN_MCP_PATH, mcpIdentityQuery(null, mcpId, null));
-            if (404 == lastResponse.code()) {
-                assertError(lastResponse, 404, ErrorCode.MCP_SERVER_NOT_FOUND, "not found");
-                return;
-            }
-            Thread.sleep(200L);
-        }
-        assertError(lastResponse, 404, ErrorCode.MCP_SERVER_NOT_FOUND, "not found");
-    }
 }

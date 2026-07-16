@@ -17,9 +17,9 @@
 package com.alibaba.nacos.api.plugin;
 
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
+import tools.jackson.core.JacksonException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import tools.jackson.core.JacksonException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ConfigItemDefinitionTest extends BasicRequestTest {
-
+    
     @Test
     @DisplayName("test default constructor")
     void testDefaultConstructor() {
@@ -43,8 +43,12 @@ class ConfigItemDefinitionTest extends BasicRequestTest {
         assertNull(definition.getType());
         assertFalse(definition.isRequired());
         assertNull(definition.getEnumValues());
+        assertNotNull(definition.getAliases());
+        assertTrue(definition.getAliases().isEmpty());
+        assertFalse(definition.isSensitive());
+        assertEquals(ConfigItemEffectMode.RESTART, definition.getEffectMode());
     }
-
+    
     @Test
     @DisplayName("test constructor with key, name and type")
     void testConstructorWithKeyNameAndType() {
@@ -54,7 +58,7 @@ class ConfigItemDefinitionTest extends BasicRequestTest {
         assertEquals("Test Name", definition.getName());
         assertEquals(ConfigItemType.STRING, definition.getType());
     }
-
+    
     @Test
     @DisplayName("test getter and setter for key")
     void testGetterAndSetterForKey() {
@@ -62,7 +66,7 @@ class ConfigItemDefinitionTest extends BasicRequestTest {
         definition.setKey("server.port");
         assertEquals("server.port", definition.getKey());
     }
-
+    
     @Test
     @DisplayName("test getter and setter for name")
     void testGetterAndSetterForName() {
@@ -70,7 +74,7 @@ class ConfigItemDefinitionTest extends BasicRequestTest {
         definition.setName("Server Port");
         assertEquals("Server Port", definition.getName());
     }
-
+    
     @Test
     @DisplayName("test getter and setter for description")
     void testGetterAndSetterForDescription() {
@@ -78,7 +82,7 @@ class ConfigItemDefinitionTest extends BasicRequestTest {
         definition.setDescription("Port number for server");
         assertEquals("Port number for server", definition.getDescription());
     }
-
+    
     @Test
     @DisplayName("test getter and setter for defaultValue")
     void testGetterAndSetterForDefaultValue() {
@@ -86,7 +90,7 @@ class ConfigItemDefinitionTest extends BasicRequestTest {
         definition.setDefaultValue("8080");
         assertEquals("8080", definition.getDefaultValue());
     }
-
+    
     @Test
     @DisplayName("test getter and setter for type")
     void testGetterAndSetterForType() {
@@ -94,7 +98,7 @@ class ConfigItemDefinitionTest extends BasicRequestTest {
         definition.setType(ConfigItemType.NUMBER);
         assertEquals(ConfigItemType.NUMBER, definition.getType());
     }
-
+    
     @Test
     @DisplayName("test getter and setter for required")
     void testGetterAndSetterForRequired() {
@@ -104,7 +108,7 @@ class ConfigItemDefinitionTest extends BasicRequestTest {
         definition.setRequired(false);
         assertFalse(definition.isRequired());
     }
-
+    
     @Test
     @DisplayName("test getter and setter for enumValues")
     void testGetterAndSetterForEnumValues() {
@@ -119,7 +123,37 @@ class ConfigItemDefinitionTest extends BasicRequestTest {
         assertEquals("option1", definition.getEnumValues().get(0));
         assertEquals("option2", definition.getEnumValues().get(1));
     }
-
+    
+    @Test
+    @DisplayName("test getter and setter for aliases")
+    void testGetterAndSetterForAliases() {
+        ConfigItemDefinition definition = new ConfigItemDefinition();
+        List<String> aliases = new ArrayList<>();
+        aliases.add("nacos.core.auth.plugin.nacos.token.secret.key");
+        definition.setAliases(aliases);
+        assertEquals(1, definition.getAliases().size());
+        assertEquals("nacos.core.auth.plugin.nacos.token.secret.key",
+            definition.getAliases().get(0));
+    }
+    
+    @Test
+    @DisplayName("test getter and setter for sensitive")
+    void testGetterAndSetterForSensitive() {
+        ConfigItemDefinition definition = new ConfigItemDefinition();
+        definition.setSensitive(true);
+        assertTrue(definition.isSensitive());
+        definition.setSensitive(false);
+        assertFalse(definition.isSensitive());
+    }
+    
+    @Test
+    @DisplayName("test getter and setter for effectMode")
+    void testGetterAndSetterForEffectMode() {
+        ConfigItemDefinition definition = new ConfigItemDefinition();
+        definition.setEffectMode(ConfigItemEffectMode.RUNTIME);
+        assertEquals(ConfigItemEffectMode.RUNTIME, definition.getEffectMode());
+    }
+    
     @Test
     @DisplayName("test Builder pattern")
     void testBuilderPattern() {
@@ -129,7 +163,7 @@ class ConfigItemDefinitionTest extends BasicRequestTest {
                 .defaultValue("true")
                 .required(true)
                 .build();
-
+        
         assertEquals("auth.enabled", definition.getKey());
         assertEquals("Enable Auth", definition.getName());
         assertEquals(ConfigItemType.BOOLEAN, definition.getType());
@@ -137,7 +171,7 @@ class ConfigItemDefinitionTest extends BasicRequestTest {
         assertEquals("true", definition.getDefaultValue());
         assertTrue(definition.isRequired());
     }
-
+    
     @Test
     @DisplayName("test Builder pattern with enum values")
     void testBuilderPatternWithEnumValues() {
@@ -151,13 +185,32 @@ class ConfigItemDefinitionTest extends BasicRequestTest {
                 .required(true)
                 .enumValues(enumValues)
                 .build();
-
+        
         assertEquals("db.type", definition.getKey());
         assertEquals(ConfigItemType.ENUM, definition.getType());
         assertEquals(2, definition.getEnumValues().size());
         assertEquals("mysql", definition.getEnumValues().get(0));
     }
-
+    
+    @Test
+    @DisplayName("test Builder pattern with config metadata")
+    void testBuilderPatternWithConfigMetadata() {
+        List<String> aliases = new ArrayList<>();
+        aliases.add("nacos.core.auth.plugin.nacos.token.secret.key");
+        ConfigItemDefinition definition =
+            new ConfigItemDefinition.Builder("token.secret.key", "Token Secret",
+                ConfigItemType.STRING)
+                .aliases(aliases)
+                .sensitive(true)
+                .effectMode(ConfigItemEffectMode.RUNTIME)
+                .build();
+        
+        assertEquals("token.secret.key", definition.getKey());
+        assertEquals(1, definition.getAliases().size());
+        assertTrue(definition.isSensitive());
+        assertEquals(ConfigItemEffectMode.RUNTIME, definition.getEffectMode());
+    }
+    
     @Test
     @DisplayName("test serialize to json")
     void testSerializeToJson() throws JacksonException {
@@ -166,7 +219,12 @@ class ConfigItemDefinitionTest extends BasicRequestTest {
         definition.setDescription("Test description");
         definition.setDefaultValue("defaultValue");
         definition.setRequired(true);
-
+        List<String> aliases = new ArrayList<>();
+        aliases.add("legacy.testKey");
+        definition.setAliases(aliases);
+        definition.setSensitive(true);
+        definition.setEffectMode(ConfigItemEffectMode.RUNTIME);
+        
         String json = mapper.writeValueAsString(definition);
         assertNotNull(json);
         assertTrue(json.contains("\"key\":\"testKey\""));
@@ -175,15 +233,19 @@ class ConfigItemDefinitionTest extends BasicRequestTest {
         assertTrue(json.contains("\"description\":\"Test description\""));
         assertTrue(json.contains("\"defaultValue\":\"defaultValue\""));
         assertTrue(json.contains("\"required\":true"));
+        assertTrue(json.contains("\"aliases\":[\"legacy.testKey\"]"));
+        assertTrue(json.contains("\"sensitive\":true"));
+        assertTrue(json.contains("\"effectMode\":\"RUNTIME\""));
     }
-
+    
     @Test
     @DisplayName("test deserialize from json")
     void testDeserializeFromJson() throws JacksonException {
         String json = "{\"key\":\"testKey\",\"name\":\"Test Name\",\"description\":\"Test\","
             + "\"defaultValue\":\"default\",\"type\":\"STRING\",\"required\":true,"
-            + "\"enumValues\":[\"opt1\",\"opt2\"]}";
-
+            + "\"enumValues\":[\"opt1\",\"opt2\"],\"aliases\":[\"legacy.testKey\"],"
+            + "\"sensitive\":true,\"effectMode\":\"RUNTIME\"}";
+        
         ConfigItemDefinition definition = mapper.readValue(json, ConfigItemDefinition.class);
         assertNotNull(definition);
         assertEquals("testKey", definition.getKey());
@@ -194,5 +256,10 @@ class ConfigItemDefinitionTest extends BasicRequestTest {
         assertTrue(definition.isRequired());
         assertNotNull(definition.getEnumValues());
         assertEquals(2, definition.getEnumValues().size());
+        assertNotNull(definition.getAliases());
+        assertEquals(1, definition.getAliases().size());
+        assertEquals("legacy.testKey", definition.getAliases().get(0));
+        assertTrue(definition.isSensitive());
+        assertEquals(ConfigItemEffectMode.RUNTIME, definition.getEffectMode());
     }
 }

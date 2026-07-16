@@ -24,12 +24,7 @@ package com.alibaba.nacos.persistence.constants;
 public class PersistenceConstant {
     
     public static final String DEFAULT_ENCODE = "UTF-8";
-    
-    /**
-     * May be removed with the upgrade of springboot version.
-     */
-    public static final String DATASOURCE_PLATFORM_PROPERTY_OLD = "spring.datasource.platform";
-    
+
     public static final String DATASOURCE_PLATFORM_PROPERTY = "spring.sql.init.platform";
 
     public static final String DATASOURCE_PLATFORM_PROPERTY_NEW = "db.platform";
