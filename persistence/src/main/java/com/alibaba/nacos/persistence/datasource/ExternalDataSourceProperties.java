@@ -16,14 +16,10 @@
 
 package com.alibaba.nacos.persistence.datasource;
 
-import com.alibaba.nacos.common.utils.CollectionUtils;
 import com.alibaba.nacos.common.utils.Preconditions;
 import com.alibaba.nacos.common.utils.StringUtils;
 import com.zaxxer.hikari.HikariDataSource;
-import org.springframework.boot.context.properties.bind.Bindable;
-import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.core.env.Environment;
-import org.springframework.util.ObjectUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -31,7 +27,6 @@ import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -39,8 +34,6 @@ import java.util.Objects;
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-
-import static com.alibaba.nacos.common.utils.CollectionUtils.getOrDefault;
 
 /**
  * Properties of external DataSource.
@@ -60,47 +53,9 @@ public class ExternalDataSourceProperties {
     private static final String SQLSERVER_DRIVER_NAME = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
 
     private static final String TEST_QUERY = "SELECT 1";
-
     private static final String NACOS_ENC_PREFIX = "NacosEnc(";
 
     private static final String NACOS_ENC_SUFFIX = ")";
-
-    private Integer num;
-
-    private List<String> url = new ArrayList<>();
-
-    private List<String> user = new ArrayList<>();
-
-    private String driverName;
-
-    private String testQuery;
-
-    private List<String> password = new ArrayList<>();
-
-    public void setNum(Integer num) {
-        this.num = num;
-    }
-
-    public void setUrl(List<String> url) {
-        this.url = url;
-    }
-
-    public void setUser(List<String> user) {
-        this.user = user;
-    }
-
-    public void setPassword(List<String> password) {
-        this.password = password;
-    }
-
-    public void setDriverName(String driverName) {
-        this.driverName = driverName;
-    }
-
-    public void setTestQuery(String testQuery) {
-        this.testQuery = testQuery;
-    }
-
     /**
      * Build serveral HikariDataSource.
      *
@@ -110,76 +65,56 @@ public class ExternalDataSourceProperties {
      */
     List<HikariDataSource> build(Environment environment, Callback<HikariDataSource> callback) {
         List<HikariDataSource> dataSources = new ArrayList<>();
-        Binder.get(environment).bind("db", Bindable.ofInstance(this));
-        applyEnvironmentFallbacks(environment);
-        Preconditions.checkArgument(Objects.nonNull(num), "db.num is null");
-        Preconditions.checkArgument(CollectionUtils.isNotEmpty(user),
-                "db.user or db.user.[index] is null");
-        Preconditions.checkArgument(CollectionUtils.isNotEmpty(password),
-                "db.password or db.password.[index] is null");
+        DatasourceConfigResolver configResolver = new DatasourceConfigResolver(environment);
+        Integer num = configResolver.resolve("num", Integer.class);
+        Preconditions.checkArgument(Objects.nonNull(num),
+            "nacos.plugin.datasource.db.num (legacy db.num) is null");
+        String dbType = environment.getProperty("DB_TYPE", "NONE").toUpperCase(Locale.ROOT);
+        String platformPrefix = dbType + ".";
+        String defaultUser = firstText(configResolver.resolveIndexed("user", 0, true),
+                environment.getProperty("DB_USER"), environment.getProperty(platformPrefix + "USER"));
+        Preconditions.checkArgument(Objects.nonNull(defaultUser),
+            "nacos.plugin.datasource.db.user[.index] (legacy db.user[.index]) is null");
+        String defaultPassword = firstText(configResolver.resolveIndexed("password", 0, true),
+                environment.getProperty("DB_PWD"), environment.getProperty("DB_PASSWORD"),
+                environment.getProperty(platformPrefix + "PASSWORD"));
+        Preconditions.checkArgument(Objects.nonNull(defaultPassword),
+            "nacos.plugin.datasource.db.password[.index] "
+                + "(legacy db.password[.index]) is null");
+        String driverName = firstText(configResolver.resolve("driver-name", String.class),
+                configResolver.resolve("driverName", String.class), environment.getProperty("DB_DRIVER_NAME"),
+                environment.getProperty(platformPrefix + "DRIVER_NAME"));
+        String testQuery = firstText(configResolver.resolve("test-query", String.class),
+                configResolver.resolve("testQuery", String.class), environment.getProperty("DB_TEST_QUERY"),
+                environment.getProperty(platformPrefix + "TEST_QURTY"),
+                environment.getProperty(platformPrefix + "TEST_QUERY"));
         for (int index = 0; index < num; index++) {
-            int currentSize = index + 1;
-            Preconditions.checkArgument(url.size() >= currentSize, "db.url.%s is null", index);
-            DataSourcePoolProperties poolProperties = DataSourcePoolProperties.build(environment);
-            String jdbcUrl = url.get(index).trim();
+            String url = firstText(configResolver.resolveIndexed("url", index, false),
+                    index == 0 ? environment.getProperty("DB_URL") : null,
+                    index == 0 ? environment.getProperty(platformPrefix + "URL") : null);
+            Preconditions.checkArgument(Objects.nonNull(url),
+                "nacos.plugin.datasource.db.url.%s (legacy db.url.%s) is null", index,
+                index);
+            String user = firstText(configResolver.resolveIndexed("user", index, true), defaultUser);
+            String password = firstText(configResolver.resolveIndexed("password", index, true), defaultPassword);
+            DataSourcePoolProperties poolProperties =
+                DataSourcePoolProperties.build(configResolver);
             if (StringUtils.isEmpty(poolProperties.getDataSource().getDriverClassName())) {
-                poolProperties.setDriverClassName(resolveDriverName(driverName, jdbcUrl));
+                poolProperties.setDriverClassName(resolveDriverName(driverName, url));
             }
-            poolProperties.setJdbcUrl(jdbcUrl);
-            poolProperties.setUsername(getOrDefault(user, index, user.get(0)).trim());
-            poolProperties.setPassword(resolveNacosEncPassword(getOrDefault(password, index, password.get(0)).trim()));
+            poolProperties.setJdbcUrl(url.trim());
+            poolProperties.setUsername(user.trim());
+            poolProperties.setPassword(resolveNacosEncPassword(password.trim()));
             HikariDataSource ds = poolProperties.getDataSource();
             if (StringUtils.isEmpty(ds.getConnectionTestQuery())) {
-                poolProperties.setTestQuery(ObjectUtils.isEmpty(testQuery) ? TEST_QUERY : testQuery);
+                poolProperties.setTestQuery(hasText(testQuery) ? testQuery : TEST_QUERY);
             }
 
             dataSources.add(ds);
             callback.accept(ds);
         }
-        Preconditions.checkArgument(CollectionUtils.isNotEmpty(dataSources),
-                "no datasource available");
+        Preconditions.checkArgument(!dataSources.isEmpty(), "no datasource available");
         return dataSources;
-    }
-
-    private void applyEnvironmentFallbacks(Environment environment) {
-        String dbType = environment.getProperty("DB_TYPE", "NONE").toUpperCase(Locale.ROOT);
-        String platformPrefix = dbType + ".";
-        String fallbackUrl = firstText(environment.getProperty("DB_URL"), environment.getProperty(platformPrefix + "URL"),
-                environment.getProperty("db.url[0]"), environment.getProperty("db.url.0"));
-        String fallbackUser = firstText(environment.getProperty("DB_USER"), environment.getProperty(platformPrefix + "USER"),
-                environment.getProperty("db.user[0]"), environment.getProperty("db.user.0"));
-        String fallbackPassword = firstText(environment.getProperty("DB_PWD"), environment.getProperty("DB_PASSWORD"),
-                environment.getProperty(platformPrefix + "PASSWORD"), environment.getProperty("db.password[0]"),
-                environment.getProperty("db.password.0"));
-        String fallbackDriverName = firstText(environment.getProperty("DB_DRIVER_NAME"),
-                environment.getProperty(platformPrefix + "DRIVER_NAME"), environment.getProperty("db.driver-name"),
-                environment.getProperty("db.driverName"));
-        String fallbackTestQuery = firstText(environment.getProperty("DB_TEST_QUERY"),
-                environment.getProperty(platformPrefix + "TEST_QURTY"), environment.getProperty(platformPrefix + "TEST_QUERY"),
-                environment.getProperty("db.test-query"), environment.getProperty("db.testQuery"));
-        if (hasText(fallbackUrl) && !hasUsableValue(url)) {
-            url = Collections.singletonList(fallbackUrl);
-        }
-        if (hasText(fallbackUser)) {
-            user = Collections.singletonList(fallbackUser);
-        }
-        if (hasText(fallbackPassword)) {
-            password = Collections.singletonList(fallbackPassword);
-        }
-        if (hasText(fallbackDriverName) && !hasText(driverName)) {
-            driverName = fallbackDriverName;
-        }
-        if (hasText(fallbackTestQuery) && !hasText(testQuery)) {
-            testQuery = fallbackTestQuery;
-        }
-    }
-
-    private static boolean hasUsableValue(List<String> values) {
-        if (CollectionUtils.isEmpty(values)) {
-            return false;
-        }
-        String value = values.get(0);
-        return hasText(value) && !value.startsWith("${");
     }
 
     private static String firstText(String... values) {

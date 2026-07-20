@@ -34,6 +34,7 @@ import com.alibaba.nacos.core.plugin.model.PluginInfo;
 import com.alibaba.nacos.core.plugin.storage.PluginStatePersistenceService;
 import com.alibaba.nacos.core.plugin.sync.PluginStateApplier;
 import com.alibaba.nacos.core.plugin.sync.PluginStateSynchronizer;
+import com.alibaba.nacos.plugin.config.constants.ConfigChangeConstants;
 import com.alibaba.nacos.sys.env.EnvUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,6 +84,22 @@ public class PluginManager
      * Default datasource platform.
      */
     private static final String DATASOURCE_PLATFORM_DEFAULT = "derby";
+    
+    /**
+     * Legacy configuration property for visibility plugin selection.
+     */
+    private static final String VISIBILITY_TYPE_PROPERTY = "nacos.plugin.visibility.type";
+    
+    /**
+     * Default visibility plugin type.
+     */
+    private static final String VISIBILITY_TYPE_DEFAULT = "nacos";
+    
+    /**
+     * Family-wide runtime gate for visibility plugins.
+     */
+    private static final String VISIBILITY_ENABLED_PROPERTY =
+        "nacos.plugin.visibility.enabled";
     
     /**
      * Plugin registry: pluginId -> PluginInfo.
@@ -416,7 +433,8 @@ public class PluginManager
     /**
      * Calculate the default enabled status for a plugin based on its type and configuration.
      * For exclusive plugins (AUTH, DATASOURCE), only the configured one is enabled by default.
-     * For non-exclusive plugins, all are enabled by default.
+     * Config change plugins preserve their legacy opt-in default. Other non-exclusive plugins
+     * are enabled by default.
      *
      * @param type plugin type
      * @param pluginName plugin name
@@ -432,10 +450,38 @@ public class PluginManager
                 String platform = getDatasourcePlatform();
                 logSelectionMigration(type, DATASOURCE_PLATFORM_PROPERTY, platform);
                 return pluginName.equalsIgnoreCase(platform);
+            case CONFIG_CHANGE:
+                return getConfigChangePluginDefaultEnabled(pluginName);
+            case VISIBILITY:
+                return getVisibilityPluginDefaultEnabled(pluginName);
             default:
                 // Non-exclusive plugins are enabled by default
                 return true;
         }
+    }
+    
+    private boolean getConfigChangePluginDefaultEnabled(String pluginName) {
+        String property = ConfigChangeConstants.NACOS_CORE_CONFIG_PLUGIN_PREFIX + pluginName
+            + ".enabled";
+        boolean enabled = EnvUtil.getProperty(property, Boolean.class, false);
+        if (EnvUtil.containsProperty(property)) {
+            LOGGER.warn("[PluginManager] Plugin config-change:{} initial enabled state '{}' is "
+                + "read from legacy property '{}'. Persisted plugin state takes precedence; "
+                + "use the plugin management API for future state changes.", pluginName,
+                enabled, property);
+        }
+        return enabled;
+    }
+    
+    private boolean getVisibilityPluginDefaultEnabled(String pluginName) {
+        String visibilityType = EnvUtil.getProperty(VISIBILITY_TYPE_PROPERTY,
+            VISIBILITY_TYPE_DEFAULT).trim();
+        boolean selected = pluginName.equalsIgnoreCase(visibilityType);
+        if (selected) {
+            logSelectionMigration(PluginType.VISIBILITY, VISIBILITY_TYPE_PROPERTY, visibilityType);
+        }
+        boolean enabled = EnvUtil.getProperty(VISIBILITY_ENABLED_PROPERTY, Boolean.class, true);
+        return selected && enabled;
     }
     
     /**
