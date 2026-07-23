@@ -104,8 +104,8 @@ class AgentVersionStorageDescriptorCodecTest {
             () -> AgentVersionStorageDescriptorCodec.decode(valid + "{}"));
         assertThrows(IllegalArgumentException.class,
             () -> AgentVersionStorageDescriptorCodec.decode(
-                valid.replace("{\"provider\":\"nacos_config\"",
-                    "{\"provider\":\"nacos_config\",\"provider\":\"nacos_config\"")));
+                valid.replace("\"provider\":\"nacos_config\"",
+                    "\"provider\":\"nacos_config\",\"provider\":\"nacos_config\"")));
         assertThrows(IllegalArgumentException.class,
             () -> AgentVersionStorageDescriptorCodec.decode(
                 valid.replace("\"size\":128", "\"size\":\"large\"")));
