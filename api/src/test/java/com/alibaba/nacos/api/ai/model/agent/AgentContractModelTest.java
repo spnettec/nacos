@@ -19,8 +19,8 @@ package com.alibaba.nacos.api.ai.model.agent;
 import com.alibaba.nacos.api.ai.constant.AiConstants;
 import com.alibaba.nacos.api.model.Page;
 import com.alibaba.nacos.api.remote.request.BasicRequestTest;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class AgentContractModelTest extends BasicRequestTest {
     
     @Test
-    void testEndpointOptionalValuesAreNotSerialized() throws JsonProcessingException {
+    void testEndpointOptionalValuesAreNotSerialized() throws JacksonException {
         Endpoint endpoint = new Endpoint();
         endpoint.setUri("https://example.com/agent");
         endpoint.setTransport("JSON-RPC");
@@ -58,7 +58,7 @@ class AgentContractModelTest extends BasicRequestTest {
     }
     
     @Test
-    void testEndpointExplicitValuesRoundTrip() throws JsonProcessingException {
+    void testEndpointExplicitValuesRoundTrip() throws JacksonException {
         Endpoint endpoint = new Endpoint();
         endpoint.setUri("http://127.0.0.1:8080/a2a");
         endpoint.setTransport("JSON-RPC");
@@ -76,16 +76,16 @@ class AgentContractModelTest extends BasicRequestTest {
     }
     
     @Test
-    void testDefaultEnumWireValuesAreExact() throws JsonProcessingException {
+    void testDefaultEnumWireValuesAreExact() throws JacksonException {
         assertEquals("\"RUNTIME\"", mapper.writeValueAsString(EndpointSource.RUNTIME));
         assertEquals("\"UNHEALTHY\"", mapper.writeValueAsString(RuntimeEndpointState.UNHEALTHY));
         
-        assertThrows(JsonProcessingException.class,
+        assertThrows(JacksonException.class,
             () -> mapper.readValue("\"runtime\"", EndpointSource.class));
     }
     
     @Test
-    void testNativeDescriptorNullIsBoundForControllerValidation() throws JsonProcessingException {
+    void testNativeDescriptorNullIsBoundForControllerValidation() throws JacksonException {
         String json = "{\"protocol\":\"a2a\",\"descriptorMediaType\":\"application/json\","
             + "\"nativeDescriptor\":null,\"endpointSourceOrder\":[\"DECLARED\"]}";
         
@@ -94,7 +94,7 @@ class AgentContractModelTest extends BasicRequestTest {
     }
     
     @Test
-    void testAgentRoundTripWithAllFields() throws JsonProcessingException {
+    void testAgentRoundTripWithAllFields() throws JacksonException {
         Agent restored = roundTrip(newAgent(), Agent.class);
         
         assertEquals("public", restored.getNamespaceId());
@@ -117,7 +117,7 @@ class AgentContractModelTest extends BasicRequestTest {
     }
     
     @Test
-    void testAgentSummaryRoundTripWithAllFields() throws JsonProcessingException {
+    void testAgentSummaryRoundTripWithAllFields() throws JacksonException {
         AgentSummary summary = new AgentSummary();
         summary.setNamespaceId("public");
         summary.setAgentName("Demo Agent");
@@ -155,7 +155,7 @@ class AgentContractModelTest extends BasicRequestTest {
     }
     
     @Test
-    void testAgentOverviewRoundTripWithCompletePage() throws JsonProcessingException {
+    void testAgentOverviewRoundTripWithCompletePage() throws JacksonException {
         Page<AgentVersionSummary> versionPage = new Page<AgentVersionSummary>();
         versionPage.setTotalCount(1);
         versionPage.setPageNumber(1);
@@ -174,7 +174,7 @@ class AgentContractModelTest extends BasicRequestTest {
     }
     
     @Test
-    void testAgentVersionDetailRoundTripWithCallInterface() throws JsonProcessingException {
+    void testAgentVersionDetailRoundTripWithCallInterface() throws JacksonException {
         AgentVersionDetail detail = new AgentVersionDetail();
         detail.setNamespaceId("public");
         detail.setAgentName("Demo Agent");
@@ -201,7 +201,7 @@ class AgentContractModelTest extends BasicRequestTest {
     }
     
     @Test
-    void testRuntimeEndpointSnapshotRoundTripWithAllFields() throws JsonProcessingException {
+    void testRuntimeEndpointSnapshotRoundTripWithAllFields() throws JacksonException {
         RuntimeVersionBinding binding = new RuntimeVersionBinding();
         binding.setRuntimeVersion("1.0.6");
         binding.setVersionRange("[1.0.0,2.0.0)");
@@ -376,7 +376,7 @@ class AgentContractModelTest extends BasicRequestTest {
             + "0123456789abcdef0123456789abcdef";
     }
     
-    private <T> T roundTrip(T value, Class<T> type) throws JsonProcessingException {
+    private <T> T roundTrip(T value, Class<T> type) throws JacksonException {
         String json = mapper.writeValueAsString(value);
         assertNotNull(json);
         return mapper.readValue(json, type);
