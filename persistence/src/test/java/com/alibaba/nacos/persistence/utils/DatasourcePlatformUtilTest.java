@@ -44,11 +44,45 @@ class DatasourcePlatformUtilTest {
     }
     
     @Test
-    void testGetDatasourcePlatformUsesCurrentPropertyOnly() {
+    void testGetDatasourcePlatformUsesLegacyAlias() {
         environment.setProperty("spring.datasource.platform", "mysql");
         assertEquals("derby", DatasourcePlatformUtil.getDatasourcePlatform("derby"));
         
         environment.setProperty("spring.sql.init.platform", "postgresql");
         assertEquals("postgresql", DatasourcePlatformUtil.getDatasourcePlatform("derby"));
+    }
+    
+    @Test
+    void testGetDatasourcePlatformPrefersStandardProperty() {
+        environment.setProperty("spring.sql.init.platform", "mysql");
+        environment.setProperty("db.platform", "oracle");
+        environment.setProperty("nacos.plugin.datasource-dialect.type", " postgresql ");
+        
+        assertEquals("postgresql", DatasourcePlatformUtil.getDatasourcePlatform("derby"));
+    }
+
+    @Test
+    void testGetDatasourcePlatformUsesLocalPropertyBeforeLegacyProperty() {
+        environment.setProperty("spring.sql.init.platform", "mysql");
+        environment.setProperty("db.platform", " PostgreSQL ");
+
+        assertEquals("postgresql", DatasourcePlatformUtil.getDatasourcePlatform("derby"));
+        assertEquals("postgresql", DatasourcePlatformUtil.getDatasourcePlatform(environment, "derby"));
+    }
+
+    @Test
+    void testGetDatasourcePlatformUsesDbTypeCompatibilityProperty() {
+        environment.setProperty("DB_TYPE", " MySQL ");
+
+        assertEquals("mysql", DatasourcePlatformUtil.getDatasourcePlatform("derby"));
+        assertEquals("mysql", DatasourcePlatformUtil.getDatasourcePlatform(environment, "derby"));
+    }
+    
+    @Test
+    void testGetDatasourcePlatformUsesDefaultForBlankProperties() {
+        environment.setProperty("spring.sql.init.platform", " ");
+        environment.setProperty("nacos.plugin.datasource-dialect.type", " ");
+        
+        assertEquals("derby", DatasourcePlatformUtil.getDatasourcePlatform("derby"));
     }
 }

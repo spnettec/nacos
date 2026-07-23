@@ -68,6 +68,8 @@ public class DefaultGrpcClientConfig implements GrpcClientConfig {
     
     private final boolean allowCoreThreadTimeOut;
     
+    private final Integer rpcPortOffset;
+    
     private final Map<String, String> labels;
     
     private RpcClientTlsConfig tlsConfig = new RpcClientTlsConfig();
@@ -95,6 +97,7 @@ public class DefaultGrpcClientConfig implements GrpcClientConfig {
         this.channelKeepAliveTimeout = builder.channelKeepAliveTimeout;
         this.capabilityNegotiationTimeout = builder.capabilityNegotiationTimeout;
         this.allowCoreThreadTimeOut = builder.allowCoreThreadTimeOut;
+        this.rpcPortOffset = builder.rpcPortOffset;
         this.labels = builder.labels;
         this.labels.put("tls.enable", "false");
         if (Objects.nonNull(builder.tlsConfig)) {
@@ -195,6 +198,11 @@ public class DefaultGrpcClientConfig implements GrpcClientConfig {
     }
     
     @Override
+    public Integer rpcPortOffset() {
+        return this.rpcPortOffset;
+    }
+    
+    @Override
     public int healthCheckRetryTimes() {
         return healthCheckRetryTimes;
     }
@@ -248,6 +256,8 @@ public class DefaultGrpcClientConfig implements GrpcClientConfig {
         private long capabilityNegotiationTimeout = 5000L;
         
         private boolean allowCoreThreadTimeOut = false;
+        
+        private Integer rpcPortOffset;
         
         private final Map<String, String> labels = new HashMap<>();
         
@@ -344,6 +354,10 @@ public class DefaultGrpcClientConfig implements GrpcClientConfig {
                 this.allowCoreThreadTimeOut = Boolean.parseBoolean(
                     properties
                         .getProperty(GrpcConstants.GRPC_THREADPOOL_ALLOW_CORE_THREAD_TIMEOUT));
+            }
+            if (properties.containsKey(GrpcConstants.NACOS_SERVER_GRPC_PORT_OFFSET_KEY)) {
+                this.rpcPortOffset = Integer.parseInt(
+                    properties.getProperty(GrpcConstants.NACOS_SERVER_GRPC_PORT_OFFSET_KEY));
             }
             this.tlsConfig = tlsConfig;
             return this;
@@ -465,6 +479,17 @@ public class DefaultGrpcClientConfig implements GrpcClientConfig {
          */
         public Builder setAllowCoreThreadTimeOut(boolean allowCoreThreadTimeOut) {
             this.allowCoreThreadTimeOut = allowCoreThreadTimeOut;
+            return this;
+        }
+        
+        /**
+         * set rpcPortOffset.
+         *
+         * @param rpcPortOffset rpc port offset
+         * @return builder
+         */
+        public Builder setRpcPortOffset(Integer rpcPortOffset) {
+            this.rpcPortOffset = rpcPortOffset;
             return this;
         }
         

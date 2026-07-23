@@ -22,9 +22,10 @@ The data source dialect plugin type isolates database-specific SQL behavior from
 Nacos persistence logic. It covers SQL dialect functions, pagination, generated
 primary keys, and mapper implementations for Nacos tables.
 
-This is an exclusive-selection plugin. The initial active dialect is selected
-by `spring.sql.init.platform`. Common lifecycle and state rules are defined by
-the [Nacos Plugin Spec](plugin-spec.md), and bundled
+This is an exclusive-selection plugin. The active dialect is selected at
+startup by `nacos.plugin.datasource-dialect.type`;
+`spring.sql.init.platform` remains a legacy alias. Common lifecycle and state
+rules are defined by the [Nacos Plugin Spec](plugin-spec.md), and bundled
 database families are defined by the
 [Default Data Source Dialect Implementation Spec](default-datasource-dialect-plugin-spec.md).
 
@@ -114,17 +115,21 @@ operation error, not an empty result.
 ## Selection And State
 
 The core plugin manager exposes this plugin type as `datasource-dialect`.
-Only the configured dialect should be enabled by default. Built-in critical
-dialects required by the server cannot be disabled while in use.
+Only the configured dialect is enabled. The type is critical and must retain
+one selected implementation while loaded.
 
-The SQL platform property supplies bootstrap selection only. Persisted unified
-plugin state takes precedence after it is loaded. Future selection changes
-should use plugin management rather than modifying the bootstrap property.
+The dialect selector supplies bootstrap selection and requires restart.
+Persisted state entries for this exclusive type do not replace the static
+selection, and the runtime status API must reject selection changes.
 
-If a requested dialect is disabled, startup or persistence operations must fail
-explicitly. If the requested dialect is missing, the current manager searches for
-another enabled dialect and logs the fallback. This fallback is compatibility
-behavior; new deployments should configure an explicit supported SQL platform.
+When neither the standard selector nor its legacy alias is configured, the
+selection follows the server storage default: standalone mode and cluster mode
+with `-DembeddedStorage=true` select `derby`; ordinary cluster mode selects
+`mysql`. This implicit selection is also snapshotted at startup.
+
+The persistence subsystem always makes this critical type active. If the requested dialect is
+disabled or missing, startup must fail explicitly and identify the selected dialect and selection
+property. The server must not continue with another discovered dialect as a fallback.
 
 Current `DatabaseDialectManager` checks unified plugin state for
 `datasource-dialect:{databaseType}` before returning a dialect. A disabled
@@ -135,11 +140,12 @@ dialect must not participate in persistence operations.
 The SQL platform is selected by:
 
 ```properties
-spring.sql.init.platform=${databaseType}
+nacos.plugin.datasource-dialect.type=${databaseType}
 ```
 
-The removed `spring.datasource.platform` property is no longer read. Deployments
-still using it must migrate to `spring.sql.init.platform` before upgrade.
+`spring.sql.init.platform` remains a legacy alias, with the standard key taking
+precedence when both are present. The removed `spring.datasource.platform`
+property is no longer read.
 
 ### Datasource Module Configuration
 
@@ -150,10 +156,10 @@ the database driver. They are standardized under the following module prefix:
 nacos.plugin.datasource.db.{item}
 ```
 
-This namespace does not make a database dialect configurable. The built-in
-`datasource-dialect:{databaseType}` instances still expose
-`configurable=false`, because connection credentials and pool settings belong
-to one server datasource rather than to each loaded dialect. These settings are
+This namespace does not make a database dialect configurable. `DatabaseDialect` inherits the common
+configuration contract, but the built-in `datasource-dialect:{databaseType}` instances declare no
+definitions and still expose `configurable=false`, because connection credentials and pool settings
+belong to one server datasource rather than to each loaded dialect. These settings are
 static, take effect on restart, and are not accepted by the plugin detail/PUT
 configuration API. A future management surface must first define one unique
 datasource configuration owner instead of copying the same credentials into

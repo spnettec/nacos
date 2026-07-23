@@ -24,7 +24,16 @@ package com.alibaba.nacos.persistence.constants;
 public class PersistenceConstant {
     
     public static final String DEFAULT_ENCODE = "UTF-8";
-
+    
+    public static final String DATASOURCE_DIALECT_TYPE_PROPERTY =
+        "nacos.plugin.datasource-dialect.type";
+    
+    /**
+     * Legacy datasource dialect selection property.
+     *
+     * @deprecated use {@link #DATASOURCE_DIALECT_TYPE_PROPERTY} instead.
+     */
+    @Deprecated
     public static final String DATASOURCE_PLATFORM_PROPERTY = "spring.sql.init.platform";
 
     public static final String DATASOURCE_PLATFORM_PROPERTY_NEW = "db.platform";

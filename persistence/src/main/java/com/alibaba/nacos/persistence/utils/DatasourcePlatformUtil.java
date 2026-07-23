@@ -43,12 +43,21 @@ public class DatasourcePlatformUtil {
      * @return
      */
     public static String getDatasourcePlatform(String defaultPlatform) {
-        String platform = EnvUtil.getProperty(PersistenceConstant.DATASOURCE_PLATFORM_PROPERTY_NEW);
-        if (StringUtils.isBlank(platform)) {
+        String platform = EnvUtil.getProperty(PersistenceConstant.DATASOURCE_DIALECT_TYPE_PROPERTY);
+        if (isUnresolved(platform)) {
+            platform = EnvUtil.getProperty(PersistenceConstant.DATASOURCE_PLATFORM_PROPERTY_NEW);
+        }
+        if (isUnresolved(platform)) {
             platform = EnvUtil.getProperty(PersistenceConstant.DATASOURCE_PLATFORM_PROPERTY);
         }
-        if (StringUtils.isBlank(platform)) {
+        if (isUnresolved(platform)) {
             platform = EnvUtil.getProperty(DATASOURCE_TYPE_PROPERTY);
+        }
+        if (isUnresolved(platform)) {
+            String dataSourceType = EnvUtil.getProperty(DATASOURCE_TYPE_PROPERTY);
+            if (StringUtils.isNotBlank(dataSourceType) && !EMPTY_DATASOURCE_TYPE.equalsIgnoreCase(dataSourceType)) {
+                platform = EnvUtil.getProperty(dataSourceType + PLATFORM_PROPERTY_SUFFIX);
+            }
         }
         return normalizeDatasourcePlatform(platform, defaultPlatform);
     }
@@ -60,14 +69,17 @@ public class DatasourcePlatformUtil {
      * @return datasource platform
      */
     public static String getDatasourcePlatform(Environment environment, String defaultPlatform) {
-        String platform = environment.getProperty(PersistenceConstant.DATASOURCE_PLATFORM_PROPERTY_NEW);
-        if (StringUtils.isBlank(platform)) {
+        String platform = environment.getProperty(PersistenceConstant.DATASOURCE_DIALECT_TYPE_PROPERTY);
+        if (isUnresolved(platform)) {
+            platform = environment.getProperty(PersistenceConstant.DATASOURCE_PLATFORM_PROPERTY_NEW);
+        }
+        if (isUnresolved(platform)) {
             platform = environment.getProperty(PersistenceConstant.DATASOURCE_PLATFORM_PROPERTY);
         }
-        if (StringUtils.isBlank(platform)) {
+        if (isUnresolved(platform)) {
             platform = environment.getProperty(DATASOURCE_TYPE_PROPERTY);
         }
-        if (StringUtils.isBlank(platform) || platform.contains("${")) {
+        if (isUnresolved(platform)) {
             String dataSourceType = environment.getProperty(DATASOURCE_TYPE_PROPERTY);
             if (StringUtils.isNotBlank(dataSourceType) && !EMPTY_DATASOURCE_TYPE.equalsIgnoreCase(dataSourceType)) {
                 platform = environment.getProperty(dataSourceType + PLATFORM_PROPERTY_SUFFIX);
@@ -76,10 +88,16 @@ public class DatasourcePlatformUtil {
         return normalizeDatasourcePlatform(platform, defaultPlatform);
     }
 
+    private static boolean isUnresolved(String platform) {
+        return StringUtils.isBlank(platform) || platform.contains("${");
+    }
+
     private static String normalizeDatasourcePlatform(String platform, String defaultPlatform) {
-        if (StringUtils.isBlank(platform) || EMPTY_DATASOURCE_TYPE.equalsIgnoreCase(platform)) {
+        if (StringUtils.isBlank(platform)) {
             return defaultPlatform;
         }
-        return platform.toLowerCase(Locale.ROOT);
+        String normalizedPlatform = platform.trim();
+        return EMPTY_DATASOURCE_TYPE.equalsIgnoreCase(normalizedPlatform)
+            ? defaultPlatform : normalizedPlatform.toLowerCase(Locale.ROOT);
     }
 }

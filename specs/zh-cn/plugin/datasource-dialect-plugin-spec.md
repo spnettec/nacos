@@ -21,8 +21,9 @@
 数据源方言插件用于把数据库相关 SQL 行为从 Nacos 持久化逻辑中隔离出来。它覆盖 SQL 方言
 函数、分页、生成主键，以及 Nacos 表对应的 mapper 实现。
 
-这是互斥选择插件。初始活跃方言由 `spring.sql.init.platform` 选择。通用生命周期和状态
-规则由 [Nacos 插件化规范](plugin-spec.md) 定义，内置数据库族由
+这是互斥选择插件。活跃方言由 `nacos.plugin.datasource-dialect.type` 在启动时选择，
+`spring.sql.init.platform` 继续作为历史 alias。通用生命周期和状态规则由
+[Nacos 插件化规范](plugin-spec.md) 定义，内置数据库族由
 [默认数据源方言插件实现规范](default-datasource-dialect-plugin-spec.md) 定义。
 
 该插件的存在原因是：Nacos 持久化需要保持同一套逻辑 schema 和 repository 契约，同时允许
@@ -95,15 +96,19 @@ legacy beta/tag 灰度表的运行时 Config 迁移查询。如果 pre-3.0 部�
 
 ## 选择与状态
 
-核心插件管理器以 `datasource-dialect` 类型暴露该插件。只有配置选中的方言默认启用。服务端
-运行所依赖的内置关键方言在使用期间不能被禁用。
+核心插件管理器以 `datasource-dialect` 类型暴露该插件。只有配置选中的方言启用。该插件
+类型属于 critical，加载后必须保留一个被选中的实现。
 
-SQL platform 配置只提供启动初始选择。统一插件持久化状态加载后优先级更高；后续选择变更
-应通过插件管理完成，而不是修改该启动配置。
+方言 selector 只提供启动选择并需要重启生效。该互斥类型的持久化状态不能替代静态选择，
+运行时 status API 必须拒绝选择变更。
 
-如果请求的方言被禁用，启动或持久化操作必须显式失败。如果请求的方言缺失，当前 manager
-会查找其他已启用方言并记录 fallback。该 fallback 属于兼容行为；新部署应明确配置受支持的
-SQL platform。
+标准选择 key 与历史 alias 均未配置时，选择结果沿用服务端存储默认值：单机模式以及
+配置了 `-DembeddedStorage=true` 的集群模式选择 `derby`，普通集群模式选择 `mysql`。
+这一隐式选择同样在启动时形成快照。
+
+持久化子系统始终使该 critical 类型处于 active 状态。如果请求的方言被禁用或缺失，启动
+必须显式失败，并明确记录选中的方言和选择配置。服务端不得 fallback 到另一个已发现方言后
+继续启动。
 
 当前 `DatabaseDialectManager` 在返回 dialect 前，会检查
 `datasource-dialect:{databaseType}` 的统一插件状态。被禁用的 dialect 不得参与持久化
@@ -114,11 +119,11 @@ SQL platform。
 SQL platform 通过以下配置选择：
 
 ```properties
-spring.sql.init.platform=${databaseType}
+nacos.plugin.datasource-dialect.type=${databaseType}
 ```
 
-已移除的 `spring.datasource.platform` 不再读取。仍使用该配置的部署必须在升级前迁移到
-`spring.sql.init.platform`。
+`spring.sql.init.platform` 继续作为历史 alias；二者同时存在时标准 key 优先。已移除的
+`spring.datasource.platform` 不再读取。
 
 ### Datasource 模块配置
 
@@ -128,9 +133,9 @@ spring.sql.init.platform=${databaseType}
 nacos.plugin.datasource.db.{item}
 ```
 
-该命名空间不会让数据库方言变为可配置插件。内置
-`datasource-dialect:{databaseType}` 仍以 `configurable=false` 暴露，因为连接凭据和连接池
-参数属于服务端唯一数据源，而不是分别属于每个已加载方言。这些配置均为静态配置，只在重启后
+该命名空间不会让数据库方言变为可配置插件。`DatabaseDialect` 虽继承统一配置契约，但内置
+`datasource-dialect:{databaseType}` 不声明 definitions，仍以 `configurable=false` 暴露，
+因为连接凭据和连接池参数属于服务端唯一数据源，而不是分别属于每个已加载方言。这些配置均为静态配置，只在重启后
 生效，当前不进入插件 detail/PUT 配置 API。未来若要提供统一管理入口，必须先定义唯一的
 datasource 配置 owner，不能把同一份凭据复制到所有方言。
 
