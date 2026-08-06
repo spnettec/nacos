@@ -209,7 +209,7 @@ public class AgentConsoleApiOpenApiITCase extends AiConsoleApiBaseITCase {
             assertEquals(version, snapshot.get("version").asText(), runtimeView.toString());
         }
         assertTrue(snapshot.get("items").isArray(), runtimeView.toString());
-        assertFalse(snapshot.get("items").elements().hasNext(), runtimeView.toString());
+        assertEquals(0, snapshot.get("items").size(), runtimeView.toString());
 
         JsonNode namingReference = runtimeView.get("namingServiceRef");
         assertEquals(namespaceId, namingReference.get("namespaceId").asText(),

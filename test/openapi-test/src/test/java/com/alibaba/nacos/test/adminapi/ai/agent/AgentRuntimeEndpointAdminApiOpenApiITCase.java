@@ -25,7 +25,6 @@ import org.junit.jupiter.api.Test;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -109,6 +108,6 @@ public class AgentRuntimeEndpointAdminApiOpenApiITCase extends AiAdminApiBaseITC
             assertEquals(version, snapshot.get("version").asText(), snapshot.toString());
         }
         assertTrue(snapshot.get("items").isArray(), snapshot.toString());
-        assertFalse(snapshot.get("items").elements().hasNext(), snapshot.toString());
+        assertEquals(0, snapshot.get("items").size(), snapshot.toString());
     }
 }

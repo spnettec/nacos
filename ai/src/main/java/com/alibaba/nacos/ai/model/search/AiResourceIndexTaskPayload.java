@@ -16,6 +16,8 @@
 
 package com.alibaba.nacos.ai.model.search;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 /**
  * Versioned input payload for the AI resource search-index task type.
  *
@@ -34,6 +36,7 @@ public class AiResourceIndexTaskPayload {
     public AiResourceIndexTaskPayload() {
     }
 
+    @JsonCreator(mode = JsonCreator.Mode.DISABLED)
     public AiResourceIndexTaskPayload(String resourceType, String resourceName,
         boolean enhancementRequested) {
         this.subject = new Subject(resourceType, resourceName);
@@ -76,6 +79,7 @@ public class AiResourceIndexTaskPayload {
         public Subject() {
         }
 
+        @JsonCreator(mode = JsonCreator.Mode.DISABLED)
         public Subject(String resourceType, String resourceName) {
             this.resourceType = resourceType;
             this.resourceName = resourceName;
@@ -108,6 +112,7 @@ public class AiResourceIndexTaskPayload {
         public Options() {
         }
 
+        @JsonCreator(mode = JsonCreator.Mode.DISABLED)
         public Options(boolean enhancementRequested) {
             this.enhancementRequested = enhancementRequested;
         }

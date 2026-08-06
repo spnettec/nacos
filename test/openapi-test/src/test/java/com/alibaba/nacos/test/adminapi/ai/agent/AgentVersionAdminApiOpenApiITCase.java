@@ -25,7 +25,6 @@ import java.util.Collections;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -251,7 +250,7 @@ public class AgentVersionAdminApiOpenApiITCase extends AiAdminApiBaseITCase {
         assertTrue(agent.get("versionCatalog").get("latestVersion") == null,
                 agent.toString());
         assertEquals(0, agent.get("versionInfo").get("onlineCnt").asInt(), agent.toString());
-        assertFalse(agent.get("versionCatalog").get("onlineVersions").elements().hasNext(),
+        assertEquals(0, agent.get("versionCatalog").get("onlineVersions").size(),
                 agent.toString());
     }
 }
