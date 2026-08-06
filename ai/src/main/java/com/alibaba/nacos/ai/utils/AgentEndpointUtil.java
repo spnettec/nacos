@@ -33,7 +33,7 @@ import java.util.Map;
  * @author xiweng.yy
  */
 public class AgentEndpointUtil {
-    
+
     /**
      * Transfer a collection of AgentEndpoint to a list of Instance.
      *
@@ -49,7 +49,7 @@ public class AgentEndpointUtil {
         }
         return result;
     }
-    
+
     /**
      * Transfer a single AgentEndpoint to an Instance.
      *
@@ -72,13 +72,13 @@ public class AgentEndpointUtil {
                 : endpoint.getProtocolVersion();
         String tenant =
             StringUtils.isBlank(endpoint.getTenant()) ? StringUtils.EMPTY : endpoint.getTenant();
-        Map<String, String> metadata = Map.of(Constants.A2A.AGENT_ENDPOINT_PATH_KEY, path,
-            Constants.A2A.AGENT_ENDPOINT_TRANSPORT_KEY, endpoint.getTransport(),
-            Constants.A2A.NACOS_AGENT_ENDPOINT_SUPPORT_TLS, String.valueOf(endpoint.isSupportTls()),
-            Constants.A2A.NACOS_AGENT_ENDPOINT_PROTOCOL_KEY, protocol,
-            Constants.A2A.NACOS_AGENT_ENDPOINT_QUERY_KEY,
-            query, Constants.A2A.NACOS_AGENT_ENDPOINT_PROTOCOL_VERSION_KEY, protocolVersion,
-            Constants.A2A.NACOS_AGENT_ENDPOINT_TENANT_KEY, tenant);
+        Map<String, String> metadata = Map.of(Constants.Agent.AGENT_ENDPOINT_PATH_KEY, path,
+            Constants.Agent.AGENT_ENDPOINT_TRANSPORT_KEY, endpoint.getTransport(),
+            Constants.Agent.AGENT_ENDPOINT_SUPPORT_TLS_KEY,
+            String.valueOf(endpoint.isSupportTls()), Constants.Agent.AGENT_ENDPOINT_PROTOCOL_KEY,
+            protocol, Constants.Agent.AGENT_ENDPOINT_QUERY_KEY, query,
+            Constants.Agent.AGENT_ENDPOINT_PROTOCOL_VERSION_KEY, protocolVersion,
+            Constants.Agent.AGENT_ENDPOINT_TENANT_KEY, tenant);
         instance.setMetadata(metadata);
         instance.validate();
         return instance;

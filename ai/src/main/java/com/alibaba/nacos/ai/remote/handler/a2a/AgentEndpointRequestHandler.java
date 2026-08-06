@@ -18,6 +18,9 @@ package com.alibaba.nacos.ai.remote.handler.a2a;
 
 import com.alibaba.nacos.api.annotation.Since;
 import com.alibaba.nacos.ai.constant.Constants;
+import com.alibaba.nacos.ai.service.a2a.A2aCompatibilityMode;
+import com.alibaba.nacos.ai.service.a2a.A2aCompatibilityModeResolver;
+import com.alibaba.nacos.ai.service.a2a.CanonicalA2aEndpointOperationService;
 import com.alibaba.nacos.ai.service.a2a.identity.AgentIdCodecHolder;
 import com.alibaba.nacos.ai.utils.AgentEndpointUtil;
 import com.alibaba.nacos.ai.utils.AgentRequestUtil;
@@ -48,6 +51,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
+
 /**
  * Register or Deregister endpoint for agent to nacos AI module request handler.
  *
@@ -57,19 +62,27 @@ import org.springframework.stereotype.Component;
 @Component
 public class AgentEndpointRequestHandler
     extends RequestHandler<AgentEndpointRequest, AgentEndpointResponse> {
-    
+
     private static final Logger LOGGER = LoggerFactory.getLogger(AgentEndpointRequestHandler.class);
-    
+
     private final EphemeralClientOperationServiceImpl clientOperationService;
-    
+
     private final AgentIdCodecHolder agentIdCodecHolder;
-    
+
+    private final A2aCompatibilityModeResolver compatibilityModeResolver;
+
+    private final CanonicalA2aEndpointOperationService canonicalEndpointOperationService;
+
     public AgentEndpointRequestHandler(EphemeralClientOperationServiceImpl clientOperationService,
-        AgentIdCodecHolder agentIdCodecHolder) {
+        AgentIdCodecHolder agentIdCodecHolder,
+        A2aCompatibilityModeResolver compatibilityModeResolver,
+        CanonicalA2aEndpointOperationService canonicalEndpointOperationService) {
         this.clientOperationService = clientOperationService;
         this.agentIdCodecHolder = agentIdCodecHolder;
+        this.compatibilityModeResolver = compatibilityModeResolver;
+        this.canonicalEndpointOperationService = canonicalEndpointOperationService;
     }
-    
+
     @Override
     @NamespaceValidation
     @ExtractorManager.Extractor(rpcExtractor = AgentRequestParamExtractor.class)
@@ -81,12 +94,16 @@ public class AgentEndpointRequestHandler
         AgentRequestUtil.fillNamespaceId(request);
         try {
             validateRequest(request);
+            if (A2aCompatibilityMode.CANONICAL == compatibilityModeResolver.resolve()) {
+                handleCanonical(request, meta);
+                return response;
+            }
             Instance instance = transferInstance(request);
             String serviceName =
                 agentIdCodecHolder.encode(request.getAgentName()) + "::"
                     + request.getEndpoint().getVersion();
             Service service =
-                Service.newService(request.getNamespaceId(), Constants.A2A.AGENT_ENDPOINT_GROUP,
+                Service.newService(request.getNamespaceId(), Constants.Agent.AGENT_ENDPOINT_GROUP,
                     serviceName);
             switch (request.getType()) {
                 case AiRemoteConstants.REGISTER_ENDPOINT:
@@ -100,8 +117,7 @@ public class AgentEndpointRequestHandler
                         ErrorCode.PARAMETER_VALIDATE_ERROR,
                         String.format("parameter `type` should be %s or %s, but was %s",
                             AiRemoteConstants.REGISTER_ENDPOINT,
-                            AiRemoteConstants.DE_REGISTER_ENDPOINT,
-                            request.getType()));
+                            AiRemoteConstants.DE_REGISTER_ENDPOINT, request.getType()));
             }
         } catch (NacosApiException e) {
             response.setErrorInfo(e.getErrCode(), e.getErrMsg());
@@ -111,11 +127,37 @@ public class AgentEndpointRequestHandler
         }
         return response;
     }
-    
+
+    private void handleCanonical(AgentEndpointRequest request, RequestMeta meta)
+        throws NacosException {
+        switch (request.getType()) {
+            case AiRemoteConstants.REGISTER_ENDPOINT:
+                canonicalEndpointOperationService.register(meta.getConnectionId(),
+                    request.getNamespaceId(), request.getAgentName(),
+                    Collections.singletonList(request.getEndpoint()));
+                break;
+            case AiRemoteConstants.DE_REGISTER_ENDPOINT:
+                canonicalEndpointOperationService.deregister(meta.getConnectionId(),
+                    request.getNamespaceId(), request.getAgentName(),
+                    request.getEndpoint().getVersion());
+                break;
+            default:
+                throw invalidType(request.getType());
+        }
+    }
+
+    private NacosApiException invalidType(String type) {
+        return new NacosApiException(NacosException.INVALID_PARAM,
+            ErrorCode.PARAMETER_VALIDATE_ERROR,
+            String.format("parameter `type` should be %s or %s, but was %s",
+                AiRemoteConstants.REGISTER_ENDPOINT, AiRemoteConstants.DE_REGISTER_ENDPOINT,
+                type));
+    }
+
     private Instance transferInstance(AgentEndpointRequest request) throws NacosApiException {
         return AgentEndpointUtil.transferToInstance(request.getEndpoint());
     }
-    
+
     private void validateRequest(AgentEndpointRequest request) throws NacosApiException {
         if (StringUtils.isBlank(request.getAgentName())) {
             throw new NacosApiException(NacosException.INVALID_PARAM, ErrorCode.PARAMETER_MISSING,
@@ -130,7 +172,7 @@ public class AgentEndpointRequestHandler
                 "Required parameter `endpoint.version` can't be empty or null");
         }
     }
-    
+
     private void doRegisterEndpoint(Service service, Instance instance, RequestMeta meta)
         throws NacosException {
         clientOperationService.registerInstance(service, instance, meta.getConnectionId());
@@ -138,9 +180,9 @@ public class AgentEndpointRequestHandler
             NamingRequestUtil.getSourceIpForGrpcRequest(meta), true, service.getNamespace(),
             service.getGroup(),
             service.getName(), instance.getIp(), instance.getPort()));
-        
+
     }
-    
+
     private void doDeregisterEndpoint(Service service, Instance instance, RequestMeta meta) {
         clientOperationService.deregisterInstance(service, instance, meta.getConnectionId());
         NotifyCenter.publishEvent(new DeregisterInstanceTraceEvent(System.currentTimeMillis(),

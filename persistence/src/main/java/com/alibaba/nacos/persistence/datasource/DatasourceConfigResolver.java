@@ -30,27 +30,40 @@ import org.springframework.core.env.Environment;
  * @author Nacos
  */
 final class DatasourceConfigResolver {
-    
+
     static final String CANONICAL_PREFIX = "nacos.plugin.datasource.db";
-    
+
+    /**
+     * Legacy datasource configuration prefix.
+     *
+     * @deprecated use {@link #CANONICAL_PREFIX} instead. Planned for removal in Nacos 4.0.0.
+     */
+    @Deprecated
     static final String LEGACY_PREFIX = "db";
-    
+
     private static final String POOL_CONFIG_SUFFIX = "pool.config";
-    
+
     private static final String QUERY_TIMEOUT_ITEM = "query-timeout";
-    
+
+    /**
+     * Legacy datasource query timeout JVM property.
+     *
+     * @deprecated use {@code nacos.plugin.datasource.db.query-timeout} instead. Planned for
+     *     removal in Nacos 4.0.0.
+     */
+    @Deprecated
     private static final String LEGACY_QUERY_TIMEOUT_PROPERTY = "QUERYTIMEOUT";
-    
+
     private static final Logger LOGGER = LoggerFactory.getLogger(DatasourceConfigResolver.class);
-    
+
     private final Environment environment;
-    
+
     private boolean legacyWarningLogged;
-    
+
     DatasourceConfigResolver(Environment environment) {
         this.environment = environment;
     }
-    
+
     <T> T resolve(String itemKey, Class<T> targetType) {
         T canonicalValue = getProperty(CANONICAL_PREFIX, itemKey, targetType);
         if (canonicalValue != null) {
@@ -62,7 +75,7 @@ final class DatasourceConfigResolver {
         }
         return legacyValue;
     }
-    
+
     String resolveIndexed(String itemKey, int index, boolean sharedFallback) {
         String value = resolveIndexedFromPrefix(CANONICAL_PREFIX, itemKey, index,
             sharedFallback);
@@ -75,7 +88,7 @@ final class DatasourceConfigResolver {
         }
         return value;
     }
-    
+
     void bindPoolConfig(HikariDataSource dataSource) {
         Binder binder = Binder.get(environment);
         Bindable<HikariDataSource> target = Bindable.ofInstance(dataSource);
@@ -84,7 +97,7 @@ final class DatasourceConfigResolver {
         }
         binder.bind(CANONICAL_PREFIX + "." + POOL_CONFIG_SUFFIX, target);
     }
-    
+
     int resolveQueryTimeout(int defaultValue) {
         String canonicalValue = getProperty(CANONICAL_PREFIX, QUERY_TIMEOUT_ITEM, String.class);
         if (canonicalValue != null) {
@@ -96,7 +109,7 @@ final class DatasourceConfigResolver {
         }
         return ConvertUtils.toInt(legacyValue, defaultValue);
     }
-    
+
     private String resolveIndexedFromPrefix(String prefix, String itemKey, int index,
         boolean sharedFallback) {
         String value = getIndexedProperty(prefix, itemKey, index);
@@ -111,7 +124,7 @@ final class DatasourceConfigResolver {
         }
         return value;
     }
-    
+
     private String getIndexedProperty(String prefix, String itemKey, int index) {
         String value = getProperty(prefix, itemKey + "." + index, String.class);
         if (value == null) {
@@ -119,11 +132,11 @@ final class DatasourceConfigResolver {
         }
         return value;
     }
-    
+
     private <T> T getProperty(String prefix, String itemKey, Class<T> targetType) {
         return environment.getProperty(prefix + "." + itemKey, targetType);
     }
-    
+
     private void warnLegacy(String legacyKey) {
         if (legacyWarningLogged) {
             return;

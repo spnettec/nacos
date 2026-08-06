@@ -31,7 +31,18 @@ import com.alibaba.nacos.config.server.service.trace.ConfigTraceService;
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>
  */
 public class DumpConfigHandler extends Subscriber<ConfigDumpEvent> {
-    
+
+    private final DumpService dumpService;
+
+    /**
+     * Creates a dump event handler.
+     *
+     * @param dumpService dump service used to enqueue keyed dump tasks
+     */
+    public DumpConfigHandler(DumpService dumpService) {
+        this.dumpService = dumpService;
+    }
+
     /**
      * trigger config dump event.
      *
@@ -44,7 +55,7 @@ public class DumpConfigHandler extends Subscriber<ConfigDumpEvent> {
         final String namespaceId = event.getNamespaceId();
         final String content = event.getContent();
         final long lastModified = event.getLastModifiedTs();
-        
+
         //gray
         if (StringUtils.isNotBlank(event.getGrayName())) {
             boolean result = false;
@@ -68,24 +79,24 @@ public class DumpConfigHandler extends Subscriber<ConfigDumpEvent> {
                         System.currentTimeMillis() - lastModified, 0);
                 }
             }
-            
+
             return result;
         }
-        
+
         if (dataId.equals(ClientIpWhiteList.CLIENT_IP_WHITELIST_METADATA)) {
             ClientIpWhiteList.load(content);
         }
-        
+
         if (dataId.equals(SwitchService.SWITCH_META_DATA_ID)) {
             SwitchService.load(content);
         }
-        
+
         boolean result;
         if (!event.isRemove()) {
             result = ConfigCacheService.dump(dataId, group, namespaceId, content, lastModified,
                 event.getType(),
                 event.getEncryptedDataKey());
-            
+
             if (result) {
                 ConfigTraceService.logDumpEvent(dataId, group, namespaceId, null, lastModified,
                     event.getHandleIp(),
@@ -94,7 +105,7 @@ public class DumpConfigHandler extends Subscriber<ConfigDumpEvent> {
             }
         } else {
             result = ConfigCacheService.remove(dataId, group, namespaceId);
-            
+
             if (result) {
                 ConfigTraceService.logDumpEvent(dataId, group, namespaceId, null, lastModified,
                     event.getHandleIp(),
@@ -103,14 +114,18 @@ public class DumpConfigHandler extends Subscriber<ConfigDumpEvent> {
             }
         }
         return result;
-        
+
     }
-    
+
     @Override
     public void onEvent(ConfigDumpEvent event) {
-        configDump(event);
+        DumpRequest dumpRequest =
+            DumpRequest.create(event.getDataId(), event.getGroup(), event.getNamespaceId(),
+                event.getLastModifiedTs(), event.getHandleIp());
+        dumpRequest.setGrayName(event.getGrayName());
+        dumpService.dump(dumpRequest);
     }
-    
+
     @Override
     public Class<? extends Event> subscribeType() {
         return ConfigDumpEvent.class;

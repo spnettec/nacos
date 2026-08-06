@@ -42,17 +42,21 @@ import static com.alibaba.nacos.config.server.constant.Constants.NULL;
  */
 
 public class ConfigRocksDbDiskService implements ConfigDiskService {
-    
+
     private static final String ROCKSDB_DATA = File.separator + "rocksdata" + File.separator;
-    
+
     private static final String BASE_DIR = ROCKSDB_DATA + "config-data";
-    
+
     private static final String GRAY_DIR = ROCKSDB_DATA + "gray-data";
-    
+
     private static final long DEFAULT_WRITE_BUFFER_MB = 32;
-    
+
+    static {
+        RocksDB.loadLibrary();
+    }
+
     Map<String, RocksDB> rocksDbMap = new HashMap<>();
-    
+
     private void createDirIfNotExist(String dir) {
         File roskDataDir = new File(EnvUtil.getNacosHome(), "rocksdata");
         if (!roskDataDir.exists()) {
@@ -63,7 +67,7 @@ public class ConfigRocksDbDiskService implements ConfigDiskService {
             baseDir.mkdirs();
         }
     }
-    
+
     private void deleteDirIfExist(String dir) {
         File rockskDataDir = new File(EnvUtil.getNacosHome(), "rocksdata");
         if (!rockskDataDir.exists()) {
@@ -74,19 +78,19 @@ public class ConfigRocksDbDiskService implements ConfigDiskService {
             baseDir.delete();
         }
     }
-    
+
     public ConfigRocksDbDiskService() {
         createDirIfNotExist(BASE_DIR);
         createDirIfNotExist(GRAY_DIR);
-        
+
     }
-    
+
     private byte[] getKeyByte(String dataId, String group, String tenant, String tag)
         throws IOException {
         String[] keys = new String[] {dataId, group, tenant, tag};
         return getKeyByte(keys);
     }
-    
+
     private byte[] getKeyByte(String... keys) throws IOException {
         if (keys == null || keys.length == 0) {
             return NULL.getBytes(ENCODE_UTF8);
@@ -101,7 +105,7 @@ public class ConfigRocksDbDiskService implements ConfigDiskService {
         }
         return stringBuilder.toString().getBytes(ENCODE_UTF8);
     }
-    
+
     /**
      * + -> %2B % -> %25.
      */
@@ -117,7 +121,7 @@ public class ConfigRocksDbDiskService implements ConfigDiskService {
             }
         }
     }
-    
+
     /**
      * save config to disk.
      */
@@ -131,7 +135,7 @@ public class ConfigRocksDbDiskService implements ConfigDiskService {
             throw new IOException(e);
         }
     }
-    
+
     /**
      * save config to disk.
      */
@@ -140,7 +144,7 @@ public class ConfigRocksDbDiskService implements ConfigDiskService {
         throws IOException {
         saveToDiskInner(type, dataId, group, tenant, null, content);
     }
-    
+
     /**
      * save config to disk.
      */
@@ -154,7 +158,7 @@ public class ConfigRocksDbDiskService implements ConfigDiskService {
             throw new IOException(e);
         }
     }
-    
+
     /**
      * Save configuration information to disk.
      */
@@ -162,7 +166,7 @@ public class ConfigRocksDbDiskService implements ConfigDiskService {
         throws IOException {
         saveToDiskInner(BASE_DIR, dataId, group, tenant, content);
     }
-    
+
     /**
      * Save tag information to disk.
      */
@@ -170,31 +174,31 @@ public class ConfigRocksDbDiskService implements ConfigDiskService {
         String content)
         throws IOException {
         saveGrayToDiskInner(GRAY_DIR, dataId, group, tenant, grayName, content);
-        
+
     }
-    
+
     /**
      * Deletes configuration files on disk.
      */
     public void removeConfigInfo(String dataId, String group, String tenant) {
         removeContentInner(BASE_DIR, dataId, group, tenant, null);
     }
-    
+
     /**
      * Deletes gray configuration files on disk.
      */
     public void removeConfigInfo4Gray(String dataId, String group, String tenant, String grayName) {
         removeGrayInner(GRAY_DIR, dataId, group, tenant, grayName);
-        
+
     }
-    
+
     private String byte2String(byte[] bytes) throws IOException {
         if (bytes == null) {
             return null;
         }
         return new String(bytes, ENCODE_UTF8);
     }
-    
+
     RocksDB initAndGetDB(String dir) throws IOException, RocksDBException {
         if (rocksDbMap.containsKey(dir)) {
             return rocksDbMap.get(dir);
@@ -207,17 +211,17 @@ public class ConfigRocksDbDiskService implements ConfigDiskService {
                 rocksDbMap.put(dir, RocksDB.open(createOptions(dir), EnvUtil.getNacosHome() + dir));
                 return rocksDbMap.get(dir);
             }
-            
+
         }
     }
-    
+
     private void createDirIfEmpty(String filePath) {
         File file = new File(filePath);
         if (!file.exists()) {
             file.mkdirs();
         }
     }
-    
+
     private String getContentInner(String type, String dataId, String group, String tenant)
         throws IOException {
         byte[] bytes = null;
@@ -229,7 +233,7 @@ public class ConfigRocksDbDiskService implements ConfigDiskService {
             throw new IOException(e);
         }
     }
-    
+
     private String getGrayInner(String type, String dataId, String group, String tenant,
         String grayName)
         throws IOException {
@@ -241,7 +245,7 @@ public class ConfigRocksDbDiskService implements ConfigDiskService {
             throw new IOException(e);
         }
     }
-    
+
     private void removeContentInner(String type, String dataId, String group, String tenant,
         String tag) {
         try {
@@ -252,7 +256,7 @@ public class ConfigRocksDbDiskService implements ConfigDiskService {
                 group, tenant, e.getCause());
         }
     }
-    
+
     private void removeGrayInner(String type, String dataId, String group, String tenant,
         String grayName) {
         try {
@@ -263,7 +267,7 @@ public class ConfigRocksDbDiskService implements ConfigDiskService {
                 group, tenant, e.getCause());
         }
     }
-    
+
     /**
      * Returns the path of the gray content cache file in server.
      */
@@ -271,16 +275,16 @@ public class ConfigRocksDbDiskService implements ConfigDiskService {
         throws IOException {
         return getGrayInner(GRAY_DIR, dataId, group, tenant, grayName);
     }
-    
+
     public String getContent(String dataId, String group, String tenant) throws IOException {
         return getContentInner(BASE_DIR, dataId, group, tenant);
     }
-    
+
     public String getLocalConfigMd5(String dataId, String group, String tenant, String encode)
         throws IOException {
         return MD5Utils.md5Hex(getContentInner(BASE_DIR, dataId, group, tenant), encode);
     }
-    
+
     Options createOptions(String dir) {
         DBOptions dbOptions = new DBOptions();
         dbOptions.setMaxBackgroundJobs(Runtime.getRuntime().availableProcessors());
@@ -288,7 +292,7 @@ public class ConfigRocksDbDiskService implements ConfigDiskService {
         options.setCreateIfMissing(true);
         return options;
     }
-    
+
     ColumnFamilyOptions createColumnFamilyOptions(String dir) {
         ColumnFamilyOptions columnFamilyOptions = new ColumnFamilyOptions();
         BlockBasedTableConfig tableFormatConfig = new BlockBasedTableConfig();
@@ -299,20 +303,20 @@ public class ConfigRocksDbDiskService implements ConfigDiskService {
         columnFamilyOptions.setLevel0FileNumCompactionTrigger(1);
         return columnFamilyOptions;
     }
-    
+
     /**
      * get suit formal buffer size.
      *
      * @return
      */
     private long getSuitFormalCacheSizeMB(String dir) {
-        
+
         boolean formal = BASE_DIR.equals(dir);
         long maxHeapSizeMB = Runtime.getRuntime().maxMemory() / 1024 / 1024;
-        
+
         if (formal) {
             long formalWriteBufferSizeMB = 0;
-            
+
             if (maxHeapSizeMB < 8 * 1024) {
                 formalWriteBufferSizeMB = 32;
             } else if (maxHeapSizeMB < 16 * 1024) {
@@ -330,9 +334,9 @@ public class ConfigRocksDbDiskService implements ConfigDiskService {
                 DEFAULT_WRITE_BUFFER_MB, dir, maxHeapSizeMB);
             return DEFAULT_WRITE_BUFFER_MB;
         }
-        
+
     }
-    
+
     /**
      * Clear all config file.
      */
@@ -348,12 +352,12 @@ public class ConfigRocksDbDiskService implements ConfigDiskService {
             LogUtil.DEFAULT_LOG.warn("clear all config-info failed.", e);
         }
     }
-    
+
     /**
      * Clear all gray config file.
      */
     public void clearAllGray() {
-        
+
         try {
             if (rocksDbMap.containsKey(GRAY_DIR)) {
                 rocksDbMap.get(GRAY_DIR).close();
@@ -365,5 +369,5 @@ public class ConfigRocksDbDiskService implements ConfigDiskService {
             LogUtil.DEFAULT_LOG.warn("clear all config-info-gray failed.", e);
         }
     }
-    
+
 }

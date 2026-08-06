@@ -55,7 +55,9 @@ Java Client SDK 是现有运行时应用行为的基准。它的连接、server 
 一个 Java Client SDK 实例绑定一个命名空间。需要访问多个命名空间的应用应创建多个
 Client SDK 实例，并在不再使用时关闭实例。公开运行时接口不暴露 namespace 参数，
 实现使用构造时绑定的 namespace。该规则不适用于 Maintainer SDK：其 Agent 管理接口
-不绑定 namespace，并要求每次调用都显式传入 namespace。
+不绑定 namespace，可显式传入 namespace，并提供使用 `public` 的默认 namespace 重载。
+Agent 管理 Request 和 Command 对象不包含 namespace；显式方法参数是自定义 namespace
+的唯一来源。
 
 ## 3. Java Client SDK 配置模型
 
@@ -169,6 +171,12 @@ AiService extends AgentDiscoveryService, A2aService
 继承方法使用兼容 default bridge，在实现未 override 时报告不支持；Nacos 官方实现 override
 完整目标接口面。
 
+`AiService` 直接提供 namespace-bound 的
+`publishAgent(AgentPublishRequest)`，返回 `AgentVersionDetail`。该新增方法使用同样的兼容
+default bridge；它不放入 `AgentDiscoveryService`，因为定义发布不是发现操作。官方实现复制
+Request、注入 SDK namespace，并按 `autoSubmit` 创建 draft 或执行普通 submit Pipeline，且不
+修改调用方对象。等价重试、冲突和状态收敛遵循 [Agent API 规范](../ai/agent-api-spec.md)。
+
 `AgentDiscoveryService` 提供以下 namespace-bound 方法：
 
 | 能力 | 方法 | 契约 |
@@ -188,6 +196,11 @@ namespace 注入传输对象，并且不修改调用方对象。如果共享输�
 
 继承的 `A2aService` 继续作为兼容 Facade。新的 Agent 应用使用
 `AgentDiscoveryService`；现有 AgentCard 调用继续通过 A2A 兼容 Adapter 工作。
+
+旧 A2A Endpoint redo 按 namespace-bound SDK 内的 `(agentName, exactVersion)` 区分意图，
+并保存 Endpoint Payload 的防御性快照。旧 AgentCard 订阅必须同时正确处理 exact Version、latest
+指针变化和取消后以已有 Cache 重新订阅；`shutdown()` 必须停止其轮询任务。Endpoint 可以先于
+Agent 定义发布，且不得隐式创建定义。
 
 资源语义由 [AI Registry 规范](../ai/ai-registry-spec.md)、
 [Agent API 规范](../ai/agent-api-spec.md)、[RAD 协议规范](../ai/rad-protocol-spec.md)
@@ -293,10 +306,12 @@ Maintainer SDK 中暴露存储 ID 选择器的方法，例如批量删除中的 
 - `agentSpec()`：AgentSpec 管理；
 - `pipeline()`：Pipeline 管理。
 
-目标 Agent 管理能力新增 `agent()`，返回 `AgentMaintainerService`。这是目标契约，
-在新的 Agent Admin API 可用前不得描述为当前已经实现。
-`AgentMaintainerService` 与该 Admin HTTP API 一一映射；实例不绑定 namespace，
-每个方法都显式携带 `namespaceId`。`a2a()` 在兼容窗口内继续保留。
+Agent 管理委托为 `agent()`，返回 `AgentMaintainerService`，并与 Agent Admin HTTP
+API 一一映射。实例不绑定 namespace；各操作提供显式 namespace 形式，以及使用默认
+namespace `public` 的便利重载。Agent Request 和 Command 对象不包含 `namespaceId`；
+显式重载将其作为独立方法参数。Agent 定义统一通过 `createDraft` 创建：首个 draft
+在 metadata 不存在时创建 Agent，后续 draft 复用已有 metadata。`a2a()` 在兼容窗口内
+继续保留。
 
 运行时 AI 注册和订阅可以继续保留在 `AiService`；大范围 AI 资源管理属于
 `AiMaintainerService`。

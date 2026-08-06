@@ -26,36 +26,40 @@ import com.alibaba.nacos.common.notify.Event;
  * @author xiweng.yy
  */
 public class AgentCardChangedEvent extends Event {
-    
+
     private static final long serialVersionUID = 2010793364377243018L;
-    
+
     private final String agentName;
-    
+
     private final String version;
-    
+
     private final AgentCardDetailInfo agentCard;
-    
+
     public AgentCardChangedEvent(AgentCardDetailInfo agentCard) {
+        this(agentCard, buildVersion(agentCard));
+    }
+
+    public AgentCardChangedEvent(AgentCardDetailInfo agentCard, String version) {
         this.agentCard = agentCard;
         this.agentName = agentCard.getName();
-        this.version = buildVersion(agentCard);
+        this.version = version;
     }
-    
-    private String buildVersion(AgentCardDetailInfo agentCard) {
+
+    private static String buildVersion(AgentCardDetailInfo agentCard) {
         if (null == agentCard.isLatestVersion() || agentCard.isLatestVersion()) {
             return CacheKeyUtils.LATEST_VERSION;
         }
         return agentCard.getVersion();
     }
-    
+
     public String getAgentName() {
         return agentName;
     }
-    
+
     public String getVersion() {
         return version;
     }
-    
+
     public AgentCardDetailInfo getAgentCard() {
         return agentCard;
     }

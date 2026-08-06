@@ -19,6 +19,7 @@ package com.alibaba.nacos.auth;
 import com.alibaba.nacos.auth.annotation.Secured;
 import com.alibaba.nacos.auth.config.NacosAuthConfig;
 import com.alibaba.nacos.auth.context.HttpIdentityContextBuilder;
+import com.alibaba.nacos.auth.parser.DefaultResourceParser;
 import com.alibaba.nacos.auth.parser.http.AbstractHttpResourceParser;
 import com.alibaba.nacos.auth.parser.http.AiHttpResourceParser;
 import com.alibaba.nacos.auth.parser.http.ConfigHttpResourceParser;
@@ -40,17 +41,17 @@ import java.util.Map;
  * @author xiweng.yy
  */
 public class HttpProtocolAuthService extends AbstractProtocolAuthService<HttpServletRequest> {
-    
+
     private final Map<String, AbstractHttpResourceParser> resourceParserMap;
-    
+
     private final HttpIdentityContextBuilder identityContextBuilder;
-    
+
     public HttpProtocolAuthService(NacosAuthConfig authConfig) {
         super(authConfig);
         resourceParserMap = new HashMap<>(2);
         identityContextBuilder = new HttpIdentityContextBuilder(authConfig);
     }
-    
+
     @Override
     public void initialize() {
         super.initialize();
@@ -58,27 +59,29 @@ public class HttpProtocolAuthService extends AbstractProtocolAuthService<HttpSer
         resourceParserMap.put(SignType.CONFIG, new ConfigHttpResourceParser());
         resourceParserMap.put(SignType.AI, new AiHttpResourceParser());
     }
-    
+
     @Override
     public Resource parseResource(HttpServletRequest request, Secured secured) {
         if (StringUtils.isNotBlank(secured.resource())) {
             return parseSpecifiedResource(secured);
         }
-        String type = secured.signType();
-        if (!resourceParserMap.containsKey(type)) {
-            Loggers.AUTH.warn(
-                "Can't find Http request resourceParser for type {} use specified resource parser",
-                type);
+        if (!DefaultResourceParser.class.equals(secured.parser())) {
             return useSpecifiedParserToParse(secured, request);
         }
-        return resourceParserMap.get(type).parse(request, secured);
+        String type = secured.signType();
+        AbstractHttpResourceParser parser = resourceParserMap.get(type);
+        if (parser == null) {
+            Loggers.AUTH.warn("Can't find Http request resourceParser for type {}", type);
+            return new DefaultResourceParser().parse(request, secured);
+        }
+        return parser.parse(request, secured);
     }
-    
+
     @Override
     public IdentityContext parseIdentity(HttpServletRequest request) {
         return identityContextBuilder.build(request);
     }
-    
+
     @Override
     protected ServerIdentity parseServerIdentity(HttpServletRequest request) {
         String serverIdentityKey = authConfig.getServerIdentityKey();

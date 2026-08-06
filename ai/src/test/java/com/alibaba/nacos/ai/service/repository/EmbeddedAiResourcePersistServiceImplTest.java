@@ -22,6 +22,7 @@ import com.alibaba.nacos.persistence.datasource.DataSourceService;
 import com.alibaba.nacos.persistence.datasource.DynamicDataSource;
 import com.alibaba.nacos.persistence.repository.embedded.EmbeddedStorageContextHolder;
 import com.alibaba.nacos.persistence.repository.embedded.operate.DatabaseOperate;
+import com.alibaba.nacos.persistence.repository.embedded.sql.ModifyRequest;
 import com.alibaba.nacos.plugin.datasource.MapperManager;
 import com.alibaba.nacos.plugin.datasource.constants.TableConstant;
 import com.alibaba.nacos.plugin.datasource.mapper.AiResourceMapper;
@@ -57,24 +58,24 @@ import static org.mockito.Mockito.when;
  */
 @ExtendWith(MockitoExtension.class)
 class EmbeddedAiResourcePersistServiceImplTest {
-    
+
     private static final String DATA_SOURCE_TYPE = "unit-test-embedded-ai-resource";
-    
+
     private static final ConfigurableEnvironment CACHED_ENVIRONMENT = EnvUtil.getEnvironment();
-    
+
     @Mock
     private DatabaseOperate databaseOperate;
-    
+
     @Mock
     private DynamicDataSource dynamicDataSource;
-    
+
     @Mock
     private DataSourceService dataSourceService;
-    
+
     private MockedStatic<DynamicDataSource> dynamicDataSourceMockedStatic;
-    
+
     private EmbeddedAiResourcePersistServiceImpl service;
-    
+
     @BeforeEach
     void setUp() {
         EnvUtil.setEnvironment(new StandardEnvironment());
@@ -86,14 +87,14 @@ class EmbeddedAiResourcePersistServiceImplTest {
         when(dataSourceService.getDataSourceType()).thenReturn(DATA_SOURCE_TYPE);
         service = new EmbeddedAiResourcePersistServiceImpl(databaseOperate);
     }
-    
+
     @AfterEach
     void tearDown() {
         dynamicDataSourceMockedStatic.close();
         EmbeddedStorageContextHolder.cleanAllContext();
         EnvUtil.setEnvironment(CACHED_ENVIRONMENT);
     }
-    
+
     @Test
     void insertShouldReturnInsertedId() {
         AiResource inserted = newResource();
@@ -101,10 +102,10 @@ class EmbeddedAiResourcePersistServiceImplTest {
         when(databaseOperate.blockUpdate()).thenReturn(true);
         when(databaseOperate.queryOne(anyString(), any(Object[].class),
             eq(AiResourceRowMappers.AI_RESOURCE_ROW_MAPPER))).thenReturn(inserted);
-        
+
         assertEquals(7L, service.insert(newResource()));
     }
-    
+
     @Test
     void findAndListShouldReadFromDatabaseOperate() {
         AiResource resource = newResource();
@@ -114,18 +115,18 @@ class EmbeddedAiResourcePersistServiceImplTest {
             .thenReturn(1);
         when(databaseOperate.queryMany(anyString(), any(Object[].class),
             Mockito.<RowMapper<AiResource>>any())).thenReturn(List.of(resource));
-        
+
         assertEquals("skill-a", service.find(null, "skill-a", "skill").getName());
         QueryCondition condition = new QueryCondition();
         condition.setType("skill");
         condition.setNameLike("skill");
         condition.putOrGroup("name", List.of("skill-a"));
         Page<AiResource> page = service.list(condition, 1, 10);
-        
+
         assertEquals(1, page.getTotalCount());
         assertEquals("skill-a", page.getPageItems().get(0).getName());
     }
-    
+
     @Test
     void updateCasShouldRequireSuccessfulUpdateAndNewMetaVersion() {
         AiResource updated = newResource();
@@ -133,29 +134,38 @@ class EmbeddedAiResourcePersistServiceImplTest {
         when(databaseOperate.blockUpdate()).thenReturn(true, false);
         when(databaseOperate.queryOne(anyString(), any(Object[].class),
             eq(AiResourceRowMappers.AI_RESOURCE_ROW_MAPPER))).thenReturn(updated);
-        
+
         assertTrue(service.updateMetaCas("public", "skill-a", "skill", 1L, newResource()));
+        ModifyRequest metaUpdate = EmbeddedStorageContextHolder.getCurrentSqlContext().get(0);
+        assertFalse(metaUpdate.getSql().contains("owner=?"));
+        assertFalse(metaUpdate.getSql().contains("scope=?"));
+        assertFalse(metaUpdate.getSql().contains("COALESCE"));
+        assertEquals(9, metaUpdate.getArgs().length);
+        assertEquals("public", metaUpdate.getArgs()[5]);
+        assertEquals("skill-a", metaUpdate.getArgs()[6]);
+        assertEquals("skill", metaUpdate.getArgs()[7]);
+        assertEquals(1L, metaUpdate.getArgs()[8]);
         assertFalse(service.updateSourceCas("public", "skill-a", "skill", 1L, "builtin"));
     }
-    
+
     @Test
     void deleteShouldReturnZeroWhenMissingAndOneWhenDeleted() {
         when(databaseOperate.queryOne(anyString(), any(Object[].class),
             eq(AiResourceRowMappers.AI_RESOURCE_ROW_MAPPER))).thenReturn(null, newResource());
         when(databaseOperate.blockUpdate()).thenReturn(true);
-        
+
         assertEquals(0, service.delete("public", "skill-a", "skill"));
         assertEquals(1, service.delete("public", "skill-a", "skill"));
     }
-    
+
     @Test
     void simpleUpdatesShouldReflectBlockUpdateResult() {
         when(databaseOperate.blockUpdate()).thenReturn(true, false);
-        
+
         assertTrue(service.updateScope("public", "skill-a", "skill", "PUBLIC"));
         assertFalse(service.incrementDownloadCount("public", "skill-a", "skill", 1L));
     }
-    
+
     private static AiResource newResource() {
         AiResource resource = new AiResource();
         resource.setId(1L);
@@ -174,60 +184,60 @@ class EmbeddedAiResourcePersistServiceImplTest {
         resource.setDownloadCount(0L);
         return resource;
     }
-    
+
     private static class UnitTestAiResourceMapper implements AiResourceMapper {
-        
+
         @Override
         public String select(List<String> columns, List<String> where) {
             return "SELECT * FROM ai_resource";
         }
-        
+
         @Override
         public String insert(List<String> columns) {
             return "INSERT INTO ai_resource";
         }
-        
+
         @Override
         public String update(List<String> columns, List<String> where) {
             return "UPDATE ai_resource";
         }
-        
+
         @Override
         public String delete(List<String> params) {
             return "DELETE FROM ai_resource";
         }
-        
+
         @Override
         public String count(List<String> where) {
             return "SELECT count(*) FROM ai_resource";
         }
-        
+
         @Override
         public String getDataSource() {
             return DATA_SOURCE_TYPE;
         }
-        
+
         @Override
         public String[] getPrimaryKeyGeneratedKeys() {
             return new String[] {"id"};
         }
-        
+
         @Override
         public String getFunction(String functionName) {
             return "NOW()";
         }
-        
+
         @Override
         public MapperResult findAiResourceCountRows(MapperContext context) {
             return new MapperResult(count(List.of("namespace_id")), new ArrayList<>());
         }
-        
+
         @Override
         public MapperResult findAiResourceFetchRows(MapperContext context) {
             return new MapperResult(select(Collections.emptyList(), Collections.emptyList()),
                 new ArrayList<>());
         }
-        
+
         @Override
         public String getTableName() {
             return TableConstant.AI_RESOURCE;

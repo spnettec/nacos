@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class AuthConstantTest {
-    
+
     @Test
     void testAuthPageConstantConstructorAndValues() {
         assertNotNull(new AuthPageConstant());
@@ -32,7 +32,7 @@ class AuthConstantTest {
         assertEquals("LIMIT", AuthPageConstant.LIMIT);
         assertEquals("LIMIT ?,?", AuthPageConstant.LIMIT_SIZE);
     }
-    
+
     @SuppressWarnings("deprecation")
     @Test
     void testAuthConstantsConstructorAndValues() {
@@ -41,6 +41,7 @@ class AuthConstantTest {
         assertEquals("ldap", AuthConstants.LDAP_AUTH_PLUGIN_TYPE);
         assertEquals("ROLE_ADMIN", AuthConstants.GLOBAL_ADMIN_ROLE);
         assertEquals("/v3/auth/user", AuthConstants.USER_PATH);
+        assertEquals("/v3/auth/visibility", AuthConstants.VISIBILITY_PATH);
         assertEquals("__nacos_anonymous__", AuthConstants.ANONYMOUS_USER);
         assertEquals("__nacos_anonymous_role__", AuthConstants.ANONYMOUS_ROLE);
     }

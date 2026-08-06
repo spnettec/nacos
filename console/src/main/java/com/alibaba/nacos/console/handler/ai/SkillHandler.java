@@ -45,7 +45,7 @@ import java.util.List;
  * @author nacos
  */
 public interface SkillHandler {
-    
+
     /**
      * Get skill.
      *
@@ -54,7 +54,7 @@ public interface SkillHandler {
      * @throws NacosException nacos exception
      */
     SkillMeta getSkill(SkillForm form) throws NacosException;
-    
+
     /**
      * Get skill version detail. Returns full skill content for a specific version.
      *
@@ -63,7 +63,7 @@ public interface SkillHandler {
      * @throws NacosException nacos exception
      */
     Skill getSkillVersion(SkillForm form) throws NacosException;
-    
+
     /**
      * Download skill version. Provides a separate entry point from {@link #getSkillVersion} so that download events can
      * be tracked independently.
@@ -73,7 +73,7 @@ public interface SkillHandler {
      * @throws NacosException nacos exception
      */
     Skill downloadSkillVersion(SkillForm form) throws NacosException;
-    
+
     /**
      * Delete skill.
      *
@@ -81,7 +81,7 @@ public interface SkillHandler {
      * @throws NacosException nacos exception
      */
     void deleteSkill(SkillForm form) throws NacosException;
-    
+
     /**
      * List skills.
      *
@@ -93,7 +93,7 @@ public interface SkillHandler {
     Page<SkillSummary> listSkills(SkillListForm skillListForm,
         AiResourceFilterableForm filterableForm,
         PageForm pageForm) throws NacosException;
-    
+
     /**
      * Upload skill from zip file.
      *
@@ -102,32 +102,31 @@ public interface SkillHandler {
      * @throws NacosException if upload failed
      */
     String uploadSkillFromZip(SkillUploadRequest request) throws NacosException;
-    
+
     /**
      * Precheck one or more skill uploads from a zip file.
      *
      * @param namespaceId namespace ID
      * @param zipBytes zip file bytes
-     * @param targetVersion target version specified by the caller
      * @return list of precheck results
      * @throws NacosException if precheck failed
      */
     List<SkillUploadPrecheckResult> precheckUploadSkillFromZip(String namespaceId,
-        byte[] zipBytes, String targetVersion) throws NacosException;
-    
+        byte[] zipBytes) throws NacosException;
+
     /**
      * Batch upload multiple skills from a single zip file containing multiple skill subdirectories.
      *
      * @param namespaceId namespace ID
      * @param zipBytes    zip file bytes
      * @param overwrite   whether to overwrite existing drafts
-     * @return batch upload result with succeeded and failed lists
+     * @return batch upload result with per-skill results
      * @throws NacosException if zip parsing fails entirely
      */
     BatchUploadResult batchUploadSkillsFromZip(String namespaceId, byte[] zipBytes,
         boolean overwrite)
         throws NacosException;
-    
+
     /**
      * Create draft version based on latest or a specified version.
      *
@@ -136,7 +135,7 @@ public interface SkillHandler {
      * @throws NacosException if operation failed
      */
     String createDraft(SkillDraftCreateForm form) throws NacosException;
-    
+
     /**
      * Update current draft content.
      *
@@ -144,7 +143,7 @@ public interface SkillHandler {
      * @throws NacosException if operation failed
      */
     void updateDraft(SkillUpdateForm form) throws NacosException;
-    
+
     /**
      * Delete current draft version.
      *
@@ -152,7 +151,7 @@ public interface SkillHandler {
      * @throws NacosException if operation failed
      */
     void deleteDraft(SkillForm form) throws NacosException;
-    
+
     /**
      * Submit a version for pipeline review.
      *
@@ -161,7 +160,7 @@ public interface SkillHandler {
      * @throws NacosException if operation failed
      */
     String submit(SkillSubmitForm form) throws NacosException;
-    
+
     /**
      * Publish an approved reviewing version.
      *
@@ -169,7 +168,7 @@ public interface SkillHandler {
      * @throws NacosException if operation failed
      */
     void publish(SkillPublishForm form) throws NacosException;
-    
+
     /**
      * Force-publish a skill version, bypassing pipeline validation. Accepts draft, reviewing, and reviewed versions.
      * Should only be called by admin users.
@@ -178,7 +177,7 @@ public interface SkillHandler {
      * @throws NacosException nacos exception
      */
     void forcePublish(SkillPublishForm form) throws NacosException;
-    
+
     /**
      * Re-edit a reviewed version, transitioning it back to draft status.
      *
@@ -186,7 +185,7 @@ public interface SkillHandler {
      * @throws NacosException if operation failed
      */
     void redraft(SkillPublishForm form) throws NacosException;
-    
+
     /**
      * Update runtime route labels without changing version status.
      *
@@ -194,7 +193,7 @@ public interface SkillHandler {
      * @throws NacosException if operation failed
      */
     void updateLabels(SkillLabelsUpdateForm form) throws NacosException;
-    
+
     /**
      * Update skill biz tags without changing version status.
      *
@@ -202,7 +201,7 @@ public interface SkillHandler {
      * @throws NacosException if operation failed
      */
     void updateBizTags(SkillBizTagsUpdateForm form) throws NacosException;
-    
+
     /**
      * Change online/offline status.
      *
@@ -211,7 +210,7 @@ public interface SkillHandler {
      * @throws NacosException if operation failed
      */
     void changeOnlineStatus(SkillOnlineForm form, boolean online) throws NacosException;
-    
+
     /**
      * Update skill visibility scope (PUBLIC/PRIVATE).
      *

@@ -278,6 +278,9 @@ public abstract class OpenApiBaseITCase {
         };
         return httpClient.execute(request, responseHandler);
     }
+    protected HttpResponse httpResponse(int code, String body) {
+        return new HttpResponse(code, body);
+    }
 
     protected ByteResponse executeRawBytes(ClassicHttpRequest request) throws Exception {
         HttpClientResponseHandler<ByteResponse> responseHandler = response -> {

@@ -29,7 +29,7 @@ import java.util.Properties;
  * @author xiweng.yy
  */
 public interface VisibilityService extends PluginConfigSpec {
-    
+
     /**
      * Initialize service with external properties.
      *
@@ -38,12 +38,13 @@ public interface VisibilityService extends PluginConfigSpec {
      * configurable items; those services are initialized through unified plugin configuration.</p>
      *
      * @param properties service-specific properties
-     * @deprecated declare configuration definitions and use the unified configuration lifecycle instead
+     * @deprecated declare configuration definitions and use the unified configuration lifecycle
+     *     instead. Planned for removal in Nacos 4.0.0.
      */
     @Deprecated
     default void init(Properties properties) {
     }
-    
+
     /**
      * Resolve default scope for a newly created resource.
      *
@@ -51,19 +52,19 @@ public interface VisibilityService extends PluginConfigSpec {
      *
      * @param identity     current identity
      * @param apiType      current api type
-     * @param resourceType resource type, such as skill / agentspec
+     * @param resourceType domain-specific resource type
      * @return default scope for new resource
      */
     default String resolveDefaultScopeForCreate(String identity, String apiType,
         String resourceType) {
         return VisibilityConstants.SCOPE_PRIVATE;
     }
-    
+
     ValidationResult validateVisibility(String identity, String action, String apiType,
         VisibilityResource resource);
-    
+
     QueryAdvisor adviseQuery(String identity, String action, String apiType,
         VisibilityQueryContext context);
-    
+
     String getVisibilityServiceName();
 }

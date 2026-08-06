@@ -16,6 +16,7 @@
 
 package com.alibaba.nacos.core.plugin.model.form;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -24,43 +25,43 @@ import java.util.Map;
  * @author Nacos
  */
 public class PluginConfigForm {
-    
+
     private String pluginType;
-    
+
     private String pluginName;
-    
-    private Map<String, String> config;
-    
+
+    private Map<String, String> config = new LinkedHashMap<>();
+
     private boolean localOnly = false;
-    
+
     public String getPluginType() {
         return pluginType;
     }
-    
+
     public void setPluginType(String pluginType) {
         this.pluginType = pluginType;
     }
-    
+
     public String getPluginName() {
         return pluginName;
     }
-    
+
     public void setPluginName(String pluginName) {
         this.pluginName = pluginName;
     }
-    
+
     public Map<String, String> getConfig() {
         return config;
     }
-    
+
     public void setConfig(Map<String, String> config) {
         this.config = config;
     }
-    
+
     public boolean isLocalOnly() {
         return localOnly;
     }
-    
+
     public void setLocalOnly(boolean localOnly) {
         this.localOnly = localOnly;
     }

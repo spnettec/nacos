@@ -43,13 +43,13 @@ import org.springframework.stereotype.Service;
 @EnabledRemoteHandler
 @EnabledAiHandler
 public class McpRemoteHandler implements McpHandler {
-    
+
     private final NacosMaintainerClientHolder clientHolder;
-    
+
     public McpRemoteHandler(NacosMaintainerClientHolder clientHolder) {
         this.clientHolder = clientHolder;
     }
-    
+
     @Override
     public Page<McpServerBasicInfo> listMcpServers(String namespaceId, String mcpName,
         String search, int pageNo,
@@ -62,7 +62,7 @@ public class McpRemoteHandler implements McpHandler {
                 pageNo, pageSize);
         }
     }
-    
+
     @Override
     public McpServerDetailInfo getMcpServer(String namespaceId, String mcpName, String mcpId,
         String version)
@@ -70,7 +70,7 @@ public class McpRemoteHandler implements McpHandler {
         return clientHolder.getAiMaintainerService().mcp().getMcpServerDetail(namespaceId, mcpName,
             mcpId, version);
     }
-    
+
     @Override
     public String createMcpServer(String namespaceId, McpServerBasicInfo serverSpecification,
         McpToolSpecification toolSpecification, McpEndpointSpec endpointSpecification)
@@ -80,7 +80,7 @@ public class McpRemoteHandler implements McpHandler {
                 toolSpecification,
                 endpointSpecification);
     }
-    
+
     @Override
     public void updateMcpServer(String namespaceId, boolean isPublish,
         McpServerBasicInfo serverSpecification,
@@ -91,14 +91,15 @@ public class McpRemoteHandler implements McpHandler {
                 serverSpecification,
                 toolSpecification, endpointSpecification, overrideExisting);
     }
-    
+
     @Override
     public void deleteMcpServer(String namespaceId, String mcpName, String mcpId, String version)
         throws NacosException {
         clientHolder.getAiMaintainerService().mcp().deleteMcpServer(namespaceId, mcpName, mcpId,
             version);
     }
-    
+
+    @Deprecated
     @Override
     public McpServerImportValidationResult validateImport(String namespaceId,
         McpServerImportRequest request)
@@ -107,7 +108,8 @@ public class McpRemoteHandler implements McpHandler {
             ErrorCode.API_FUNCTION_DISABLED,
             "MCP import functionality is not supported in remote mode");
     }
-    
+
+    @Deprecated
     @Override
     public McpServerImportResponse executeImport(String namespaceId, McpServerImportRequest request)
         throws NacosException {

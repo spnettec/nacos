@@ -37,23 +37,23 @@ import java.util.Set;
  * @author Nacos
  */
 public class PluginConfigResolver {
-    
+
     private final PluginConfigKeyResolver keyResolver = new PluginConfigKeyResolver();
-    
+
     private final PluginConfigSourceRegistry sourceRegistry;
-    
+
     public PluginConfigResolver() {
         this(new PluginConfigSourceRegistry());
     }
-    
+
     PluginConfigResolver(PluginStatePersistenceService persistence) {
         this(new PluginConfigSourceRegistry(persistence));
     }
-    
+
     PluginConfigResolver(PluginConfigSourceRegistry sourceRegistry) {
         this.sourceRegistry = sourceRegistry;
     }
-    
+
     /**
      * Normalize config keys with plugin config definitions.
      *
@@ -64,7 +64,7 @@ public class PluginConfigResolver {
     public Map<String, String> normalizeConfig(PluginInfo pluginInfo, Map<String, String> config) {
         return keyResolver.normalizeConfig(pluginInfo, config);
     }
-    
+
     /**
      * Initialize the static source snapshot for one plugin.
      *
@@ -73,14 +73,23 @@ public class PluginConfigResolver {
     public void initializeStaticConfig(PluginInfo pluginInfo) {
         sourceRegistry.initializeConfig(PluginConfigSourceType.STATIC, pluginInfo);
     }
-    
+
     /**
      * Load all runtime persisted source configs during startup.
      */
     public void initializeRuntimePersistedConfigs() {
         sourceRegistry.initializePersistedConfigs();
     }
-    
+
+    /**
+     * Whether the runtime persisted source storage is available.
+     *
+     * @return true when the selected storage initialized successfully
+     */
+    public boolean isRuntimePersistedSourceAvailable() {
+        return sourceRegistry.isPersistedSourceAvailable();
+    }
+
     /**
      * Normalize one loaded runtime persisted source config with plugin definitions.
      *
@@ -89,7 +98,7 @@ public class PluginConfigResolver {
     public void initializeRuntimePersistedConfig(PluginInfo pluginInfo) {
         sourceRegistry.initializeConfig(PluginConfigSourceType.RUNTIME_PERSISTED, pluginInfo);
     }
-    
+
     /**
      * Refresh runtime-effective fields in the static source snapshot.
      *
@@ -98,7 +107,7 @@ public class PluginConfigResolver {
     public void refreshStaticConfig(PluginInfo pluginInfo) {
         sourceRegistry.refreshConfig(PluginConfigSourceType.STATIC, pluginInfo);
     }
-    
+
     /**
      * Replace config in an updatable source.
      *
@@ -115,7 +124,7 @@ public class PluginConfigResolver {
         }
         sourceResolver.updateConfig(pluginId, config);
     }
-    
+
     /**
      * Get the current config snapshot of a source.
      *
@@ -127,7 +136,7 @@ public class PluginConfigResolver {
         PluginInfo pluginInfo) {
         return sourceRegistry.getSourceResolver(sourceType).getConfig(pluginInfo);
     }
-    
+
     /**
      * Get all runtime persisted source configs for a snapshot.
      *
@@ -136,7 +145,7 @@ public class PluginConfigResolver {
     public Map<String, Map<String, String>> getAllRuntimePersistedConfigs() {
         return sourceRegistry.getAllPersistedConfigs();
     }
-    
+
     /**
      * Restore all runtime persisted source configs from a snapshot.
      *
@@ -145,7 +154,14 @@ public class PluginConfigResolver {
     public void restoreRuntimePersistedConfigs(Map<String, Map<String, String>> configs) {
         sourceRegistry.restorePersistedConfigs(configs);
     }
-    
+
+    /**
+     * Release the runtime persisted source storage.
+     */
+    public void shutdown() {
+        sourceRegistry.shutdownPersistedConfigs();
+    }
+
     /**
      * Resolve effective plugin config from source resolvers.
      *
@@ -156,7 +172,7 @@ public class PluginConfigResolver {
     public PluginConfigResolution resolve(PluginInfo pluginInfo, boolean maskSensitive) {
         return resolveInternal(pluginInfo, maskSensitive);
     }
-    
+
     private PluginConfigResolution resolveInternal(PluginInfo pluginInfo, boolean maskSensitive) {
         List<ConfigItemDefinition> definitions = pluginInfo.getConfigDefinitions();
         if (definitions == null || definitions.isEmpty()) {
@@ -174,7 +190,7 @@ public class PluginConfigResolver {
         }
         return new PluginConfigResolution(config, metas);
     }
-    
+
     private PluginConfigResolution resolveWithoutDefinitions(PluginInfo pluginInfo) {
         Map<String, String> config = new LinkedHashMap<>();
         Map<String, String> runtimeConfig =
@@ -192,7 +208,7 @@ public class PluginConfigResolver {
         }
         return new PluginConfigResolution(config, Collections.emptyMap());
     }
-    
+
     private void resolveItem(ConfigItemDefinition definition,
         Map<PluginConfigSourceType, Map<String, String>> sourceConfigs, boolean maskSensitive,
         Map<String, String> config,
@@ -209,7 +225,7 @@ public class PluginConfigResolver {
         metas.put(definition.getKey(), buildValueMeta(definition.getKey(),
             effectiveValue.getSource(), countOverrideSources(sourceValues) > 1));
     }
-    
+
     private Map<PluginConfigSourceType, Map<String, String>> getSourceConfigs(
         PluginInfo pluginInfo) {
         Map<PluginConfigSourceType, Map<String, String>> result = new LinkedHashMap<>();
@@ -218,7 +234,7 @@ public class PluginConfigResolver {
         }
         return result;
     }
-    
+
     private List<PluginConfigSourceValue> resolveSourceValues(ConfigItemDefinition definition,
         Map<PluginConfigSourceType, Map<String, String>> sourceConfigs) {
         List<PluginConfigSourceResolver> sourceResolvers = sourceRegistry.getSourceResolvers();
@@ -236,7 +252,7 @@ public class PluginConfigResolver {
         }
         return result;
     }
-    
+
     private PluginConfigSourceValue firstPresent(List<PluginConfigSourceValue> values) {
         for (PluginConfigSourceValue value : values) {
             if (value.isPresent()) {
@@ -245,7 +261,7 @@ public class PluginConfigResolver {
         }
         return PluginConfigSourceValue.absent(PluginConfigSourceType.DEFAULT);
     }
-    
+
     private int countOverrideSources(List<PluginConfigSourceValue> values) {
         Set<PluginConfigSourceType> sources = new LinkedHashSet<>();
         for (PluginConfigSourceValue value : values) {
@@ -255,7 +271,7 @@ public class PluginConfigResolver {
         }
         return sources.size();
     }
-    
+
     private PluginConfigValueMeta buildValueMeta(String key, PluginConfigSourceType source,
         boolean overridden) {
         PluginConfigValueMeta meta = new PluginConfigValueMeta();

@@ -19,8 +19,11 @@ package com.alibaba.nacos.ai.plugin;
 import com.alibaba.nacos.ai.pipeline.PublishPipelineManager;
 import com.alibaba.nacos.api.plugin.PluginProvider;
 import com.alibaba.nacos.api.plugin.PluginType;
+import com.alibaba.nacos.common.spi.PluginRegistryUtils;
 import com.alibaba.nacos.plugin.ai.pipeline.spi.PublishPipelineService;
 import com.alibaba.nacos.sys.utils.ApplicationUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 
 import java.util.Collections;
@@ -40,12 +43,15 @@ import java.util.Map;
  * @author nacos
  */
 public class AiPipelinePluginProvider implements PluginProvider<PublishPipelineService> {
-    
+
+    private static final Logger LOGGER =
+        LoggerFactory.getLogger(AiPipelinePluginProvider.class);
+
     @Override
     public PluginType getPluginType() {
         return PluginType.AI_PIPELINE;
     }
-    
+
     @Override
     public Map<String, PublishPipelineService> getAllPlugins() {
         if (ApplicationUtils.getApplicationContext() == null) {
@@ -56,9 +62,9 @@ public class AiPipelinePluginProvider implements PluginProvider<PublishPipelineS
             manager.init();
             Map<String, PublishPipelineService> map = new LinkedHashMap<>();
             for (PublishPipelineService service : manager.getAllServices()) {
-                if (service != null && service.pipelineId() != null) {
-                    map.putIfAbsent(service.pipelineId(), service);
-                }
+                String pluginName = service == null ? null : service.pipelineId();
+                PluginRegistryUtils.registerFirst(map, PluginType.AI_PIPELINE.getType(),
+                    pluginName, service, LOGGER);
             }
             return map;
         } catch (BeansException | IllegalStateException ignored) {

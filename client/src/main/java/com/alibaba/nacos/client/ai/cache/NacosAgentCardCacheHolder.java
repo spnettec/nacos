@@ -48,19 +48,21 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @author xiweng.yy
  */
 public class NacosAgentCardCacheHolder implements Closeable {
-    
+
     private static final Logger LOGGER = LoggerFactory.getLogger(NacosAgentCardCacheHolder.class);
-    
+
     private final AiGrpcClient aiGrpcClient;
-    
+
     private final Map<String, AgentCardDetailInfo> agentCardCache;
-    
+
     private final ScheduledExecutorService updaterExecutor;
-    
+
     private final long updateIntervalMillis;
-    
+
     private final Map<String, AgentCardUpdater> updateTaskMap;
-    
+
+    private final AtomicBoolean shutdown = new AtomicBoolean();
+
     public NacosAgentCardCacheHolder(AiGrpcClient aiGrpcClient, NacosClientProperties properties) {
         this.aiGrpcClient = aiGrpcClient;
         this.agentCardCache = new ConcurrentHashMap<>(4);
@@ -71,12 +73,12 @@ public class NacosAgentCardCacheHolder implements Closeable {
             properties.getLong(AiConstants.AI_AGENT_CARD_CACHE_UPDATE_INTERVAL,
                 AiConstants.DEFAULT_AI_CACHE_UPDATE_INTERVAL);
     }
-    
+
     public AgentCardDetailInfo getAgentCard(String agentName, String version) {
         String key = CacheKeyUtils.buildAgentCardKey(agentName, version);
         return agentCardCache.get(key);
     }
-    
+
     /**
      * Process new agent card detail info.
      *
@@ -89,17 +91,25 @@ public class NacosAgentCardCacheHolder implements Closeable {
         String key = CacheKeyUtils.buildAgentCardKey(agentName, version);
         AgentCardDetailInfo oldAgentCard = agentCardCache.get(key);
         agentCardCache.put(key, detailInfo);
+        publishIfChanged(oldAgentCard, detailInfo, version);
         if (null != isLatest && isLatest) {
             String latestVersionKey = CacheKeyUtils.buildAgentCardKey(agentName, null);
+            AgentCardDetailInfo oldLatest = agentCardCache.get(latestVersionKey);
             agentCardCache.put(latestVersionKey, detailInfo);
-        }
-        if (isAgentCardChanged(oldAgentCard, detailInfo)) {
-            LOGGER.info("agent card {} changed, from {} -> {}.", detailInfo.getName(),
-                JsonUtils.toJson(oldAgentCard), JsonUtils.toJson(detailInfo));
-            NotifyCenter.publishEvent(new AgentCardChangedEvent(detailInfo));
+            publishIfChanged(oldLatest, detailInfo, CacheKeyUtils.LATEST_VERSION);
         }
     }
-    
+
+    private void publishIfChanged(AgentCardDetailInfo oldAgentCard,
+        AgentCardDetailInfo newAgentCard, String version) {
+        if (!isAgentCardChanged(oldAgentCard, newAgentCard)) {
+            return;
+        }
+        LOGGER.info("agent card {} changed for {}, from {} -> {}.", newAgentCard.getName(),
+            version, JsonUtils.toJson(oldAgentCard), JsonUtils.toJson(newAgentCard));
+        NotifyCenter.publishEvent(new AgentCardChangedEvent(newAgentCard, version));
+    }
+
     /**
      * Add new update task for agent card.
      *
@@ -114,7 +124,7 @@ public class NacosAgentCardCacheHolder implements Closeable {
             return updateTask;
         });
     }
-    
+
     /**
      * Remove new update task for agent card.
      *
@@ -128,7 +138,7 @@ public class NacosAgentCardCacheHolder implements Closeable {
             updateTask.cancel();
         }
     }
-    
+
     private boolean isAgentCardChanged(AgentCardDetailInfo oldAgentCard,
         AgentCardDetailInfo newAgentCard) {
         if (null == oldAgentCard) {
@@ -141,7 +151,7 @@ public class NacosAgentCardCacheHolder implements Closeable {
         }
         return isInterfacesChanged(oldAgentCard, newAgentCard);
     }
-    
+
     private boolean isInterfacesChanged(AgentCardDetailInfo oldAgentCard,
         AgentCardDetailInfo newAgentCard) {
         List<AgentInterface> oldSupported = oldAgentCard.getSupportedInterfaces();
@@ -164,26 +174,33 @@ public class NacosAgentCardCacheHolder implements Closeable {
         }
         return !CollectionUtils.isEqualCollection(oldInterfaces, newInterfaces);
     }
-    
+
     @Override
     public void shutdown() throws NacosException {
+        if (!shutdown.compareAndSet(false, true)) {
+            return;
+        }
+        for (AgentCardUpdater updater : updateTaskMap.values()) {
+            updater.cancel();
+        }
+        updateTaskMap.clear();
         this.updaterExecutor.shutdownNow();
     }
-    
+
     private class AgentCardUpdater implements Runnable {
-        
+
         private final String agentName;
-        
+
         private final String version;
-        
+
         private final AtomicBoolean cancel;
-        
+
         public AgentCardUpdater(String agentName, String version) {
             this.agentName = agentName;
             this.version = version;
             this.cancel = new AtomicBoolean(false);
         }
-        
+
         @Override
         public void run() {
             if (cancel.get()) {
@@ -202,12 +219,12 @@ public class NacosAgentCardCacheHolder implements Closeable {
                 }
                 LOGGER.warn("AgentCard updater execute query failed", e);
             } finally {
-                if (!cancel.get()) {
+                if (!cancel.get() && !shutdown.get()) {
                     updaterExecutor.schedule(this, updateIntervalMillis, TimeUnit.MILLISECONDS);
                 }
             }
         }
-        
+
         public void cancel() {
             cancel.set(true);
         }

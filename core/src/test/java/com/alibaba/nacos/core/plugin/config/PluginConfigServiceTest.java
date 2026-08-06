@@ -54,18 +54,18 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class PluginConfigServiceTest {
-    
+
     private static final String PLUGIN_ID = "trace:test";
-    
+
     @Mock
     private PluginStatePersistenceService persistence;
-    
+
     private ConfigurableEnvironment cachedEnvironment;
-    
+
     private MockEnvironment environment;
-    
+
     private PluginConfigService service;
-    
+
     @BeforeEach
     void setUp() {
         cachedEnvironment = EnvUtil.getEnvironment();
@@ -73,26 +73,26 @@ class PluginConfigServiceTest {
         EnvUtil.setEnvironment(environment);
         service = new PluginConfigService(persistence);
     }
-    
+
     @AfterEach
     void tearDown() {
         EnvUtil.setEnvironment(cachedEnvironment);
     }
-    
+
     @Test
     void initializePluginConfigAppliesStaticValueWithoutPersistence() {
         ConfigItemDefinition definition = runtimeDefinition("endpoint", "default");
         PluginInfo pluginInfo = pluginInfo(definition);
         RecordingPlugin plugin = new RecordingPlugin(pluginInfo.getConfigDefinitions());
         environment.setProperty("nacos.plugin.trace.test.endpoint", "static");
-        
+
         service.initializePluginConfig(pluginInfo, plugin);
-        
+
         assertEquals("static", plugin.getCurrentConfig().get("endpoint"));
         assertEquals("static", pluginInfo.getConfig().get("endpoint"));
         verify(persistence, never()).saveConfig(eq(PLUGIN_ID), anyMap());
     }
-    
+
     @Test
     void initializePluginConfigAppliesNormalizedPersistedRestartValue() {
         ConfigItemDefinition definition = new ConfigItemDefinition("endpoint", "endpoint",
@@ -103,26 +103,26 @@ class PluginConfigServiceTest {
         when(persistence.loadAllConfigs()).thenReturn(Collections.singletonMap(PLUGIN_ID,
             Collections.singletonMap("nacos.plugin.trace.test.endpoint", "persisted")));
         service.initializeRuntimePersistedConfigs();
-        
+
         service.initializePluginConfig(pluginInfo, plugin);
-        
+
         assertEquals("persisted", plugin.getCurrentConfig().get("endpoint"));
         verify(persistence, never()).saveConfig(eq(PLUGIN_ID), anyMap());
     }
-    
+
     @Test
     void initializePluginConfigWrapsValidationFailure() {
         ConfigItemDefinition definition = runtimeDefinition("required", null);
         definition.setRequired(true);
         PluginInfo pluginInfo = pluginInfo(definition);
         RecordingPlugin plugin = new RecordingPlugin(pluginInfo.getConfigDefinitions());
-        
+
         PluginConfigApplyException exception = assertThrows(PluginConfigApplyException.class,
             () -> service.initializePluginConfig(pluginInfo, plugin));
-        
+
         assertTrue(exception.getMessage().contains("Failed to initialize plugin config"));
     }
-    
+
     @Test
     void refreshStaticConfigAppliesRuntimeFieldAndKeepsRestartField() {
         ConfigItemDefinition runtimeDefinition = runtimeDefinition("runtime", "runtime-default");
@@ -134,13 +134,13 @@ class PluginConfigServiceTest {
         environment.setProperty("nacos.plugin.trace.test.runtime", "runtime-old");
         environment.setProperty("nacos.plugin.trace.test.restart", "restart-old");
         service.initializePluginConfig(pluginInfo, plugin);
-        
+
         MockEnvironment refreshedEnvironment = new MockEnvironment();
         refreshedEnvironment.setProperty("nacos.plugin.trace.test.runtime", "runtime-new");
         refreshedEnvironment.setProperty("nacos.plugin.trace.test.restart", "restart-new");
         EnvUtil.setEnvironment(refreshedEnvironment);
         service.refreshStaticConfig(pluginInfo, plugin);
-        
+
         assertEquals("runtime-new", plugin.getCurrentConfig().get("runtime"));
         assertEquals("restart-old", plugin.getCurrentConfig().get("restart"));
         assertEquals(plugin.getCurrentConfig(), pluginInfo.getConfig());
@@ -148,19 +148,19 @@ class PluginConfigServiceTest {
         assertEquals("restart-old",
             service.resolve(pluginInfo, false).getConfig().get("restart"));
     }
-    
+
     @Test
     void refreshStaticConfigSkipsApplyWhenEffectiveConfigIsUnchanged() {
         ConfigItemDefinition definition = runtimeDefinition("endpoint", "default");
         PluginInfo pluginInfo = pluginInfo(definition);
         RecordingPlugin plugin = new RecordingPlugin(pluginInfo.getConfigDefinitions());
         service.initializePluginConfig(pluginInfo, plugin);
-        
+
         service.refreshStaticConfig(pluginInfo, plugin);
-        
+
         assertEquals(1, plugin.getApplyCount());
     }
-    
+
     @Test
     void refreshStaticConfigKeepsAcceptedSourceWhenApplyFails() {
         ConfigItemDefinition definition = runtimeDefinition("endpoint", "default");
@@ -168,43 +168,43 @@ class PluginConfigServiceTest {
         FailOncePlugin plugin = new FailOncePlugin(pluginInfo.getConfigDefinitions());
         service.initializePluginConfig(pluginInfo, plugin);
         environment.setProperty("nacos.plugin.trace.test.endpoint", "bad");
-        
+
         PluginConfigApplyException exception = assertThrows(PluginConfigApplyException.class,
             () -> service.refreshStaticConfig(pluginInfo, plugin));
-        
+
         assertTrue(exception.getMessage().contains("Static plugin config was refreshed"));
         assertEquals("default", plugin.getCurrentConfig().get("endpoint"));
         assertEquals("default", pluginInfo.getConfig().get("endpoint"));
         assertEquals("bad", service.resolve(pluginInfo, false).getConfig().get("endpoint"));
-        
+
         service.refreshStaticConfig(pluginInfo, plugin);
-        
+
         assertEquals("bad", plugin.getCurrentConfig().get("endpoint"));
         assertEquals("bad", pluginInfo.getConfig().get("endpoint"));
         assertEquals(2, plugin.getApplyCount());
     }
-    
+
     @Test
     void runtimeUpdatePersistsCanonicalMapAndEmptyMapFallsBack() {
         ConfigItemDefinition definition = runtimeDefinition("endpoint", "default");
         PluginInfo pluginInfo = pluginInfo(definition);
         RecordingPlugin plugin = new RecordingPlugin(pluginInfo.getConfigDefinitions());
         service.initializePluginConfig(pluginInfo, plugin);
-        
+
         service.applyRuntimePersistedConfig(PLUGIN_ID, pluginInfo, plugin,
             Collections.singletonMap("nacos.plugin.trace.test.endpoint", "runtime"));
-        
+
         assertEquals("runtime", plugin.getCurrentConfig().get("endpoint"));
         verify(persistence).saveConfig(PLUGIN_ID,
             Collections.singletonMap("endpoint", "runtime"));
-        
+
         service.applyRuntimePersistedConfig(PLUGIN_ID, pluginInfo, plugin,
             Collections.emptyMap());
-        
+
         assertEquals("default", plugin.getCurrentConfig().get("endpoint"));
         verify(persistence).saveConfig(PLUGIN_ID, Collections.emptyMap());
     }
-    
+
     @Test
     void localOnlyUpdateOverridesRuntimeWithoutPersistence() {
         ConfigItemDefinition definition = runtimeDefinition("endpoint", "default");
@@ -213,27 +213,27 @@ class PluginConfigServiceTest {
         service.initializePluginConfig(pluginInfo, plugin);
         service.applyRuntimePersistedConfig(PLUGIN_ID, pluginInfo, plugin,
             Collections.singletonMap("endpoint", "runtime"));
-        
+
         service.updateLocalOnlyConfig(pluginInfo, plugin,
             Collections.singletonMap("endpoint", "local"));
-        
+
         assertEquals("local", plugin.getCurrentConfig().get("endpoint"));
-        
+
         service.applyRuntimePersistedConfig(PLUGIN_ID, pluginInfo, plugin,
             Collections.singletonMap("endpoint", "runtime-new"));
-        
+
         assertEquals("local", plugin.getCurrentConfig().get("endpoint"));
         assertEquals(4, plugin.getApplyCount());
-        
+
         service.updateLocalOnlyConfig(pluginInfo, plugin, Collections.emptyMap());
-        
+
         assertEquals("runtime-new", plugin.getCurrentConfig().get("endpoint"));
         verify(persistence).saveConfig(PLUGIN_ID,
             Collections.singletonMap("endpoint", "runtime"));
         verify(persistence).saveConfig(PLUGIN_ID,
             Collections.singletonMap("endpoint", "runtime-new"));
     }
-    
+
     @Test
     void applyFailureKeepsAcceptedSourceAndSameMapRetriesApply() {
         ConfigItemDefinition definition = runtimeDefinition("endpoint", "default");
@@ -241,23 +241,23 @@ class PluginConfigServiceTest {
         FailOncePlugin plugin = new FailOncePlugin(pluginInfo.getConfigDefinitions());
         service.initializePluginConfig(pluginInfo, plugin);
         Map<String, String> failedConfig = Collections.singletonMap("endpoint", "bad");
-        
+
         assertThrows(PluginConfigApplyException.class,
             () -> service.applyRuntimePersistedConfig(PLUGIN_ID, pluginInfo, plugin,
                 failedConfig));
-        
+
         assertEquals("default", plugin.getCurrentConfig().get("endpoint"));
         assertEquals("default", pluginInfo.getConfig().get("endpoint"));
         assertEquals("bad", service.resolve(pluginInfo, false).getConfig().get("endpoint"));
         verify(persistence).saveConfig(PLUGIN_ID, failedConfig);
-        
+
         service.applyRuntimePersistedConfig(PLUGIN_ID, pluginInfo, plugin, failedConfig);
-        
+
         assertEquals("bad", plugin.getCurrentConfig().get("endpoint"));
         assertEquals("bad", pluginInfo.getConfig().get("endpoint"));
         verify(persistence, times(2)).saveConfig(PLUGIN_ID, failedConfig);
     }
-    
+
     @Test
     void persistenceFailureLeavesSourceAndPluginConfigUnchanged() {
         ConfigItemDefinition definition = runtimeDefinition("endpoint", "default");
@@ -266,15 +266,15 @@ class PluginConfigServiceTest {
         service.initializePluginConfig(pluginInfo, plugin);
         doThrow(new PluginPersistenceException("save failed")).when(persistence)
             .saveConfig(eq(PLUGIN_ID), anyMap());
-        
+
         assertThrows(PluginPersistenceException.class,
             () -> service.applyRuntimePersistedConfig(PLUGIN_ID, pluginInfo, plugin,
                 Collections.singletonMap("endpoint", "runtime")));
-        
+
         assertEquals("default", plugin.getCurrentConfig().get("endpoint"));
         assertEquals("default", service.resolve(pluginInfo, false).getConfig().get("endpoint"));
     }
-    
+
     @Test
     void prepareRuntimeUpdatePreservesMaskedValueFromTargetSource() {
         ConfigItemDefinition definition = runtimeDefinition("secret", "secret-value");
@@ -283,7 +283,7 @@ class PluginConfigServiceTest {
         when(persistence.loadAllConfigs()).thenReturn(Collections.singletonMap(PLUGIN_ID,
             Collections.singletonMap("secret", "runtime-secret")));
         service.initializeRuntimePersistedConfigs();
-        
+
         for (String maskedValue : new String[] {"******", "a******z", "ab******yz"}) {
             Map<String, String> prepared = service.prepareRuntimeUpdate(pluginInfo,
                 Collections.singletonMap("secret", maskedValue),
@@ -291,22 +291,22 @@ class PluginConfigServiceTest {
             assertEquals("runtime-secret", prepared.get("secret"));
         }
     }
-    
+
     @Test
     void prepareRuntimeUpdateDoesNotCopyStaticSensitiveValueToRuntimeSource() {
         ConfigItemDefinition definition = runtimeDefinition("secret", "default-secret");
         definition.setSensitive(true);
         PluginInfo pluginInfo = pluginInfo(definition);
         environment.setProperty("nacos.plugin.trace.test.secret", "static-secret");
-        
+
         Map<String, String> prepared = service.prepareRuntimeUpdate(pluginInfo,
             Collections.singletonMap("secret", "st******et"),
             PluginConfigSourceType.RUNTIME_PERSISTED);
-        
+
         assertTrue(prepared.isEmpty());
         assertEquals("static-secret", service.resolve(pluginInfo, false).getConfig().get("secret"));
     }
-    
+
     @Test
     void restoreRuntimePersistedConfigsAllowsRestartField() {
         ConfigItemDefinition definition = new ConfigItemDefinition("endpoint", "endpoint",
@@ -316,17 +316,17 @@ class PluginConfigServiceTest {
         PluginInfo pluginInfo = pluginInfo(definition);
         RecordingPlugin plugin = new RecordingPlugin(pluginInfo.getConfigDefinitions());
         service.initializePluginConfig(pluginInfo, plugin);
-        
+
         Map<String, Map<String, String>> restored = Collections.singletonMap(PLUGIN_ID,
             Collections.singletonMap("endpoint", "restored"));
         service.restoreRuntimePersistedConfigs(restored);
         service.applyRestoredPluginConfig(pluginInfo, plugin);
-        
+
         assertEquals("restored", plugin.getCurrentConfig().get("endpoint"));
         assertEquals(restored, service.getAllRuntimePersistedConfigs());
         verify(persistence).replaceAllConfigs(restored);
     }
-    
+
     @Test
     void applyRestoredPluginConfigWrapsApplyFailure() {
         ConfigItemDefinition definition = runtimeDefinition("endpoint", "default");
@@ -335,41 +335,68 @@ class PluginConfigServiceTest {
         service.initializePluginConfig(pluginInfo, plugin);
         service.restoreRuntimePersistedConfigs(Collections.singletonMap(PLUGIN_ID,
             Collections.singletonMap("endpoint", "bad")));
-        
+
         PluginConfigApplyException exception = assertThrows(PluginConfigApplyException.class,
             () -> service.applyRestoredPluginConfig(pluginInfo, plugin));
-        
+
         assertTrue(exception.getMessage().contains("Failed to apply restored plugin config"));
         assertEquals("default", plugin.getCurrentConfig().get("endpoint"));
         assertEquals("bad", service.resolve(pluginInfo, false).getConfig().get("endpoint"));
     }
-    
+
     @Test
     void applyRuntimePersistedConfigWithoutLocalPluginPersistsInput() {
         Map<String, String> config = Collections.singletonMap("legacy", "value");
-        
+
         service.applyRuntimePersistedConfig(PLUGIN_ID, null, null, config);
         service.applyRuntimePersistedConfig(PLUGIN_ID, null, null, null);
-        
+
         verify(persistence).saveConfig(PLUGIN_ID, config);
         verify(persistence).saveConfig(PLUGIN_ID, Collections.emptyMap());
     }
-    
+
     @Test
     void prepareRuntimeUpdateRejectsReadOnlySource() {
         PluginInfo pluginInfo = pluginInfo(runtimeDefinition("endpoint", "default"));
-        
+
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
             () -> service.prepareRuntimeUpdate(pluginInfo, Collections.emptyMap(),
                 PluginConfigSourceType.STATIC));
-        
+
         assertTrue(exception.getMessage().contains("not runtime updatable"));
     }
-    
+
+    @Test
+    void unavailablePersistedStorageRejectsClusterUpdateButAllowsLocalOnly() {
+        RuntimePersistedPluginConfigSourceResolver persistedResolver =
+            new RuntimePersistedPluginConfigSourceResolver(
+                (com.alibaba.nacos.core.plugin.config.storage.PluginConfigStorageProvider) null);
+        PluginConfigSourceRegistry registry = new PluginConfigSourceRegistry(
+            java.util.Arrays.asList(new LocalOnlyPluginConfigSourceResolver(),
+                persistedResolver, new StaticPluginConfigSourceResolver(),
+                new DefaultPluginConfigSourceResolver()));
+        PluginConfigService unavailableService = new PluginConfigService(
+            new PluginConfigResolver(registry), new PluginConfigBasicChecker(),
+            new PluginConfigApplier());
+        PluginInfo pluginInfo = pluginInfo(runtimeDefinition("endpoint", "default"));
+        persistedResolver.initialize();
+
+        assertThrows(PluginPersistenceException.class,
+            () -> unavailableService.prepareRuntimeUpdate(pluginInfo,
+                Collections.singletonMap("endpoint", "runtime"),
+                PluginConfigSourceType.RUNTIME_PERSISTED));
+        assertEquals(Collections.singletonMap("endpoint", "local"),
+            unavailableService.prepareRuntimeUpdate(pluginInfo,
+                Collections.singletonMap("endpoint", "local"),
+                PluginConfigSourceType.LOCAL_ONLY));
+
+        unavailableService.shutdown();
+    }
+
     private PluginInfo pluginInfo(ConfigItemDefinition definition) {
         return pluginInfo(new ConfigItemDefinition[] {definition});
     }
-    
+
     private PluginInfo pluginInfo(ConfigItemDefinition... definitions) {
         PluginInfo result = new PluginInfo();
         result.setPluginId(PLUGIN_ID);
@@ -380,56 +407,56 @@ class PluginConfigServiceTest {
         result.setConfig(new HashMap<>());
         return result;
     }
-    
+
     private ConfigItemDefinition runtimeDefinition(String key, String defaultValue) {
         ConfigItemDefinition result = new ConfigItemDefinition(key, key, ConfigItemType.STRING);
         result.setDefaultValue(defaultValue);
         result.setEffectMode(ConfigItemEffectMode.RUNTIME);
         return result;
     }
-    
+
     private static class RecordingPlugin implements PluginConfigSpec {
-        
+
         private final List<ConfigItemDefinition> definitions;
-        
+
         private final Map<String, String> currentConfig = new HashMap<>();
-        
+
         private int applyCount;
-        
+
         RecordingPlugin(List<ConfigItemDefinition> definitions) {
             this.definitions = new ArrayList<>(definitions);
         }
-        
+
         @Override
         public List<ConfigItemDefinition> getConfigDefinitions() {
             return definitions;
         }
-        
+
         @Override
         public void applyConfig(Map<String, String> config) {
             applyCount++;
             currentConfig.clear();
             currentConfig.putAll(config);
         }
-        
+
         @Override
         public Map<String, String> getCurrentConfig() {
             return currentConfig;
         }
-        
+
         int getApplyCount() {
             return applyCount;
         }
     }
-    
+
     private static class FailOncePlugin extends RecordingPlugin {
-        
+
         private boolean failed;
-        
+
         FailOncePlugin(List<ConfigItemDefinition> definitions) {
             super(definitions);
         }
-        
+
         @Override
         public void applyConfig(Map<String, String> config) {
             if ("bad".equals(config.get("endpoint")) && !failed) {

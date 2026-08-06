@@ -16,6 +16,7 @@
 
 package com.alibaba.nacos.plugin.auth.impl.configuration.web;
 
+import com.alibaba.nacos.plugin.auth.impl.controller.v3.VisibilityGrantControllerV3;
 import com.alibaba.nacos.plugin.auth.impl.authenticate.IAuthenticationManager;
 import com.alibaba.nacos.plugin.auth.impl.controller.v3.PermissionControllerV3;
 import com.alibaba.nacos.plugin.auth.impl.controller.v3.RoleControllerV3;
@@ -23,6 +24,9 @@ import com.alibaba.nacos.plugin.auth.impl.controller.v3.UserControllerV3;
 import com.alibaba.nacos.plugin.auth.impl.roles.NacosRoleService;
 import com.alibaba.nacos.plugin.auth.impl.token.TokenManagerDelegate;
 import com.alibaba.nacos.plugin.auth.impl.users.NacosUserService;
+import com.alibaba.nacos.plugin.auth.impl.visibility.VisibilityGrantService;
+import com.alibaba.nacos.plugin.auth.impl.visibility.DefaultVisibilityGrantService;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 
 /**
@@ -31,7 +35,7 @@ import org.springframework.context.annotation.Bean;
  * @author xiweng.yy
  */
 public class NacosAuthPluginControllerConfig {
-    
+
     @Bean
     public UserControllerV3 userControllerV3(NacosUserService userDetailsService,
         NacosRoleService roleService,
@@ -40,14 +44,27 @@ public class NacosAuthPluginControllerConfig {
         return new UserControllerV3(userDetailsService, roleService, iAuthenticationManager,
             jwtTokenManager);
     }
-    
+
     @Bean
     public RoleControllerV3 roleControllerV3(NacosRoleService roleService) {
         return new RoleControllerV3(roleService);
     }
-    
+
     @Bean
     public PermissionControllerV3 permissionControllerV3(NacosRoleService roleService) {
         return new PermissionControllerV3(roleService);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(VisibilityGrantService.class)
+    public VisibilityGrantService visibilityGrantService(NacosRoleService roleService,
+        NacosUserService userService) {
+        return new DefaultVisibilityGrantService(roleService, userService);
+    }
+
+    @Bean
+    public VisibilityGrantControllerV3 visibilityGrantControllerV3(
+        VisibilityGrantService visibilityGrantService) {
+        return new VisibilityGrantControllerV3(visibilityGrantService);
     }
 }

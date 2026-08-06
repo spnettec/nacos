@@ -138,7 +138,7 @@
         <log4j.version>2.26.0</log4j.version>
         
         <mysql-connector-java.version>8.2.0</mysql-connector-java.version>
-        <postgresql.version>42.7.11</postgresql.version>
+        <postgresql.version>42.7.12</postgresql.version>
         <derby.version>10.14.2.0</derby.version>
         <jjwt.version>0.11.2</jjwt.version>
         <grpc-java.version>1.82.0</grpc-java.version>
@@ -152,6 +152,7 @@
         <jraft.groupId>com.github.heyoulin.sofa-jraft</jraft.groupId>
         <jraft-core.version>1.4.1.B</jraft-core.version>
         <rpc-grpc-impl.version>${jraft-core.version}</rpc-grpc-impl.version>
+        <rocksdb.version>10.10.1.1</rocksdb.version>
         <!-- gson version should follow grcp-core dependency -->
         <!-- TODO try to remove direct dependency on gson -->
         <gson.version>2.11.0</gson.version>
@@ -384,6 +385,9 @@
                         <exclude>**/filter-config.json</exclude>
                         <!-- Strict JSON Schema cannot carry a source-code comment header. -->
                         <exclude>specs/schemas/**/*.schema.json</exclude>
+                        <!-- Pinned upstream ARD schema; license and provenance are stored beside it. -->
+                        <exclude>**/ard-spec/**/ai-catalog.schema.json</exclude>
+                        <exclude>**/ard-spec/**/ard.openapi.yaml</exclude>
                         <exclude>**/disk_cache_test/**</exclude>
                         <exclude>**/failover_test/**</exclude>
                         <exclude>lefthook.yml</exclude>
@@ -1037,6 +1041,12 @@
                         <artifactId>*</artifactId>
                     </exclusion>
                 </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.rocksdb</groupId>
+                <artifactId>rocksdbjni</artifactId>
+                <version>${rocksdb.version}</version>
             </dependency>
             
             <!-- Third-party libs -->

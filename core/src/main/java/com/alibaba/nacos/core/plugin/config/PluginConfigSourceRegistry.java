@@ -33,24 +33,26 @@ import java.util.Map;
  * @author Nacos
  */
 class PluginConfigSourceRegistry {
-    
+
     private static final List<PluginConfigSourceType> SOURCE_ORDER = Arrays.asList(
         PluginConfigSourceType.LOCAL_ONLY, PluginConfigSourceType.RUNTIME_PERSISTED,
         PluginConfigSourceType.STATIC, PluginConfigSourceType.DEFAULT);
-    
+
     private final Map<PluginConfigSourceType, PluginConfigSourceResolver> sourceResolvers =
         new EnumMap<>(PluginConfigSourceType.class);
-    
+
     PluginConfigSourceRegistry() {
-        this((PluginStatePersistenceService) null);
+        this(Arrays.asList(new LocalOnlyPluginConfigSourceResolver(),
+            new RuntimePersistedPluginConfigSourceResolver(),
+            new StaticPluginConfigSourceResolver(), new DefaultPluginConfigSourceResolver()));
     }
-    
+
     PluginConfigSourceRegistry(PluginStatePersistenceService persistence) {
         this(Arrays.asList(new LocalOnlyPluginConfigSourceResolver(),
             new RuntimePersistedPluginConfigSourceResolver(persistence),
             new StaticPluginConfigSourceResolver(), new DefaultPluginConfigSourceResolver()));
     }
-    
+
     PluginConfigSourceRegistry(List<PluginConfigSourceResolver> sourceResolvers) {
         for (PluginConfigSourceResolver sourceResolver : sourceResolvers) {
             PluginConfigSourceType sourceType = sourceResolver.getSourceType();
@@ -71,7 +73,7 @@ class PluginConfigSourceRegistry {
                 + "support persistence lifecycle");
         }
     }
-    
+
     List<PluginConfigSourceResolver> getSourceResolvers() {
         List<PluginConfigSourceResolver> result = new ArrayList<>(SOURCE_ORDER.size());
         for (PluginConfigSourceType sourceType : SOURCE_ORDER) {
@@ -79,7 +81,7 @@ class PluginConfigSourceRegistry {
         }
         return Collections.unmodifiableList(result);
     }
-    
+
     PluginConfigSourceResolver getSourceResolver(PluginConfigSourceType sourceType) {
         PluginConfigSourceResolver result = sourceResolvers.get(sourceType);
         if (result == null) {
@@ -87,27 +89,35 @@ class PluginConfigSourceRegistry {
         }
         return result;
     }
-    
+
     void initializeConfig(PluginConfigSourceType sourceType, PluginInfo pluginInfo) {
         getSourceResolver(sourceType).initializeConfig(pluginInfo);
     }
-    
+
     void refreshConfig(PluginConfigSourceType sourceType, PluginInfo pluginInfo) {
         getSourceResolver(sourceType).refreshConfig(pluginInfo);
     }
-    
+
     void initializePersistedConfigs() {
         getPersistedSourceResolver().initialize();
     }
-    
+
+    boolean isPersistedSourceAvailable() {
+        return getPersistedSourceResolver().isAvailable();
+    }
+
     Map<String, Map<String, String>> getAllPersistedConfigs() {
         return getPersistedSourceResolver().getAllConfigs();
     }
-    
+
     void restorePersistedConfigs(Map<String, Map<String, String>> configs) {
         getPersistedSourceResolver().restoreConfigs(configs);
     }
-    
+
+    void shutdownPersistedConfigs() {
+        getPersistedSourceResolver().shutdown();
+    }
+
     private PersistedPluginConfigSourceResolver getPersistedSourceResolver() {
         return (PersistedPluginConfigSourceResolver) getSourceResolver(
             PluginConfigSourceType.RUNTIME_PERSISTED);

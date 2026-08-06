@@ -41,6 +41,7 @@ import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.model.Page;
 import com.alibaba.nacos.api.model.v2.Result;
 import com.alibaba.nacos.auth.annotation.Secured;
+import com.alibaba.nacos.auth.parser.http.AgentSpecCardHttpResourceParser;
 import com.alibaba.nacos.common.utils.JacksonUtils;
 import com.alibaba.nacos.common.utils.NamespaceUtil;
 import com.alibaba.nacos.core.model.form.PageForm;
@@ -71,13 +72,13 @@ import static com.alibaba.nacos.plugin.auth.constant.Constants.Tag.ALLOW_ANONYMO
 @RequestMapping(Constants.AgentSpecs.ADMIN_PATH)
 @ExtractorManager.Extractor(httpExtractor = AgentSpecHttpParamExtractor.class)
 public class AgentSpecAdminController {
-    
+
     private final AgentSpecOperationService agentSpecOperationService;
-    
+
     public AgentSpecAdminController(AgentSpecOperationService agentSpecOperationService) {
         this.agentSpecOperationService = agentSpecOperationService;
     }
-    
+
     /**
      * Get agentspec detail for admin (includes version governance info and all version summaries).
      *
@@ -94,7 +95,7 @@ public class AgentSpecAdminController {
             agentSpecOperationService.getAgentSpecDetail(form.getNamespaceId(),
                 form.getAgentSpecName()));
     }
-    
+
     /**
      * Get specific version detail of an agentspec for viewing or editing.
      *
@@ -112,7 +113,7 @@ public class AgentSpecAdminController {
                 form.getAgentSpecName(),
                 form.getVersion()));
     }
-    
+
     /**
      * Get specific version metadata of an agentspec without resource content. Returns the agentspec main content and
      * resource list (name + type only), skipping resource file IO.
@@ -131,7 +132,7 @@ public class AgentSpecAdminController {
                 form.getAgentSpecName(),
                 form.getVersion()));
     }
-    
+
     /**
      * Delete agentspec.
      *
@@ -147,7 +148,7 @@ public class AgentSpecAdminController {
         agentSpecOperationService.deleteAgentSpec(form.getNamespaceId(), form.getAgentSpecName());
         return Result.success("ok");
     }
-    
+
     /**
      * List agentspecs for admin (includes governance metadata: status, tags, labels, etc.).
      *
@@ -172,7 +173,7 @@ public class AgentSpecAdminController {
             agentSpecListForm.getOrderBy(), filterableForm.getOwner(), filterableForm.getScope(),
             pageForm.getPageNo(), pageForm.getPageSize()));
     }
-    
+
     /**
      * Upload agentspec from zip file.
      *
@@ -197,7 +198,7 @@ public class AgentSpecAdminController {
             agentSpecOperationService.uploadAgentSpecFromZip(namespaceId, zipBytes, overwrite);
         return Result.success(agentSpecName);
     }
-    
+
     /**
      * Create draft version.
      */
@@ -211,20 +212,21 @@ public class AgentSpecAdminController {
                 form.getBasedOnVersion(), form.getTargetVersion());
         return Result.success(v);
     }
-    
+
     /**
      * Update current draft content.
      */
     @Since("3.2.0")
     @PutMapping("/draft")
-    @Secured(action = ActionTypes.WRITE, signType = SignType.AI, apiType = ApiType.ADMIN_API)
+    @Secured(action = ActionTypes.WRITE, signType = SignType.AI, apiType = ApiType.ADMIN_API,
+        parser = AgentSpecCardHttpResourceParser.class)
     public Result<String> updateDraft(AgentSpecUpdateForm form) throws NacosException {
         form.validate();
         AgentSpec agentSpec = AgentSpecRequestUtil.parseAgentSpec(form);
         agentSpecOperationService.updateDraft(form.getNamespaceId(), agentSpec);
         return Result.success("ok");
     }
-    
+
     /**
      * Delete current draft version.
      */
@@ -236,7 +238,7 @@ public class AgentSpecAdminController {
         agentSpecOperationService.deleteDraft(form.getNamespaceId(), form.getAgentSpecName());
         return Result.success("ok");
     }
-    
+
     /**
      * Submit a version for pipeline review.
      */
@@ -250,7 +252,7 @@ public class AgentSpecAdminController {
                 form.getVersion());
         return Result.success(result);
     }
-    
+
     /**
      * Publish an approved reviewing version.
      */
@@ -264,7 +266,7 @@ public class AgentSpecAdminController {
             true);
         return Result.success("ok");
     }
-    
+
     /**
      * Force-publish an agentspec version, bypassing pipeline validation. Accepts draft, reviewing, and reviewed
      * versions. Only admin users can call this endpoint.
@@ -272,7 +274,7 @@ public class AgentSpecAdminController {
     @Since("3.2.1")
     @PostMapping("/force-publish")
     @Secured(resource = Constants.AgentSpecs.ADMIN_PATH
-        + "/force-publish", action = ActionTypes.WRITE, signType = SignType.CONSOLE,
+        + "/force-publish", action = ActionTypes.WRITE, signType = SignType.AI,
         apiType = ApiType.ADMIN_API)
     public Result<String> forcePublish(AgentSpecPublishForm form) throws NacosException {
         form.validate();
@@ -281,7 +283,7 @@ public class AgentSpecAdminController {
             true);
         return Result.success("ok");
     }
-    
+
     /**
      * Re-edit a reviewed agentspec version, transitioning it back to draft for modification.
      */
@@ -294,7 +296,7 @@ public class AgentSpecAdminController {
             form.getVersion());
         return Result.success("ok");
     }
-    
+
     /**
      * Update runtime route labels without changing version status.
      */
@@ -308,7 +310,7 @@ public class AgentSpecAdminController {
             labels);
         return Result.success("ok");
     }
-    
+
     /**
      * Update agentspec biz tags without changing version status.
      */
@@ -321,7 +323,7 @@ public class AgentSpecAdminController {
             form.getBizTags());
         return Result.success("ok");
     }
-    
+
     /**
      * Online operation (version-level or agentspec-level by scope).
      */
@@ -335,7 +337,7 @@ public class AgentSpecAdminController {
             form.getVersion(), true);
         return Result.success("ok");
     }
-    
+
     /**
      * Update agentspec visibility scope (PUBLIC or PRIVATE).
      *
@@ -352,7 +354,7 @@ public class AgentSpecAdminController {
             form.getScope());
         return Result.success("ok");
     }
-    
+
     /**
      * Offline operation (version-level or agentspec-level by scope).
      */

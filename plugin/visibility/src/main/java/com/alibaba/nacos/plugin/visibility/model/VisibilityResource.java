@@ -24,44 +24,44 @@ import com.alibaba.nacos.plugin.visibility.constant.VisibilityConstants;
  * @author xiweng.yy
  */
 public abstract class VisibilityResource {
-    
+
     private String scope = VisibilityConstants.SCOPE_PRIVATE;
-    
+
     private String owner = "";
-    
+
     /**
      * Get the namespace id of this resource.
      *
      * @return namespace id
      */
     public abstract String getNamespaceId();
-    
+
     /**
      * Get the unique name of this resource within its namespace and type.
      *
      * @return resource name
      */
     public abstract String getResourceName();
-    
+
     /**
-     * Get the subtype of this resource, e.g. "skill", "mcp", "prompt", "a2a".
+     * Get the domain-specific category of this resource.
      *
      * @return resource type
      */
     public abstract String getResourceType();
-    
+
     public String getScope() {
         return scope;
     }
-    
+
     public void setScope(String scope) {
         this.scope = scope;
     }
-    
+
     public String getOwner() {
         return owner;
     }
-    
+
     public void setOwner(String owner) {
         this.owner = owner;
     }

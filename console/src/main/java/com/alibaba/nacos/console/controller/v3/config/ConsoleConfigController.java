@@ -78,13 +78,13 @@ import static com.alibaba.nacos.config.server.utils.RequestUtil.getRemoteIp;
 @RequestMapping("/v3/console/cs/config")
 @ExtractorManager.Extractor(httpExtractor = ConfigDefaultHttpParamExtractor.class)
 public class ConsoleConfigController {
-    
+
     private final ConfigProxy configProxy;
-    
+
     public ConsoleConfigController(ConfigProxy configProxy) {
         this.configProxy = configProxy;
     }
-    
+
     /**
      * Get the specific configuration information.
      *
@@ -102,7 +102,7 @@ public class ConsoleConfigController {
         String groupName = configForm.getGroupName();
         return Result.success(configProxy.getConfigDetail(dataId, groupName, namespaceId));
     }
-    
+
     /**
      * Add or update configuration.
      *
@@ -120,29 +120,29 @@ public class ConsoleConfigController {
         configForm.validateWithContent();
         configForm
             .setNamespaceId(NamespaceUtil.processNamespaceParameter(configForm.getNamespaceId()));
-        
+
         // check param
         ParamUtils.checkParam(configForm.getDataId(), configForm.getGroup(), "datumId",
             configForm.getContent());
         ParamUtils.checkParamV2(configForm.getTag());
-        
+
         if (StringUtils.isBlank(configForm.getSrcUser())) {
             configForm.setSrcUser(RequestUtil.getSrcUserName(request));
         }
         if (!ConfigType.isValidType(configForm.getType())) {
             configForm.setType(ConfigType.getDefaultType().getType());
         }
-        
+
         ConfigRequestInfo configRequestInfo = new ConfigRequestInfo();
         configRequestInfo.setSrcIp(RequestUtil.getRemoteIp(request));
         configRequestInfo.setSrcType(Constants.HTTP);
         configRequestInfo.setRequestIpApp(RequestUtil.getAppName(request));
         configRequestInfo.setBetaIps(request.getHeader("betaIps"));
         configRequestInfo.setCasMd5(request.getHeader("casMd5"));
-        
+
         return Result.success(configProxy.publishConfig(configForm, configRequestInfo));
     }
-    
+
     /**
      * Delete configuration.
      *
@@ -160,17 +160,17 @@ public class ConsoleConfigController {
         //fix issue #9783
         String namespaceId = NamespaceUtil.processNamespaceParameter(configForm.getNamespaceId());
         ParamUtils.checkParamV2(configForm.getTag());
-        
+
         String dataId = configForm.getDataId();
         String groupName = configForm.getGroupName();
         String tag = configForm.getTag();
         String clientIp = RequestUtil.getRemoteIp(request);
         String srcUser = RequestUtil.getSrcUserName(request);
-        
+
         return Result.success(
             configProxy.deleteConfig(dataId, groupName, namespaceId, tag, clientIp, srcUser));
     }
-    
+
     /**
      * Batch delete configurations.
      *
@@ -189,11 +189,11 @@ public class ConsoleConfigController {
         String clientIp = RequestUtil.getRemoteIp(request);
         String srcUser = RequestUtil.getSrcUserName(request);
         String requestNamespaceId = NamespaceUtil.processNamespaceParameter(namespaceId);
-        
+
         return Result.success(configProxy.batchDeleteConfigs(ids, requestNamespaceId, clientIp,
             srcUser));
     }
-    
+
     /**
      * Get configure information list.
      *
@@ -227,12 +227,12 @@ public class ConsoleConfigController {
         String namespaceId = NamespaceUtil.processNamespaceParameter(configForm.getNamespaceId());
         String dataId = configForm.getDataId();
         String groupName = configForm.getGroupName();
-        
+
         return Result.success(
             configProxy.getConfigList(pageNo, pageSize, dataId, groupName, namespaceId,
                 configAdvanceInfo));
     }
-    
+
     /**
      * Search config list by config detail.
      *
@@ -271,13 +271,13 @@ public class ConsoleConfigController {
         String namespaceId = NamespaceUtil.processNamespaceParameter(configForm.getNamespaceId());
         String dataId = configForm.getDataId();
         String groupName = configForm.getGroupName();
-        
+
         return Result.success(
             configProxy.getConfigListByContent(search, pageNo, pageSize, dataId, groupName,
                 namespaceId,
                 configAdvanceInfo));
     }
-    
+
     /**
      * Subscribe to configured client information.
      *
@@ -301,14 +301,14 @@ public class ConsoleConfigController {
             configProxy.getListeners(dataId, groupName, namespaceId,
                 aggregationForm.isAggregation()));
     }
-    
+
     /**
      * Get subscribe information from client side.
      */
     @Since("3.0.0")
     @GetMapping("/listener/ip")
-    @Secured(resource = Constants.LISTENER_CONTROLLER_PATH, action = ActionTypes.READ,
-        signType = SignType.CONFIG, apiType = ApiType.CONSOLE_API)
+    @Secured(action = ActionTypes.READ, signType = SignType.CONFIG,
+        apiType = ApiType.CONSOLE_API)
     public Result<ConfigListenerInfo> getAllSubClientConfigByIp(@RequestParam("ip") String ip,
         @RequestParam(value = "all", required = false) boolean all,
         @RequestParam(value = "namespaceId", required = false) String namespaceId,
@@ -319,7 +319,7 @@ public class ConsoleConfigController {
             configProxy.getAllSubClientConfigByIp(ip, all, namespaceId,
                 aggregationForm.isAggregation()));
     }
-    
+
     /**
      * New version export config adds metadata.yml file to record config metadata.
      *
@@ -341,10 +341,10 @@ public class ConsoleConfigController {
         String dataId = configForm.getDataId();
         String groupName = configForm.getGroupName();
         String appName = configForm.getAppName();
-        
+
         return configProxy.exportConfigV2(dataId, groupName, namespaceId, appName, ids);
     }
-    
+
     /**
      * Import and publish configuration.
      *
@@ -366,17 +366,17 @@ public class ConsoleConfigController {
         MultipartFile file)
         throws NacosException {
         namespaceId = NamespaceUtil.processNamespaceParameter(namespaceId);
-        
+
         if (StringUtils.isBlank(srcUser)) {
             srcUser = RequestUtil.getSrcUserName(request);
         }
         final String srcIp = RequestUtil.getRemoteIp(request);
         String requestIpApp = RequestUtil.getAppName(request);
-        
+
         return configProxy.importAndPublishConfig(srcUser, namespaceId, policy, file, srcIp,
             requestIpApp);
     }
-    
+
     /**
      * Clone configuration.
      *
@@ -410,11 +410,11 @@ public class ConsoleConfigController {
         }
         final String srcIp = RequestUtil.getRemoteIp(request);
         String requestIpApp = RequestUtil.getAppName(request);
-        
+
         return configProxy.cloneConfig(srcUser, sourceNamespaceId, targetNamespaceId,
             configBeansList, policy, srcIp, requestIpApp);
     }
-    
+
     /**
      * Execute to remove beta operation.
      *
@@ -425,7 +425,8 @@ public class ConsoleConfigController {
      */
     @Since("3.0.0")
     @DeleteMapping("/beta")
-    @Secured(action = ActionTypes.WRITE, signType = SignType.CONFIG)
+    @Secured(action = ActionTypes.WRITE, signType = SignType.CONFIG,
+        apiType = ApiType.CONSOLE_API)
     public Result<Boolean> stopBeta(HttpServletRequest httpServletRequest, ConfigFormV3 configForm)
         throws NacosException {
         configForm.validate();
@@ -443,7 +444,7 @@ public class ConsoleConfigController {
         }
         return Result.success(true);
     }
-    
+
     /**
      * Execute to query beta operation.
      *
@@ -453,7 +454,8 @@ public class ConsoleConfigController {
      */
     @Since("3.0.0")
     @GetMapping("/beta")
-    @Secured(action = ActionTypes.READ, signType = SignType.CONFIG)
+    @Secured(action = ActionTypes.READ, signType = SignType.CONFIG,
+        apiType = ApiType.CONSOLE_API)
     public Result<ConfigGrayInfo> queryBeta(ConfigFormV3 configForm) throws NacosException {
         configForm.validate();
         String dataId = configForm.getDataId();
@@ -461,5 +463,5 @@ public class ConsoleConfigController {
         String namespaceId = NamespaceUtil.processNamespaceParameter(configForm.getNamespaceId());
         return Result.success(configProxy.queryBetaConfig(dataId, groupName, namespaceId));
     }
-    
+
 }

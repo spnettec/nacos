@@ -59,13 +59,13 @@ import java.util.List;
 @RequestMapping(Constants.A2A.CONSOLE_PATH)
 @ExtractorManager.Extractor(httpExtractor = AgentHttpParamExtractor.class)
 public class ConsoleA2aController {
-    
+
     private final A2aProxy a2aProxy;
-    
+
     public ConsoleA2aController(A2aProxy a2aProxy) {
         this.a2aProxy = a2aProxy;
     }
-    
+
     /**
      * register agent.
      *
@@ -82,7 +82,7 @@ public class ConsoleA2aController {
         a2aProxy.registerAgent(agentCard, form);
         return Result.success("ok");
     }
-    
+
     /**
      * get agent card.
      *
@@ -97,7 +97,7 @@ public class ConsoleA2aController {
         form.validate();
         return Result.success(a2aProxy.getAgentCard(form));
     }
-    
+
     /**
      * update agent.
      *
@@ -114,7 +114,7 @@ public class ConsoleA2aController {
         a2aProxy.updateAgentCard(agentCard, form);
         return Result.success("ok");
     }
-    
+
     /**
      * delete agent.
      *
@@ -130,7 +130,7 @@ public class ConsoleA2aController {
         a2aProxy.deleteAgent(form);
         return Result.success("ok");
     }
-    
+
     /**
      * list agents.
      *
@@ -149,7 +149,7 @@ public class ConsoleA2aController {
         pageForm.validate();
         return Result.success(a2aProxy.listAgents(agentListForm, pageForm));
     }
-    
+
     /**
      * List all versions for target Agent.
      *
@@ -159,7 +159,8 @@ public class ConsoleA2aController {
      */
     @Since("3.1.0")
     @GetMapping("/version/list")
-    @Secured(action = ActionTypes.READ, signType = SignType.AI, apiType = ApiType.ADMIN_API)
+    @Secured(action = ActionTypes.READ, signType = SignType.AI,
+        apiType = ApiType.CONSOLE_API)
     public Result<List<AgentVersionDetail>> listAgentVersions(AgentForm agentForm)
         throws NacosException {
         agentForm.validate();

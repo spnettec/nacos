@@ -51,129 +51,141 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ExtendWith(MockitoExtension.class)
 class ConsolePluginControllerTest {
-    
+
     @Mock
     private PluginProxy pluginProxy;
-    
+
     private MockMvc mockMvc;
-    
+
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(new ConsolePluginController(pluginProxy))
             .setControllerAdvice(new NacosApiExceptionHandler())
             .build();
     }
-    
+
     @Test
     void testGetPluginList() throws Exception {
         PluginInfoVO vo = new PluginInfoVO();
         vo.setPluginName("test-plugin");
         vo.setPluginType("auth");
         when(pluginProxy.listPlugins(eq("auth"))).thenReturn(List.of(vo));
-        
+
         MockHttpServletResponse response = mockMvc.perform(
             get("/v3/console/plugin/list").param("pluginType", "auth"))
             .andExpect(status().isOk()).andReturn().getResponse();
-        
+
         Result<List<PluginInfoVO>> result =
             JacksonUtils.toObj(response.getContentAsString(), new TypeReference<>() {
             });
         assertEquals(1, result.getData().size());
         assertEquals("test-plugin", result.getData().get(0).getPluginName());
     }
-    
+
     @Test
     void testGetPluginListWithoutType() throws Exception {
         when(pluginProxy.listPlugins(eq(null))).thenReturn(Collections.emptyList());
-        
+
         MockHttpServletResponse response =
             mockMvc.perform(get("/v3/console/plugin/list")).andExpect(status().isOk()).andReturn()
                 .getResponse();
-        
+
         Result<List<PluginInfoVO>> result =
             JacksonUtils.toObj(response.getContentAsString(), new TypeReference<>() {
             });
         assertEquals(0, result.getData().size());
     }
-    
+
     @Test
     void testGetPluginDetail() throws Exception {
         PluginDetailVO detail = new PluginDetailVO();
         detail.setPluginName("test-plugin");
         detail.setPluginType("auth");
         when(pluginProxy.getPluginDetail("auth", "test-plugin")).thenReturn(detail);
-        
+
         MockHttpServletResponse response = mockMvc.perform(
             get("/v3/console/plugin").param("pluginType", "auth")
                 .param("pluginName", "test-plugin"))
             .andExpect(status().isOk()).andReturn().getResponse();
-        
+
         Result<PluginDetailVO> result =
             JacksonUtils.toObj(response.getContentAsString(), new TypeReference<>() {
             });
         assertNotNull(result.getData());
         assertEquals("test-plugin", result.getData().getPluginName());
     }
-    
+
     @Test
     void testUpdatePluginStatus() throws Exception {
         doNothing().when(pluginProxy)
             .updatePluginStatus(anyString(), anyString(), anyBoolean(), anyBoolean());
-        
+
         MockHttpServletResponse response = mockMvc.perform(
             put("/v3/console/plugin/status").param("pluginType", "auth")
                 .param("pluginName", "test-plugin").param("enabled", "true")
                 .param("localOnly", "false"))
             .andExpect(status().isOk()).andReturn().getResponse();
-        
+
         Result<String> result =
             JacksonUtils.toObj(response.getContentAsString(), new TypeReference<>() {
             });
         assertEquals("Plugin status updated successfully", result.getData());
         verify(pluginProxy).updatePluginStatus("auth", "test-plugin", true, false);
     }
-    
+
     @Test
     void testUpdatePluginConfig() throws Exception {
         doNothing().when(pluginProxy)
             .updatePluginConfig(anyString(), anyString(), any(), anyBoolean());
-        
+
         MockHttpServletResponse response = mockMvc.perform(
             put("/v3/console/plugin/config").param("pluginType", "auth")
                 .param("pluginName", "test-plugin").param("config[key1]", "val1")
                 .param("localOnly", "false"))
             .andExpect(status().isOk()).andReturn().getResponse();
-        
+
         Result<String> result =
             JacksonUtils.toObj(response.getContentAsString(), new TypeReference<>() {
             });
         assertEquals("Plugin configuration updated successfully", result.getData());
     }
-    
+
+    @Test
+    void testClearPluginConfig() throws Exception {
+        doNothing().when(pluginProxy)
+            .updatePluginConfig(anyString(), anyString(), any(), anyBoolean());
+
+        mockMvc.perform(put("/v3/console/plugin/config").param("pluginType", "auth")
+            .param("pluginName", "test-plugin").param("localOnly", "true"))
+            .andExpect(status().isOk());
+
+        verify(pluginProxy).updatePluginConfig("auth", "test-plugin", Collections.emptyMap(), true);
+    }
+
     @Test
     void testUpdatePluginConfigMissingType() throws Exception {
         mockMvc.perform(put("/v3/console/plugin/config").param("pluginName", "test-plugin")
             .param("config[key1]", "val1"))
             .andExpect(status().isBadRequest());
     }
-    
+
     @Test
     void testUpdatePluginConfigMissingName() throws Exception {
         mockMvc.perform(put("/v3/console/plugin/config").param("pluginType", "auth")
             .param("config[key1]", "val1"))
             .andExpect(status().isBadRequest());
     }
-    
+
     @Test
     void testGetPluginAvailability() throws Exception {
         Map<String, Boolean> availability = Map.of("node1", true, "node2", false);
         when(pluginProxy.getPluginAvailability("auth", "test-plugin")).thenReturn(availability);
-        
+
         MockHttpServletResponse response = mockMvc.perform(
             get("/v3/console/plugin/availability").param("pluginType", "auth")
                 .param("pluginName", "test-plugin"))
             .andExpect(status().isOk()).andReturn().getResponse();
-        
+
         Result<Map<String, Boolean>> result =
             JacksonUtils.toObj(response.getContentAsString(), new TypeReference<>() {
             });

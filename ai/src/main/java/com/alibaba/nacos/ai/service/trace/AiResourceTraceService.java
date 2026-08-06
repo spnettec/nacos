@@ -36,158 +36,163 @@ import com.alibaba.nacos.common.trace.event.ai.AiResourceTraceEvent;
  * @since 3.2.1
  */
 public class AiResourceTraceService {
-    
+
     // ==================== Operation Constants ====================
-    
+
     /**
      * Create a new draft version.
      */
     public static final String OP_CREATE_DRAFT = "CREATE_DRAFT";
-    
+
     /**
      * Update an existing draft version.
      */
     public static final String OP_UPDATE_DRAFT = "UPDATE_DRAFT";
-    
+
     /**
      * Delete a draft version.
      */
     public static final String OP_DELETE_DRAFT = "DELETE_DRAFT";
-    
+
     /**
      * Upload a skill/resource.
      */
     public static final String OP_UPLOAD = "UPLOAD";
-    
+
     /**
      * Submit version for review.
      */
     public static final String OP_SUBMIT_REVIEW = "SUBMIT_REVIEW";
-    
+
     /**
      * Review approved.
      */
     public static final String OP_REVIEW_APPROVED = "REVIEW_APPROVED";
-    
+
     /**
      * Review rejected.
      */
     public static final String OP_REVIEW_REJECTED = "REVIEW_REJECTED";
-    
+
     /**
      * Force skip review (admin operation).
      */
     public static final String OP_REVIEW_FORCE_SKIP = "REVIEW_FORCE_SKIP";
-    
+
     /**
      * Re-edit a reviewed version (transition back to draft).
      */
     public static final String OP_REDRAFT = "REDRAFT";
-    
+
     /**
      * Publish a version to online.
      */
     public static final String OP_PUBLISH = "PUBLISH";
-    
+
     /**
      * Force publish (bypass review).
      */
     public static final String OP_FORCE_PUBLISH = "FORCE_PUBLISH";
-    
+
     /**
      * Take a version offline.
      */
     public static final String OP_OFFLINE_VERSION = "OFFLINE_VERSION";
-    
+
     /**
      * Bring a version back online.
      */
     public static final String OP_ONLINE_VERSION = "ONLINE_VERSION";
-    
+
     /**
      * Delete a version.
      */
     public static final String OP_DELETE_VERSION = "DELETE_VERSION";
-    
+
     /**
      * Delete the entire resource (including all versions).
      */
     public static final String OP_DELETE_RESOURCE = "DELETE_RESOURCE";
-    
+
     /**
      * Set/update label for a version.
      */
     public static final String OP_SET_LABEL = "SET_LABEL";
-    
+
     /**
      * Remove label from a version.
      */
     public static final String OP_REMOVE_LABEL = "REMOVE_LABEL";
-    
+
     /**
      * Update labels.
      */
     public static final String OP_UPDATE_LABELS = "UPDATE_LABELS";
-    
+
     /**
      * Update resource scope.
      */
     public static final String OP_UPDATE_SCOPE = "UPDATE_SCOPE";
-    
+
     /**
      * Update resource description.
      */
     public static final String OP_UPDATE_DESCRIPTION = "UPDATE_DESCRIPTION";
-    
+
     /**
      * Update resource bizTags.
      */
     public static final String OP_UPDATE_BIZ_TAGS = "UPDATE_BIZ_TAGS";
-    
+
+    /**
+     * Update a Resource's complete writable metadata.
+     */
+    public static final String OP_UPDATE_RESOURCE = "UPDATE_RESOURCE";
+
     /**
      * Enable resource.
      */
     public static final String OP_ENABLE = "ENABLE";
-    
+
     /**
      * Disable resource.
      */
     public static final String OP_DISABLE = "DISABLE";
-    
+
     /**
      * Search external AI resource import candidates.
      */
     public static final String OP_IMPORT_SEARCH = "IMPORT_SEARCH";
-    
+
     /**
      * Validate selected external AI resource import candidates.
      */
     public static final String OP_IMPORT_VALIDATE = "IMPORT_VALIDATE";
-    
+
     /**
      * Execute external AI resource import.
      */
     public static final String OP_IMPORT_EXECUTE = "IMPORT_EXECUTE";
-    
+
     // ==================== Status Constants ====================
-    
+
     /**
      * Operation succeeded.
      */
     public static final String STATUS_SUCCESS = "SUCCESS";
-    
+
     /**
      * Operation failed.
      */
     public static final String STATUS_FAILURE = "FAILURE";
-    
+
     /**
      * Operation skipped by request policy.
      */
     public static final String STATUS_SKIPPED = "SKIPPED";
-    
+
     // ==================== Logging Methods ====================
-    
+
     /**
      * Log a successful AI resource operation.
      *
@@ -203,7 +208,7 @@ public class AiResourceTraceService {
         String operator, String clientIp) {
         log(resourceType, resourceId, version, operation, STATUS_SUCCESS, operator, clientIp, null);
     }
-    
+
     /**
      * Log a successful AI resource operation with extra info.
      *
@@ -220,7 +225,7 @@ public class AiResourceTraceService {
         String operator, String clientIp, String ext) {
         log(resourceType, resourceId, version, operation, STATUS_SUCCESS, operator, clientIp, ext);
     }
-    
+
     /**
      * Log a failed AI resource operation.
      *
@@ -238,7 +243,7 @@ public class AiResourceTraceService {
         log(resourceType, resourceId, version, operation, STATUS_FAILURE, operator, clientIp,
             errorMsg);
     }
-    
+
     /**
      * Log an AI resource operation event.
      *
@@ -257,7 +262,7 @@ public class AiResourceTraceService {
         NotifyCenter.publishEvent(buildTraceEvent(resourceType, resourceId, version, operation,
             status, operator, clientIp, ext));
     }
-    
+
     static AiResourceTraceEvent buildTraceEvent(String resourceType, String resourceId,
         String version, String operation, String status, String operator, String clientIp,
         String ext) {

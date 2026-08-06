@@ -16,6 +16,8 @@
 
 package com.alibaba.nacos.auth;
 
+import com.alibaba.nacos.api.exception.NacosException;
+import com.alibaba.nacos.api.exception.runtime.NacosRuntimeException;
 import com.alibaba.nacos.auth.annotation.Secured;
 import com.alibaba.nacos.auth.config.NacosAuthConfig;
 import com.alibaba.nacos.auth.serveridentity.ServerIdentity;
@@ -45,21 +47,21 @@ import java.util.Properties;
  * @author xiweng.yy
  */
 public abstract class AbstractProtocolAuthService<R> implements ProtocolAuthService<R> {
-    
+
     protected final NacosAuthConfig authConfig;
-    
+
     protected final ServerIdentityChecker checker;
-    
+
     protected AbstractProtocolAuthService(NacosAuthConfig authConfig) {
         this.authConfig = authConfig;
         this.checker = ServerIdentityCheckerHolder.getInstance().newChecker();
     }
-    
+
     @Override
     public void initialize() {
         this.checker.init(authConfig);
     }
-    
+
     @Override
     public boolean enableAuth(Secured secured) {
         Optional<AuthPluginService> authPluginService = AuthPluginManager.getInstance()
@@ -72,7 +74,7 @@ public abstract class AbstractProtocolAuthService<R> implements ProtocolAuthServ
             authConfig.getNacosAuthSystemType(), Constants.Auth.NACOS_CORE_AUTH_ENABLED);
         return false;
     }
-    
+
     @Override
     public AuthResult validateIdentity(IdentityContext identityContext, Resource resource)
         throws AccessException {
@@ -83,7 +85,7 @@ public abstract class AbstractProtocolAuthService<R> implements ProtocolAuthServ
         }
         return AuthResult.successResult();
     }
-    
+
     @Override
     public AuthResult validateAuthority(IdentityContext identityContext, Permission permission)
         throws AccessException {
@@ -94,7 +96,7 @@ public abstract class AbstractProtocolAuthService<R> implements ProtocolAuthServ
         }
         return AuthResult.successResult();
     }
-    
+
     @Override
     public ServerIdentityResult checkServerIdentity(R request, Secured secured) {
         if (isInvalidServerIdentity()) {
@@ -105,12 +107,12 @@ public abstract class AbstractProtocolAuthService<R> implements ProtocolAuthServ
         ServerIdentity serverIdentity = parseServerIdentity(request);
         return checker.check(serverIdentity, secured);
     }
-    
+
     private boolean isInvalidServerIdentity() {
         return StringUtils.isBlank(authConfig.getServerIdentityKey()) || StringUtils.isBlank(
             authConfig.getServerIdentityValue());
     }
-    
+
     /**
      * Parse server identity from protocol request.
      *
@@ -118,7 +120,7 @@ public abstract class AbstractProtocolAuthService<R> implements ProtocolAuthServ
      * @return nacos server identity.
      */
     protected abstract ServerIdentity parseServerIdentity(R request);
-    
+
     /**
      * Get resource from secured annotation specified resource.
      *
@@ -132,7 +134,7 @@ public abstract class AbstractProtocolAuthService<R> implements ProtocolAuthServ
         }
         return new Resource(null, null, secured.resource(), SignType.SPECIFIED, properties);
     }
-    
+
     /**
      * Parse resource by specified resource parser.
      *
@@ -142,11 +144,14 @@ public abstract class AbstractProtocolAuthService<R> implements ProtocolAuthServ
      */
     protected Resource useSpecifiedParserToParse(Secured secured, R request) {
         try {
-            return secured.parser().newInstance().parse(request, secured);
-        } catch (Exception e) {
+            return secured.parser().getDeclaredConstructor().newInstance().parse(request, secured);
+        } catch (ReflectiveOperationException e) {
             Loggers.AUTH.error("Use specified resource parser {} parse resource failed.",
                 secured.parser().getCanonicalName(), e);
-            return Resource.EMPTY_RESOURCE;
+            throw new NacosRuntimeException(NacosException.SERVER_ERROR,
+                "Failed to initialize specified resource parser "
+                    + secured.parser().getCanonicalName(),
+                e);
         }
     }
 }

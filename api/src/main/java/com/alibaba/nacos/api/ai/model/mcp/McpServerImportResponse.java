@@ -23,98 +23,101 @@ import java.util.List;
  * MCP Server Import Response.
  *
  * @author nacos
+ * @deprecated use the unified AI resource import response models instead. Planned for removal in
+ *     Nacos 3.4.0.
  */
+@Deprecated
 public class McpServerImportResponse implements Serializable {
-    
+
     private static final long serialVersionUID = 1L;
-    
+
     /**
      * Import success.
      */
     private boolean success;
-    
+
     /**
      * Total count of servers to import.
      */
     private int totalCount = 0;
-    
+
     /**
      * Successfully imported count.
      */
     private int successCount = 0;
-    
+
     /**
      * Failed import count.
      */
     private int failedCount = 0;
-    
+
     /**
      * Skipped count (duplicates).
      */
     private int skippedCount = 0;
-    
+
     /**
      * Import results for each server.
      */
     private List<McpServerImportResult> results;
-    
+
     /**
      * Overall error message.
      */
     private String errorMessage;
-    
+
     public boolean isSuccess() {
         return success;
     }
-    
+
     public void setSuccess(boolean success) {
         this.success = success;
     }
-    
+
     public int getTotalCount() {
         return totalCount;
     }
-    
+
     public void setTotalCount(int totalCount) {
         this.totalCount = totalCount;
     }
-    
+
     public int getSuccessCount() {
         return successCount;
     }
-    
+
     public void setSuccessCount(int successCount) {
         this.successCount = successCount;
     }
-    
+
     public int getFailedCount() {
         return failedCount;
     }
-    
+
     public void setFailedCount(int failedCount) {
         this.failedCount = failedCount;
     }
-    
+
     public int getSkippedCount() {
         return skippedCount;
     }
-    
+
     public void setSkippedCount(int skippedCount) {
         this.skippedCount = skippedCount;
     }
-    
+
     public List<McpServerImportResult> getResults() {
         return results;
     }
-    
+
     public void setResults(List<McpServerImportResult> results) {
         this.results = results;
     }
-    
+
     public String getErrorMessage() {
         return errorMessage;
     }
-    
+
     public void setErrorMessage(String errorMessage) {
         this.errorMessage = errorMessage;
     }

@@ -23,71 +23,73 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
- * Batch command that registers or updates runtime Agent endpoints.
+ * Complete Runtime Endpoint batch for one publisher, Agent, protocol, and Version binding.
+ *
+ * <p>A later batch replaces the previous batch for the same publisher and Naming service.</p>
  *
  * @author Nacos
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AgentEndpointRegistrationBatch implements Serializable {
-    
+
     private static final long serialVersionUID = 1L;
-    
+
     private String namespaceId;
-    
+
     private String agentName;
-    
+
     private String runtimeVersion;
-    
+
     private String versionRange;
-    
+
     private String protocol;
-    
+
     private List<Endpoint> endpoints;
-    
+
     public String getNamespaceId() {
         return namespaceId;
     }
-    
+
     public void setNamespaceId(String namespaceId) {
         this.namespaceId = namespaceId;
     }
-    
+
     public String getAgentName() {
         return agentName;
     }
-    
+
     public void setAgentName(String agentName) {
         this.agentName = agentName;
     }
-    
+
     public String getRuntimeVersion() {
         return runtimeVersion;
     }
-    
+
     public void setRuntimeVersion(String runtimeVersion) {
         this.runtimeVersion = runtimeVersion;
     }
-    
+
     public String getVersionRange() {
         return versionRange;
     }
-    
+
     public void setVersionRange(String versionRange) {
         this.versionRange = versionRange;
     }
-    
+
     public String getProtocol() {
         return protocol;
     }
-    
+
     public void setProtocol(String protocol) {
         this.protocol = protocol;
     }
-    
+
     public List<Endpoint> getEndpoints() {
         return endpoints;
     }
-    
+
     public void setEndpoints(List<Endpoint> endpoints) {
         this.endpoints = endpoints;
     }

@@ -17,6 +17,7 @@
 package com.alibaba.nacos.auth.parser.grpc;
 
 import com.alibaba.nacos.api.ai.constant.AiConstants;
+import com.alibaba.nacos.api.ai.remote.request.AbstractAgentClientRpcRequest;
 import com.alibaba.nacos.api.ai.remote.request.AbstractAgentRequest;
 import com.alibaba.nacos.api.ai.remote.request.AbstractMcpRequest;
 import com.alibaba.nacos.api.ai.remote.request.AbstractPromptRequest;
@@ -39,7 +40,7 @@ import static com.alibaba.nacos.plugin.auth.constant.Constants.Resource.AI_TYPE_
  * @author hongye.nhy xiweng.yy
  */
 public class AiGrpcResourceParser extends AbstractGrpcResourceParser {
-    
+
     @Override
     protected String getNamespaceId(Request request) {
         String namespaceId = null;
@@ -49,18 +50,20 @@ public class AiGrpcResourceParser extends AbstractGrpcResourceParser {
             namespaceId = ((AbstractAgentRequest) request).getNamespaceId();
         } else if (request instanceof AbstractPromptRequest) {
             namespaceId = ((AbstractPromptRequest) request).getNamespaceId();
+        } else if (request instanceof AbstractAgentClientRpcRequest) {
+            namespaceId = ((AbstractAgentClientRpcRequest) request).extractNamespaceId();
         }
         if (StringUtils.isBlank(namespaceId)) {
             namespaceId = AiConstants.Mcp.MCP_DEFAULT_NAMESPACE;
         }
         return namespaceId;
     }
-    
+
     @Override
     protected String getGroup(Request request) {
         return Constants.DEFAULT_GROUP;
     }
-    
+
     @Override
     protected String getResourceName(Request request) {
         if (request instanceof AbstractMcpRequest) {
@@ -69,10 +72,13 @@ public class AiGrpcResourceParser extends AbstractGrpcResourceParser {
             return getAgentName((AbstractAgentRequest) request);
         } else if (request instanceof AbstractPromptRequest) {
             return getPromptName((AbstractPromptRequest) request);
+        } else if (request instanceof AbstractAgentClientRpcRequest) {
+            String agentName = ((AbstractAgentClientRpcRequest) request).extractAgentName();
+            return StringUtils.isBlank(agentName) ? StringUtils.EMPTY : agentName;
         }
         return StringUtils.EMPTY;
     }
-    
+
     private String getMcpName(AbstractMcpRequest request) {
         String mcpName = request.getMcpName();
         if (request instanceof ReleaseMcpServerRequest) {
@@ -83,7 +89,7 @@ public class AiGrpcResourceParser extends AbstractGrpcResourceParser {
         }
         return StringUtils.isBlank(mcpName) ? StringUtils.EMPTY : mcpName;
     }
-    
+
     private String getAgentName(AbstractAgentRequest request) {
         String agentName = request.getAgentName();
         if (request instanceof ReleaseAgentCardRequest) {
@@ -94,12 +100,12 @@ public class AiGrpcResourceParser extends AbstractGrpcResourceParser {
         }
         return StringUtils.isBlank(agentName) ? StringUtils.EMPTY : agentName;
     }
-    
+
     private String getPromptName(AbstractPromptRequest request) {
         String promptKey = request.getPromptKey();
         return StringUtils.isBlank(promptKey) ? StringUtils.EMPTY : promptKey;
     }
-    
+
     @Override
     protected Properties getProperties(Request request) {
         Properties properties = super.getProperties(request);
@@ -109,6 +115,8 @@ public class AiGrpcResourceParser extends AbstractGrpcResourceParser {
             properties.setProperty(AI_TYPE, AI_TYPE_AGENT);
         } else if (request instanceof AbstractPromptRequest) {
             properties.setProperty(AI_TYPE, AI_TYPE_PROMPT);
+        } else if (request instanceof AbstractAgentClientRpcRequest) {
+            properties.setProperty(AI_TYPE, AI_TYPE_AGENT);
         }
         return properties;
     }

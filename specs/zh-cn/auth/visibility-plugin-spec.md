@@ -23,8 +23,8 @@
 - 鉴权判断目标资源/动作上的身份和权限。
 - 可见性判断目标资源，或范围查询中的某个资源，是否应该对该身份可见。
 
-可见性对于 AI 注册中心资源尤其重要，因为用户可能创建仅 owner 可见、读者公开可见，或通过
-显式授权可见的资源。
+插件本身与领域无关。当前 Nacos 集成将其应用于 AI 注册中心资源；这类资源可能仅 owner
+可见、对读者公开可见，或通过显式授权可见。
 
 可见性补充[鉴权与权限规范](auth-permission-spec.md)，并遵守
 [Nacos 插件化规范](../plugin/plugin-spec.md)中的通用生命周期规则。它可以与
@@ -96,18 +96,41 @@ nacos.plugin.visibility.type=nacos
 
 列出资源的 API 或存储适配层必须组合这两部分，且不得泄漏私有资源。
 
-默认 AI 集成会在执行 count 和分页查询前，将 `QueryAdvisor` 转换为仓储层
-`QueryCondition`。基础谓词映射如下：
+默认领域集成会在执行 count 和分页查询前，将 `QueryAdvisor` 转换为仓储层
+`QueryCondition`。设 `F` 为调用方在传入 `QueryCondition` 上已有的业务筛选条件
+（例如请求中显式指定的 `scope` 或 `owner`），`B` 为解析后的 `BaseVisibilityPredicate`，
+`G` 为 `name IN AuthorizedResources`。转换器必须生成：
 
-| 谓词 | 查询行为 |
-|------|----------|
-| `ALL` | 不追加可见性条件。 |
-| `PUBLIC` | 限制为 `scope=PUBLIC`；如果调用方请求了冲突 scope，则返回空集。 |
-| `OWNER` | 限制为 `owner=identity`；如果身份为空或 owner 冲突，则返回空集。 |
-| `PUBLIC_AND_OWNER` | 限制为 `scope=PUBLIC OR owner=identity`；匿名调用方退化为仅公开资源。 |
+```text
+最终查询 = F AND (B OR G)
+```
 
-如果 `AuthorizedResources` 被填充，它应作为与基础谓词并列的 OR 分支加入查询。默认实现当前
-保持该列表为空，并将该字段作为显式资源授权的扩展点。
+`B` 需要独立于 `G` 单独求解，结果只会是三种之一：恒成立、恒不成立，或一组 OR 分支。
+基础谓词的求解规则如下：
+
+| 谓词 | `B` 的求解结果 |
+|------|----------------|
+| `ALL` | 恒成立；不追加可见性条件。 |
+| `PUBLIC` | 当 `scope=PUBLIC` 时成立；当调用方的业务筛选与公开 scope 冲突时恒不成立。 |
+| `OWNER` | 当 `owner=identity` 时成立；当身份为空，或调用方的业务筛选与该身份作为 owner 冲突时恒不成立。 |
+| `PUBLIC_AND_OWNER` | 当 `scope=PUBLIC OR owner=identity` 时成立；匿名调用方退化为 `PUBLIC` 的求解规则。仅当调用方的业务筛选同时将 scope 和 owner 固定为与两个分支都冲突的值时才恒不成立。 |
+
+只有在 `B` 求解完成后，才能与 `G` 取并集：`B` 恒成立时 `G` 不再重要（`B OR G` 仍然恒
+成立）；`B` 恒不成立时 `B OR G` 会退化为只剩 `G`；`B` 为 OR 分支时，`G` 会作为额外的一
+条 OR 分支与之并列。这一并集运算必须在化简为具体的 `QueryCondition` 形态（硬字段、
+OR 分组，或 `alwaysEmpty`）之前完成：如果在得知 `G` 之前就把 `B` 提前折叠进查询条件，
+可能会把本应的并集悄悄变成交集，或者在 `F AND G` 原本仍可能匹配的情况下，把整个查询
+错误地标记为 `alwaysEmpty`。
+
+调用方提交的 owner、scope 等业务筛选必须先进入基础 `QueryCondition`，再应用
+`QueryAdvisor`：这些筛选条件既用于构成 `F`，也用于在转换器决定生成 OR 分组还是退化为
+`alwaysEmpty` 之前，裁剪掉 `B` 中已经恒成立或已经不可能成立的分支。资源类型不得在转换
+后重新设置这些字段并覆盖插件生成的可见性约束。
+
+如果 `AuthorizedResources` 被填充，`G` 会按照上述并集规则作为与 `B` 并列的 OR 分支加入
+查询（当 `B` 本身恒不成立时则取代 `B`）——`G` 不会仅仅因为 `B` 无法独立成立而被丢弃。默认
+可见性实现会从当前鉴权插件管理的显式授权中填充该列表。存储态写授权会隐式包含读权限，
+而只读授权仅影响读/列表查询。
 
 ## 插件状态与配置
 
@@ -135,6 +158,9 @@ nacos.plugin.visibility.enabled=true
 nacos.plugin.visibility.{serviceName}.{itemKey}
 ```
 
+当可见性被关闭时，所属领域必须定义行为是全部可见，还是拒绝可见性敏感操作。默认
+可见性实现会在鉴权未启用时允许可见。
+
 按旧版 SPI 编译的历史实现，以及没有声明 definitions 的实现，仍通过
 `VisibilityService.init(Properties)` 一次性接收实现本地属性。使用非空历史属性时，服务端
 记录迁移告警，但不得打印配置值。对于返回 `isConfigurable()=true` 的实现，Visibility
@@ -158,6 +184,21 @@ source、元数据、脱敏和更新语义。
 这保留了职责分离：可见性决定候选资源，鉴权仍然是权限判断来源。
 [默认鉴权插件实现](default-auth-plugin-spec.md)提供当前内置的可见性实现。
 
+当插件自带的授权管理 API 需要校验资源存在性或 owner 元数据时，领域模块可以提供类似
+`VisibilityResourceLocator` 的轻量查询桥接，让鉴权/可见性插件在不直接依赖领域持久化
+类型的前提下解析 `namespaceId`、`resourceType`、`resourceName`、`owner` 和
+`scope`。
+
+默认内置的授权管理 API 为：
+
+```text
+POST /v3/auth/visibility
+DELETE /v3/auth/visibility
+```
+
+这些端点属于插件自有的 auth API，必须使用 `ApiType.ADMIN_API`。默认实现不暴露管理侧
+授权列表端点。
+
 ## API 要求
 
 任何返回具备可见性语义资源的 API 都必须：
@@ -165,6 +206,7 @@ source、元数据、脱敏和更新语义。
 - 对单资源读写操作调用 `validateVisibility`。
 - 在列表或搜索操作返回数据前应用 `adviseQuery`。
 - 在资源创建或更新时保留 owner 和 scope 元数据。
+- 如果领域暴露显式授权管理 API，在变更 grant 前必须校验资源存在性和管理权限。
 - 避免通过数量、错误信息或部分列表响应暴露私有资源名。
 - 当 API 需要隐藏资源存在性时，单资源读拒绝应返回 not found。
 - 写拒绝应返回 access denied。

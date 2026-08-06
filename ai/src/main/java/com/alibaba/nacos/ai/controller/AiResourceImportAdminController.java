@@ -51,15 +51,15 @@ import java.util.List;
 @RestController
 @RequestMapping(Constants.AI_RESOURCE_IMPORT_ADMIN_PATH)
 public class AiResourceImportAdminController {
-    
+
     private final AiResourceImportManager importManager;
-    
+
     public AiResourceImportAdminController(AiResourceImportManager importManager) {
         this.importManager = importManager;
     }
-    
+
     /**
-     * List configured import sources.
+     * List enabled managed importer plugins as import sources.
      *
      * @param form source list form
      * @return source list
@@ -73,7 +73,7 @@ public class AiResourceImportAdminController {
         form.validate();
         return Result.success(importManager.listSources(form.getResourceType()));
     }
-    
+
     /**
      * Search external import candidates.
      *
@@ -89,7 +89,7 @@ public class AiResourceImportAdminController {
         form.validate();
         return Result.success(importManager.search(form.toRequest()));
     }
-    
+
     /**
      * Validate selected import candidates.
      *
@@ -105,7 +105,7 @@ public class AiResourceImportAdminController {
         form.validate();
         return Result.success(importManager.validate(form.toRequest()));
     }
-    
+
     /**
      * Execute import for selected candidates.
      *

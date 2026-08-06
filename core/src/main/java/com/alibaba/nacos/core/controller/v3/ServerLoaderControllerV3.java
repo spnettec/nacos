@@ -27,6 +27,7 @@ import com.alibaba.nacos.core.remote.Connection;
 import com.alibaba.nacos.core.service.NacosServerLoaderService;
 import com.alibaba.nacos.core.utils.WebUtils;
 import com.alibaba.nacos.plugin.auth.constant.ActionTypes;
+import com.alibaba.nacos.plugin.auth.constant.SignType;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,15 +51,15 @@ import static com.alibaba.nacos.core.utils.Commons.NACOS_ADMIN_CORE_CONTEXT_V3;
 @RestController
 @RequestMapping(NACOS_ADMIN_CORE_CONTEXT_V3 + "/loader")
 public class ServerLoaderControllerV3 {
-    
+
     private static final Logger LOGGER = LoggerFactory.getLogger(ServerLoaderControllerV3.class);
-    
+
     private final NacosServerLoaderService serverLoaderService;
-    
+
     public ServerLoaderControllerV3(NacosServerLoaderService serverLoaderService) {
         this.serverLoaderService = serverLoaderService;
     }
-    
+
     /**
      * Get current clients.
      *
@@ -67,18 +68,19 @@ public class ServerLoaderControllerV3 {
     @Since("3.0.0")
     @GetMapping("/current")
     @Secured(resource = NACOS_ADMIN_CORE_CONTEXT_V3 + "/loader", action = ActionTypes.READ,
-        apiType = ApiType.ADMIN_API)
+        signType = SignType.CONSOLE, apiType = ApiType.ADMIN_API)
     public Result<Map<String, Connection>> currentClients() {
         return Result.success(serverLoaderService.getAllClients());
     }
-    
+
     /**
      * Rebalance the number of sdk connections on the current server.
      *
      * @return state json.
      */
     @Secured(resource = NACOS_ADMIN_CORE_CONTEXT_V3
-        + "/loader", action = ActionTypes.WRITE, apiType = ApiType.ADMIN_API)
+        + "/loader", action = ActionTypes.WRITE, signType = SignType.CONSOLE,
+        apiType = ApiType.ADMIN_API)
     @Since("3.0.0")
     @PostMapping("/reloadCurrent")
     public Result<String> reloadCount(@RequestParam Integer count,
@@ -86,7 +88,7 @@ public class ServerLoaderControllerV3 {
         serverLoaderService.reloadCount(count, redirectAddress);
         return Result.success();
     }
-    
+
     /**
      * According to the total number of sdk connections of all nodes in the nacos cluster, intelligently balance the
      * number of sdk connections of each node in the nacos cluster.
@@ -96,7 +98,8 @@ public class ServerLoaderControllerV3 {
     @Since("3.0.0")
     @PostMapping("/smartReloadCluster")
     @Secured(resource = NACOS_ADMIN_CORE_CONTEXT_V3
-        + "/loader", action = ActionTypes.WRITE, apiType = ApiType.ADMIN_API)
+        + "/loader", action = ActionTypes.WRITE, signType = SignType.CONSOLE,
+        apiType = ApiType.ADMIN_API)
     public Result<String> smartReload(HttpServletRequest request,
         @RequestParam(value = "loaderFactor", defaultValue = "0.1f") String loaderFactorStr) {
         LOGGER.info("Smart reload request receive,requestIp={}", WebUtils.getRemoteIp(request));
@@ -107,7 +110,7 @@ public class ServerLoaderControllerV3 {
         }
         return Result.success();
     }
-    
+
     /**
      * Send a ConnectResetRequest to this connection according to the sdk connection ID.
      *
@@ -116,13 +119,14 @@ public class ServerLoaderControllerV3 {
     @Since("3.0.0")
     @PostMapping("/reloadClient")
     @Secured(resource = NACOS_ADMIN_CORE_CONTEXT_V3
-        + "/loader", action = ActionTypes.WRITE, apiType = ApiType.ADMIN_API)
+        + "/loader", action = ActionTypes.WRITE, signType = SignType.CONSOLE,
+        apiType = ApiType.ADMIN_API)
     public Result<String> reloadSingle(@RequestParam String connectionId,
         @RequestParam(value = "redirectAddress", required = false) String redirectAddress) {
         serverLoaderService.reloadClient(connectionId, redirectAddress);
         return Result.success();
     }
-    
+
     /**
      * Get current clients.
      *
@@ -131,7 +135,7 @@ public class ServerLoaderControllerV3 {
     @Since("3.0.0")
     @GetMapping("/cluster")
     @Secured(resource = NACOS_ADMIN_CORE_CONTEXT_V3 + "/loader", action = ActionTypes.READ,
-        apiType = ApiType.ADMIN_API)
+        signType = SignType.CONSOLE, apiType = ApiType.ADMIN_API)
     public Result<ServerLoaderMetrics> loaderMetrics() {
         return Result.success(serverLoaderService.getServerLoaderMetrics());
     }

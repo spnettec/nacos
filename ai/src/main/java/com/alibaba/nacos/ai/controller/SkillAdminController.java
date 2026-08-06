@@ -219,7 +219,6 @@ public class SkillAdminController {
      *
      * @param request HTTP servlet request
      * @param namespaceId namespace ID
-     * @param targetVersion target version specified by the caller
      * @param file zip file containing one skill or multiple skill subdirectories
      * @return list of precheck results
      * @throws NacosException if zip parsing fails entirely
@@ -231,14 +230,13 @@ public class SkillAdminController {
     public Result<List<SkillUploadPrecheckResult>> precheckUploadSkill(
         HttpServletRequest request,
         @RequestParam(value = "namespaceId", required = false) String namespaceId,
-        @RequestParam(value = "targetVersion", required = false) String targetVersion,
         @RequestParam("file") MultipartFile file) throws NacosException {
         namespaceId = NamespaceUtil.processNamespaceParameter(namespaceId);
         byte[] zipBytes = SkillRequestUtil.validateAndExtractZipBytes(file);
-        return Result.success(skillOperationService.precheckUploadSkillFromZip(namespaceId,
-            zipBytes, targetVersion));
+        return Result.success(
+            skillOperationService.precheckUploadSkillFromZip(namespaceId, zipBytes));
     }
-    
+
     /**
      * Batch upload multiple skills from a single zip file. The zip must contain one-level subdirectories,
      * each with its own SKILL.md. Uses best-effort strategy.
@@ -247,7 +245,7 @@ public class SkillAdminController {
      * @param namespaceId namespace ID
      * @param overwrite   whether to overwrite existing drafts
      * @param file        zip file containing multiple skill subdirectories
-     * @return batch upload result with succeeded and failed lists
+     * @return batch upload result with per-skill results
      * @throws NacosException if zip parsing fails entirely
      */
     @Since("3.2.2")
@@ -338,7 +336,7 @@ public class SkillAdminController {
     @Since("3.2.1")
     @PostMapping("/force-publish")
     @Secured(resource = ADMIN_PATH
-        + "/force-publish", action = ActionTypes.WRITE, signType = SignType.CONSOLE,
+        + "/force-publish", action = ActionTypes.WRITE, signType = SignType.AI,
         apiType = ApiType.ADMIN_API)
     public Result<String> forcePublish(SkillPublishForm form) throws NacosException {
         form.validate();

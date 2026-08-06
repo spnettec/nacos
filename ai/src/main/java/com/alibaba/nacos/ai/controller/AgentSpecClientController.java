@@ -31,6 +31,7 @@ import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.model.Page;
 import com.alibaba.nacos.api.model.v2.Result;
 import com.alibaba.nacos.auth.annotation.Secured;
+import com.alibaba.nacos.auth.parser.http.AgentSpecNameHttpResourceParser;
 import com.alibaba.nacos.core.model.form.PageForm;
 import com.alibaba.nacos.core.paramcheck.ExtractorManager;
 import com.alibaba.nacos.plugin.auth.constant.ActionTypes;
@@ -52,13 +53,13 @@ import static com.alibaba.nacos.plugin.auth.constant.Constants.Tag.ALLOW_ANONYMO
 @RequestMapping(Constants.AgentSpecs.CLIENT_PATH)
 @ExtractorManager.Extractor(httpExtractor = ExtractorManager.DefaultHttpExtractor.class)
 public class AgentSpecClientController {
-    
+
     private final AgentSpecOperationService agentSpecOperationService;
-    
+
     public AgentSpecClientController(AgentSpecOperationService agentSpecOperationService) {
         this.agentSpecOperationService = agentSpecOperationService;
     }
-    
+
     /**
      * Search enabled agentspecs for runtime usage.
      */
@@ -73,7 +74,7 @@ public class AgentSpecClientController {
             agentSpecOperationService.searchAgentSpecs(form.getNamespaceId(), form.getKeyword(),
                 pageForm.getPageNo(), pageForm.getPageSize()));
     }
-    
+
     /**
      * Get an online agentspec version by label/version/latest.
      * Supports MD5-based conditional query: returns 304 when the client cache is fresh.
@@ -81,7 +82,7 @@ public class AgentSpecClientController {
     @Since("3.2.0")
     @GetMapping
     @Secured(action = ActionTypes.READ, signType = SignType.AI, apiType = ApiType.OPEN_API,
-        tags = {ALLOW_ANONYMOUS})
+        parser = AgentSpecNameHttpResourceParser.class, tags = {ALLOW_ANONYMOUS})
     public ResponseEntity<Result<AgentSpec>> get(AgentSpecQueryForm form)
         throws NacosException {
         form.validate();

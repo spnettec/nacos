@@ -47,20 +47,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author WangzJi
  */
 class FilePluginStatePersistenceImplTest {
-    
+
     @TempDir
     Path tempDir;
-    
+
     private FilePluginStatePersistenceImpl persistence;
-    
+
     private Path pluginDataDir;
-    
+
     @BeforeAll
     static void setUpAll() {
         MockEnvironment environment = new MockEnvironment();
         EnvUtil.setEnvironment(environment);
     }
-    
+
     @BeforeEach
     void setUp() throws IOException {
         // Use EnvUtil.setNacosHomePath to set the static cached path directly
@@ -81,250 +81,285 @@ class FilePluginStatePersistenceImplTest {
         }
         persistence = new FilePluginStatePersistenceImpl();
     }
-    
+
     @AfterEach
     void tearDown() {
         // Clear the static cached path to avoid affecting other tests
         EnvUtil.setNacosHomePath(null);
     }
-    
+
     @Test
     void saveStateTest() {
         persistence.saveState("trace:test", true);
-        
+
         Map<String, Boolean> states = persistence.loadAllStates();
         assertNotNull(states);
         assertTrue(states.containsKey("trace:test"));
         assertTrue(states.get("trace:test"));
     }
-    
+
     @Test
     void saveStateMultiplePluginsTest() {
         persistence.saveState("trace:test1", true);
         persistence.saveState("auth:test2", false);
-        
+
         Map<String, Boolean> states = persistence.loadAllStates();
         assertNotNull(states);
         assertEquals(2, states.size());
         assertTrue(states.get("trace:test1"));
         assertFalse(states.get("auth:test2"));
     }
-    
+
     @Test
     void saveStateOverwriteTest() {
         persistence.saveState("trace:test", true);
         persistence.saveState("trace:test", false);
-        
+
         Map<String, Boolean> states = persistence.loadAllStates();
         assertFalse(states.get("trace:test"));
     }
-    
+
     @Test
     void replaceAllStatesTest() {
         persistence.saveState("trace:old", true);
         Map<String, Boolean> replacement = new HashMap<>();
         replacement.put("trace:new", false);
-        
+
         persistence.replaceAllStates(replacement);
-        
+
         assertEquals(replacement, persistence.loadAllStates());
-        
+
         persistence.replaceAllStates(null);
         assertTrue(persistence.loadAllStates().isEmpty());
     }
-    
+
     @Test
-    void replaceAllStatesFailureTest() {
-        ReflectionTestUtils.setField(persistence, "dataDir",
-            tempDir.resolve("missing").toString());
-        
+    void replaceAllStatesFailureTest() throws IOException {
+        useInvalidDataDir();
+
         assertThrows(PluginPersistenceException.class,
             () -> persistence.replaceAllStates(Collections.emptyMap()));
     }
-    
+
+    @Test
+    void saveOperationsFailureTest() throws IOException {
+        useInvalidDataDir();
+
+        assertThrows(PluginPersistenceException.class,
+            () -> persistence.saveState("trace:test", true));
+        assertThrows(PluginPersistenceException.class, () -> persistence.saveConfig("trace:test",
+            Collections.singletonMap("endpoint", "value")));
+    }
+
     @Test
     void saveConfigTest() {
         Map<String, String> config = new HashMap<>();
         config.put("key1", "value1");
         config.put("key2", "value2");
-        
+
         persistence.saveConfig("trace:test", config);
-        
+
         Map<String, Map<String, String>> configs = persistence.loadAllConfigs();
         assertNotNull(configs);
         assertTrue(configs.containsKey("trace:test"));
         assertEquals("value1", configs.get("trace:test").get("key1"));
         assertEquals("value2", configs.get("trace:test").get("key2"));
     }
-    
+
     @Test
     void saveConfigMultiplePluginsTest() {
         Map<String, String> config1 = new HashMap<>();
         config1.put("key1", "value1");
-        
+
         Map<String, String> config2 = new HashMap<>();
         config2.put("key2", "value2");
-        
+
         persistence.saveConfig("trace:test1", config1);
         persistence.saveConfig("auth:test2", config2);
-        
+
         Map<String, Map<String, String>> configs = persistence.loadAllConfigs();
         assertNotNull(configs);
         assertEquals(2, configs.size());
         assertEquals("value1", configs.get("trace:test1").get("key1"));
         assertEquals("value2", configs.get("auth:test2").get("key2"));
     }
-    
+
     @Test
     void replaceAllConfigsTest() {
         persistence.saveConfig("trace:old", Collections.singletonMap("key", "old"));
         Map<String, Map<String, String>> replacement = new HashMap<>();
         replacement.put("trace:new", Collections.singletonMap("key", "new"));
-        
+
         persistence.replaceAllConfigs(replacement);
-        
+
         assertEquals(replacement, persistence.loadAllConfigs());
-        
+
         persistence.replaceAllConfigs(null);
         assertTrue(persistence.loadAllConfigs().isEmpty());
     }
-    
+
     @Test
-    void replaceAllConfigsFailureTest() {
-        ReflectionTestUtils.setField(persistence, "dataDir",
-            tempDir.resolve("missing").toString());
-        
+    void replaceAllConfigsFailureTest() throws IOException {
+        useInvalidDataDir();
+
         assertThrows(PluginPersistenceException.class,
             () -> persistence.replaceAllConfigs(Collections.emptyMap()));
     }
-    
+
     @Test
     void loadAllStatesFileNotExistsTest() {
         Map<String, Boolean> states = persistence.loadAllStates();
-        
+
         assertNotNull(states);
         assertEquals(0, states.size());
     }
-    
+
     @Test
     void loadAllStatesEmptyFileTest() throws IOException {
         Path stateFile = pluginDataDir.resolve("plugin-states.json");
         Files.createDirectories(pluginDataDir);
         Files.write(stateFile, "".getBytes(StandardCharsets.UTF_8));
-        
+
         Map<String, Boolean> states = persistence.loadAllStates();
-        
+
         assertNotNull(states);
         assertEquals(0, states.size());
     }
-    
+
     @Test
     void loadAllStatesCorruptedFileTest() throws IOException {
         Path stateFile = pluginDataDir.resolve("plugin-states.json");
         Files.createDirectories(pluginDataDir);
         Files.write(stateFile, "not a valid json".getBytes(StandardCharsets.UTF_8));
-        
+
         Map<String, Boolean> states = persistence.loadAllStates();
-        
+
         assertNotNull(states);
         assertEquals(0, states.size());
     }
-    
+
     @Test
     void loadAllConfigsFileNotExistsTest() {
         Map<String, Map<String, String>> configs = persistence.loadAllConfigs();
-        
+
         assertNotNull(configs);
         assertEquals(0, configs.size());
     }
-    
+
     @Test
     void loadAllConfigsEmptyFileTest() throws IOException {
         Path configFile = pluginDataDir.resolve("plugin-configs.json");
         Files.createDirectories(pluginDataDir);
         Files.write(configFile, "".getBytes(StandardCharsets.UTF_8));
-        
+
         Map<String, Map<String, String>> configs = persistence.loadAllConfigs();
-        
+
         assertNotNull(configs);
         assertEquals(0, configs.size());
     }
-    
+
     @Test
     void loadAllConfigsCorruptedFileTest() throws IOException {
         Path configFile = pluginDataDir.resolve("plugin-configs.json");
         Files.createDirectories(pluginDataDir);
         Files.write(configFile, "not a valid json".getBytes(StandardCharsets.UTF_8));
-        
-        Map<String, Map<String, String>> configs = persistence.loadAllConfigs();
-        
-        assertNotNull(configs);
-        assertEquals(0, configs.size());
+
+        assertThrows(PluginPersistenceException.class, persistence::loadAllConfigs);
     }
-    
+
     @Test
     void deleteStateTest() {
         persistence.saveState("trace:test1", true);
         persistence.saveState("trace:test2", false);
-        
+
         persistence.deleteState("trace:test1");
-        
+
         Map<String, Boolean> states = persistence.loadAllStates();
         assertFalse(states.containsKey("trace:test1"));
         assertTrue(states.containsKey("trace:test2"));
     }
-    
+
     @Test
     void deleteStateNonExistingPluginTest() {
         persistence.saveState("trace:test1", true);
-        
+
         persistence.deleteState("nonexistent:plugin");
-        
+
         Map<String, Boolean> states = persistence.loadAllStates();
         assertEquals(1, states.size());
         assertTrue(states.containsKey("trace:test1"));
     }
-    
+
     @Test
     void deleteConfigTest() {
         Map<String, String> config1 = new HashMap<>();
         config1.put("key1", "value1");
-        
+
         Map<String, String> config2 = new HashMap<>();
         config2.put("key2", "value2");
-        
+
         persistence.saveConfig("trace:test1", config1);
         persistence.saveConfig("trace:test2", config2);
-        
+
         persistence.deleteConfig("trace:test1");
-        
+
         Map<String, Map<String, String>> configs = persistence.loadAllConfigs();
         assertFalse(configs.containsKey("trace:test1"));
         assertTrue(configs.containsKey("trace:test2"));
     }
-    
+
     @Test
     void deleteConfigNonExistingPluginTest() {
         Map<String, String> config1 = new HashMap<>();
         config1.put("key1", "value1");
-        
+
         persistence.saveConfig("trace:test1", config1);
-        
+
         persistence.deleteConfig("nonexistent:plugin");
-        
+
         Map<String, Map<String, String>> configs = persistence.loadAllConfigs();
         assertEquals(1, configs.size());
         assertTrue(configs.containsKey("trace:test1"));
     }
-    
+
     @Test
-    void ensureDataDirExistsTest() {
+    void deleteOperationsFailureTest() throws IOException {
+        useInvalidDataDir();
+
+        assertThrows(PluginPersistenceException.class,
+            () -> persistence.deleteState("trace:test"));
+        assertThrows(PluginPersistenceException.class,
+            () -> persistence.deleteConfig("trace:test"));
+    }
+
+    @Test
+    void dataDirCreationIsDeferredUntilWriteTest() {
         File dataDir = new File(pluginDataDir.toString());
-        
+
+        assertFalse(dataDir.exists());
+        persistence.saveState("trace:test", true);
+
         assertTrue(dataDir.exists());
         assertTrue(dataDir.isDirectory());
     }
-    
+
+    @Test
+    void ensureDataDirExistsFailureTest() throws IOException {
+        useInvalidDataDir();
+
+        assertThrows(PluginPersistenceException.class,
+            () -> ReflectionTestUtils.invokeMethod(persistence, "ensureDataDirExists"));
+    }
+
+    @Test
+    void ensureDataDirExistsAcceptsExistingDirectoryTest() throws IOException {
+        Files.createDirectories(pluginDataDir);
+
+        ReflectionTestUtils.invokeMethod(persistence, "ensureDataDirExists");
+
+        assertTrue(Files.isDirectory(pluginDataDir));
+    }
+
     @Test
     void concurrentSaveStateTest() throws InterruptedException {
         Thread t1 = new Thread(() -> {
@@ -332,24 +367,31 @@ class FilePluginStatePersistenceImplTest {
                 persistence.saveState("plugin1", i % 2 == 0);
             }
         });
-        
+
         Thread t2 = new Thread(() -> {
             for (int i = 0; i < 100; i++) {
                 persistence.saveState("plugin2", i % 2 == 0);
             }
         });
-        
+
         t1.start();
         t2.start();
         t1.join();
         t2.join();
-        
+
         Map<String, Boolean> states = persistence.loadAllStates();
         assertEquals(2, states.size());
         assertTrue(states.containsKey("plugin1"));
         assertTrue(states.containsKey("plugin2"));
     }
-    
+
+    private void useInvalidDataDir() throws IOException {
+        Path parentFile = tempDir.resolve("not-a-directory");
+        Files.write(parentFile, Collections.singletonList("content"), StandardCharsets.UTF_8);
+        ReflectionTestUtils.setField(persistence, "dataDir",
+            parentFile.resolve("plugin").toString());
+    }
+
     @Test
     void concurrentSaveConfigTest() throws InterruptedException {
         Thread t1 = new Thread(() -> {
@@ -359,7 +401,7 @@ class FilePluginStatePersistenceImplTest {
                 persistence.saveConfig("plugin1", config);
             }
         });
-        
+
         Thread t2 = new Thread(() -> {
             for (int i = 0; i < 100; i++) {
                 Map<String, String> config = new HashMap<>();
@@ -367,12 +409,12 @@ class FilePluginStatePersistenceImplTest {
                 persistence.saveConfig("plugin2", config);
             }
         });
-        
+
         t1.start();
         t2.start();
         t1.join();
         t2.join();
-        
+
         Map<String, Map<String, String>> configs = persistence.loadAllConfigs();
         assertEquals(2, configs.size());
         assertTrue(configs.containsKey("plugin1"));

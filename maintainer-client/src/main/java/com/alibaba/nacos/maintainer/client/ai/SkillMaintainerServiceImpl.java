@@ -43,15 +43,15 @@ import java.util.Properties;
  */
 public class SkillMaintainerServiceImpl extends AbstractAiDelegateMaintainerService
     implements SkillMaintainerService {
-    
+
     public SkillMaintainerServiceImpl(Properties properties) throws NacosException {
         this(new AiMaintainerHttpContext(properties));
     }
-    
+
     SkillMaintainerServiceImpl(AiMaintainerHttpContext context) {
         super(context);
     }
-    
+
     @Override
     public SkillMeta getSkillMeta(String namespaceId, String skillName) throws NacosException {
         namespaceId = resolveNamespace(namespaceId);
@@ -68,7 +68,7 @@ public class SkillMaintainerServiceImpl extends AbstractAiDelegateMaintainerServ
             });
         return result.getData();
     }
-    
+
     @Override
     public Skill getSkillVersionDetail(String namespaceId, String skillName, String version)
         throws NacosException {
@@ -88,7 +88,7 @@ public class SkillMaintainerServiceImpl extends AbstractAiDelegateMaintainerServ
             });
         return result.getData();
     }
-    
+
     @Override
     public boolean deleteSkill(String namespaceId, String skillName) throws NacosException {
         namespaceId = resolveNamespace(namespaceId);
@@ -106,14 +106,14 @@ public class SkillMaintainerServiceImpl extends AbstractAiDelegateMaintainerServ
             });
         return ErrorCode.SUCCESS.getCode().equals(result.getCode());
     }
-    
+
     @Override
     public Page<SkillSummary> listSkills(String namespaceId, String skillName, String search,
         int pageNo,
         int pageSize) throws NacosException {
         return listSkills(namespaceId, skillName, search, null, null, null, null, pageNo, pageSize);
     }
-    
+
     @Override
     public Page<SkillSummary> listSkills(String namespaceId, String skillName, String search,
         String orderBy,
@@ -148,13 +148,13 @@ public class SkillMaintainerServiceImpl extends AbstractAiDelegateMaintainerServ
             });
         return result.getData();
     }
-    
+
     @Override
     public String uploadSkillFromZip(String namespaceId, byte[] zipBytes, boolean overwrite)
         throws NacosException {
         return uploadSkillFromZip(namespaceId, zipBytes, overwrite, null, null);
     }
-    
+
     @Override
     public String uploadSkillFromZip(String namespaceId, byte[] zipBytes, boolean overwrite,
         String targetVersion, String commitMsg)
@@ -162,7 +162,7 @@ public class SkillMaintainerServiceImpl extends AbstractAiDelegateMaintainerServ
         return uploadSkillFromZip(namespaceId, zipBytes, overwrite, targetVersion, commitMsg,
             null);
     }
-    
+
     @Override
     public String uploadSkillFromZip(String namespaceId, byte[] zipBytes, boolean overwrite,
         String targetVersion, String commitMsg, String uploadAction)
@@ -184,14 +184,13 @@ public class SkillMaintainerServiceImpl extends AbstractAiDelegateMaintainerServ
             });
         return result.getData();
     }
-    
+
     @Override
     public List<SkillUploadPrecheckResult> precheckUploadSkillFromZip(String namespaceId,
-        byte[] zipBytes, String targetVersion) throws NacosException {
+        byte[] zipBytes) throws NacosException {
         namespaceId = resolveNamespace(namespaceId);
-        Map<String, String> params = new HashMap<>(4);
+        Map<String, String> params = new HashMap<>(2);
         params.put("namespaceId", namespaceId);
-        putIfNotBlank(params, "targetVersion", targetVersion);
         HttpRequest httpRequest = buildHttpRequestBuilder(buildRequestResource(namespaceId, null))
             .setHttpMethod(HttpMethod.POST)
             .setPath(Constants.AdminApiPath.AI_SKILL_UPLOAD_PRECHECK_ADMIN_PATH)
@@ -202,7 +201,7 @@ public class SkillMaintainerServiceImpl extends AbstractAiDelegateMaintainerServ
             });
         return result.getData();
     }
-    
+
     @Override
     public BatchUploadResult batchUploadSkillsFromZip(String namespaceId, byte[] zipBytes,
         boolean overwrite)
@@ -221,7 +220,7 @@ public class SkillMaintainerServiceImpl extends AbstractAiDelegateMaintainerServ
             });
         return result.getData();
     }
-    
+
     @Override
     public String createDraft(String namespaceId, String skillName, String basedOnVersion,
         String targetVersion,
@@ -246,7 +245,7 @@ public class SkillMaintainerServiceImpl extends AbstractAiDelegateMaintainerServ
             });
         return result.getData();
     }
-    
+
     @Override
     public boolean updateDraft(String namespaceId, String skillCard, Boolean setAsLatest,
         String commitMsg)
@@ -269,7 +268,7 @@ public class SkillMaintainerServiceImpl extends AbstractAiDelegateMaintainerServ
             });
         return ErrorCode.SUCCESS.getCode().equals(result.getCode());
     }
-    
+
     @Override
     public boolean deleteDraft(String namespaceId, String skillName) throws NacosException {
         namespaceId = resolveNamespace(namespaceId);
@@ -287,7 +286,7 @@ public class SkillMaintainerServiceImpl extends AbstractAiDelegateMaintainerServ
             });
         return ErrorCode.SUCCESS.getCode().equals(result.getCode());
     }
-    
+
     @Override
     public String submit(String namespaceId, String skillName, String version)
         throws NacosException {
@@ -307,7 +306,7 @@ public class SkillMaintainerServiceImpl extends AbstractAiDelegateMaintainerServ
             });
         return result.getData();
     }
-    
+
     @Override
     public boolean publish(String namespaceId, String skillName, String version,
         Boolean updateLatestLabel)
@@ -331,7 +330,7 @@ public class SkillMaintainerServiceImpl extends AbstractAiDelegateMaintainerServ
             });
         return ErrorCode.SUCCESS.getCode().equals(result.getCode());
     }
-    
+
     @Override
     public boolean forcePublish(String namespaceId, String skillName, String version,
         Boolean updateLatestLabel)
@@ -355,7 +354,7 @@ public class SkillMaintainerServiceImpl extends AbstractAiDelegateMaintainerServ
             });
         return ErrorCode.SUCCESS.getCode().equals(result.getCode());
     }
-    
+
     @Override
     public boolean redraft(String namespaceId, String skillName, String version)
         throws NacosException {
@@ -375,7 +374,7 @@ public class SkillMaintainerServiceImpl extends AbstractAiDelegateMaintainerServ
             });
         return ErrorCode.SUCCESS.getCode().equals(result.getCode());
     }
-    
+
     @Override
     public boolean updateLabels(String namespaceId, String skillName, String labels)
         throws NacosException {
@@ -395,7 +394,7 @@ public class SkillMaintainerServiceImpl extends AbstractAiDelegateMaintainerServ
             });
         return ErrorCode.SUCCESS.getCode().equals(result.getCode());
     }
-    
+
     @Override
     public boolean updateBizTags(String namespaceId, String skillName, String bizTags)
         throws NacosException {
@@ -415,7 +414,7 @@ public class SkillMaintainerServiceImpl extends AbstractAiDelegateMaintainerServ
             });
         return ErrorCode.SUCCESS.getCode().equals(result.getCode());
     }
-    
+
     @Override
     public boolean changeOnlineStatus(String namespaceId, String skillName, String scope,
         String version,
@@ -438,7 +437,7 @@ public class SkillMaintainerServiceImpl extends AbstractAiDelegateMaintainerServ
             });
         return ErrorCode.SUCCESS.getCode().equals(result.getCode());
     }
-    
+
     @Override
     public boolean updateScope(String namespaceId, String skillName, String scope)
         throws NacosException {

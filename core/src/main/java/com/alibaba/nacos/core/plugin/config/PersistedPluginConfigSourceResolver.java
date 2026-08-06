@@ -24,23 +24,35 @@ import java.util.Map;
  * @author Nacos
  */
 interface PersistedPluginConfigSourceResolver extends PluginConfigSourceResolver {
-    
+
     /**
      * Load the complete persisted source during startup.
      */
     void initialize();
-    
+
+    /**
+     * Whether the selected physical storage is available.
+     *
+     * @return true when runtime persisted reads and writes are available
+     */
+    boolean isAvailable();
+
     /**
      * Get the complete persisted source snapshot.
      *
      * @return plugin ID to source config map
      */
     Map<String, Map<String, String>> getAllConfigs();
-    
+
     /**
      * Replace the complete persisted source while restoring a snapshot.
      *
      * @param configs complete persisted source snapshot
      */
     void restoreConfigs(Map<String, Map<String, String>> configs);
+
+    /**
+     * Release the selected physical storage.
+     */
+    void shutdown();
 }

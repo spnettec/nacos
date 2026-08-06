@@ -19,7 +19,7 @@
     "NamespaceId": {
       "type": "string",
       "minLength": 1,
-      "maxLength": 64,
+      "maxLength": 128,
       "pattern": "^[A-Za-z0-9_-]+$"
     },
     "AgentName": {
@@ -95,7 +95,7 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 64,
-      "pattern": "^[0-9A-Za-z-]{1,64}$"
+      "pattern": "^[0-9A-Za-z+-]{1,64}$"
     },
     "ContentDigest": {
       "type": "string",
@@ -162,10 +162,7 @@
     "Tag": {
       "type": "string",
       "minLength": 1,
-      "maxLength": 64,
-      "not": {
-        "pattern": "^__nacos\\.agent\\."
-      }
+      "maxLength": 64
     },
     "Extensions": {
       "type": "object",
@@ -176,7 +173,7 @@
         "maxLength": 128
       },
       "additionalProperties": true,
-      "description": "Namespaced public extension values. The canonical JSON representation of the whole map is limited to 16 KiB by domain validation."
+      "description": "Namespaced public extension values. The serialized UTF-8 JSON representation of the whole map is limited to 16 KiB by domain validation."
     },
     "AgentResourceStatus": {
       "type": "string",
@@ -228,7 +225,7 @@
         }
       }
     },
-    "VersionCatalogEntry": {
+    "AgentVersionCatalogEntry": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -258,7 +255,7 @@
         }
       }
     },
-    "VersionCatalog": {
+    "AgentVersionCatalog": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -271,7 +268,7 @@
         "onlineVersions": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/VersionCatalogEntry"
+            "$ref": "#/$defs/AgentVersionCatalogEntry"
           }
         }
       },
@@ -357,14 +354,16 @@
         },
         "scope": {
           "type": "string",
-          "minLength": 1,
-          "maxLength": 64
+          "enum": [
+            "PUBLIC",
+            "PRIVATE"
+          ]
         },
         "versionInfo": {
           "$ref": "#/$defs/AgentVersionInfo"
         },
         "versionCatalog": {
-          "$ref": "#/$defs/VersionCatalog"
+          "$ref": "#/$defs/AgentVersionCatalog"
         },
         "metaVersion": {
           "type": "integer",
@@ -433,14 +432,16 @@
         },
         "scope": {
           "type": "string",
-          "minLength": 1,
-          "maxLength": 64
+          "enum": [
+            "PUBLIC",
+            "PRIVATE"
+          ]
         },
         "versionInfo": {
           "$ref": "#/$defs/AgentVersionInfo"
         },
         "versionCatalog": {
-          "$ref": "#/$defs/VersionCatalog"
+          "$ref": "#/$defs/AgentVersionCatalog"
         },
         "metaVersion": {
           "type": "integer",

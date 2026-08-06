@@ -20,9 +20,11 @@ import com.alibaba.nacos.naming.consistency.ephemeral.distro.v2.DistroClientVeri
 import com.alibaba.nacos.naming.constants.ClientConstants;
 import com.alibaba.nacos.naming.core.v2.client.Client;
 import com.alibaba.nacos.naming.core.v2.client.ClientAttributes;
+import com.alibaba.nacos.naming.core.v2.client.impl.HttpConnectionBasedClient;
 import com.alibaba.nacos.naming.core.v2.client.impl.IpPortBasedClient;
 import com.alibaba.nacos.naming.core.v2.client.manager.impl.ConnectionBasedClientManager;
 import com.alibaba.nacos.naming.core.v2.client.manager.impl.EphemeralIpPortClientManager;
+import com.alibaba.nacos.naming.core.v2.client.manager.impl.HttpConnectionBasedClientManager;
 import com.alibaba.nacos.naming.core.v2.client.manager.impl.PersistentIpPortClientManager;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
@@ -38,80 +40,89 @@ import java.util.HashSet;
 @DependsOn({"clientServiceIndexesManager", "namingMetadataManager"})
 @Component("clientManager")
 public class ClientManagerDelegate implements ClientManager {
-    
+
     private final ConnectionBasedClientManager connectionBasedClientManager;
-    
+
+    private final HttpConnectionBasedClientManager httpConnectionBasedClientManager;
+
     private final EphemeralIpPortClientManager ephemeralIpPortClientManager;
-    
+
     private final PersistentIpPortClientManager persistentIpPortClientManager;
-    
+
     public ClientManagerDelegate(ConnectionBasedClientManager connectionBasedClientManager,
+        HttpConnectionBasedClientManager httpConnectionBasedClientManager,
         EphemeralIpPortClientManager ephemeralIpPortClientManager,
         PersistentIpPortClientManager persistentIpPortClientManager) {
         this.connectionBasedClientManager = connectionBasedClientManager;
+        this.httpConnectionBasedClientManager = httpConnectionBasedClientManager;
         this.ephemeralIpPortClientManager = ephemeralIpPortClientManager;
         this.persistentIpPortClientManager = persistentIpPortClientManager;
     }
-    
+
     @Override
     public boolean clientConnected(String clientId, ClientAttributes attributes) {
         return getClientManagerById(clientId).clientConnected(clientId, attributes);
     }
-    
+
     @Override
     public boolean clientConnected(Client client) {
         return getClientManagerById(client.getClientId()).clientConnected(client);
     }
-    
+
     @Override
     public boolean syncClientConnected(String clientId, ClientAttributes attributes) {
         return getClientManagerById(clientId).syncClientConnected(clientId, attributes);
     }
-    
+
     @Override
     public boolean clientDisconnected(String clientId) {
         return getClientManagerById(clientId).clientDisconnected(clientId);
     }
-    
+
     @Override
     public Client getClient(String clientId) {
         return getClientManagerById(clientId).getClient(clientId);
     }
-    
+
     @Override
     public boolean contains(String clientId) {
         return connectionBasedClientManager.contains(clientId)
+            || httpConnectionBasedClientManager.contains(clientId)
             || ephemeralIpPortClientManager.contains(clientId)
             || persistentIpPortClientManager.contains(clientId);
     }
-    
+
     @Override
     public Collection<String> allClientId() {
         Collection<String> result = new HashSet<>();
         result.addAll(connectionBasedClientManager.allClientId());
+        result.addAll(httpConnectionBasedClientManager.allClientId());
         result.addAll(ephemeralIpPortClientManager.allClientId());
         result.addAll(persistentIpPortClientManager.allClientId());
         return result;
     }
-    
+
     @Override
     public boolean isResponsibleClient(Client client) {
         return getClientManagerById(client.getClientId()).isResponsibleClient(client);
     }
-    
+
     @Override
     public boolean verifyClient(DistroClientVerifyInfo verifyData) {
         return getClientManagerById(verifyData.getClientId()).verifyClient(verifyData);
     }
-    
+
     private ClientManager getClientManagerById(String clientId) {
+        if (HttpConnectionBasedClient.isHttpClientId(clientId)) {
+            return httpConnectionBasedClientManager;
+        }
         if (isConnectionBasedClient(clientId)) {
             return connectionBasedClientManager;
         }
         return clientId.endsWith(ClientConstants.PERSISTENT_SUFFIX) ? persistentIpPortClientManager
             : ephemeralIpPortClientManager;
     }
-    
+
     private boolean isConnectionBasedClient(String clientId) {
         return !clientId.contains(IpPortBasedClient.ID_DELIMITER);
     }

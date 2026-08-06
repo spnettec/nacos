@@ -31,22 +31,22 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PublishPipelineModelTest {
-    
+
     @Test
     void testPublishPipelineContextAccessors() {
         PublishPipelineContext context = new PublishPipelineContext();
-        
+
         context.setResourceType(PublishPipelineResourceType.PROMPT);
         context.setResourceName("prompt");
         context.setNamespaceId("namespace");
         context.setVersion("v1");
-        
+
         assertEquals(PublishPipelineResourceType.PROMPT, context.getResourceType());
         assertEquals("prompt", context.getResourceName());
         assertEquals("namespace", context.getNamespaceId());
         assertEquals("v1", context.getVersion());
     }
-    
+
     @Test
     void testResourceFilesPipelineContextLoadsFilesLazilyOnce() {
         ResourceFileContent file = new ResourceFileContent("SKILL.md", "content");
@@ -56,45 +56,47 @@ class PublishPipelineModelTest {
             loadCount.incrementAndGet();
             return Collections.singletonList(file);
         });
-        
+
         assertSame(context.getFiles(), context.getFiles());
         assertEquals(1, loadCount.get());
         assertEquals("SKILL.md", context.getFiles().get(0).getFilePath());
         assertEquals("content", context.getFiles().get(0).getContent());
         assertEquals("ResourceFileContent{filePath='SKILL.md'}", file.toString());
     }
-    
+
     @Test
     void testResourceFilesPipelineContextUsesExplicitFiles() {
         List<ResourceFileContent> files = Collections.singletonList(new ResourceFileContent());
         ResourceFilesPipelineContext context = new ResourceFilesPipelineContext();
-        
+
         context.setFiles(files);
-        
+
         assertSame(files, context.getFiles());
         assertNull(context.getFilesLoader());
     }
-    
+
     @Test
     void testTypedPipelineContextsSetResourceType() {
         assertEquals(PublishPipelineResourceType.SKILL,
             new SkillPipelineContext().getResourceType());
         assertEquals(PublishPipelineResourceType.AGENTSPEC,
             new AgentSpecPipelineContext().getResourceType());
+        assertEquals(PublishPipelineResourceType.AGENT,
+            PublishPipelineResourceType.valueOf("AGENT"));
     }
-    
+
     @Test
     void testPublishPipelineResultFactoriesAndAccessors() {
         List<Checkpoint> checkpoints = Arrays.asList(new Checkpoint("format", true),
             new Checkpoint("security", false));
-        
+
         PublishPipelineResult passed =
             PublishPipelineResult.pass("ok", PublishPipelineMessageType.MARKDOWN, checkpoints);
         PublishPipelineResult rejected = PublishPipelineResult.reject("bad", null, checkpoints);
         PublishPipelineResult constructed = new PublishPipelineResult(true, "created");
         PublishPipelineResult simplePassed = PublishPipelineResult.pass("simple-ok");
         PublishPipelineResult simpleRejected = PublishPipelineResult.reject("simple-bad");
-        
+
         assertTrue(passed.isPassed());
         assertEquals("ok", passed.getMessage());
         assertEquals(PublishPipelineMessageType.MARKDOWN, passed.getType());
@@ -105,7 +107,7 @@ class PublishPipelineModelTest {
         assertEquals(PublishPipelineMessageType.TEXT, constructed.getType());
         assertTrue(simplePassed.isPassed());
         assertFalse(simpleRejected.isPassed());
-        
+
         constructed.setPassed(false);
         constructed.setMessage("updated");
         constructed.setType(PublishPipelineMessageType.JSON);
@@ -115,30 +117,30 @@ class PublishPipelineModelTest {
         assertEquals(PublishPipelineMessageType.JSON, constructed.getType());
         assertSame(checkpoints, constructed.getCheckpoints());
     }
-    
+
     @Test
     void testPublishPipelineMessageTypeGetCode() {
         assertEquals("markdown", PublishPipelineMessageType.MARKDOWN.getCode());
     }
-    
+
     @Test
     void testResourceFileContentAccessors() {
         ResourceFileContent file = new ResourceFileContent();
-        
+
         file.setFilePath("README.md");
         file.setContent("content");
-        
+
         assertEquals("README.md", file.getFilePath());
         assertEquals("content", file.getContent());
     }
-    
+
     @Test
     void testCheckpointEqualsAndHashCode() {
         Checkpoint checkpoint = new Checkpoint("format", true);
         Checkpoint same = new Checkpoint();
         same.setTitle("format");
         same.setPassed(true);
-        
+
         assertEquals(checkpoint, checkpoint);
         assertEquals(checkpoint, same);
         assertEquals(checkpoint.hashCode(), same.hashCode());

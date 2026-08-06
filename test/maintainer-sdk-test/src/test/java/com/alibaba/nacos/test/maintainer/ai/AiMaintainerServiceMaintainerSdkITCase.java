@@ -32,9 +32,11 @@ import com.alibaba.nacos.api.ai.model.mcp.registry.ServerVersionDetail;
 import com.alibaba.nacos.api.ai.model.pipeline.PipelineExecution;
 import com.alibaba.nacos.api.ai.model.prompt.PromptMetaInfo;
 import com.alibaba.nacos.api.ai.model.prompt.PromptVersionInfo;
+import com.alibaba.nacos.api.ai.model.skills.BatchUploadItemResult;
 import com.alibaba.nacos.api.ai.model.skills.BatchUploadResult;
 import com.alibaba.nacos.api.ai.model.skills.Skill;
 import com.alibaba.nacos.api.ai.model.skills.SkillMeta;
+import com.alibaba.nacos.api.ai.model.skills.SkillUploadPrecheckResult;
 import com.alibaba.nacos.api.ai.model.skills.SkillUtils;
 import com.alibaba.nacos.api.common.Constants;
 import com.alibaba.nacos.api.exception.NacosException;
@@ -71,16 +73,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * <p>Scenario coverage:
  * <ul>
  *     <li>Expected capability: the AI maintainer factory exposes MCP, A2A,
- *     Prompt, Skill, AgentSpec, and Pipeline delegate services against a
+ *     Agent, Prompt, Skill, AgentSpec, and Pipeline delegate services against a
  *     standalone Nacos server.</li>
  *     <li>Expected capability: representative MCP, A2A, Prompt, Skill, and
  *     AgentSpec admin lifecycle workflows create, query, list, update,
  *     force-publish when applicable, and delete isolated resources.</li>
  *     <li>Boundary/validation: null factory properties and invalid MCP
  *     local/remote specifications fail with controlled SDK exceptions.</li>
- *     <li>Expected capability: Skill and AgentSpec ZIP uploads, including
- *     Skill batch upload, create editable drafts that can be queried through
- *     the maintainer SDK.</li>
+ *     <li>Expected capability: Skill ZIP-only precheck and Skill/AgentSpec ZIP
+ *     uploads, including Skill batch upload, create editable drafts that can
+ *     be queried through the maintainer SDK.</li>
  *     <li>Known standalone limitation: real pipeline approval workflows are
  *     documented as follow-up coverage because this IT uses force-publish
  *     instead of enabling review plugins.</li>
@@ -89,22 +91,25 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author xiweng.yy
  */
 class AiMaintainerServiceMaintainerSdkITCase extends MaintainerSdkBaseITCase {
-    
+
     private static final String NAMESPACE_ID = Constants.DEFAULT_NAMESPACE_ID;
-    
+
     private static final String VERSION = "1.0.0";
-    
+
+    private static final String UPDATED_VERSION = "1.0.1";
+
     @Test
     void shouldCreateAiMaintainerServiceAndQueryDelegates() throws Exception {
         AiMaintainerService maintainerService = createAiMaintainerService();
-        
+
         assertNotNull(maintainerService.mcp());
         assertNotNull(maintainerService.a2a());
+        assertNotNull(maintainerService.agent());
         assertNotNull(maintainerService.prompt());
         assertNotNull(maintainerService.skill());
         assertNotNull(maintainerService.agentSpec());
         assertNotNull(maintainerService.pipeline());
-        
+
         assertPage(maintainerService.mcp()
                 .listMcpServer(NAMESPACE_ID, randomMaintainerName("missing-mcp"), 1, 10));
         assertPage(maintainerService.a2a()
@@ -122,63 +127,63 @@ class AiMaintainerServiceMaintainerSdkITCase extends MaintainerSdkBaseITCase {
                         .getPipelineDetail(randomMaintainerName("missing-pipeline")));
         assertEquals(NacosException.NOT_FOUND, missingPipeline.getErrCode());
     }
-    
+
     @Test
     void shouldManageMcpServerLifecycle() throws Exception {
         McpMaintainerService mcpMaintainerService = createAiMaintainerService().mcp();
         String mcpName = randomMaintainerName("mcp");
         McpToolSpecification toolSpec = buildMcpToolSpecification(mcpName);
-        
+
         assertThrows(NacosException.class,
                 () -> mcpMaintainerService.getMcpServerDetail(NAMESPACE_ID, mcpName, VERSION));
-        
+
         String mcpId = mcpMaintainerService.createLocalMcpServer(mcpName, VERSION,
                 "Maintainer SDK IT MCP server", toolSpec);
         assertNotNull(mcpId);
         addCleanup(() -> mcpMaintainerService.deleteMcpServer(NAMESPACE_ID, mcpName, mcpId,
                 VERSION));
-        
+
         McpServerDetailInfo detail =
                 mcpMaintainerService.getMcpServerDetail(NAMESPACE_ID, mcpName, mcpId, VERSION);
         assertMcpServer(detail, mcpName, VERSION, "Maintainer SDK IT MCP server");
         assertNotNull(detail.getToolSpec());
         assertFalse(detail.getToolSpec().getTools().isEmpty());
-        
+
         assertContainsPageItem(mcpMaintainerService.listMcpServer(NAMESPACE_ID, mcpName, 1, 10),
                 each -> mcpName.equals(each.getName()));
         assertContainsPageItem(mcpMaintainerService.searchMcpServer(NAMESPACE_ID, mcpName, 1, 10),
                 each -> mcpName.equals(each.getName()));
-        
+
         McpServerBasicInfo updatedSpec =
                 buildMcpServer(mcpName, VERSION, "Maintainer SDK IT MCP server updated");
         updatedSpec.setId(mcpId);
         assertTrue(mcpMaintainerService.updateMcpServer(NAMESPACE_ID, mcpName, true, updatedSpec,
                 toolSpec, null, true));
-        
+
         McpServerDetailInfo updated =
                 mcpMaintainerService.getMcpServerDetail(NAMESPACE_ID, mcpName, mcpId, VERSION);
         assertMcpServer(updated, mcpName, VERSION, "Maintainer SDK IT MCP server updated");
-        
+
         assertTrue(mcpMaintainerService.deleteMcpServer(NAMESPACE_ID, mcpName, mcpId, VERSION));
         assertNoPageItem(mcpMaintainerService.listMcpServer(NAMESPACE_ID, mcpName, 1, 10),
                 each -> mcpName.equals(each.getName()));
     }
-    
+
     @Test
     void shouldManageA2aAgentLifecycle() throws Exception {
         AiMaintainerService maintainerService = createAiMaintainerService();
         String agentName = randomMaintainerName("agent");
         AgentCard agentCard = buildAgentCard(agentName, VERSION, "Maintainer SDK IT agent");
-        
+
         assertTrue(maintainerService.a2a().registerAgent(agentCard, NAMESPACE_ID,
                 AiConstants.A2a.A2A_ENDPOINT_TYPE_URL));
         addCleanup(() -> maintainerService.a2a().deleteAgent(agentName, NAMESPACE_ID, ""));
-        
+
         AgentCardDetailInfo detail = maintainerService.a2a()
                 .getAgentCard(agentName, NAMESPACE_ID, AiConstants.A2a.A2A_ENDPOINT_TYPE_URL,
                         VERSION);
         assertAgentCard(detail, agentName, VERSION, "Maintainer SDK IT agent");
-        
+
         List<AgentVersionDetail> versions =
                 maintainerService.a2a().listAllVersionOfAgent(agentName, NAMESPACE_ID);
         assertTrue(versions.stream().anyMatch(each -> VERSION.equals(each.getVersion())));
@@ -188,39 +193,47 @@ class AiMaintainerServiceMaintainerSdkITCase extends MaintainerSdkBaseITCase {
         assertContainsPageItem(
                 maintainerService.a2a().searchAgentCardsByName(NAMESPACE_ID, agentName, 1, 10),
                 each -> agentName.equals(each.getName()));
-        
+
+        AgentCard conflictingCard =
+                buildAgentCard(agentName, VERSION, "Maintainer SDK IT agent conflict");
+        NacosException conflict = assertThrows(NacosException.class,
+                () -> maintainerService.a2a().updateAgentCard(conflictingCard, NAMESPACE_ID, true,
+                        AiConstants.A2a.A2A_ENDPOINT_TYPE_URL));
+        assertEquals(NacosException.CONFLICT, conflict.getErrCode());
+
         AgentCard updatedCard =
-                buildAgentCard(agentName, VERSION, "Maintainer SDK IT agent updated");
+                buildAgentCard(agentName, UPDATED_VERSION, "Maintainer SDK IT agent updated");
         assertTrue(maintainerService.a2a().updateAgentCard(updatedCard, NAMESPACE_ID, true,
                 AiConstants.A2a.A2A_ENDPOINT_TYPE_URL));
-        
+
         AgentCardDetailInfo updated = maintainerService.a2a()
                 .getAgentCard(agentName, NAMESPACE_ID, AiConstants.A2a.A2A_ENDPOINT_TYPE_URL,
-                        VERSION);
-        assertAgentCard(updated, agentName, VERSION, "Maintainer SDK IT agent updated");
-        
+                        UPDATED_VERSION);
+        assertAgentCard(updated, agentName, UPDATED_VERSION,
+                "Maintainer SDK IT agent updated");
+
         assertTrue(maintainerService.a2a().deleteAgent(agentName, NAMESPACE_ID, ""));
         assertNoPageItem(maintainerService.a2a().listAgentCards(NAMESPACE_ID, agentName, 1, 10),
                 each -> agentName.equals(each.getName()));
     }
-    
+
     @Test
     void shouldManagePromptLifecycle() throws Exception {
         AiMaintainerService maintainerService = createAiMaintainerService();
         String promptKey = randomMaintainerName("prompt");
-        
+
         String draftVersion = maintainerService.prompt().createDraft(NAMESPACE_ID, promptKey, null,
                 VERSION, "Maintainer SDK IT prompt template", null, "create prompt",
                 "Maintainer SDK IT prompt", "[\"maintainer-sdk-it\"]");
         assertEquals(VERSION, draftVersion);
         addCleanup(() -> maintainerService.prompt().deletePrompt(NAMESPACE_ID, promptKey));
-        
+
         maintainerService.prompt().updateDraft(NAMESPACE_ID, promptKey,
                 "Maintainer SDK IT prompt template updated", null, "update prompt");
         PromptVersionInfo draftDetail =
                 maintainerService.prompt().getVersionDetail(NAMESPACE_ID, promptKey, VERSION);
         assertEquals("Maintainer SDK IT prompt template updated", draftDetail.getTemplate());
-        
+
         maintainerService.prompt().forcePublish(NAMESPACE_ID, promptKey, VERSION, true);
         maintainerService.prompt().updateLabels(NAMESPACE_ID, promptKey,
                 "{\"latest\":\"" + VERSION + "\",\"stable\":\"" + VERSION + "\"}");
@@ -230,7 +243,7 @@ class AiMaintainerServiceMaintainerSdkITCase extends MaintainerSdkBaseITCase {
                 "[\"maintainer-sdk-it\",\"prompt\"]");
         maintainerService.prompt().changeOnlineStatus(NAMESPACE_ID, promptKey, VERSION, false);
         maintainerService.prompt().changeOnlineStatus(NAMESPACE_ID, promptKey, VERSION, true);
-        
+
         PromptMetaInfo governance =
                 maintainerService.prompt().getPromptGovernanceDetail(NAMESPACE_ID, promptKey);
         assertEquals(promptKey, governance.getPromptKey());
@@ -239,24 +252,24 @@ class AiMaintainerServiceMaintainerSdkITCase extends MaintainerSdkBaseITCase {
                 "accurate", null, 1, 10), each -> promptKey.equals(each.getPromptKey()));
         assertContainsPageItem(maintainerService.prompt().listPromptVersions(NAMESPACE_ID,
                 promptKey, 1, 10), each -> VERSION.equals(each.getVersion()));
-        
+
         assertTrue(maintainerService.prompt().deletePrompt(NAMESPACE_ID, promptKey));
         assertThrows(NacosException.class,
                 () -> maintainerService.prompt().getPromptGovernanceDetail(NAMESPACE_ID,
                         promptKey));
     }
-    
+
     @Test
     void shouldManageSkillAndAgentSpecLifecycle() throws Exception {
         AiMaintainerService maintainerService = createAiMaintainerService();
-        
+
         String skillName = randomMaintainerName("skill");
         String skillCard = buildSkillCard(skillName, "Maintainer SDK IT skill");
         String skillVersion = maintainerService.skill()
                 .createDraft(NAMESPACE_ID, skillName, null, VERSION, skillCard, "create skill");
         assertEquals(VERSION, skillVersion);
         addCleanup(() -> maintainerService.skill().deleteSkill(NAMESPACE_ID, skillName));
-        
+
         String updatedSkillCard = buildSkillCard(skillName, "Maintainer SDK IT skill updated");
         assertTrue(maintainerService.skill()
                 .updateDraft(NAMESPACE_ID, updatedSkillCard, true, "update skill"));
@@ -265,7 +278,7 @@ class AiMaintainerServiceMaintainerSdkITCase extends MaintainerSdkBaseITCase {
         assertEquals(skillName, skillDraft.getName());
         assertEquals("Maintainer SDK IT skill updated", skillDraft.getDescription());
         assertTrue(skillDraft.getSkillMd().contains("Maintainer SDK IT skill updated"));
-        
+
         assertTrue(maintainerService.skill().forcePublish(NAMESPACE_ID, skillName, VERSION, true));
         assertTrue(maintainerService.skill().updateLabels(NAMESPACE_ID, skillName,
                 "{\"latest\":\"" + VERSION + "\",\"stable\":\"" + VERSION + "\"}"));
@@ -276,19 +289,19 @@ class AiMaintainerServiceMaintainerSdkITCase extends MaintainerSdkBaseITCase {
                 .changeOnlineStatus(NAMESPACE_ID, skillName, "version", VERSION, false));
         assertTrue(maintainerService.skill()
                 .changeOnlineStatus(NAMESPACE_ID, skillName, "version", VERSION, true));
-        
+
         SkillMeta skillMeta = maintainerService.skill().getSkillMeta(NAMESPACE_ID, skillName);
         assertEquals(skillName, skillMeta.getName());
         assertContainsPageItem(maintainerService.skill().listSkills(NAMESPACE_ID, skillName,
                 "accurate", 1, 10), each -> skillName.equals(each.getName()));
-        
+
         String agentSpecName = randomMaintainerName("agentspec");
         String agentSpecVersion = maintainerService.agentSpec()
                 .createDraft(NAMESPACE_ID, agentSpecName, null, VERSION);
         assertEquals(VERSION, agentSpecVersion);
         addCleanup(() -> maintainerService.agentSpec().deleteAgentSpec(NAMESPACE_ID,
                 agentSpecName));
-        
+
         String agentSpecCard =
                 buildAgentSpecCard(agentSpecName, "Maintainer SDK IT AgentSpec");
         assertTrue(maintainerService.agentSpec().updateDraft(NAMESPACE_ID, agentSpecCard, true));
@@ -296,7 +309,7 @@ class AiMaintainerServiceMaintainerSdkITCase extends MaintainerSdkBaseITCase {
                 .getAgentSpecVersionDetail(NAMESPACE_ID, agentSpecName, VERSION);
         assertEquals(agentSpecName, agentSpecDraft.getName());
         assertTrue(agentSpecDraft.getContent().contains(agentSpecName));
-        
+
         assertTrue(maintainerService.agentSpec()
                 .forcePublish(NAMESPACE_ID, agentSpecName, VERSION, true));
         assertTrue(maintainerService.agentSpec().updateLabels(NAMESPACE_ID, agentSpecName,
@@ -309,7 +322,7 @@ class AiMaintainerServiceMaintainerSdkITCase extends MaintainerSdkBaseITCase {
                 .changeOnlineStatus(NAMESPACE_ID, agentSpecName, "version", VERSION, false));
         assertTrue(maintainerService.agentSpec()
                 .changeOnlineStatus(NAMESPACE_ID, agentSpecName, "version", VERSION, true));
-        
+
         AgentSpecMeta agentSpecMeta =
                 maintainerService.agentSpec().getAgentSpecAdminDetail(NAMESPACE_ID,
                         agentSpecName);
@@ -322,7 +335,7 @@ class AiMaintainerServiceMaintainerSdkITCase extends MaintainerSdkBaseITCase {
         assertContainsPageItem(maintainerService.agentSpec().listAgentSpecAdminItems(NAMESPACE_ID,
                 agentSpecName, "accurate", 1, 10),
                 each -> agentSpecName.equals(each.getName()));
-        
+
         assertTrue(maintainerService.skill().deleteSkill(NAMESPACE_ID, skillName));
         assertTrue(maintainerService.agentSpec().deleteAgentSpec(NAMESPACE_ID, agentSpecName));
         assertThrows(NacosException.class,
@@ -331,28 +344,34 @@ class AiMaintainerServiceMaintainerSdkITCase extends MaintainerSdkBaseITCase {
                 () -> maintainerService.agentSpec().getAgentSpecAdminDetail(NAMESPACE_ID,
                         agentSpecName));
     }
-    
+
     @Test
     void shouldUploadSkillFromZipWithTargetVersion() throws Exception {
         AiMaintainerService maintainerService = createAiMaintainerService();
         String skillName = randomMaintainerName("skill-zip");
         String targetVersion = "2.1.0";
         String commitMsg = "upload skill zip";
-        
+        byte[] zipBytes =
+                buildSkillZip(skillName, "Maintainer SDK IT uploaded skill", null);
+
+        List<SkillUploadPrecheckResult> precheck =
+                maintainerService.skill().precheckUploadSkillFromZip(NAMESPACE_ID, zipBytes);
+        assertEquals(1, precheck.size());
+        assertEquals(skillName, precheck.get(0).getSkillName());
+        assertEquals("0.0.1", precheck.get(0).getTargetVersion());
+
         String uploadedName = maintainerService.skill()
-                .uploadSkillFromZip(NAMESPACE_ID,
-                        buildSkillZip(skillName, "Maintainer SDK IT uploaded skill", null),
-                        false, targetVersion, commitMsg);
+                .uploadSkillFromZip(NAMESPACE_ID, zipBytes, false, targetVersion, commitMsg);
         assertEquals(skillName, uploadedName);
         addCleanup(() -> maintainerService.skill().deleteSkill(NAMESPACE_ID, skillName));
-        
+
         Skill detail =
                 maintainerService.skill().getSkillVersionDetail(NAMESPACE_ID, skillName,
                         targetVersion);
         assertEquals(skillName, detail.getName());
         assertEquals("Maintainer SDK IT uploaded skill", detail.getDescription());
         assertTrue(detail.getSkillMd().contains("Maintainer SDK IT uploaded skill"));
-        
+
         SkillMeta meta = maintainerService.skill().getSkillMeta(NAMESPACE_ID, skillName);
         assertNotNull(meta.getVersions());
         assertTrue(meta.getVersions().stream()
@@ -361,7 +380,7 @@ class AiMaintainerServiceMaintainerSdkITCase extends MaintainerSdkBaseITCase {
         assertEquals(targetVersion,
                 maintainerService.skill().submit(NAMESPACE_ID, skillName, targetVersion));
     }
-    
+
     @Test
     void shouldBatchUploadSkillsFromZip() throws Exception {
         AiMaintainerService maintainerService = createAiMaintainerService();
@@ -369,8 +388,8 @@ class AiMaintainerServiceMaintainerSdkITCase extends MaintainerSdkBaseITCase {
         String secondSkillName = randomMaintainerName("skill-batch-two");
         addCleanup(() -> maintainerService.skill().deleteSkill(NAMESPACE_ID, secondSkillName));
         addCleanup(() -> maintainerService.skill().deleteSkill(NAMESPACE_ID, firstSkillName));
-        
-        BatchUploadResult result = maintainerService.skill()
+
+        BatchUploadResult batchResult = maintainerService.skill()
                 .batchUploadSkillsFromZip(NAMESPACE_ID,
                         buildMultiSkillZip(
                                 buildSkill(firstSkillName, "Maintainer SDK IT batch skill one",
@@ -378,22 +397,29 @@ class AiMaintainerServiceMaintainerSdkITCase extends MaintainerSdkBaseITCase {
                                 buildSkill(secondSkillName, "Maintainer SDK IT batch skill two",
                                         VERSION)),
                         false);
-        
-        assertNotNull(result);
-        assertTrue(result.getFailed().isEmpty(), () -> result.getFailed().toString());
-        assertTrue(result.getSucceeded().contains(firstSkillName));
-        assertTrue(result.getSucceeded().contains(secondSkillName));
+
+        assertNotNull(batchResult);
+        List<BatchUploadItemResult> results = batchResult.getResults();
+        assertEquals(2, results.size());
+        assertEquals(2, batchResult.getSucceeded().size());
+        assertTrue(batchResult.getFailed().isEmpty());
+        assertTrue(results.stream().allMatch(BatchUploadItemResult::isSuccess),
+                results::toString);
+        assertTrue(results.stream().allMatch(
+                result -> BatchUploadItemResult.ERROR_CODE_SUCCESS.equals(result.getErrorCode())));
+        assertTrue(results.stream().anyMatch(result -> firstSkillName.equals(result.getName())));
+        assertTrue(results.stream().anyMatch(result -> secondSkillName.equals(result.getName())));
         assertEquals(firstSkillName, maintainerService.skill()
                 .getSkillVersionDetail(NAMESPACE_ID, firstSkillName, VERSION).getName());
         assertEquals(secondSkillName, maintainerService.skill()
                 .getSkillVersionDetail(NAMESPACE_ID, secondSkillName, VERSION).getName());
     }
-    
+
     @Test
     void shouldUploadAgentSpecFromZip() throws Exception {
         AiMaintainerService maintainerService = createAiMaintainerService();
         String agentSpecName = randomMaintainerName("agentspec-zip");
-        
+
         String uploadedName = maintainerService.agentSpec()
                 .uploadAgentSpecFromZip(NAMESPACE_ID,
                         buildAgentSpecZip(agentSpecName,
@@ -402,7 +428,7 @@ class AiMaintainerServiceMaintainerSdkITCase extends MaintainerSdkBaseITCase {
         assertEquals(agentSpecName, uploadedName);
         addCleanup(() -> maintainerService.agentSpec().deleteAgentSpec(NAMESPACE_ID,
                 agentSpecName));
-        
+
         AgentSpec detail = maintainerService.agentSpec()
                 .getAgentSpecVersionDetail(NAMESPACE_ID, agentSpecName, "0.0.1");
         assertEquals(agentSpecName, detail.getName());
@@ -411,7 +437,7 @@ class AiMaintainerServiceMaintainerSdkITCase extends MaintainerSdkBaseITCase {
         assertTrue(detail.getResource().values().stream()
                 .anyMatch(resource -> "README.md".equals(resource.getName())
                         && "docs".equals(resource.getType())));
-        
+
         AgentSpec meta = maintainerService.agentSpec()
                 .getAgentSpecVersionMeta(NAMESPACE_ID, agentSpecName, "0.0.1");
         assertEquals(agentSpecName, meta.getName());
@@ -422,15 +448,15 @@ class AiMaintainerServiceMaintainerSdkITCase extends MaintainerSdkBaseITCase {
         assertEquals("0.0.1",
                 maintainerService.agentSpec().submit(NAMESPACE_ID, agentSpecName, "0.0.1"));
     }
-    
+
     @Test
     void shouldRejectInvalidAiMaintainerParameters() throws Exception {
         AiMaintainerService maintainerService = createAiMaintainerService();
-        
+
         NacosException nullProperties = assertThrows(NacosException.class,
                 () -> AiMaintainerFactory.createAiMaintainerService(null));
         assertEquals(NacosException.INVALID_PARAM, nullProperties.getErrCode());
-        
+
         McpServerBasicInfo remoteProtocol =
                 buildMcpServer(randomMaintainerName("invalid-mcp"), VERSION, "invalid");
         remoteProtocol.setProtocol(AiConstants.Mcp.MCP_PROTOCOL_SSE);
@@ -438,14 +464,14 @@ class AiMaintainerServiceMaintainerSdkITCase extends MaintainerSdkBaseITCase {
                 () -> maintainerService.mcp().createLocalMcpServer(remoteProtocol.getName(),
                         remoteProtocol, null));
         assertEquals(NacosException.INVALID_PARAM, localProtocol.getErrCode());
-        
+
         NacosException missingEndpoint = assertThrows(NacosException.class,
                 () -> maintainerService.mcp().createRemoteMcpServer(
                         randomMaintainerName("invalid-remote"), VERSION,
                         AiConstants.Mcp.MCP_PROTOCOL_SSE, null));
         assertEquals(NacosException.INVALID_PARAM, missingEndpoint.getErrCode());
     }
-    
+
     private McpServerBasicInfo buildMcpServer(String mcpName, String version,
             String description) {
         McpServerBasicInfo result = new McpServerBasicInfo();
@@ -457,7 +483,7 @@ class AiMaintainerServiceMaintainerSdkITCase extends MaintainerSdkBaseITCase {
         result.setVersionDetail(versionDetail);
         return result;
     }
-    
+
     private McpToolSpecification buildMcpToolSpecification(String mcpName) {
         McpTool tool = new McpTool();
         tool.setName("tool_" + mcpName.replace('-', '_'));
@@ -467,17 +493,17 @@ class AiMaintainerServiceMaintainerSdkITCase extends MaintainerSdkBaseITCase {
         result.setTools(Collections.singletonList(tool));
         return result;
     }
-    
+
     private AgentCard buildAgentCard(String agentName, String version, String description) {
         AgentInterface jsonRpc = new AgentInterface();
         jsonRpc.setUrl("https://example.com/" + agentName + "/jsonrpc");
         jsonRpc.setProtocolBinding(AiConstants.A2a.A2A_ENDPOINT_DEFAULT_TRANSPORT);
         jsonRpc.setProtocolVersion("1.0");
-        
+
         AgentCapabilities capabilities = new AgentCapabilities();
         capabilities.setStreaming(true);
         capabilities.setExtendedAgentCard(true);
-        
+
         AgentCard result = new AgentCard();
         result.setName(agentName);
         result.setVersion(version);
@@ -486,11 +512,11 @@ class AiMaintainerServiceMaintainerSdkITCase extends MaintainerSdkBaseITCase {
         result.setCapabilities(capabilities);
         return result;
     }
-    
+
     private String buildSkillCard(String skillName, String description) {
         return JacksonUtils.toJson(buildSkill(skillName, description, null));
     }
-    
+
     private Skill buildSkill(String skillName, String description, String version) {
         Skill skill = new Skill();
         skill.setNamespaceId(NAMESPACE_ID);
@@ -505,7 +531,7 @@ class AiMaintainerServiceMaintainerSdkITCase extends MaintainerSdkBaseITCase {
         skill.setSkillMd(skillMd.toString());
         return skill;
     }
-    
+
     private String buildAgentSpecCard(String agentSpecName, String description) {
         AgentSpec agentSpec = new AgentSpec();
         agentSpec.setNamespaceId(NAMESPACE_ID);
@@ -516,12 +542,12 @@ class AiMaintainerServiceMaintainerSdkITCase extends MaintainerSdkBaseITCase {
                 description)));
         return JacksonUtils.toJson(agentSpec);
     }
-    
+
     private byte[] buildSkillZip(String skillName, String description, String version)
             throws IOException {
         return SkillUtils.toZipBytes(buildSkill(skillName, description, version));
     }
-    
+
     private byte[] buildMultiSkillZip(Skill... skills) throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         try (ZipOutputStream zipOutputStream = new ZipOutputStream(outputStream)) {
@@ -532,7 +558,7 @@ class AiMaintainerServiceMaintainerSdkITCase extends MaintainerSdkBaseITCase {
         }
         return outputStream.toByteArray();
     }
-    
+
     private byte[] buildAgentSpecZip(String agentSpecName, String description)
             throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -543,14 +569,14 @@ class AiMaintainerServiceMaintainerSdkITCase extends MaintainerSdkBaseITCase {
         }
         return outputStream.toByteArray();
     }
-    
+
     private void writeZipEntry(ZipOutputStream zipOutputStream, String name, String content)
             throws IOException {
         zipOutputStream.putNextEntry(new ZipEntry(name));
         zipOutputStream.write(content.getBytes(StandardCharsets.UTF_8));
         zipOutputStream.closeEntry();
     }
-    
+
     private Map<String, Object> buildAgentSpecManifest(String agentSpecName, String description) {
         Map<String, Object> worker = new HashMap<>();
         worker.put("suggested_name", agentSpecName);
@@ -560,7 +586,7 @@ class AiMaintainerServiceMaintainerSdkITCase extends MaintainerSdkBaseITCase {
         result.put("worker", worker);
         return result;
     }
-    
+
     private void assertMcpServer(McpServerDetailInfo detail, String mcpName, String version,
             String description) {
         assertNotNull(detail);
@@ -570,7 +596,7 @@ class AiMaintainerServiceMaintainerSdkITCase extends MaintainerSdkBaseITCase {
         assertNotNull(detail.getVersionDetail());
         assertEquals(version, detail.getVersionDetail().getVersion());
     }
-    
+
     private void assertAgentCard(AgentCardDetailInfo detail, String agentName, String version,
             String description) {
         assertNotNull(detail);
@@ -581,28 +607,28 @@ class AiMaintainerServiceMaintainerSdkITCase extends MaintainerSdkBaseITCase {
         assertNotNull(detail.getSupportedInterfaces());
         assertFalse(detail.getSupportedInterfaces().isEmpty());
     }
-    
+
     private <T> void assertPage(Page<T> page) {
         assertNotNull(page);
         assertNotNull(page.getPageItems());
     }
-    
+
     private <T> void assertContainsPageItem(Page<T> page, Predicate<T> predicate) {
         assertPage(page);
         assertTrue(containsPageItem(page, predicate),
                 () -> "Expected page item was not found in " + page.getPageItems());
     }
-    
+
     private <T> void assertNoPageItem(Page<T> page, Predicate<T> predicate) {
         assertPage(page);
         assertFalse(containsPageItem(page, predicate),
                 () -> "Unexpected page item was found in " + page.getPageItems());
     }
-    
+
     private <T> boolean containsPageItem(Page<T> page, Predicate<T> predicate) {
         return page.getPageItems().stream().anyMatch(predicate);
     }
-    
+
     private void assertSuccessResult(Result<Page<PipelineExecution>> result) {
         assertNotNull(result);
         assertEquals(ErrorCode.SUCCESS.getCode(), result.getCode(), result.toString());

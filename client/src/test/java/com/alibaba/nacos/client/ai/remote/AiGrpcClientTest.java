@@ -90,27 +90,27 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class AiGrpcClientTest {
-    
+
     @Mock
     private RpcClient rpcClient;
-    
+
     @Mock
     private AbstractServerListManager serverListManager;
-    
+
     @Mock
     private AiGrpcRedoService redoService;
-    
+
     @Mock
     private SecurityProxy securityProxy;
-    
+
     @Mock
     private NacosMcpServerCacheHolder mcpServerCacheHolder;
-    
+
     @Mock
     private NacosAgentCardCacheHolder agentCardCacheHolder;
-    
+
     AiGrpcClient aiGrpcClient;
-    
+
     @BeforeEach
     void setUp() {
         Properties properties = new Properties();
@@ -118,17 +118,17 @@ class AiGrpcClientTest {
         NacosClientProperties clientProperties = NacosClientProperties.PROTOTYPE.derive(properties);
         aiGrpcClient = new AiGrpcClient("test", clientProperties);
     }
-    
+
     @AfterEach
     void tearDown() throws NacosException {
         aiGrpcClient.shutdown();
     }
-    
+
     @Test
     void start() throws NacosException {
         assertDoesNotThrow(() -> aiGrpcClient.start(mcpServerCacheHolder, agentCardCacheHolder));
     }
-    
+
     @Test
     void queryMcpServer() throws NacosException, NoSuchFieldException, IllegalAccessException {
         injectMock();
@@ -142,7 +142,7 @@ class AiGrpcClientTest {
         McpServerDetailInfo actual = aiGrpcClient.queryMcpServer("test", "1.0.0");
         assertEquals(mcpServerDetailInfo, actual);
     }
-    
+
     @Test
     void queryMcpServerWithErrorCode()
         throws NoSuchFieldException, IllegalAccessException, NacosException {
@@ -154,7 +154,7 @@ class AiGrpcClientTest {
         when(rpcClient.request(any(QueryMcpServerRequest.class))).thenReturn(response);
         assertThrows(NacosException.class, () -> aiGrpcClient.queryMcpServer("test", "1.0.0"));
     }
-    
+
     @Test
     void queryMcpServerWithNoRight()
         throws NoSuchFieldException, IllegalAccessException, NacosException {
@@ -167,7 +167,7 @@ class AiGrpcClientTest {
         assertThrows(NacosException.class, () -> aiGrpcClient.queryMcpServer("test", "1.0.0"));
         verify(securityProxy).reLogin();
     }
-    
+
     @Test
     void queryMcpServerWithUnExpectedResponse()
         throws NoSuchFieldException, IllegalAccessException, NacosException {
@@ -179,7 +179,7 @@ class AiGrpcClientTest {
         when(rpcClient.request(any(QueryMcpServerRequest.class))).thenReturn(response);
         assertThrows(NacosException.class, () -> aiGrpcClient.queryMcpServer("test", "1.0.0"));
     }
-    
+
     @Test
     void queryMcpServerWithException()
         throws NoSuchFieldException, IllegalAccessException, NacosException {
@@ -191,7 +191,7 @@ class AiGrpcClientTest {
             .thenThrow(new RuntimeException("test"));
         assertThrows(NacosException.class, () -> aiGrpcClient.queryMcpServer("test", "1.0.0"));
     }
-    
+
     @Test
     void queryPromptShouldBuildRequestWithVersionLabelMd5() throws Exception {
         injectMock();
@@ -202,9 +202,9 @@ class AiGrpcClientTest {
         prompt.setVersion("1.0.0");
         response.setPromptInfo(prompt);
         when(rpcClient.request(any(QueryPromptRequest.class))).thenReturn(response);
-        
+
         Prompt actual = aiGrpcClient.queryPrompt("p1", "1.0.0", "prod", "m1");
-        
+
         assertEquals("p1", actual.getPromptKey());
         ArgumentCaptor<QueryPromptRequest> reqCaptor =
             ArgumentCaptor.forClass(QueryPromptRequest.class);
@@ -216,7 +216,7 @@ class AiGrpcClientTest {
         assertEquals("prod", captured.getLabel());
         assertEquals("m1", captured.getMd5());
     }
-    
+
     @Test
     void requestToServerShouldInjectSecurityHeaderForPromptRequest() throws Exception {
         injectMock();
@@ -226,37 +226,37 @@ class AiGrpcClientTest {
         QueryPromptResponse response = new QueryPromptResponse();
         response.setPromptInfo(new Prompt("p1", "1.0.0", "hello"));
         when(rpcClient.request(any(QueryPromptRequest.class))).thenReturn(response);
-        
+
         aiGrpcClient.queryPrompt("p1", "1.0.0", null, null);
-        
+
         verify(securityProxy).getIdentityContext(any());
         ArgumentCaptor<QueryPromptRequest> reqCaptor =
             ArgumentCaptor.forClass(QueryPromptRequest.class);
         verify(rpcClient).request(reqCaptor.capture());
         assertEquals("v", reqCaptor.getValue().getHeader("k"));
     }
-    
+
     @Test
     void queryPromptShouldReloginWhen403() throws Exception {
         injectMock();
         when(securityProxy.getIdentityContext(any())).thenReturn(new HashMap<>());
         Response response = ErrorResponse.build(NacosException.NO_RIGHT, "no right");
         when(rpcClient.request(any(QueryPromptRequest.class))).thenReturn(response);
-        
+
         assertThrows(NacosException.class, () -> aiGrpcClient.queryPrompt("p1", null, null, null));
         verify(securityProxy).reLogin();
     }
-    
+
     @Test
     void queryPromptShouldThrowWhenResponseTypeMismatch() throws Exception {
         injectMock();
         when(securityProxy.getIdentityContext(any())).thenReturn(new HashMap<>());
         QueryMcpServerResponse response = new QueryMcpServerResponse();
         when(rpcClient.request(any(QueryPromptRequest.class))).thenReturn(response);
-        
+
         assertThrows(NacosException.class, () -> aiGrpcClient.queryPrompt("p1", null, null, null));
     }
-    
+
     @Test
     void releaseMcpServer() throws NoSuchFieldException, IllegalAccessException, NacosException {
         injectMock();
@@ -274,7 +274,7 @@ class AiGrpcClientTest {
         assertEquals(id,
             aiGrpcClient.releaseMcpServer(serverSpec, new McpToolSpecification(), null));
     }
-    
+
     @Test
     void registerMcpServerEndpoint()
         throws NoSuchFieldException, IllegalAccessException, NacosException {
@@ -289,7 +289,7 @@ class AiGrpcClientTest {
         verify(redoService).cachedMcpServerEndpointForRedo("test", "127.0.0.1", 8080, "1.0.0");
         verify(redoService).mcpServerEndpointRegistered("test");
     }
-    
+
     @Test
     void deregisterMcpServerEndpoint()
         throws NoSuchFieldException, IllegalAccessException, NacosException {
@@ -304,7 +304,7 @@ class AiGrpcClientTest {
         verify(redoService).mcpServerEndpointDeregister("test");
         verify(redoService).mcpServerEndpointDeregistered("test");
     }
-    
+
     @Test
     void subscribeMcpServer() throws NoSuchFieldException, IllegalAccessException, NacosException {
         injectMock();
@@ -319,7 +319,7 @@ class AiGrpcClientTest {
         verify(mcpServerCacheHolder).processMcpServerDetailInfo(mcpServerDetailInfo);
         verify(mcpServerCacheHolder).addMcpServerUpdateTask("test", null);
     }
-    
+
     @Test
     void subscribeMcpServerAlreadySubscribed()
         throws NoSuchFieldException, IllegalAccessException, NacosException {
@@ -334,7 +334,7 @@ class AiGrpcClientTest {
         verify(mcpServerCacheHolder, never()).processMcpServerDetailInfo(mcpServerDetailInfo);
         verify(mcpServerCacheHolder, never()).addMcpServerUpdateTask("test", null);
     }
-    
+
     @Test
     void unsubscribeMcpServer()
         throws NoSuchFieldException, IllegalAccessException, NacosException {
@@ -345,7 +345,7 @@ class AiGrpcClientTest {
         aiGrpcClient.unsubscribeMcpServer("test", null);
         verify(mcpServerCacheHolder).removeMcpServerUpdateTask("test", null);
     }
-    
+
     @Test
     void queryMcpServerWithFeatureDisabled() throws NoSuchFieldException, IllegalAccessException {
         injectMock();
@@ -356,7 +356,7 @@ class AiGrpcClientTest {
             () -> aiGrpcClient.queryMcpServer("test", "1.0.0"));
         assertEquals(NacosException.SERVER_NOT_IMPLEMENTED, exception.getErrCode());
     }
-    
+
     @Test
     void queryMcpServerWithDisconnectedShouldThrowConnectionError()
         throws NoSuchFieldException, IllegalAccessException {
@@ -366,7 +366,7 @@ class AiGrpcClientTest {
             () -> aiGrpcClient.queryMcpServer("test", "1.0.0"));
         assertEquals(NacosException.SERVER_ERROR, exception.getErrCode());
     }
-    
+
     @Test
     void queryMcpServerWithUnknownAbilityButConnectedShouldProceed()
         throws NoSuchFieldException, IllegalAccessException, NacosException {
@@ -379,7 +379,7 @@ class AiGrpcClientTest {
         when(rpcClient.request(any(QueryMcpServerRequest.class))).thenReturn(response);
         assertDoesNotThrow(() -> aiGrpcClient.queryMcpServer("test", "1.0.0"));
     }
-    
+
     @Test
     void releaseMcpServerWithFeatureDisabled() throws NoSuchFieldException, IllegalAccessException {
         injectMock();
@@ -393,7 +393,7 @@ class AiGrpcClientTest {
         assertThrows(NacosRuntimeException.class,
             () -> aiGrpcClient.releaseMcpServer(serverSpec, null, null));
     }
-    
+
     @Test
     void registerMcpServerEndpointWithFeatureDisabled()
         throws NoSuchFieldException, IllegalAccessException {
@@ -404,7 +404,7 @@ class AiGrpcClientTest {
         assertThrows(NacosRuntimeException.class,
             () -> aiGrpcClient.registerMcpServerEndpoint("test", "127.0.0.1", 8080, "1.0.0"));
     }
-    
+
     @Test
     void deregisterMcpServerEndpointWithFeatureDisabled()
         throws NoSuchFieldException, IllegalAccessException {
@@ -415,7 +415,7 @@ class AiGrpcClientTest {
         assertThrows(NacosRuntimeException.class,
             () -> aiGrpcClient.deregisterMcpServerEndpoint("test", "127.0.0.1", 8080));
     }
-    
+
     @Test
     void subscribeMcpServerWithFeatureDisabled()
         throws NoSuchFieldException, IllegalAccessException {
@@ -426,7 +426,7 @@ class AiGrpcClientTest {
         assertThrows(NacosRuntimeException.class,
             () -> aiGrpcClient.subscribeMcpServer("test", null));
     }
-    
+
     @Test
     void unsubscribeMcpServerWithFeatureDisabled()
         throws NoSuchFieldException, IllegalAccessException {
@@ -437,7 +437,7 @@ class AiGrpcClientTest {
         assertThrows(NacosRuntimeException.class,
             () -> aiGrpcClient.unsubscribeMcpServer("test", null));
     }
-    
+
     @Test
     void releaseAgentCardShouldUseLegacyFormatWhenServerV1NotSupported()
         throws NoSuchFieldException, IllegalAccessException, NacosException {
@@ -459,7 +459,7 @@ class AiGrpcClientTest {
         assertEquals("JSONRPC", actual.getPreferredTransport());
         assertEquals("1.0", actual.getProtocolVersion());
     }
-    
+
     @Test
     void releaseAgentCardShouldRetryLegacyWhenServerReturnsLegacyValidationError()
         throws NoSuchFieldException, IllegalAccessException, NacosException {
@@ -477,7 +477,7 @@ class AiGrpcClientTest {
         aiGrpcClient.releaseAgentCard(buildV1AgentCard(), "service", true);
         verify(rpcClient, org.mockito.Mockito.times(2)).request(any(ReleaseAgentCardRequest.class));
     }
-    
+
     @Test
     void isEnable() throws NoSuchFieldException, IllegalAccessException {
         injectMock();
@@ -485,7 +485,7 @@ class AiGrpcClientTest {
         when(rpcClient.isRunning()).thenReturn(true);
         assertTrue(aiGrpcClient.isEnable());
     }
-    
+
     @Test
     void requestToServerWithoutMcpRequest()
         throws NoSuchMethodException, NoSuchFieldException, IllegalAccessException {
@@ -501,7 +501,7 @@ class AiGrpcClientTest {
             assertEquals(400, ((NacosException) targetException).getErrCode());
         }
     }
-    
+
     @Test
     void queryPromptThreeArgOverloadDelegates() throws Exception {
         injectMock();
@@ -512,7 +512,7 @@ class AiGrpcClientTest {
         Prompt actual = aiGrpcClient.queryPrompt("p1", "1.0.0", "stable");
         assertEquals("p1", actual.getPromptKey());
     }
-    
+
     @Test
     void subscribeMcpServerSwallowsNotFound() throws Exception {
         injectMock();
@@ -525,7 +525,7 @@ class AiGrpcClientTest {
         assertDoesNotThrow(() -> aiGrpcClient.subscribeMcpServer("test", null));
         verify(mcpServerCacheHolder).addMcpServerUpdateTask("test", null);
     }
-    
+
     @Test
     void subscribeMcpServerRethrowsOnNonNotFound() throws Exception {
         injectMock();
@@ -538,7 +538,7 @@ class AiGrpcClientTest {
             () -> aiGrpcClient.subscribeMcpServer("test", null));
         verify(mcpServerCacheHolder, never()).addMcpServerUpdateTask("test", null);
     }
-    
+
     @Test
     void getAgentCardSendsRequest() throws Exception {
         injectMock();
@@ -558,7 +558,7 @@ class AiGrpcClientTest {
         assertEquals("1.0", cap.getValue().getVersion());
         assertEquals("service", cap.getValue().getRegistrationType());
     }
-    
+
     @Test
     void releaseAgentCardSuccessNoLegacyRetry() throws Exception {
         injectMock();
@@ -573,7 +573,7 @@ class AiGrpcClientTest {
         verify(rpcClient, org.mockito.Mockito.times(1))
             .request(any(ReleaseAgentCardRequest.class));
     }
-    
+
     @Test
     void releaseAgentCardRethrowsOnNonLegacyError() throws Exception {
         injectMock();
@@ -590,7 +590,7 @@ class AiGrpcClientTest {
         verify(rpcClient, org.mockito.Mockito.times(1))
             .request(any(ReleaseAgentCardRequest.class));
     }
-    
+
     @Test
     void releaseAgentCardRetriesOnPreferredTransportError() throws Exception {
         injectMock();
@@ -608,7 +608,7 @@ class AiGrpcClientTest {
         verify(rpcClient, org.mockito.Mockito.times(2))
             .request(any(ReleaseAgentCardRequest.class));
     }
-    
+
     @Test
     void releaseAgentCardRetriesOnUrlError() throws Exception {
         injectMock();
@@ -626,7 +626,7 @@ class AiGrpcClientTest {
         verify(rpcClient, org.mockito.Mockito.times(2))
             .request(any(ReleaseAgentCardRequest.class));
     }
-    
+
     @Test
     void shouldRetryWithLegacyFormatNonInvalidParam() throws Exception {
         Method m = AiGrpcClient.class.getDeclaredMethod("shouldRetryWithLegacyFormat",
@@ -638,7 +638,7 @@ class AiGrpcClientTest {
         assertFalse((boolean) m.invoke(aiGrpcClient,
             new NacosException(NacosException.INVALID_PARAM, "")));
     }
-    
+
     @Test
     void registerAgentEndpoint() throws Exception {
         injectMock();
@@ -650,12 +650,13 @@ class AiGrpcClientTest {
         AgentEndpoint endpoint = new AgentEndpoint();
         endpoint.setAddress("127.0.0.1");
         endpoint.setPort(8080);
+        endpoint.setVersion("1.0.0");
         aiGrpcClient.registerAgentEndpoint("ag", endpoint);
         verify(redoService).cachedAgentEndpointForRedo(org.mockito.ArgumentMatchers.eq("ag"),
             any());
-        verify(redoService).agentEndpointRegistered("ag");
+        verify(redoService).agentEndpointRegistered("ag", "1.0.0");
     }
-    
+
     @Test
     void registerAgentEndpointsBatch() throws Exception {
         injectMock();
@@ -667,15 +668,17 @@ class AiGrpcClientTest {
         AgentEndpoint e1 = new AgentEndpoint();
         e1.setAddress("127.0.0.1");
         e1.setPort(8080);
+        e1.setVersion("1.0.0");
         AgentEndpoint e2 = new AgentEndpoint();
         e2.setAddress("127.0.0.1");
         e2.setPort(8081);
+        e2.setVersion("1.0.0");
         aiGrpcClient.registerAgentEndpoints("ag", Arrays.asList(e1, e2));
         verify(redoService).cachedAgentEndpointForRedo(org.mockito.ArgumentMatchers.eq("ag"),
             any());
-        verify(redoService).agentEndpointRegistered("ag");
+        verify(redoService).agentEndpointRegistered("ag", "1.0.0");
     }
-    
+
     @Test
     void deregisterAgentEndpoint() throws Exception {
         injectMock();
@@ -687,11 +690,12 @@ class AiGrpcClientTest {
         AgentEndpoint endpoint = new AgentEndpoint();
         endpoint.setAddress("127.0.0.1");
         endpoint.setPort(8080);
+        endpoint.setVersion("1.0.0");
         aiGrpcClient.deregisterAgentEndpoint("ag", endpoint);
-        verify(redoService).agentEndpointDeregister("ag");
-        verify(redoService).agentEndpointDeregistered("ag");
+        verify(redoService).agentEndpointDeregister("ag", "1.0.0");
+        verify(redoService).agentEndpointDeregistered("ag", "1.0.0");
     }
-    
+
     @Test
     void subscribeAgentCardCachedReturnsImmediately() throws Exception {
         injectMockWithAgentCardCache();
@@ -703,8 +707,9 @@ class AiGrpcClientTest {
         AgentCardDetailInfo actual = aiGrpcClient.subscribeAgentCard("ag", null);
         assertEquals(cached, actual);
         verify(rpcClient, never()).request(any(QueryAgentCardRequest.class));
+        verify(agentCardCacheHolder).addAgentCardUpdateTask("ag", null);
     }
-    
+
     @Test
     void subscribeAgentCardFetchesAndCaches() throws Exception {
         injectMockWithAgentCardCache();
@@ -719,7 +724,7 @@ class AiGrpcClientTest {
         verify(agentCardCacheHolder).processAgentCardDetailInfo(fetched);
         verify(agentCardCacheHolder).addAgentCardUpdateTask("ag", null);
     }
-    
+
     @Test
     void subscribeAgentCardSwallowsNotFound() throws Exception {
         injectMockWithAgentCardCache();
@@ -731,7 +736,7 @@ class AiGrpcClientTest {
         assertDoesNotThrow(() -> aiGrpcClient.subscribeAgentCard("ag", null));
         verify(agentCardCacheHolder).addAgentCardUpdateTask("ag", null);
     }
-    
+
     @Test
     void subscribeAgentCardRethrowsOnNonNotFound() throws Exception {
         injectMockWithAgentCardCache();
@@ -744,7 +749,7 @@ class AiGrpcClientTest {
             () -> aiGrpcClient.subscribeAgentCard("ag", null));
         verify(agentCardCacheHolder, never()).addAgentCardUpdateTask("ag", null);
     }
-    
+
     @Test
     void unsubscribeAgentCard() throws Exception {
         injectMockWithAgentCardCache();
@@ -754,7 +759,7 @@ class AiGrpcClientTest {
         aiGrpcClient.unsubscribeAgentCard("ag", null);
         verify(agentCardCacheHolder).removeAgentCardUpdateTask("ag", null);
     }
-    
+
     @Test
     void isAbilitySupportedByServer() throws Exception {
         injectMock();
@@ -762,7 +767,7 @@ class AiGrpcClientTest {
             .thenReturn(AbilityStatus.SUPPORTED);
         assertTrue(aiGrpcClient.isAbilitySupportedByServer(AbilityKey.SERVER_MCP_REGISTRY));
     }
-    
+
     @Test
     void buildLegacyCompatibleAgentCardWithMultipleInterfaces() throws Exception {
         Method m = AiGrpcClient.class.getDeclaredMethod("buildLegacyCompatibleAgentCard",
@@ -784,7 +789,7 @@ class AiGrpcClientTest {
         assertEquals("u1", converted.getUrl());
         assertEquals(1, converted.getAdditionalInterfaces().size());
     }
-    
+
     @Test
     void requestToServerWithExplicitTimeout() throws Exception {
         // Set a positive requestTimeout to take the timeout branch
@@ -802,7 +807,7 @@ class AiGrpcClientTest {
         verify(rpcClient).request(any(QueryPromptRequest.class),
             org.mockito.ArgumentMatchers.eq(5000L));
     }
-    
+
     @Test
     void buildRequestResourceWithNullName() throws Exception {
         Method m = AiGrpcClient.class.getDeclaredMethod("buildRequestResource", String.class,
@@ -812,7 +817,7 @@ class AiGrpcClientTest {
         Object resource = m.invoke(aiGrpcClient, "ns", null);
         assertTrue(resource != null);
     }
-    
+
     private void injectMockWithAgentCardCache()
         throws NoSuchFieldException, IllegalAccessException {
         injectMock();
@@ -820,31 +825,31 @@ class AiGrpcClientTest {
         field.setAccessible(true);
         field.set(aiGrpcClient, agentCardCacheHolder);
     }
-    
+
     private void injectMock() throws NoSuchFieldException, IllegalAccessException {
         Field field = AiGrpcClient.class.getDeclaredField("rpcClient");
         field.setAccessible(true);
         RpcClient autoRpcClient = (RpcClient) field.get(aiGrpcClient);
         field.set(aiGrpcClient, rpcClient);
-        
+
         field = AiGrpcClient.class.getDeclaredField("serverListManager");
         field.setAccessible(true);
         AbstractServerListManager autoServerListManager =
             (AbstractServerListManager) field.get(aiGrpcClient);
         field.set(aiGrpcClient, serverListManager);
-        
+
         field = AiGrpcClient.class.getDeclaredField("redoService");
         field.setAccessible(true);
         AiGrpcRedoService autoRedoService = (AiGrpcRedoService) field.get(aiGrpcClient);
         field.set(aiGrpcClient, redoService);
-        
+
         field = AiGrpcClient.class.getDeclaredField("securityProxy");
         field.setAccessible(true);
         field.set(aiGrpcClient, securityProxy);
         field = AiGrpcClient.class.getDeclaredField("mcpServerCacheHolder");
         field.setAccessible(true);
         field.set(aiGrpcClient, mcpServerCacheHolder);
-        
+
         try {
             autoRpcClient.shutdown();
             autoServerListManager.shutdown();
@@ -852,7 +857,7 @@ class AiGrpcClientTest {
         } catch (NacosException ignored) {
         }
     }
-    
+
     private AgentCard buildV1AgentCard() {
         AgentCard agentCard = new AgentCard();
         agentCard.setName("test-agent");

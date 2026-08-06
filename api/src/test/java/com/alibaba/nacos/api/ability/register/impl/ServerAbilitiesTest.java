@@ -23,20 +23,28 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ServerAbilitiesTest {
-    
+
     @Test
     void testGetStaticAbilities() {
         assertFalse(ServerAbilities.getStaticAbilities().isEmpty());
     }
-    
+
     @Test
     void testSupportPersistentInstanceByGrpcAbilities() {
         assertTrue(ServerAbilities.getStaticAbilities()
             .get(AbilityKey.SERVER_PERSISTENT_INSTANCE_BY_GRPC));
     }
-    
+
     @Test
     void testSupportAgentCardV1Abilities() {
         assertTrue(ServerAbilities.getStaticAbilities().get(AbilityKey.SERVER_AGENT_CARD_V1));
+    }
+
+    @Test
+    void testSupportAgentDiscoveryAbilities() {
+        assertTrue(
+            ServerAbilities.getStaticAbilities().get(AbilityKey.SERVER_AGENT_DISCOVERY_V1));
+        assertTrue(ServerAbilities.getStaticAbilities().get(AbilityKey.SERVER_AGENT_ENDPOINT_V1));
+        assertTrue(ServerAbilities.getStaticAbilities().get(AbilityKey.SERVER_AGENT_PUBLISH_V1));
     }
 }

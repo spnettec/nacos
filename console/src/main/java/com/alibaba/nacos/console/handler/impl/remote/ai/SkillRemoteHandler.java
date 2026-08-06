@@ -55,20 +55,20 @@ import java.util.List;
 @EnabledRemoteHandler
 @EnabledAiHandler
 public class SkillRemoteHandler implements SkillHandler {
-    
+
     private final NacosMaintainerClientHolder clientHolder;
-    
+
     public SkillRemoteHandler(NacosMaintainerClientHolder clientHolder) {
         this.clientHolder = clientHolder;
     }
-    
+
     @Override
     public SkillMeta getSkill(SkillForm form) throws NacosException {
         return clientHolder.getAiMaintainerService().skill().getSkillMeta(
             form.getNamespaceId(),
             form.getSkillName());
     }
-    
+
     @Override
     public Skill getSkillVersion(SkillForm form) throws NacosException {
         return clientHolder.getAiMaintainerService().skill().getSkillVersionDetail(
@@ -76,19 +76,19 @@ public class SkillRemoteHandler implements SkillHandler {
             form.getSkillName(),
             form.getVersion());
     }
-    
+
     @Override
     public Skill downloadSkillVersion(SkillForm form) throws NacosException {
         return getSkillVersion(form);
     }
-    
+
     @Override
     public void deleteSkill(SkillForm form) throws NacosException {
         clientHolder.getAiMaintainerService().skill().deleteSkill(
             form.getNamespaceId(),
             form.getSkillName());
     }
-    
+
     @Override
     public Page<SkillSummary> listSkills(SkillListForm skillListForm,
         AiResourceFilterableForm filterableForm,
@@ -113,21 +113,21 @@ public class SkillRemoteHandler implements SkillHandler {
         }
         return result;
     }
-    
+
     @Override
     public String uploadSkillFromZip(SkillUploadRequest request) throws NacosException {
         return clientHolder.getAiMaintainerService().skill().uploadSkillFromZip(
             request.getNamespaceId(), request.getZipBytes(), request.isOverwrite(),
             request.getTargetVersion(), request.getCommitMsg(), request.getUploadAction());
     }
-    
+
     @Override
     public List<SkillUploadPrecheckResult> precheckUploadSkillFromZip(String namespaceId,
-        byte[] zipBytes, String targetVersion) throws NacosException {
-        return clientHolder.getAiMaintainerService().skill().precheckUploadSkillFromZip(namespaceId,
-            zipBytes, targetVersion);
+        byte[] zipBytes) throws NacosException {
+        return clientHolder.getAiMaintainerService().skill()
+            .precheckUploadSkillFromZip(namespaceId, zipBytes);
     }
-    
+
     @Override
     public BatchUploadResult batchUploadSkillsFromZip(String namespaceId, byte[] zipBytes,
         boolean overwrite)
@@ -135,7 +135,7 @@ public class SkillRemoteHandler implements SkillHandler {
         return clientHolder.getAiMaintainerService().skill().batchUploadSkillsFromZip(namespaceId,
             zipBytes, overwrite);
     }
-    
+
     @Override
     public String createDraft(SkillDraftCreateForm form) throws NacosException {
         return clientHolder.getAiMaintainerService().skill().createDraft(form.getNamespaceId(),
@@ -143,64 +143,64 @@ public class SkillRemoteHandler implements SkillHandler {
             form.getBasedOnVersion(), form.getTargetVersion(), form.getSkillCard(),
             form.getCommitMsg());
     }
-    
+
     @Override
     public void updateDraft(SkillUpdateForm form) throws NacosException {
         clientHolder.getAiMaintainerService().skill().updateDraft(form.getNamespaceId(),
             form.getSkillCard(),
             form.getSetAsLatest(), form.getCommitMsg());
     }
-    
+
     @Override
     public void deleteDraft(SkillForm form) throws NacosException {
         clientHolder.getAiMaintainerService().skill().deleteDraft(form.getNamespaceId(),
             form.getSkillName());
     }
-    
+
     @Override
     public String submit(SkillSubmitForm form) throws NacosException {
         return clientHolder.getAiMaintainerService().skill()
             .submit(form.getNamespaceId(), form.getSkillName(), form.getVersion());
     }
-    
+
     @Override
     public void publish(SkillPublishForm form) throws NacosException {
         clientHolder.getAiMaintainerService().skill()
             .publish(form.getNamespaceId(), form.getSkillName(), form.getVersion(),
                 true);
     }
-    
+
     @Override
     public void forcePublish(SkillPublishForm form) throws NacosException {
         clientHolder.getAiMaintainerService().skill()
             .forcePublish(form.getNamespaceId(), form.getSkillName(), form.getVersion(),
                 true);
     }
-    
+
     @Override
     public void redraft(SkillPublishForm form) throws NacosException {
         clientHolder.getAiMaintainerService().skill()
             .redraft(form.getNamespaceId(), form.getSkillName(), form.getVersion());
     }
-    
+
     @Override
     public void updateLabels(SkillLabelsUpdateForm form) throws NacosException {
         clientHolder.getAiMaintainerService().skill()
             .updateLabels(form.getNamespaceId(), form.getSkillName(), form.getLabels());
     }
-    
+
     @Override
     public void updateBizTags(SkillBizTagsUpdateForm form) throws NacosException {
         clientHolder.getAiMaintainerService().skill()
             .updateBizTags(form.getNamespaceId(), form.getSkillName(), form.getBizTags());
     }
-    
+
     @Override
     public void changeOnlineStatus(SkillOnlineForm form, boolean online) throws NacosException {
         clientHolder.getAiMaintainerService().skill().changeOnlineStatus(form.getNamespaceId(),
             form.getSkillName(), form.getScope(), form.getVersion(), online);
     }
-    
+
     @Override
     public void updateScope(SkillScopeForm form) throws NacosException {
         clientHolder.getAiMaintainerService().skill().updateScope(form.getNamespaceId(),

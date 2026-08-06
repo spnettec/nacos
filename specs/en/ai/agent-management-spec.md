@@ -82,9 +82,10 @@ namespaceId + resourceType=agent + agentName
 must use `agentName` when `displayName` is absent or blank. `displayName` never
 participates in identity, authorization, storage keys, or endpoint matching.
 
-Exact lookup compares the original `agentName`. A name filter performs literal
-substring matching; persistence implementations must escape wildcard
-characters such as `%` and `_` instead of interpreting them as patterns.
+Exact lookup compares the original `agentName`. Filter semantics belong to the
+corresponding API binding: RAD Search uses literal substring matching, while
+the initial Admin list reuses the shared AI Resource fuzzy-name query and does
+not add an Agent-specific persistence operator.
 
 ### 2.2 Version Identity
 
@@ -133,20 +134,20 @@ The Agent resource contains the following fields:
 
 | Field | Required | Meaning |
 | --- | :---: | --- |
-| `namespaceId` | Yes | Isolation boundary. |
+| `namespaceId` | Yes | Nacos namespace isolation boundary; 1 to 128 `[A-Za-z0-9_-]` characters. |
 | `agentName` | Yes | Stable public identity. |
 | `displayName` | No | Unicode presentation name. |
 | `description` | No | Catalog description. |
 | `iconUrl` | No | Catalog icon URI. |
 | `provider` | No | Provider `name` and `url`; this is not the management owner. |
-| `tags[]` | No | Public catalog and exact-match search tags. |
+| `tags[]` | No | Public catalog tags; RAD Search applies exact matching. |
 | `extensions` | No | Namespaced `Map<String, JsonValue>` for public Agent-level extensions. |
 | `status` | Yes | `enable` or `disable`. |
 | `owner` | Yes | Management owner. |
-| `scope` | Yes | Visibility scope. |
+| `scope` | Yes | Shared visibility scope; `PUBLIC` or `PRIVATE` in this version. |
 | `versionInfo` | Read-only | Shared editing, reviewing, online-count, and label summary. |
 | `versionCatalog` | Read-only | Compact catalog of online versions and protocols. |
-| `metaVersion` | Read-only | Metadata CAS version. |
+| `metaVersion` | Read-only | Monotonic metadata revision shared with the AI Resource model. The initial Agent Admin API does not expose a conditional-write parameter. |
 | `createTime`, `updateTime` | Read-only | Audit timestamps. |
 
 The following invariants apply:
@@ -200,6 +201,24 @@ validation rules are defined by the [Agent Storage Spec](agent-storage-spec.md).
 
 ### 4.2 Lifecycle Rules
 
+Draft creation is the common entry for both Resource and Version creation:
+
+- if the Agent metadata does not exist, creating a draft also creates the
+  `ai_resource` metadata. The first draft must contain direct
+  `callInterfaces`; `basedOnVersion` is invalid because no source Version can
+  belong to the absent Agent. Optional catalog metadata is initialized from
+  the same request. The server derives enabled status, current owner, and
+  default scope. When the request context has no identity, such as while
+  authentication is disabled, the server uses `nacos` as the owner;
+- if the Agent metadata exists, draft creation follows the normal editing-slot
+  rule and accepts either direct content or one exact source Version. Catalog
+  metadata belongs to the Agent update lifecycle and is not accepted on a
+  subsequent draft request.
+
+There is no independent metadata-only or `createAgent` operation in this
+version. Both first and subsequent draft creation return an
+`AgentVersionDetail`.
+
 Agent Versions use the shared lifecycle:
 
 | Status | Content mutable | Available to ordinary RAD discovery |
@@ -234,7 +253,7 @@ The following Agent-specific rules refine the common AI lifecycle rule:
   not trigger recalculation.
 
 Whenever online status or labels change, the server must rebuild
-`versionCatalog` and the derived protocol search tokens as one logical update.
+`versionCatalog` as one logical update.
 When at least one online version exists, exactly one valid `latestVersion` must
 exist and must occur in `onlineVersions`.
 
@@ -324,8 +343,12 @@ state = AVAILABLE | DISABLED | UNHEALTHY
 
 State evaluation is ordered: `enabled=false` is `DISABLED`; otherwise
 `healthy=false` is `UNHEALTHY`; all other items are `AVAILABLE`.
-`lastUpdatedTime` changes only when public Endpoint content, enabled state, or
-aggregate health changes. A heartbeat alone does not change it.
+`lastUpdatedTime` is the `lastRefTime` of the Naming `ServiceInfo` projection
+from which the snapshot was built. All items from one snapshot therefore share
+the same projection observation time. It is not a per-Endpoint distributed
+fact or a cache validator and may change whenever Naming rebuilds that Service
+projection. Cross-node equality and watch deduplication use the content-derived
+`sourceRevision` instead.
 
 `protocol` is required. Without `version`, the snapshot contains one effective
 item per natural Endpoint key for that protocol and all of its Version
@@ -352,16 +375,15 @@ Version fact:
 | `description` | 2048 characters. |
 | Icon, provider, or declared Endpoint URI | 2048 characters. |
 | Public tags | 32 items, 64 characters each. |
-| Agent `extensions` | 32 items; key 128 characters; canonical JSON total 16 KiB. |
+| Agent `extensions` | 32 items; key 128 characters; serialized UTF-8 JSON total 16 KiB. |
 | `protocol`, `protocolVersion` | 32 and 64 characters. |
 | CallInterfaces per Version | 16. |
 | Declared Endpoints per CallInterface | 64. |
 | Endpoint metadata | 32 items; key 64 and value 256 characters. |
 | `AgentVersionContent` | 1 MiB. |
 
-Public tags and internal protocol tokens share the persistence capacity of
-`biz_tags`; the server validates the canonical combined length before atomically
-accepting either a tag or online-protocol change.
+`biz_tags` stores only public tags supplied by the user and does not contain
+server-derived indexes. Its serialized JSON must not exceed 1024 characters.
 
 Descriptors, extensions, and Endpoint metadata must not contain plaintext
 credentials. Audit records must not log complete native descriptors, security

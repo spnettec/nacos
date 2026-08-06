@@ -29,19 +29,24 @@ import com.alibaba.nacos.plugin.ai.pipeline.spi.PublishPipelineService;
  * @since 3.2.0
  */
 public enum PublishPipelineResourceType {
-    
+
     /**
      * Skill resource type.
      */
     SKILL,
-    
+
     /**
      * Prompt resource type.
      */
     PROMPT,
-    
+
     /**
      * AgentSpec resource type.
      */
-    AGENTSPEC
+    AGENTSPEC,
+
+    /**
+     * Agent resource type.
+     */
+    AGENT
 }

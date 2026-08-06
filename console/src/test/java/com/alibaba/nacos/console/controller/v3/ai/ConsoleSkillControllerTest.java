@@ -254,20 +254,20 @@ class ConsoleSkillControllerTest {
             && SkillUploadPrecheckResult.ACTION_OVERWRITE_DRAFT
                 .equals(request.getUploadAction()))))
             .thenReturn(SKILL_NAME);
-        
+
         MockMultipartFile file = new MockMultipartFile("file", "skill.zip",
             "application/zip", new byte[] {0x50, 0x4B, 0x03, 0x04, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-        
+
         MockHttpServletResponse response = mockMvc.perform(
             MockMvcRequestBuilders.multipart(BASE_PATH + "/upload").file(file)
                 .param("namespaceId", NS)
                 .param("uploadAction", SkillUploadPrecheckResult.ACTION_OVERWRITE_DRAFT))
             .andReturn().getResponse();
-        
+
         assertEquals(200, response.getStatus());
     }
-    
+
     @Test
     void testPrecheckUploadSkill() throws Exception {
         byte[] zipBytes = "zip-content".getBytes();
@@ -277,18 +277,17 @@ class ConsoleSkillControllerTest {
         precheckResult.setParsedVersion("1.0.0");
         precheckResult.setTargetVersion("1.0.0");
         precheckResult.setPrecheckCode(SkillUploadPrecheckResult.PRECHECK_CODE_READY);
-        when(skillProxy.precheckUploadSkillFromZip(eq(NS), aryEq(zipBytes), eq("1.0.0")))
+        when(skillProxy.precheckUploadSkillFromZip(eq(NS), aryEq(zipBytes)))
             .thenReturn(java.util.Collections.singletonList(precheckResult));
         MockMultipartFile file = new MockMultipartFile("file", "skill.zip",
             "application/zip", zipBytes);
-        
+
         MockHttpServletResponse response = mockMvc.perform(
             MockMvcRequestBuilders.multipart(BASE_PATH + "/upload/precheck")
                 .file(file)
-                .param("namespaceId", NS)
-                .param("targetVersion", "1.0.0"))
+                .param("namespaceId", NS))
             .andReturn().getResponse();
-        
+
         assertEquals(200, response.getStatus());
         Result<java.util.List<SkillUploadPrecheckResult>> result = JacksonUtils.toObj(
             response.getContentAsString(), new TypeReference<>() {
@@ -304,7 +303,7 @@ class ConsoleSkillControllerTest {
         assertFalse(precheckJson.has("status"));
         assertFalse(precheckJson.has("actions"));
     }
-    
+
     @Test
     void testCreateDraft() throws Exception {
         when(skillProxy.createDraft(any())).thenReturn("v1-draft");

@@ -18,11 +18,12 @@ package com.alibaba.nacos.plugin.visibility.spi;
 
 import com.alibaba.nacos.api.plugin.PluginStateCheckerHolder;
 import com.alibaba.nacos.api.plugin.PluginType;
+import com.alibaba.nacos.common.spi.PluginRegistryUtils;
 import com.alibaba.nacos.common.utils.StringUtils;
+import com.alibaba.nacos.sys.env.EnvUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
@@ -38,25 +39,25 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author xiweng.yy
  */
 public class VisibilityPluginManager {
-    
+
     private static final Logger LOGGER = LoggerFactory.getLogger(VisibilityPluginManager.class);
-    
+
     private static final VisibilityPluginManager INSTANCE = new VisibilityPluginManager();
-    
+
     private static final String PROPERTIES_PREFIX = "nacos.plugin.visibility.";
-    
+
     private final Map<String, VisibilityService> visibilityServiceMap = new ConcurrentHashMap<>();
-    
+
     private volatile boolean initialized;
-    
+
     private VisibilityPluginManager() {
     }
-    
+
     private synchronized void initVisibilityServices() {
         if (initialized) {
             return;
         }
-        Properties allProperties = resolveInitProperties();
+        Properties allProperties = EnvUtil.getProperties();
         ServiceLoader<VisibilityService> serviceLoader =
             ServiceLoader.load(VisibilityService.class);
         Iterator<VisibilityService> iterator = serviceLoader.iterator();
@@ -77,8 +78,13 @@ public class VisibilityPluginManager {
         }
         initialized = true;
     }
-    
+
     private void registerVisibilityService(VisibilityService service, Properties allProperties) {
+        if (service == null) {
+            PluginRegistryUtils.registerFirst(visibilityServiceMap,
+                PluginType.VISIBILITY.getType(), null, null, LOGGER);
+            return;
+        }
         String serviceName;
         try {
             serviceName = service.getVisibilityServiceName();
@@ -92,6 +98,11 @@ public class VisibilityPluginManager {
             LOGGER.warn(
                 "[VisibilityPluginManager] VisibilityService({}) has empty serviceName, skip.",
                 service.getClass());
+            return;
+        }
+        if (visibilityServiceMap.containsKey(serviceName)) {
+            PluginRegistryUtils.registerFirst(visibilityServiceMap,
+                PluginType.VISIBILITY.getType(), serviceName, service, LOGGER);
             return;
         }
         if (!service.isConfigurable()) {
@@ -112,11 +123,13 @@ public class VisibilityPluginManager {
                 return;
             }
         }
-        visibilityServiceMap.put(serviceName, service);
-        LOGGER.info("[VisibilityPluginManager] Loaded VisibilityService({}:{}) successfully.",
-            service.getClass(), serviceName);
+        if (PluginRegistryUtils.registerFirst(visibilityServiceMap,
+            PluginType.VISIBILITY.getType(), serviceName, service, LOGGER)) {
+            LOGGER.info("[VisibilityPluginManager] Loaded VisibilityService({}:{}) successfully.",
+                service.getClass(), serviceName);
+        }
     }
-    
+
     private Properties resolveServiceProperties(Properties allProperties, String serviceName) {
         Properties result = new Properties();
         if (allProperties.isEmpty()) {
@@ -131,11 +144,11 @@ public class VisibilityPluginManager {
         }
         return result;
     }
-    
+
     public static VisibilityPluginManager getInstance() {
         return INSTANCE;
     }
-    
+
     /**
      * Find a visibility service by name.
      *
@@ -156,40 +169,16 @@ public class VisibilityPluginManager {
         }
         return Optional.ofNullable(visibilityServiceMap.get(serviceName));
     }
-    
+
     private boolean isVisibilityModuleEnabled() {
-        Properties allProperties = resolveInitProperties();
+        Properties allProperties = EnvUtil.getProperties();
         String enabledValue = allProperties.getProperty(
             VisibilityPluginTypePolicy.VISIBILITY_ENABLED_PROPERTY);
         return StringUtils.isBlank(enabledValue) || Boolean.parseBoolean(enabledValue);
     }
-    
+
     public Map<String, VisibilityService> getAllPlugins() {
         initVisibilityServices();
         return Collections.unmodifiableMap(visibilityServiceMap);
-    }
-    
-    private Properties resolveInitProperties() {
-        // TODO: Replace reflection with direct EnvUtil.getProperties() after plugin/visibility can depend on nacos-sys.
-        try {
-            Class<?> envUtilClass = Class.forName("com.alibaba.nacos.sys.env.EnvUtil");
-            Method method = envUtilClass.getMethod("getProperties");
-            Object result = method.invoke(null);
-            if (result instanceof Properties) {
-                return (Properties) result;
-            }
-        } catch (Throwable ex) {
-            LOGGER.debug(
-                "[VisibilityPluginManager] Cannot load EnvUtil properties, fallback to system properties.",
-                ex);
-            return copySystemProperties();
-        }
-        return copySystemProperties();
-    }
-    
-    private Properties copySystemProperties() {
-        Properties fallback = new Properties();
-        fallback.putAll(System.getProperties());
-        return fallback;
     }
 }

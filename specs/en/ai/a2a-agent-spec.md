@@ -19,7 +19,7 @@
 | Item | Value |
 | --- | --- |
 | Status | Experimental target compatibility contract |
-| Activation | Canonical Agent write-path cutover |
+| Activation | `nacos.ai.a2a.compatibility.mode`, default `CANONICAL` |
 
 This document defines A2A as a protocol binding of the canonical Nacos Agent
 resource and specifies the compatibility facade for historical AgentCard APIs.
@@ -29,16 +29,27 @@ The canonical model is defined by the
 
 ## 1. Activation, Current Baseline, And Identity
 
-Before feature activation, the current Nacos runtime may continue to persist
-`type=a2a` resources and use the legacy Config and Naming layouts. That
-implementation remains conforming to the current A2A baseline; this target
-spec does not claim that it has already migrated.
+The legacy A2A surfaces select one complete definition implementation through
+`nacos.ai.a2a.compatibility.mode`:
 
-Sections 2 through 7 become normative for new requests only after the
-canonical Agent write path is activated. Activation and mixed-version rollout
-must be explicit: before cutover, the legacy model remains the fact source;
-after cutover, new writes use the canonical Agent model and the legacy surface
-is the compatibility facade defined here.
+| Mode | Compatibility implementation |
+| --- | --- |
+| `CANONICAL` | Canonical Agent metadata, Version storage, and RAD Runtime Endpoints. This is the default because this release does not support a rolling upgrade for this feature. |
+| `LEGACY` | Historical AgentCard Config groups and exact-Version Naming Endpoints. The legacy implementation remains unchanged. |
+| `AUTO` | Start on `LEGACY`; switch once, and only once, to `CANONICAL` after every known cluster member reports version 3.3.0 or later. Missing or invalid member versions keep the legacy branch active. |
+
+Mode tokens are case-insensitive. Each request is routed wholly to one branch;
+there is no per-operation mixture, fallback, dual read, or dual write. The
+`AUTO` entry only reserves a conservative future cutover hook. It is not a
+rolling-upgrade guarantee, and a one-way switch does not migrate historical
+Config data. Operators that select `LEGACY` or later change from `LEGACY` to
+`CANONICAL` are responsible for the visibility consequences until a separate
+migration contract is implemented.
+
+Sections 2 through 7 are normative for requests routed to `CANONICAL`. Requests
+routed to `LEGACY` retain the complete historical Config definition and
+Version-specific Naming Endpoint behavior. After `AUTO` switches, it uses the
+same complete branch as `CANONICAL`.
 
 A2A is not a top-level AI resource type. The canonical identity is:
 
@@ -86,10 +97,12 @@ Rules:
 - a standard Agent publish or online operation always moves `latest`;
 - deleting or taking the current latest offline selects the greatest remaining
   online Agent version, or removes `latest` when none remains;
-- releasing an already-online exact version through the Client SDK is a
-  successful no-op;
-- an existing exact version with different canonical content is a conflict;
-  0.1.0 does not provide same-version force overwrite;
+- releasing an already-online exact version that already contains an A2A call
+  interface through the Client SDK is a successful no-op: content is neither
+  compared nor replaced, and `latest` is not moved;
+- different canonical content is a conflict for Admin updates of an existing
+  exact version and for Client releases that hit an exact version without an
+  A2A call interface; 0.1.0 does not provide same-version force overwrite;
 - deleting a missing Agent or version is a successful no-op only where the
   historical API already promises that behavior.
 
@@ -98,27 +111,53 @@ records without logging the complete descriptor or sensitive endpoint metadata.
 
 ## 4. Legacy Runtime Endpoint Writes
 
-Legacy single and batch endpoint operations retain replacement semantics under
-this compatibility scope:
+The `CANONICAL` branch adapts legacy single, batch, and deregistration requests
+to the canonical RAD Runtime Naming layout:
 
 ```text
-publisher + namespaceId + agentName + exactVersion + protocol=a2a
+group=agent-endpoints
+serviceName=rad-<encodedAgentId>-a2a
+runtimeVersion=<exactVersion>
+versionRange=[<exactVersion>]
 ```
 
-Single register replaces the scope with one endpoint; batch register replaces
-it with the submitted set. The adapter maps the exact version to
-`runtimeVersion=version` and `versionRange=[version]` and writes through the
-canonical Runtime Endpoint Registry.
+Legacy SDK redo and replacement identity is
+`(connection, namespaceId, agentName, exactVersion)`, while the canonical
+Runtime Service stores one complete batch per Naming publisher. The adapter
+therefore creates a deterministic internal child publisher for each legacy
+exact Version and binds it to the original AI gRPC connection. Single register
+replaces that child publication with one Endpoint; batch register replaces the
+same child publication with the submitted complete batch; deregister removes
+the complete exact-Version child publication. Different Version child
+publishers write the same canonical Service without overwriting each other.
+Disconnecting the original connection releases all of its children and keeps
+using Naming ClientData Distro, indexes, events, and cleanup. The adapter never
+reads and merges an old publication.
 
-The Registry stores separate publisher contribution groups for different exact
-versions even when they use the same public endpoint natural key. Legacy
-deregister removes only the requested exact-version contribution group. This
-internal compatibility operation is intentionally narrower than RAD
-`Deregister`, which removes the current publisher's bindings for the submitted
-natural endpoint keys.
+Every converted Naming Instance uses canonical singular `runtimeVersion` and
+`versionRange` metadata. Legacy `protocolVersion` and `tenant` remain reserved
+metadata solely for A2A reverse projection; they are excluded from public RAD
+Endpoint metadata and Runtime revision. Legacy Endpoint URI, transport, health,
+and weight pass through the canonical Runtime mapping and validation.
+
+The `LEGACY` branch preserves the existing handler and
+`<legacyEncodedAgentName>::<exactVersion>` Naming Service implementation
+unchanged. This keeps the old path available for a future compatibility
+switch. In Beta, `CANONICAL` writes only the canonical Service and does not
+dual-write the legacy Service. A caller discovering the historical serviceName
+directly through a Naming Gateway will therefore not see these new
+publications. A dual-write policy, switch, rollback, and old-service cleanup are
+post-Beta design work.
 
 Endpoint publication may precede Agent or Version creation. It never creates an
 Agent definition implicitly.
+
+The legacy Java SDK stores Endpoint redo independently for each
+`(agentName, exactVersion)` and keeps a defensive snapshot of the submitted
+payload. Reconnect caching must not lose one Version's publication intent
+because another Version shares the Agent name. Internal child publishers are a
+server implementation detail and never enter public payloads, redo keys,
+authorization resources, or management queries.
 
 ## 5. Legacy Query Projection
 
@@ -135,16 +174,28 @@ Projection rules:
 | `SERVICE` with matching Runtime Endpoints | Project the deterministic Runtime Endpoint set into AgentCard interfaces and root URL. |
 | `SERVICE` with no matching Runtime Endpoint | Fall back to the stored declared AgentCard. |
 
-Runtime projection excludes `enabled=false` endpoints and retains
+`CANONICAL` queries read `rad-<encodedAgentId>-a2a` and filter bindings by the
+target exact Version. `LEGACY` queries continue reading the historical
+Version-specific Service. Runtime projection excludes `enabled=false` endpoints and retains
 `healthy=false` endpoints because the legacy DTO has no health field. The
 projection order is stable: priority first, then the endpoint natural key. New
 RAD-only fields such as source revision, health, priority, weight, and general
 metadata are not added to legacy DTOs.
 
+For wire compatibility, the complete projected Runtime Endpoint set is exposed
+through both `supportedInterfaces` and the historical `additionalInterfaces`
+field. The root URL and preferred transport select one member of that same set;
+the selected member is not removed from `additionalInterfaces`.
+
 Legacy list and version-list APIs read Agent metadata plus online A2A versions.
 Legacy subscription events pass through the same projection as GET. A legacy
 subscription may remain registered when the initial target is absent; this is a
 compatibility behavior and is not the RAD Watch contract.
+Exact-Version and latest subscriptions use distinct identities. A Version's
+current latest flag cannot choose the sole event target. Moving latest to an
+already cached exact Version still notifies latest subscribers. Resubscription
+after cancellation restarts polling, and SDK shutdown stops all legacy
+AgentCard polling tasks.
 
 ## 6. Compatibility Surfaces
 
@@ -159,9 +210,10 @@ and response wrappers remain stable during their windows. New Agent/RAD APIs
 must not expose `registrationType`, `setAsLatest`, or AgentCard-specific list
 wrappers.
 
-Historical data migration, mixed-version dual read/write, source switching,
-rollback, and cleanup are rolling-upgrade concerns and are not defined by this
-API compatibility spec.
+Historical data migration, mixed-version dual read/write, rollback, and cleanup
+remain rolling-upgrade concerns and are not defined by this API compatibility
+spec. The mode switch above selects an implementation; it does not provide any
+of those capabilities.
 
 ## 7. Evolution
 

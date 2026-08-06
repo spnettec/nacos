@@ -28,6 +28,7 @@ import com.alibaba.nacos.plugin.control.rule.parser.NacosConnectionControlRulePa
 import com.alibaba.nacos.plugin.control.rule.storage.RuleStorageProxy;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -39,43 +40,56 @@ import java.util.stream.Collectors;
  * @author shiyiyu
  */
 public abstract class ConnectionControlManager {
-    
+
     private final ConnectionControlRuleParser connectionControlRuleParser;
-    
+
     protected ConnectionControlRule connectionControlRule;
-    
+
     protected Collection<ConnectionMetricsCollector> metricsCollectorList;
-    
+
     private ScheduledExecutorService executorService;
-    
+
     public ConnectionControlManager() {
+        this(true);
+    }
+
+    /**
+     * Construct connection control manager.
+     *
+     * @param initialize whether to load rules, metrics collectors and reporter resources
+     */
+    protected ConnectionControlManager(boolean initialize) {
+        this.connectionControlRuleParser = buildConnectionControlRuleParser();
+        if (!initialize) {
+            metricsCollectorList = Collections.emptyList();
+            return;
+        }
         metricsCollectorList = NacosServiceLoader.load(ConnectionMetricsCollector.class);
         Loggers.CONTROL.info("Load connection metrics collector,size={},{}",
             metricsCollectorList.size(),
             metricsCollectorList);
-        this.connectionControlRuleParser = buildConnectionControlRuleParser();
         initConnectionRule();
         if (!metricsCollectorList.isEmpty()) {
             initExecuteService();
             startConnectionMetricsReport();
         }
     }
-    
+
     /**
      * get manager name.
      *
      * @return name
      */
     public abstract String getName();
-    
+
     protected ConnectionControlRuleParser buildConnectionControlRuleParser() {
         return new NacosConnectionControlRuleParser();
     }
-    
+
     public ConnectionControlRuleParser getConnectionControlRuleParser() {
         return connectionControlRuleParser;
     }
-    
+
     private void initExecuteService() {
         executorService = ExecutorFactory.newSingleScheduledExecutorService(r -> {
             Thread thread = new Thread(r, "nacos.plugin.control.connection.reporter");
@@ -83,7 +97,7 @@ public abstract class ConnectionControlManager {
             return thread;
         });
     }
-    
+
     private void initConnectionRule() {
         RuleStorageProxy ruleStorageProxy = RuleStorageProxy.getInstance();
         String localRuleContent = ruleStorageProxy.getLocalDiskStorage().getConnectionRule();
@@ -99,33 +113,33 @@ public abstract class ConnectionControlManager {
                     localRuleContent);
             }
         }
-        
+
         if (StringUtils.isNotBlank(localRuleContent)) {
             connectionControlRule = connectionControlRuleParser.parseRule(localRuleContent);
             Loggers.CONTROL.info("init connection rule end");
-            
+
         } else {
             Loggers.CONTROL.info("No connection rule content found ,use default empty rule ");
             connectionControlRule = connectionControlRuleParser.parseRule("");
         }
     }
-    
+
     private void startConnectionMetricsReport() {
         executorService.scheduleWithFixedDelay(new ConnectionMetricsReporter(), 3000, 3000,
             TimeUnit.MILLISECONDS);
     }
-    
+
     public ConnectionControlRule getConnectionLimitRule() {
         return connectionControlRule;
     }
-    
+
     /**
      * apply connection rule.
      *
      * @param connectionControlRule not null.
      */
     public abstract void applyConnectionLimitRule(ConnectionControlRule connectionControlRule);
-    
+
     /**
      * check connection allowed.
      *
@@ -133,16 +147,16 @@ public abstract class ConnectionControlManager {
      * @return connection check response
      */
     public abstract ConnectionCheckResponse check(ConnectionCheckRequest connectionCheckRequest);
-    
+
     class ConnectionMetricsReporter implements Runnable {
-        
+
         @Override
         public void run() {
             Map<String, Integer> metricsTotalCount = metricsCollectorList.stream().collect(
                 Collectors.toMap(ConnectionMetricsCollector::getName,
                     ConnectionMetricsCollector::getTotalCount));
             int totalCount = metricsTotalCount.values().stream().mapToInt(Integer::intValue).sum();
-            
+
             Loggers.CONNECTION.info("ConnectionMetrics, totalCount = {}, detail = {}", totalCount,
                 metricsTotalCount);
         }

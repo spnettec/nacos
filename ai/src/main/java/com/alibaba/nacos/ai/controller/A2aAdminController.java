@@ -23,7 +23,7 @@ import com.alibaba.nacos.ai.form.a2a.admin.AgentCardUpdateForm;
 import com.alibaba.nacos.ai.form.a2a.admin.AgentForm;
 import com.alibaba.nacos.ai.form.a2a.admin.AgentListForm;
 import com.alibaba.nacos.ai.param.AgentHttpParamExtractor;
-import com.alibaba.nacos.ai.service.a2a.A2aServerOperationService;
+import com.alibaba.nacos.ai.service.a2a.A2aCompatibilityOperationService;
 import com.alibaba.nacos.ai.utils.AgentRequestUtil;
 import com.alibaba.nacos.api.ai.model.a2a.AgentCard;
 import com.alibaba.nacos.api.ai.model.a2a.AgentCardDetailInfo;
@@ -32,7 +32,6 @@ import com.alibaba.nacos.api.ai.model.a2a.AgentVersionDetail;
 import com.alibaba.nacos.api.annotation.NacosApi;
 import com.alibaba.nacos.api.common.ApiType;
 import com.alibaba.nacos.api.exception.NacosException;
-import com.alibaba.nacos.api.exception.api.NacosApiException;
 import com.alibaba.nacos.api.model.Page;
 import com.alibaba.nacos.api.model.v2.Result;
 import com.alibaba.nacos.auth.annotation.Secured;
@@ -59,13 +58,13 @@ import java.util.List;
 @RequestMapping(Constants.A2A.ADMIN_PATH)
 @ExtractorManager.Extractor(httpExtractor = AgentHttpParamExtractor.class)
 public class A2aAdminController {
-    
-    private final A2aServerOperationService a2aServerOperationService;
-    
-    public A2aAdminController(A2aServerOperationService a2aServerOperationService) {
+
+    private final A2aCompatibilityOperationService a2aServerOperationService;
+
+    public A2aAdminController(A2aCompatibilityOperationService a2aServerOperationService) {
         this.a2aServerOperationService = a2aServerOperationService;
     }
-    
+
     /**
      * Register agent.
      *
@@ -83,25 +82,25 @@ public class A2aAdminController {
             form.getRegistrationType());
         return Result.success("ok");
     }
-    
+
     /**
      * Get agent card.
      *
      * @param form the agent form to get
      * @return result of the get operation
-     * @throws NacosApiException if the agent get fails due to invalid input or internal error
+     * @throws NacosException if the agent get fails due to invalid input or internal error
      */
     @Since("3.1.0")
     @GetMapping
     @Secured(action = ActionTypes.READ, signType = SignType.AI, apiType = ApiType.ADMIN_API)
-    public Result<AgentCardDetailInfo> getAgentCard(AgentForm form) throws NacosApiException {
+    public Result<AgentCardDetailInfo> getAgentCard(AgentForm form) throws NacosException {
         form.validate();
         return Result.success(
             a2aServerOperationService.getAgentCard(form.getNamespaceId(), form.getAgentName(),
                 form.getVersion(),
                 form.getRegistrationType()));
     }
-    
+
     /**
      * Update agent.
      *
@@ -120,7 +119,7 @@ public class A2aAdminController {
             form.getSetAsLatest());
         return Result.success("ok");
     }
-    
+
     /**
      * Delete agent.
      *
@@ -137,7 +136,7 @@ public class A2aAdminController {
             form.getVersion());
         return Result.success("ok");
     }
-    
+
     /**
      * List agents.
      *
@@ -159,7 +158,7 @@ public class A2aAdminController {
                 agentListForm.getAgentName(),
                 agentListForm.getSearch(), pageForm.getPageNo(), pageForm.getPageSize()));
     }
-    
+
     /**
      * List all versions for target Agent.
      *

@@ -53,6 +53,8 @@ public abstract class JavaSdkBaseITCase {
 
     private static final String SDK_STATUS_UP = "UP";
 
+    private static final String AI_CONNECTION_PROBE = "java-sdk-it-ai-connection-probe";
+
     private final Deque<CleanupAction> cleanupActions = new ArrayDeque<>();
 
     private final Deque<CleanupAction> shutdownActions = new ArrayDeque<>();
@@ -81,10 +83,20 @@ public abstract class JavaSdkBaseITCase {
                 () -> SDK_STATUS_UP.equals(service.getServerStatus()));
         return service;
     }
-
-    protected AiService createAiService() throws NacosException {
+    protected AiService createAiService() throws Exception {
         AiService service = AiFactory.createAiService(sdkProperties());
         shutdownActions.addFirst(service::shutdown);
+        waitUntil("AI SDK client should connect to server", () -> {
+            try {
+                service.getMcpServer(AI_CONNECTION_PROBE);
+                return true;
+            } catch (NacosException exception) {
+                if (NacosException.NOT_FOUND == exception.getErrCode()) {
+                    return true;
+                }
+                throw exception;
+            }
+        });
         return service;
     }
 

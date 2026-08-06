@@ -172,10 +172,10 @@ CREATE TABLE `roles` (
 
 CREATE TABLE `permissions` (
                                `role` varchar(50) NOT NULL COMMENT 'role',
-                               `resource` varchar(128) NOT NULL COMMENT 'resource',
+                               `resource` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT 'resource',
                                `action` varchar(8) NOT NULL COMMENT 'action',
                                UNIQUE INDEX `uk_role_permission` (`role`,`resource`,`action`) USING BTREE
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC;
 
 
 /******************************************/
@@ -244,3 +244,78 @@ CREATE TABLE `ai_resource_version` (
     KEY `idx_ai_resource_ver_status` (`status`),
     KEY `idx_ai_resource_ver_gmt_modified` (`gmt_modified`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='AI资源版本表';
+
+/******************************************/
+/*   表名称 = ai_resource_search_document       */
+/******************************************/
+CREATE TABLE `ai_resource_search_document` (
+    `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'id',
+    `gmt_create` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `gmt_modified` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
+    `namespace_id` varchar(128) NOT NULL DEFAULT '' COMMENT '命名空间ID',
+    `resource_type` varchar(32) NOT NULL COMMENT '资源类型',
+    `resource_name` varchar(256) NOT NULL COMMENT '资源名称',
+    `resource_version` varchar(64) NOT NULL COMMENT '资源版本',
+    `display_name` varchar(256) NOT NULL COMMENT '展示名称',
+    `c_desc` varchar(2048) DEFAULT NULL COMMENT '描述',
+    `tags` longtext DEFAULT NULL COMMENT '标签(JSON)',
+    `capabilities` longtext DEFAULT NULL COMMENT '能力(JSON)',
+    `representative_queries` longtext DEFAULT NULL COMMENT '代表性查询(JSON)',
+    `metadata` longtext DEFAULT NULL COMMENT '元数据(JSON)',
+    `source_digest` varchar(64) NOT NULL COMMENT '来源摘要',
+    `status` varchar(32) NOT NULL COMMENT '状态',
+    `generate_mode` varchar(32) NOT NULL COMMENT '生成模式',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_search_document_resource_version` (`namespace_id`,`resource_type`,`resource_name`,`resource_version`),
+    KEY `idx_search_document_type_status` (`namespace_id`,`resource_type`,`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='AI资源检索文档表';
+
+/******************************************/
+/*   表名称 = ai_resource_search_chunk       */
+/******************************************/
+CREATE TABLE `ai_resource_search_chunk` (
+    `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'id',
+    `gmt_create` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `gmt_modified` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
+    `document_id` bigint(20) NOT NULL COMMENT '检索文档ID',
+    `namespace_id` varchar(128) NOT NULL DEFAULT '' COMMENT '命名空间ID',
+    `resource_type` varchar(32) NOT NULL COMMENT '资源类型',
+    `resource_name` varchar(256) NOT NULL COMMENT '资源名称',
+    `resource_version` varchar(64) NOT NULL COMMENT '资源版本',
+    `chunk_type` varchar(64) NOT NULL COMMENT '分片类型',
+    `chunk_text` longtext NOT NULL COMMENT '分片文本',
+    `canonical_text` longtext NOT NULL COMMENT '规范化文本',
+    `language` varchar(16) DEFAULT NULL COMMENT '语言',
+    `chunk_hash` varchar(64) NOT NULL COMMENT '分片摘要',
+    `metadata` longtext DEFAULT NULL COMMENT '元数据(JSON)',
+    `status` varchar(32) NOT NULL COMMENT '状态',
+    PRIMARY KEY (`id`),
+    KEY `idx_search_chunk_document` (`document_id`),
+    KEY `idx_search_chunk_hash` (`chunk_hash`),
+    KEY `idx_search_chunk_resource` (`namespace_id`,`resource_type`,`resource_name`,`resource_version`),
+    KEY `idx_search_chunk_type_status` (`namespace_id`,`resource_type`,`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='AI资源检索分片表';
+
+/******************************************/
+/*   表名称 = ai_resource_task  */
+/******************************************/
+CREATE TABLE `ai_resource_task` (
+    `task_key` varchar(64) NOT NULL COMMENT '任务唯一键',
+    `namespace_id` varchar(128) NOT NULL DEFAULT '' COMMENT '命名空间ID',
+    `task_type` varchar(64) NOT NULL COMMENT '任务类型',
+    `task_stage` varchar(32) NOT NULL COMMENT '任务阶段',
+    `status` varchar(16) NOT NULL COMMENT '任务状态',
+    `task_payload` text NOT NULL COMMENT '任务输入，JSON文本',
+    `task_result` text COMMENT '任务结果，JSON文本',
+    `retry_count` int NOT NULL DEFAULT 0 COMMENT '当前阶段重试次数',
+    `revision` bigint(20) NOT NULL DEFAULT 1 COMMENT '任务修订号',
+    `lease_token` bigint(20) NOT NULL DEFAULT 0 COMMENT '租约令牌',
+    `next_execute_at` bigint(20) NOT NULL COMMENT '最早执行时间，Unix Epoch毫秒',
+    `lease_expire_at` bigint(20) DEFAULT NULL COMMENT '租约到期时间，Unix Epoch毫秒',
+    `last_error` varchar(2000) DEFAULT NULL COMMENT '最近错误',
+    `gmt_create` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `gmt_modified` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
+    PRIMARY KEY (`task_key`),
+    KEY `idx_ai_resource_task_due` (`task_type`,`status`,`next_execute_at`),
+    KEY `idx_ai_resource_task_lease` (`task_type`,`status`,`lease_expire_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='AI资源持久化异步任务表';

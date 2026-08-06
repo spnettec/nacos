@@ -79,15 +79,15 @@ import java.util.Map;
 @RequestMapping(Constants.Prompt.ADMIN_PATH)
 @ExtractorManager.Extractor(httpExtractor = PromptHttpParamExtractor.class)
 public class PromptAdminController {
-    
+
     private final PromptOperationService promptOperationService;
-    
+
     public PromptAdminController(PromptOperationService promptOperationService) {
         this.promptOperationService = promptOperationService;
     }
-    
+
     // ========== Common endpoints ==========
-    
+
     /**
      * Delete prompt.
      */
@@ -100,7 +100,7 @@ public class PromptAdminController {
         promptOperationService.deletePrompt(form.getNamespaceId(), form.getPromptKey());
         return Result.success(true);
     }
-    
+
     /**
      * List prompts with pagination.
      */
@@ -114,7 +114,7 @@ public class PromptAdminController {
             form.getPageSize());
         return Result.success(result);
     }
-    
+
     /**
      * List prompt versions.
      */
@@ -129,9 +129,9 @@ public class PromptAdminController {
                 form.getPromptKey(), form.getPageNo(), form.getPageSize());
         return Result.success(result);
     }
-    
+
     // ========== Lifecycle endpoints ==========
-    
+
     /**
      * Get prompt governance detail (includes version governance info and all version summaries).
      */
@@ -143,7 +143,7 @@ public class PromptAdminController {
         return Result.success(
             promptOperationService.getPromptDetail(form.getNamespaceId(), form.getPromptKey()));
     }
-    
+
     /**
      * Get specific version detail for viewing or editing.
      */
@@ -155,7 +155,7 @@ public class PromptAdminController {
         return Result.success(promptOperationService.getPromptVersionDetail(form.getNamespaceId(),
             form.getPromptKey(), form.getVersion()));
     }
-    
+
     /**
      * Download a specific prompt version as a Markdown document.
      *
@@ -175,7 +175,7 @@ public class PromptAdminController {
             form.getPromptKey(), form.getVersion());
         return PromptMarkdownBuilder.buildMarkdownResponse(info);
     }
-    
+
     /**
      * Create draft: {@code template} required unless {@code basedOnVersion} is set (fork from existing version).
      */
@@ -191,7 +191,7 @@ public class PromptAdminController {
                 form.getBizTags());
         return Result.success(version);
     }
-    
+
     /**
      * Update current draft content.
      */
@@ -205,7 +205,7 @@ public class PromptAdminController {
             parseVariables(form.getVariables()), form.getCommitMsg());
         return Result.success("ok");
     }
-    
+
     /**
      * Delete current draft version.
      */
@@ -217,7 +217,7 @@ public class PromptAdminController {
         promptOperationService.deleteDraft(form.getNamespaceId(), form.getPromptKey());
         return Result.success("ok");
     }
-    
+
     /**
      * Submit a version for pipeline review.
      */
@@ -230,7 +230,7 @@ public class PromptAdminController {
             form.getVersion());
         return Result.success(result);
     }
-    
+
     /**
      * Publish an approved reviewing version.
      */
@@ -243,14 +243,14 @@ public class PromptAdminController {
             form.getVersion(), true);
         return Result.success("ok");
     }
-    
+
     /**
      * Force-publish a prompt version, bypassing pipeline validation.
      */
     @Since("3.2.1")
     @PostMapping("/force-publish")
     @Secured(resource = Constants.Prompt.ADMIN_PATH
-        + "/force-publish", action = ActionTypes.WRITE, signType = SignType.CONSOLE,
+        + "/force-publish", action = ActionTypes.WRITE, signType = SignType.AI,
         apiType = ApiType.ADMIN_API)
     public Result<String> forcePublish(PromptVersionPublishForm form) throws NacosException {
         form.validate();
@@ -259,7 +259,7 @@ public class PromptAdminController {
             true);
         return Result.success("ok");
     }
-    
+
     /**
      * Re-edit a reviewed prompt version, transitioning it back to draft for modification.
      */
@@ -272,7 +272,7 @@ public class PromptAdminController {
             form.getVersion());
         return Result.success("ok");
     }
-    
+
     /**
      * Online a prompt version.
      */
@@ -285,7 +285,7 @@ public class PromptAdminController {
             form.getVersion(), true);
         return Result.success("ok");
     }
-    
+
     /**
      * Offline a prompt version.
      */
@@ -298,7 +298,7 @@ public class PromptAdminController {
             form.getVersion(), false);
         return Result.success("ok");
     }
-    
+
     /**
      * Update runtime route labels without changing version status.
      */
@@ -311,7 +311,7 @@ public class PromptAdminController {
         promptOperationService.updateLabels(form.getNamespaceId(), form.getPromptKey(), labels);
         return Result.success("ok");
     }
-    
+
     /**
      * Update prompt description without changing version status.
      */
@@ -325,7 +325,7 @@ public class PromptAdminController {
             form.getDescription());
         return Result.success("ok");
     }
-    
+
     /**
      * Update prompt biz tags without changing version status.
      */
@@ -338,9 +338,9 @@ public class PromptAdminController {
             form.getBizTags());
         return Result.success("ok");
     }
-    
+
     // ========== Private helpers ==========
-    
+
     private List<PromptVariable> parseVariables(String variables) {
         if (StringUtils.isBlank(variables)) {
             return null;
@@ -348,9 +348,9 @@ public class PromptAdminController {
         return JacksonUtils.toObj(variables, new TypeReference<List<PromptVariable>>() {
         });
     }
-    
+
     // ========== Legacy compatibility endpoints (deprecated) ==========
-    
+
     /**
      * Legacy one-shot publish a new version of prompt.
      *
@@ -369,7 +369,7 @@ public class PromptAdminController {
                 form.getBizTags(), parseVariables(form.getVariables()));
         return Result.success(success);
     }
-    
+
     /**
      * Legacy get prompt metadata.
      *
@@ -385,7 +385,7 @@ public class PromptAdminController {
             promptOperationService.getPromptMeta(form.getNamespaceId(), form.getPromptKey());
         return Result.success(detail);
     }
-    
+
     /**
      * Legacy get prompt detail by version/label/latest.
      *
@@ -401,7 +401,7 @@ public class PromptAdminController {
             form.getPromptKey(), form.getVersion(), form.getLabel());
         return Result.success(detail);
     }
-    
+
     /**
      * Legacy bind label to a specified prompt version.
      *
@@ -419,7 +419,7 @@ public class PromptAdminController {
                 form.getLabel(), form.getVersion());
         return Result.success(success);
     }
-    
+
     /**
      * Legacy unbind label from prompt.
      *
@@ -437,7 +437,7 @@ public class PromptAdminController {
                 form.getLabel());
         return Result.success(success);
     }
-    
+
     /**
      * Legacy update prompt metadata (description and bizTags).
      *

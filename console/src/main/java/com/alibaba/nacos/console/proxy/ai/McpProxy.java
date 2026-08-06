@@ -35,13 +35,13 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class McpProxy {
-    
+
     private final McpHandler mcpHandler;
-    
+
     public McpProxy(McpHandler mcpHandler) {
         this.mcpHandler = mcpHandler;
     }
-    
+
     /**
      * List mcp server.
      *
@@ -58,7 +58,7 @@ public class McpProxy {
         int pageSize) throws NacosException {
         return mcpHandler.listMcpServers(namespaceId, mcpName, search, pageNo, pageSize);
     }
-    
+
     /**
      * Get specified mcp server detail info.
      *
@@ -71,7 +71,7 @@ public class McpProxy {
         String version) throws NacosException {
         return mcpHandler.getMcpServer(namespaceId, mcpName, mcpId, version);
     }
-    
+
     /**
      * Create new mcp server.
      *
@@ -88,7 +88,7 @@ public class McpProxy {
         return mcpHandler.createMcpServer(namespaceId, serverSpecification, toolSpecification,
             endpointSpecification);
     }
-    
+
     /**
      * Update existed mcp server.
      *
@@ -111,7 +111,7 @@ public class McpProxy {
         mcpHandler.updateMcpServer(namespaceId, isPublish, serverSpecification, toolSpecification,
             endpointSpecification, overrideExisting);
     }
-    
+
     /**
      * Delete existed mcp server.
      *
@@ -124,7 +124,7 @@ public class McpProxy {
         String version) throws NacosException {
         mcpHandler.deleteMcpServer(namespaceId, mcpName, mcpServerId, version);
     }
-    
+
     /**
      * Validate MCP server import request.
      *
@@ -132,12 +132,15 @@ public class McpProxy {
      * @param request     import request containing data and settings
      * @return validation result with details about potential issues
      * @throws NacosException any exception during validation
+     * @deprecated use the unified AI resource import validation API instead. Planned for removal
+     *     in Nacos 3.4.0.
      */
+    @Deprecated
     public McpServerImportValidationResult validateImport(String namespaceId,
         McpServerImportRequest request) throws NacosException {
         return mcpHandler.validateImport(namespaceId, request);
     }
-    
+
     /**
      * Execute MCP server import operation.
      *
@@ -145,7 +148,10 @@ public class McpProxy {
      * @param request     import request containing data and settings
      * @return import response with results and statistics
      * @throws NacosException any exception during import execution
+     * @deprecated use the unified AI resource import execute API instead. Planned for removal in
+     *     Nacos 3.4.0.
      */
+    @Deprecated
     public McpServerImportResponse executeImport(String namespaceId, McpServerImportRequest request)
         throws NacosException {
         return mcpHandler.executeImport(namespaceId, request);

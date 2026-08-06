@@ -17,6 +17,8 @@
 package com.alibaba.nacos.ai.service.repository;
 
 import com.alibaba.nacos.ai.model.AiResource;
+import com.alibaba.nacos.ai.model.AiResourceVersion;
+import com.alibaba.nacos.persistence.repository.RowMapperManager;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -28,6 +30,8 @@ import java.sql.Timestamp;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 /**
@@ -37,10 +41,25 @@ import static org.mockito.Mockito.when;
  */
 @ExtendWith(MockitoExtension.class)
 class AiResourceRowMappersTest {
-    
+
     @Mock
     private ResultSet resultSet;
-    
+
+    @Test
+    void testAiResourceRowMappersAreRegistered() {
+        String resourceMapperName =
+            AiResourceRowMappers.AI_RESOURCE_ROW_MAPPER.getClass().getCanonicalName();
+        String versionMapperName =
+            AiResourceRowMappers.AI_RESOURCE_VERSION_ROW_MAPPER.getClass().getCanonicalName();
+
+        assertNotNull(resourceMapperName);
+        assertNotNull(versionMapperName);
+        assertSame(AiResourceRowMappers.AI_RESOURCE_ROW_MAPPER,
+            RowMapperManager.getRowMapper(resourceMapperName));
+        assertSame(AiResourceRowMappers.AI_RESOURCE_VERSION_ROW_MAPPER,
+            RowMapperManager.getRowMapper(versionMapperName));
+    }
+
     @Test
     void testAiResourceRowMapperIncludesScopeAndOwner() throws SQLException {
         Timestamp now = new Timestamp(System.currentTimeMillis());
@@ -59,9 +78,9 @@ class AiResourceRowMappersTest {
         when(resultSet.getLong("meta_version")).thenReturn(1L);
         when(resultSet.getString("scope")).thenReturn("PUBLIC");
         when(resultSet.getString("owner")).thenReturn("alice");
-        
+
         AiResource resource = AiResourceRowMappers.AI_RESOURCE_ROW_MAPPER.mapRow(resultSet, 0);
-        
+
         assertNotNull(resource);
         assertEquals(1L, resource.getId());
         assertEquals("test-skill", resource.getName());
@@ -69,7 +88,7 @@ class AiResourceRowMappersTest {
         assertEquals("PUBLIC", resource.getScope());
         assertEquals("alice", resource.getOwner());
     }
-    
+
     @Test
     void testAiResourceRowMapperWithPrivateScope() throws SQLException {
         Timestamp now = new Timestamp(System.currentTimeMillis());
@@ -88,12 +107,37 @@ class AiResourceRowMappersTest {
         when(resultSet.getLong("meta_version")).thenReturn(1L);
         when(resultSet.getString("scope")).thenReturn("PRIVATE");
         when(resultSet.getString("owner")).thenReturn("bob");
-        
+
         AiResource resource = AiResourceRowMappers.AI_RESOURCE_ROW_MAPPER.mapRow(resultSet, 0);
-        
+
         assertNotNull(resource);
         assertEquals("local", resource.getFrom());
         assertEquals("PRIVATE", resource.getScope());
         assertEquals("bob", resource.getOwner());
+    }
+
+    @Test
+    void testAiResourceVersionRowMapper() throws SQLException {
+        when(resultSet.getString(anyString())).thenAnswer(invocation -> {
+            String columnName = invocation.getArgument(0);
+            if ("name".equals(columnName)) {
+                return "test-skill";
+            }
+            if ("version".equals(columnName)) {
+                return "1.0.0";
+            }
+            if ("storage".equals(columnName)) {
+                return "local";
+            }
+            return null;
+        });
+
+        AiResourceVersion version =
+            AiResourceRowMappers.AI_RESOURCE_VERSION_ROW_MAPPER.mapRow(resultSet, 0);
+
+        assertNotNull(version);
+        assertEquals("test-skill", version.getName());
+        assertEquals("1.0.0", version.getVersion());
+        assertEquals("local", version.getStorage());
     }
 }

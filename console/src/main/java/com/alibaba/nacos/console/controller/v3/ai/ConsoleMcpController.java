@@ -76,13 +76,13 @@ import static com.alibaba.nacos.api.ai.constant.AiConstants.Mcp.MCP_PROTOCOL_STR
 @RequestMapping(Constants.MCP_CONSOLE_PATH)
 @ExtractorManager.Extractor(httpExtractor = McpHttpParamExtractor.class)
 public class ConsoleMcpController {
-    
+
     private final McpProxy mcpProxy;
-    
+
     public ConsoleMcpController(McpProxy mcpProxy) {
         this.mcpProxy = mcpProxy;
     }
-    
+
     /**
      * List mcp server.
      *
@@ -104,7 +104,7 @@ public class ConsoleMcpController {
                 mcpListForm.getSearch(),
                 pageForm.getPageNo(), pageForm.getPageSize()));
     }
-    
+
     /**
      * Import tools from mcp result.
      *
@@ -155,7 +155,7 @@ public class ConsoleMcpController {
                 "Failed to import tools from MCP server", e);
         }
     }
-    
+
     /**
      * Get specified mcp server detail info.
      *
@@ -172,7 +172,7 @@ public class ConsoleMcpController {
             mcpForm.getMcpId(),
             mcpForm.getVersion()));
     }
-    
+
     /**
      * Create new mcp server.
      *
@@ -191,7 +191,7 @@ public class ConsoleMcpController {
             mcpProxy.createMcpServer(mcpForm.getNamespaceId(), basicInfo, mcpTools, endpointSpec);
         return Result.success(mcpId);
     }
-    
+
     /**
      * Update existed mcp server.
      *
@@ -215,7 +215,7 @@ public class ConsoleMcpController {
             mcpForm.isOverrideExisting());
         return Result.success("ok");
     }
-    
+
     /**
      * Delete existed mcp server.
      *
@@ -231,14 +231,17 @@ public class ConsoleMcpController {
             mcpForm.getVersion());
         return Result.success("ok");
     }
-    
+
     /**
      * Validate MCP server import request.
      *
      * @param mcpImportForm import request form
      * @return validation result with details about potential issues
      * @throws NacosException any exception during validation
+     * @deprecated use {@code POST /v3/console/ai/import/validate} instead. Planned for removal in
+     *     Nacos 3.4.0.
      */
+    @Deprecated
     @Since("3.1.0")
     @PostMapping("/import/validate")
     @Secured(action = ActionTypes.WRITE, signType = SignType.AI, apiType = ApiType.CONSOLE_API)
@@ -250,14 +253,17 @@ public class ConsoleMcpController {
             mcpProxy.validateImport(mcpImportForm.getNamespaceId(), request);
         return Result.success(result);
     }
-    
+
     /**
      * Execute MCP server import operation.
      *
      * @param mcpImportForm import request form
      * @return import response with results and statistics
      * @throws NacosException any exception during import execution
+     * @deprecated use {@code POST /v3/console/ai/import/execute} instead. Planned for removal in
+     *     Nacos 3.4.0.
      */
+    @Deprecated
     @Since("3.1.0")
     @PostMapping("/import/execute")
     @Secured(action = ActionTypes.WRITE, signType = SignType.AI, apiType = ApiType.CONSOLE_API)
@@ -269,13 +275,16 @@ public class ConsoleMcpController {
             mcpProxy.executeImport(mcpImportForm.getNamespaceId(), request);
         return Result.success(response);
     }
-    
+
     /**
      * Convert McpImportForm to McpServerImportRequest.
      *
      * @param form the form from HTTP request
      * @return the import request for service layer
+     * @deprecated part of the legacy MCP import endpoint bridge. Planned for removal in Nacos
+     *     3.4.0.
      */
+    @Deprecated
     private McpServerImportRequest convertToImportRequest(McpImportForm form) {
         McpServerImportRequest request = new McpServerImportRequest();
         request.setImportType(form.getImportType());

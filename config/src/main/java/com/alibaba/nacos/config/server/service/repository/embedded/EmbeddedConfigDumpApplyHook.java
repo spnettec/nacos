@@ -22,9 +22,11 @@ import com.alibaba.nacos.common.utils.StringUtils;
 import com.alibaba.nacos.config.server.constant.Constants;
 import com.alibaba.nacos.config.server.model.event.ConfigDumpEvent;
 import com.alibaba.nacos.config.server.service.dump.DumpConfigHandler;
+import com.alibaba.nacos.config.server.service.dump.DumpService;
 import com.alibaba.nacos.consistency.entity.WriteRequest;
 import com.alibaba.nacos.core.utils.GenericType;
 import com.alibaba.nacos.persistence.repository.embedded.hook.EmbeddedApplyHook;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -38,17 +40,17 @@ import java.util.Objects;
  */
 @Component
 public class EmbeddedConfigDumpApplyHook extends EmbeddedApplyHook {
-    
-    public EmbeddedConfigDumpApplyHook() {
+
+    public EmbeddedConfigDumpApplyHook(@Lazy DumpService dumpService) {
         NotifyCenter.registerToPublisher(ConfigDumpEvent.class, NotifyCenter.ringBufferSize);
-        NotifyCenter.registerSubscriber(new DumpConfigHandler());
+        NotifyCenter.registerSubscriber(new DumpConfigHandler(dumpService));
     }
-    
+
     @Override
     public void afterApply(WriteRequest log) {
         handleExtendInfo(log.getExtendInfoMap());
     }
-    
+
     private void handleExtendInfo(Map<String, String> extendInfo) {
         if (extendInfo.containsKey(Constants.EXTEND_INFO_CONFIG_DUMP_EVENT)) {
             String jsonVal = extendInfo.get(Constants.EXTEND_INFO_CONFIG_DUMP_EVENT);

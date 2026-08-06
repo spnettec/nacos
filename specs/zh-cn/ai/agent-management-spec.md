@@ -76,8 +76,9 @@ namespaceId + resourceType=agent + agentName
 `displayName` 是可选的 Unicode 展示字段。`displayName` 缺失或为空白时，展示层必须
 使用 `agentName`。`displayName` 不参与身份、鉴权、存储 key 或 Endpoint 匹配。
 
-精确查询比较原始 `agentName`。名称过滤执行 literal substring 匹配；持久化实现必须
-转义 `%`、`_` 等通配符字符，而不是把它们解释为 pattern。
+精确查询比较原始 `agentName`。过滤语义由对应 API Binding 定义：RAD Search 使用
+literal substring 匹配；首版 Admin 列表复用共享 AI Resource 的名称模糊查询，
+不新增 Agent 专用持久化运算符。
 
 ### 2.2 Version 身份
 
@@ -122,20 +123,20 @@ Agent 资源包含以下字段：
 
 | 字段 | 必选 | 含义 |
 | --- | :---: | --- |
-| `namespaceId` | 是 | 隔离边界。 |
+| `namespaceId` | 是 | Nacos Namespace 隔离边界；1～128 个 `[A-Za-z0-9_-]` 字符。 |
 | `agentName` | 是 | 稳定公开身份。 |
 | `displayName` | 否 | Unicode 展示名称。 |
 | `description` | 否 | 目录描述。 |
 | `iconUrl` | 否 | 目录图标 URI。 |
 | `provider` | 否 | 提供方 `name` 和 `url`；它不是管理 owner。 |
-| `tags[]` | 否 | 公开目录标签和精确匹配检索标签。 |
+| `tags[]` | 否 | 公开目录标签；RAD Search 使用精确匹配。 |
 | `extensions` | 否 | 用于公开 Agent 级扩展的命名空间化 `Map<String, JsonValue>`。 |
 | `status` | 是 | `enable` 或 `disable`。 |
 | `owner` | 是 | 管理 owner。 |
-| `scope` | 是 | 可见性 scope。 |
+| `scope` | 是 | 共享可见性 scope；本版本为 `PUBLIC` 或 `PRIVATE`。 |
 | `versionInfo` | 只读 | 共享的 editing、reviewing、online count 和 label 摘要。 |
 | `versionCatalog` | 只读 | online Version 和 protocol 的紧凑目录。 |
-| `metaVersion` | 只读 | 元数据 CAS 版本。 |
+| `metaVersion` | 只读 | 与 AI Resource 模型共享的单调元数据修订号；首版 Agent Admin API 不暴露条件写入参数。 |
 | `createTime`、`updateTime` | 只读 | 审计时间。 |
 
 固定以下不变量：
@@ -182,6 +183,20 @@ AgentVersionContent
 
 ### 4.2 生命周期规则
 
+创建 draft 是 Resource 和 Version 的统一创建入口：
+
+- Agent metadata 不存在时，创建 draft 会同时创建 `ai_resource` metadata。首个 draft
+  必须直接包含 `callInterfaces`；因为不存在可属于该 Agent 的源 Version，
+  `basedOnVersion` 非法。同一请求可以初始化可选目录 metadata；enabled 状态、当前 owner
+  和默认 scope 由服务端派生。请求上下文没有 identity（例如关闭鉴权）时，服务端使用
+  `nacos` 作为 owner；
+- Agent metadata 已存在时，draft 创建遵循普通 editing slot 规则，并在直接内容和一个
+  精确源 Version 之间二选一。目录 metadata 属于 Agent 更新生命周期，后续 draft 请求
+  不接受这些字段。
+
+本版本不提供独立的 metadata-only 或 `createAgent` 操作。首个和后续 draft 创建均返回
+`AgentVersionDetail`。
+
 Agent Version 使用共享生命周期：
 
 | 状态 | 内容可修改 | 可进入普通 RAD 发现 |
@@ -210,9 +225,9 @@ reviewing 后内容冻结。Reviewed、online 和 offline 内容不得原地更�
 - 删除最后一个 online Version 时删除 `latest`；
 - 删除或下线当前 `latest` 之外的 online Version 时，不触发重算。
 
-online 状态或 label 变化时，服务端必须在一次逻辑更新中重建 `versionCatalog` 和派生的
-protocol 检索 token。只要存在 online Version，就必须存在且仅存在一个有效的
-`latestVersion`，并且它必须出现在 `onlineVersions` 中。
+online 状态或 label 变化时，服务端必须在一次逻辑更新中重建 `versionCatalog`。只要存在
+online Version，就必须存在且仅存在一个有效的 `latestVersion`，并且它必须出现在
+`onlineVersions` 中。
 
 Agent 元数据、Agent Version 定义和 Runtime Endpoint 之间不互相拥有生命周期。删除或
 disable Agent 定义会改变读取投影，但不会删除仍然活跃的运行时 publisher 状态。
@@ -289,8 +304,10 @@ state = AVAILABLE | DISABLED | UNHEALTHY
 ```
 
 状态按顺序判定：`enabled=false` 为 `DISABLED`；否则 `healthy=false` 为 `UNHEALTHY`；
-其他项为 `AVAILABLE`。只有公开 Endpoint 内容、enabled 或聚合健康状态变化时，
-`lastUpdatedTime` 才变化；单纯 heartbeat 不改变它。
+其他项为 `AVAILABLE`。`lastUpdatedTime` 使用本次构建 Snapshot 的 Naming `ServiceInfo.lastRefTime`，
+因此同一 Snapshot 的全部 item 共享同一个 Service 投影观察时间。它不是单个 Endpoint 的分布式事实或
+缓存校验器；Naming 每次重建该 Service 投影时都可能改变它。跨节点相等性和 Watch 去重使用由内容
+派生的 `sourceRevision`。
 
 `protocol` 必填。没有 `version` 时，Snapshot 对该 protocol 下每个 Endpoint 自然键返回一个有效项
 及其全部 Version binding；指定 `version` 时，只保留命中该 Version 的 binding，并在没有
@@ -312,15 +329,15 @@ Version 定义与允许的 DECLARED 和 RUNTIME Endpoint set 组合，但不作�
 | `description` | 2048 字符。 |
 | Icon、provider 或 declared Endpoint URI | 2048 字符。 |
 | 公开 tag | 32 项，每项 64 字符。 |
-| Agent `extensions` | 32 项；key 128 字符；canonical JSON 合计 16 KiB。 |
+| Agent `extensions` | 32 项；key 128 字符；序列化后的 UTF-8 JSON 合计 16 KiB。 |
 | `protocol`、`protocolVersion` | 32 和 64 字符。 |
 | 每个 Version 的 CallInterface | 16。 |
 | 每个 CallInterface 的 Declared Endpoint | 64。 |
 | Endpoint metadata | 32 项；key 64、value 256 字符。 |
 | `AgentVersionContent` | 1 MiB。 |
 
-公开 tag 和内部 protocol token 共享 `biz_tags` 的持久化容量；服务端在原子接受 tag 或
-online protocol 变化之前，必须校验 canonical 合计长度。
+`biz_tags` 只保存用户设置的公开 tag，不保存服务端派生索引；序列化后的 JSON 不得超过
+1024 字符。
 
 Descriptor、extension 和 Endpoint metadata 不得包含明文 credential。审计记录不得记录
 完整 native descriptor、security scheme 或敏感 Endpoint metadata。Runtime 发布和物理存储

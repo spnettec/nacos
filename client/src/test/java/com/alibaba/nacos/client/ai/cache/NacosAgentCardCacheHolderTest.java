@@ -36,6 +36,9 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -51,14 +54,14 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class NacosAgentCardCacheHolderTest {
-    
+
     @Mock
     private AiGrpcClient aiGrpcClient;
-    
+
     private NacosAgentCardCacheHolder cacheHolder;
-    
+
     private TestAgentCardSubscriber subscriber;
-    
+
     @BeforeEach
     void setUp() {
         deregisterAgentCardPublisher();
@@ -67,14 +70,14 @@ class NacosAgentCardCacheHolderTest {
         subscriber = new TestAgentCardSubscriber();
         NotifyCenter.registerSubscriber(subscriber);
     }
-    
+
     @AfterEach
     void tearDown() throws Exception {
         NotifyCenter.deregisterSubscriber(subscriber);
         cacheHolder.shutdown();
         deregisterAgentCardPublisher();
     }
-    
+
     @Test
     void testProcessNewAgentCardShouldPublishEvent() throws InterruptedException {
         AgentCardDetailInfo detailInfo = buildDetailInfo("test-agent", "1.0", true);
@@ -83,15 +86,60 @@ class NacosAgentCardCacheHolderTest {
         assertNotNull(subscriber.lastEvent.get());
         assertEquals("test-agent", subscriber.lastEvent.get().getAgentName());
     }
-    
+
+    @Test
+    void testLatestSnapshotPublishesExactAndLatestRoutes() throws InterruptedException {
+        RoutingSubscriber routing = new RoutingSubscriber(2);
+        NotifyCenter.registerSubscriber(routing);
+        try {
+            cacheHolder.processAgentCardDetailInfo(buildDetailInfo("route-agent", "1.0", true));
+            assertTrue(routing.latch.await(3, TimeUnit.SECONDS));
+            assertTrue(routing.versions.contains("1.0"));
+            assertTrue(routing.versions.contains(
+                com.alibaba.nacos.client.ai.utils.CacheKeyUtils.LATEST_VERSION));
+        } finally {
+            NotifyCenter.deregisterSubscriber(routing);
+        }
+    }
+
+    @Test
+    void testLatestCanMoveToAlreadyCachedExactVersion() throws InterruptedException {
+        RoutingSubscriber warmup = new RoutingSubscriber(3);
+        NotifyCenter.registerSubscriber(warmup);
+        try {
+            cacheHolder.processAgentCardDetailInfo(buildDetailInfo("move-agent", "1.0", true));
+            cacheHolder.processAgentCardDetailInfo(buildDetailInfo("move-agent", "2.0", false));
+            assertTrue(warmup.latch.await(3, TimeUnit.SECONDS));
+        } finally {
+            NotifyCenter.deregisterSubscriber(warmup);
+        }
+        RoutingSubscriber routing = new RoutingSubscriber(1);
+        NotifyCenter.registerSubscriber(routing);
+        try {
+            cacheHolder.processAgentCardDetailInfo(buildDetailInfo("move-agent", "2.0", true));
+            assertTrue(routing.latch.await(3, TimeUnit.SECONDS));
+            assertEquals(Collections.singleton(
+                com.alibaba.nacos.client.ai.utils.CacheKeyUtils.LATEST_VERSION),
+                routing.versions);
+        } finally {
+            NotifyCenter.deregisterSubscriber(routing);
+        }
+    }
+
     @Test
     void testProcessSameAgentCardShouldNotPublishEvent() throws InterruptedException {
         AgentCardDetailInfo first = buildDetailInfo("test-agent", "1.0", true);
         first.setSupportedInterfaces(
             Collections.singletonList(buildInterface("http://a", "jsonrpc", "1.0")));
-        cacheHolder.processAgentCardDetailInfo(first);
-        assertTrue(subscriber.latch.await(3, TimeUnit.SECONDS));
-        
+        RoutingSubscriber warmup = new RoutingSubscriber(2);
+        NotifyCenter.registerSubscriber(warmup);
+        try {
+            cacheHolder.processAgentCardDetailInfo(first);
+            assertTrue(warmup.latch.await(3, TimeUnit.SECONDS));
+        } finally {
+            NotifyCenter.deregisterSubscriber(warmup);
+        }
+
         TestAgentCardSubscriber secondSubscriber = new TestAgentCardSubscriber();
         NotifyCenter.registerSubscriber(secondSubscriber);
         try {
@@ -105,13 +153,13 @@ class NacosAgentCardCacheHolderTest {
             NotifyCenter.deregisterSubscriber(secondSubscriber);
         }
     }
-    
+
     @Test
     void testVersionChangeShouldPublishEvent() throws InterruptedException {
         AgentCardDetailInfo first = buildDetailInfo("test-agent", "1.0", true);
         cacheHolder.processAgentCardDetailInfo(first);
         assertTrue(subscriber.latch.await(3, TimeUnit.SECONDS));
-        
+
         TestAgentCardSubscriber secondSubscriber = new TestAgentCardSubscriber();
         NotifyCenter.registerSubscriber(secondSubscriber);
         try {
@@ -123,7 +171,7 @@ class NacosAgentCardCacheHolderTest {
             NotifyCenter.deregisterSubscriber(secondSubscriber);
         }
     }
-    
+
     @Test
     void testSupportedInterfacesChangeShouldPublishEvent() throws InterruptedException {
         AgentCardDetailInfo first = buildDetailInfo("test-agent", "1.0", true);
@@ -131,7 +179,7 @@ class NacosAgentCardCacheHolderTest {
             Collections.singletonList(buildInterface("http://a", "jsonrpc", "1.0")));
         cacheHolder.processAgentCardDetailInfo(first);
         assertTrue(subscriber.latch.await(3, TimeUnit.SECONDS));
-        
+
         TestAgentCardSubscriber secondSubscriber = new TestAgentCardSubscriber();
         NotifyCenter.registerSubscriber(secondSubscriber);
         try {
@@ -145,14 +193,14 @@ class NacosAgentCardCacheHolderTest {
             NotifyCenter.deregisterSubscriber(secondSubscriber);
         }
     }
-    
+
     @Test
     void testSupportedInterfacesAppearsShouldPublishEvent() throws InterruptedException {
         AgentCardDetailInfo first = buildDetailInfo("test-agent", "1.0", true);
         first.setUrl("http://a");
         cacheHolder.processAgentCardDetailInfo(first);
         assertTrue(subscriber.latch.await(3, TimeUnit.SECONDS));
-        
+
         TestAgentCardSubscriber secondSubscriber = new TestAgentCardSubscriber();
         NotifyCenter.registerSubscriber(secondSubscriber);
         try {
@@ -166,14 +214,14 @@ class NacosAgentCardCacheHolderTest {
             NotifyCenter.deregisterSubscriber(secondSubscriber);
         }
     }
-    
+
     @Test
     void testLegacyUrlChangeShouldPublishEvent() throws InterruptedException {
         AgentCardDetailInfo first = buildDetailInfo("test-agent", "1.0", true);
         first.setUrl("http://old");
         cacheHolder.processAgentCardDetailInfo(first);
         assertTrue(subscriber.latch.await(3, TimeUnit.SECONDS));
-        
+
         TestAgentCardSubscriber secondSubscriber = new TestAgentCardSubscriber();
         NotifyCenter.registerSubscriber(secondSubscriber);
         try {
@@ -186,7 +234,7 @@ class NacosAgentCardCacheHolderTest {
             NotifyCenter.deregisterSubscriber(secondSubscriber);
         }
     }
-    
+
     @Test
     void testLegacyAdditionalInterfacesChangeShouldPublishEvent() throws InterruptedException {
         AgentCardDetailInfo first = buildDetailInfo("test-agent", "1.0", true);
@@ -195,7 +243,7 @@ class NacosAgentCardCacheHolderTest {
             Collections.singletonList(buildInterface("http://b", "jsonrpc", "1.0")));
         cacheHolder.processAgentCardDetailInfo(first);
         assertTrue(subscriber.latch.await(3, TimeUnit.SECONDS));
-        
+
         TestAgentCardSubscriber secondSubscriber = new TestAgentCardSubscriber();
         NotifyCenter.registerSubscriber(secondSubscriber);
         try {
@@ -211,7 +259,7 @@ class NacosAgentCardCacheHolderTest {
             NotifyCenter.deregisterSubscriber(secondSubscriber);
         }
     }
-    
+
     @Test
     void testGetAgentCardFromCache() {
         assertNull(cacheHolder.getAgentCard("test-agent", "1.0"));
@@ -220,7 +268,7 @@ class NacosAgentCardCacheHolderTest {
         assertNotNull(cacheHolder.getAgentCard("test-agent", "1.0"));
         assertNotNull(cacheHolder.getAgentCard("test-agent", null));
     }
-    
+
     @Test
     void testGetAgentCardNotLatestShouldNotCacheLatest() {
         AgentCardDetailInfo detailInfo = buildDetailInfo("test-agent", "1.0", false);
@@ -228,14 +276,14 @@ class NacosAgentCardCacheHolderTest {
         assertNotNull(cacheHolder.getAgentCard("test-agent", "1.0"));
         assertNull(cacheHolder.getAgentCard("test-agent", null));
     }
-    
+
     @SuppressWarnings("unchecked")
     private static <T> T readField(Object target, String name) throws Exception {
         Field field = findField(target.getClass(), name);
         field.setAccessible(true);
         return (T) field.get(target);
     }
-    
+
     private static Field findField(Class<?> clazz, String name) throws NoSuchFieldException {
         Class<?> c = clazz;
         while (c != null) {
@@ -248,7 +296,7 @@ class NacosAgentCardCacheHolderTest {
         }
         throw new NoSuchFieldException(name);
     }
-    
+
     @Test
     void testAddAndRemoveAgentCardUpdateTask() throws Exception {
         cacheHolder.addAgentCardUpdateTask("test-agent", "1.0");
@@ -261,7 +309,7 @@ class NacosAgentCardCacheHolderTest {
         cacheHolder.removeAgentCardUpdateTask("test-agent", "1.0");
         assertEquals(0, taskMap.size());
     }
-    
+
     @Test
     void testRemoveAgentCardUpdateTaskNonExistentNoOp() throws Exception {
         // No task registered → remove should be a no-op
@@ -269,7 +317,7 @@ class NacosAgentCardCacheHolderTest {
         Map<String, ?> taskMap = readField(cacheHolder, "updateTaskMap");
         assertEquals(0, taskMap.size());
     }
-    
+
     @Test
     void testAgentCardUpdaterRunFetchesAndProcesses() throws Exception {
         AgentCardDetailInfo detailInfo = buildDetailInfo("test-agent", "1.0", true);
@@ -280,7 +328,7 @@ class NacosAgentCardCacheHolderTest {
         // After run, the detail info should be in the cache
         assertNotNull(cacheHolder.getAgentCard("test-agent", "1.0"));
     }
-    
+
     @Test
     void testAgentCardUpdaterRunSwallowsNotFound() throws Exception {
         when(aiGrpcClient.getAgentCard(anyString(), anyString(), anyString()))
@@ -290,7 +338,7 @@ class NacosAgentCardCacheHolderTest {
         // Should not throw and the cache stays empty
         assertNull(cacheHolder.getAgentCard("test-agent", "1.0"));
     }
-    
+
     @Test
     void testAgentCardUpdaterRunSwallowsOtherException() throws Exception {
         when(aiGrpcClient.getAgentCard(anyString(), anyString(), anyString()))
@@ -299,7 +347,7 @@ class NacosAgentCardCacheHolderTest {
         // Should not throw, caught and rescheduled
         updater.run();
     }
-    
+
     @Test
     void testAgentCardUpdaterCancelExitsEarly() throws Exception {
         Runnable updater = newUpdater("test-agent", "1.0");
@@ -309,7 +357,7 @@ class NacosAgentCardCacheHolderTest {
         updater.run();
         org.mockito.Mockito.verifyNoInteractions(aiGrpcClient);
     }
-    
+
     @Test
     void testAgentCardUpdaterCancelMethod() throws Exception {
         Runnable updater = newUpdater("test-agent", "1.0");
@@ -320,7 +368,23 @@ class NacosAgentCardCacheHolderTest {
         cancelMethod.invoke(updater);
         assertTrue(cancel.get());
     }
-    
+
+    @Test
+    void testShutdownCancelsTasksAndIsIdempotent() throws Exception {
+        cacheHolder.addAgentCardUpdateTask("test-agent", "1.0");
+        Map<String, ?> taskMap = readField(cacheHolder, "updateTaskMap");
+        ScheduledThreadPoolExecutor executor = readField(cacheHolder, "updaterExecutor");
+        cacheHolder.shutdown();
+        cacheHolder.shutdown();
+        assertTrue(taskMap.isEmpty());
+        assertTrue(executor.isShutdown());
+
+        when(aiGrpcClient.getAgentCard(anyString(), anyString(), anyString()))
+            .thenReturn(buildDetailInfo("test-agent", "1.0", false));
+        newUpdater("test-agent", "1.0").run();
+        assertNotNull(cacheHolder.getAgentCard("test-agent", "1.0"));
+    }
+
     private Runnable newUpdater(String agentName, String version) throws Exception {
         Class<?> updaterClass = Class.forName(
             "com.alibaba.nacos.client.ai.cache.NacosAgentCardCacheHolder$AgentCardUpdater");
@@ -329,13 +393,13 @@ class NacosAgentCardCacheHolderTest {
         ctor.setAccessible(true);
         return (Runnable) ctor.newInstance(cacheHolder, agentName, version);
     }
-    
+
     private static void deregisterAgentCardPublisher() {
         if (NotifyCenter.getPublisher(AgentCardChangedEvent.class) != null) {
             NotifyCenter.deregisterPublisher(AgentCardChangedEvent.class);
         }
     }
-    
+
     private AgentCardDetailInfo buildDetailInfo(String name, String version, boolean isLatest) {
         AgentCardDetailInfo detail = new AgentCardDetailInfo();
         detail.setName(name);
@@ -343,7 +407,7 @@ class NacosAgentCardCacheHolderTest {
         detail.setLatestVersion(isLatest);
         return detail;
     }
-    
+
     private AgentInterface buildInterface(String url, String protocolBinding,
         String protocolVersion) {
         AgentInterface iface = new AgentInterface();
@@ -352,19 +416,41 @@ class NacosAgentCardCacheHolderTest {
         iface.setProtocolVersion(protocolVersion);
         return iface;
     }
-    
+
     private static class TestAgentCardSubscriber extends Subscriber<AgentCardChangedEvent> {
-        
+
         final CountDownLatch latch = new CountDownLatch(1);
-        
+
         final AtomicReference<AgentCardChangedEvent> lastEvent = new AtomicReference<>();
-        
+
         @Override
         public void onEvent(AgentCardChangedEvent event) {
             lastEvent.set(event);
             latch.countDown();
         }
-        
+
+        @Override
+        public Class<? extends Event> subscribeType() {
+            return AgentCardChangedEvent.class;
+        }
+    }
+
+    private static class RoutingSubscriber extends Subscriber<AgentCardChangedEvent> {
+
+        final CountDownLatch latch;
+
+        final Set<String> versions = Collections.synchronizedSet(new HashSet<String>());
+
+        RoutingSubscriber(int expectedEvents) {
+            latch = new CountDownLatch(expectedEvents);
+        }
+
+        @Override
+        public void onEvent(AgentCardChangedEvent event) {
+            versions.add(event.getVersion());
+            latch.countDown();
+        }
+
         @Override
         public Class<? extends Event> subscribeType() {
             return AgentCardChangedEvent.class;

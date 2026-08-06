@@ -17,8 +17,10 @@
 package com.alibaba.nacos.config.server.service.dump;
 
 import com.alibaba.nacos.common.utils.MD5Utils;
+import com.alibaba.nacos.config.server.manager.TaskManager;
 import com.alibaba.nacos.config.server.model.CacheItem;
 import com.alibaba.nacos.config.server.model.ConfigInfoWrapper;
+import com.alibaba.nacos.config.server.model.event.ConfigDumpEvent;
 import com.alibaba.nacos.config.server.service.ConfigCacheService;
 import com.alibaba.nacos.config.server.service.dump.disk.ConfigDiskService;
 import com.alibaba.nacos.config.server.service.dump.disk.ConfigDiskServiceFactory;
@@ -40,9 +42,11 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -52,27 +56,27 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class DumpProcessorTest {
-    
+
     @Mock
     DynamicDataSource dynamicDataSource;
-    
+
     @Mock
     DataSourceService dataSourceService;
-    
+
     @Mock
     ConfigInfoPersistService configInfoPersistService;
-    
+
     @Mock
     ConfigInfoGrayPersistService configInfoGrayPersistService;
-    
+
     ExternalDumpService dumpService;
-    
+
     DumpProcessor dumpProcessor;
-    
+
     MockedStatic<DynamicDataSource> dynamicDataSourceMockedStatic;
-    
+
     MockedStatic<EnvUtil> envUtilMockedStatic;
-    
+
     @BeforeEach
     void init() throws Exception {
         dynamicDataSourceMockedStatic = Mockito.mockStatic(DynamicDataSource.class);
@@ -83,12 +87,12 @@ class DumpProcessorTest {
         when(EnvUtil.getProperty(eq("memory_limit_file_path"),
             eq("/sys/fs/cgroup/memory/memory.limit_in_bytes"))).thenReturn(
                 "/sys/fs/cgroup/memory/memory.limit_in_bytes");
-        
+
         dynamicDataSourceMockedStatic.when(DynamicDataSource::getInstance)
             .thenReturn(dynamicDataSource);
-        
+
         when(dynamicDataSource.getDataSource()).thenReturn(dataSourceService);
-        
+
         dumpService = new ExternalDumpService(configInfoPersistService, null, null,
             configInfoGrayPersistService, null);
         dumpProcessor = new DumpProcessor(configInfoPersistService, configInfoGrayPersistService);
@@ -99,20 +103,22 @@ class DumpProcessorTest {
                 filed.set(null, createDiskService());
             }
         }
-        
+
     }
-    
+
     protected ConfigDiskService createDiskService() {
         return new ConfigRocksDbDiskService();
     }
-    
+
     @AfterEach
     void after() throws Exception {
+        ((TaskManager) ReflectionTestUtils.getField(dumpService, "dumpTaskMgr")).close();
+        ((TaskManager) ReflectionTestUtils.getField(dumpService, "dumpAllTaskMgr")).close();
         dynamicDataSourceMockedStatic.close();
         envUtilMockedStatic.close();
         ConfigDiskServiceFactory.getInstance().clearAll();
         ConfigDiskServiceFactory.getInstance().clearAllGray();
-        
+
         Field[] declaredFields = ConfigDiskServiceFactory.class.getDeclaredFields();
         for (Field filed : declaredFields) {
             if (filed.getName().equals("configDiskService")) {
@@ -121,7 +127,7 @@ class DumpProcessorTest {
             }
         }
     }
-    
+
     @Test
     void testDumpNormalAndRemove() throws IOException {
         String dataId = "testDataId";
@@ -135,17 +141,17 @@ class DumpProcessorTest {
         configInfoWrapper.setTenant(tenant);
         configInfoWrapper.setContent(content);
         configInfoWrapper.setLastModified(time);
-        
+
         Mockito.when(configInfoPersistService.findConfigInfo(eq(dataId), eq(group), eq(tenant)))
             .thenReturn(configInfoWrapper);
-        
+
         String handlerIp = "127.0.0.1";
         long lastModified = System.currentTimeMillis();
         DumpTask dumpTask =
             new DumpTask(GroupKey2.getKey(dataId, group, tenant), null, lastModified, handlerIp);
         boolean process = dumpProcessor.process(dumpTask);
         assertTrue(process);
-        
+
         //Check cache
         CacheItem contentCache =
             ConfigCacheService.getContentCache(GroupKey2.getKey(dataId, group, tenant));
@@ -155,14 +161,14 @@ class DumpProcessorTest {
         String contentFromDisk =
             ConfigDiskServiceFactory.getInstance().getContent(dataId, group, tenant);
         assertEquals(content, contentFromDisk);
-        
+
         // remove
         Mockito.when(configInfoPersistService.findConfigInfo(eq(dataId), eq(group), eq(tenant)))
             .thenReturn(null);
-        
+
         boolean processRemove = dumpProcessor.process(dumpTask);
         assertTrue(processRemove);
-        
+
         //Check cache
         CacheItem contentCacheAfterRemove =
             ConfigCacheService.getContentCache(GroupKey2.getKey(dataId, group, tenant));
@@ -171,6 +177,50 @@ class DumpProcessorTest {
         String contentFromDiskAfterRemove =
             ConfigDiskServiceFactory.getInstance().getContent(dataId, group, tenant);
         assertNull(contentFromDiskAfterRemove);
-        
+
+    }
+
+    @Test
+    void testStaleRemoveEventReloadsLatestPersistedConfig() throws Exception {
+        String dataId = "staleRemoveDataId";
+        String group = "staleRemoveGroup";
+        String tenant = "staleRemoveTenant";
+        String content = "latestContent";
+        long latestModified = 200L;
+        String groupKey = GroupKey2.getKey(dataId, group, tenant);
+
+        try {
+            assertTrue(ConfigCacheService.dump(dataId, group, tenant, content, latestModified,
+                "text", "encryptedKey"));
+            ConfigInfoWrapper latestConfig = new ConfigInfoWrapper();
+            latestConfig.setDataId(dataId);
+            latestConfig.setGroup(group);
+            latestConfig.setTenant(tenant);
+            latestConfig.setContent(content);
+            latestConfig.setType("text");
+            latestConfig.setEncryptedDataKey("encryptedKey");
+            latestConfig.setLastModified(latestModified);
+            Mockito.when(configInfoPersistService.findConfigInfo(dataId, group, tenant))
+                .thenReturn(latestConfig);
+
+            DumpConfigHandler handler = new DumpConfigHandler(dumpService);
+            handler.onEvent(ConfigDumpEvent.builder().dataId(dataId).group(group)
+                .namespaceId(tenant).lastModifiedTs(100L).handleIp("127.0.0.1").remove(true)
+                .build());
+            handler.onEvent(ConfigDumpEvent.builder().dataId(dataId).group(group)
+                .namespaceId(tenant).content(content).lastModifiedTs(latestModified)
+                .handleIp("127.0.0.1").remove(false).build());
+
+            TaskManager taskManager =
+                (TaskManager) ReflectionTestUtils.getField(dumpService, "dumpTaskMgr");
+            assertEquals(1, taskManager.size());
+            assertTrue(taskManager.await(5, TimeUnit.SECONDS));
+
+            CacheItem cacheItem = ConfigCacheService.getContentCache(groupKey);
+            assertEquals(MD5Utils.md5Hex(content, "UTF-8"), cacheItem.getConfigCache().getMd5());
+            assertEquals(latestModified, cacheItem.getConfigCache().getLastModifiedTs());
+        } finally {
+            ConfigCacheService.remove(dataId, group, tenant);
+        }
     }
 }

@@ -20,6 +20,7 @@ import com.alibaba.nacos.api.plugin.ConfigItemDefinition;
 import com.alibaba.nacos.common.utils.StringUtils;
 import com.alibaba.nacos.core.plugin.model.PluginConfigSourceType;
 import com.alibaba.nacos.core.plugin.model.PluginInfo;
+import com.alibaba.nacos.core.plugin.storage.PluginPersistenceException;
 import com.alibaba.nacos.core.plugin.storage.PluginStatePersistenceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,29 +37,29 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author Nacos
  */
 public class PluginConfigService {
-    
+
     private static final Logger LOGGER = LoggerFactory.getLogger(PluginConfigService.class);
-    
+
     private final PluginConfigResolver resolver;
-    
+
     private final PluginConfigBasicChecker checker;
-    
+
     private final PluginConfigApplier applier;
-    
+
     private final Map<String, Object> pluginLocks = new ConcurrentHashMap<>();
-    
+
     public PluginConfigService(PluginStatePersistenceService persistence) {
         this(new PluginConfigResolver(persistence), new PluginConfigBasicChecker(),
             new PluginConfigApplier());
     }
-    
+
     PluginConfigService(PluginConfigResolver resolver, PluginConfigBasicChecker checker,
         PluginConfigApplier applier) {
         this.resolver = resolver;
         this.checker = checker;
         this.applier = applier;
     }
-    
+
     /**
      * Normalize and validate a runtime update before local apply or cluster synchronization.
      *
@@ -70,6 +71,11 @@ public class PluginConfigService {
     public Map<String, String> prepareRuntimeUpdate(PluginInfo pluginInfo,
         Map<String, String> config, PluginConfigSourceType sourceType) {
         validateRuntimeSource(sourceType);
+        if (PluginConfigSourceType.RUNTIME_PERSISTED == sourceType
+            && !resolver.isRuntimePersistedSourceAvailable()) {
+            throw new PluginPersistenceException(
+                "Runtime persisted plugin config source is unavailable");
+        }
         synchronized (getPluginLock(pluginInfo.getPluginId())) {
             Map<String, String> normalizedConfig = normalizeConfig(pluginInfo, config);
             Map<String, String> preparedConfig = preserveMaskedSensitiveValues(pluginInfo,
@@ -78,14 +84,21 @@ public class PluginConfigService {
             return preparedConfig;
         }
     }
-    
+
     /**
      * Load the complete runtime persisted source during startup.
      */
     public void initializeRuntimePersistedConfigs() {
         resolver.initializeRuntimePersistedConfigs();
     }
-    
+
+    /**
+     * Release runtime persisted configuration storage resources.
+     */
+    public void shutdown() {
+        resolver.shutdown();
+    }
+
     /**
      * Resolve and apply all effective fields during plugin startup.
      *
@@ -109,7 +122,7 @@ public class PluginConfigService {
             pluginInfo.setConfig(copyConfig(resolution.getConfig()));
         }
     }
-    
+
     /**
      * Refresh runtime-effective static configuration and apply an effective change.
      *
@@ -135,7 +148,7 @@ public class PluginConfigService {
             pluginInfo.setConfig(copyConfig(resolution.getConfig()));
         }
     }
-    
+
     /**
      * Replace and apply the local-only source snapshot.
      *
@@ -148,7 +161,7 @@ public class PluginConfigService {
         replaceAndApply(pluginInfo.getPluginId(), pluginInfo, pluginInstance,
             PluginConfigSourceType.LOCAL_ONLY, config, true);
     }
-    
+
     /**
      * Replace, apply and persist a synchronized runtime source snapshot.
      *
@@ -162,7 +175,7 @@ public class PluginConfigService {
         replaceAndApply(pluginId, pluginInfo, pluginInstance,
             PluginConfigSourceType.RUNTIME_PERSISTED, config, true);
     }
-    
+
     /**
      * Get the complete runtime persisted source for a Raft snapshot.
      *
@@ -171,7 +184,7 @@ public class PluginConfigService {
     public Map<String, Map<String, String>> getAllRuntimePersistedConfigs() {
         return resolver.getAllRuntimePersistedConfigs();
     }
-    
+
     /**
      * Restore the complete runtime persisted source from a Raft snapshot.
      *
@@ -180,7 +193,7 @@ public class PluginConfigService {
     public void restoreRuntimePersistedConfigs(Map<String, Map<String, String>> configs) {
         resolver.restoreRuntimePersistedConfigs(configs);
     }
-    
+
     /**
      * Resolve and apply effective config after restoring the persisted source.
      *
@@ -203,7 +216,7 @@ public class PluginConfigService {
             pluginInfo.setConfig(copyConfig(resolution.getConfig()));
         }
     }
-    
+
     /**
      * Resolve effective config for a query response.
      *
@@ -216,7 +229,7 @@ public class PluginConfigService {
             return resolver.resolve(pluginInfo, maskSensitive);
         }
     }
-    
+
     private void replaceAndApply(String pluginId, PluginInfo pluginInfo, Object pluginInstance,
         PluginConfigSourceType sourceType, Map<String, String> config,
         boolean validateRuntimeUpdate) {
@@ -244,13 +257,13 @@ public class PluginConfigService {
             pluginInfo.setConfig(copyConfig(resolution.getConfig()));
         }
     }
-    
+
     private void validateRuntimeUpdate(PluginInfo pluginInfo, Map<String, String> config,
         PluginConfigSourceType sourceType) {
         Map<String, String> currentConfig = resolver.getConfig(sourceType, pluginInfo);
         checker.validateRuntimeUpdate(pluginInfo, currentConfig, config);
     }
-    
+
     private Map<String, String> preserveMaskedSensitiveValues(PluginInfo pluginInfo,
         Map<String, String> config, PluginConfigSourceType sourceType) {
         List<ConfigItemDefinition> definitions = pluginInfo.getConfigDefinitions();
@@ -275,7 +288,7 @@ public class PluginConfigService {
         }
         return result;
     }
-    
+
     private Map<String, String> normalizeConfig(PluginInfo pluginInfo,
         Map<String, String> config) {
         Map<String, String> configToNormalize = config == null ? Collections.emptyMap() : config;
@@ -284,15 +297,15 @@ public class PluginConfigService {
         }
         return copyConfig(resolver.normalizeConfig(pluginInfo, configToNormalize));
     }
-    
+
     private Map<String, String> copyConfig(Map<String, String> config) {
         return config == null ? new LinkedHashMap<>() : new LinkedHashMap<>(config);
     }
-    
+
     private Object getPluginLock(String pluginId) {
         return pluginLocks.computeIfAbsent(pluginId, key -> new Object());
     }
-    
+
     private void validateRuntimeSource(PluginConfigSourceType sourceType) {
         if (PluginConfigSourceType.RUNTIME_PERSISTED != sourceType
             && PluginConfigSourceType.LOCAL_ONLY != sourceType) {

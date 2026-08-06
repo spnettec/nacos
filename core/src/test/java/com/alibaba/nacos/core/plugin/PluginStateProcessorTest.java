@@ -18,12 +18,10 @@ package com.alibaba.nacos.core.plugin;
 
 import com.alibaba.nacos.consistency.SerializeFactory;
 import com.alibaba.nacos.consistency.Serializer;
-import com.alibaba.nacos.consistency.cp.CPProtocol;
 import com.alibaba.nacos.consistency.entity.ReadRequest;
 import com.alibaba.nacos.consistency.entity.Response;
 import com.alibaba.nacos.consistency.entity.WriteRequest;
 import com.alibaba.nacos.consistency.snapshot.SnapshotOperation;
-import com.alibaba.nacos.core.distributed.ProtocolManager;
 import com.alibaba.nacos.core.plugin.config.PluginConfigApplyException;
 import com.alibaba.nacos.core.plugin.model.PluginStateOperation;
 import com.alibaba.nacos.core.plugin.storage.PluginPersistenceException;
@@ -45,14 +43,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 /**
  * {@link PluginStateProcessor} unit test.
@@ -61,47 +56,38 @@ import static org.mockito.Mockito.when;
  */
 @ExtendWith(MockitoExtension.class)
 class PluginStateProcessorTest {
-    
+
     @Mock
     private PluginManager pluginManager;
-    
+
     @Mock
     private PluginStatePersistenceService persistence;
-    
-    @Mock
-    private ProtocolManager protocolManager;
-    
-    @Mock
-    private CPProtocol cpProtocol;
-    
+
     private PluginStateProcessor processor;
-    
+
     private Serializer serializer;
-    
+
     @BeforeEach
     void setUp() {
-        when(protocolManager.getCpProtocol()).thenReturn(cpProtocol);
-        doNothing().when(cpProtocol).addRequestProcessors(anyList());
-        
-        processor = new PluginStateProcessor(pluginManager, persistence, protocolManager);
+        processor = new PluginStateProcessor(pluginManager, persistence);
         serializer = SerializeFactory.getDefault();
     }
-    
+
     @Test
     void groupTest() {
         assertEquals("plugin_state", processor.group());
     }
-    
+
     @Test
     void onRequestTest() {
         ReadRequest request = ReadRequest.newBuilder().build();
-        
+
         Response response = processor.onRequest(request);
-        
+
         assertNotNull(response);
         assertTrue(response.getSuccess());
     }
-    
+
     @Test
     void onApplyChangeStateTest() throws Exception {
         PluginStateOperation operation = PluginStateOperation.builder()
@@ -109,14 +95,14 @@ class PluginStateProcessorTest {
             .pluginId("trace:otel")
             .enabled(false)
             .build();
-        
+
         byte[] data = serializer.serialize(operation);
         WriteRequest request = WriteRequest.newBuilder()
             .setData(ByteString.copyFrom(data))
             .build();
-        
+
         Response response = processor.onApply(request);
-        
+
         assertNotNull(response);
         assertTrue(response.getSuccess());
         InOrder inOrder = inOrder(pluginManager, persistence);
@@ -124,72 +110,72 @@ class PluginStateProcessorTest {
         inOrder.verify(persistence).saveState("trace:otel", false);
         inOrder.verify(pluginManager).applyStateChange("trace:otel", false);
     }
-    
+
     @Test
     void onApplyChangeStateValidationFailureDoesNotPersistOrApply() throws Exception {
         doThrow(new IllegalArgumentException("invalid state")).when(pluginManager)
             .validateStateChange("trace:otel", false);
         WriteRequest request = changeStateRequest(false);
-        
+
         Response response = processor.onApply(request);
-        
+
         assertFalse(response.getSuccess());
         assertTrue(response.getErrMsg().startsWith(
             PluginStateOperation.INVALID_PARAM_ERROR_PREFIX));
         verify(persistence, never()).saveState("trace:otel", false);
         verify(pluginManager, never()).applyStateChange("trace:otel", false);
     }
-    
+
     @Test
     void onApplyChangeStatePersistenceFailureDoesNotApply() throws Exception {
         doThrow(new PluginPersistenceException("save failed")).when(persistence)
             .saveState("trace:otel", false);
         WriteRequest request = changeStateRequest(false);
-        
+
         Response response = processor.onApply(request);
-        
+
         assertFalse(response.getSuccess());
         verify(pluginManager).validateStateChange("trace:otel", false);
         verify(pluginManager, never()).applyStateChange("trace:otel", false);
     }
-    
+
     @Test
     void onApplyUpdateConfigTest() throws Exception {
         Map<String, String> config = new HashMap<>();
         config.put("endpoint", "http://localhost:8080");
         config.put("timeout", "5000");
-        
+
         PluginStateOperation operation = PluginStateOperation.builder()
             .type(PluginStateOperation.OperationType.UPDATE_CONFIG)
             .pluginId("trace:otel")
             .config(config)
             .build();
-        
+
         byte[] data = serializer.serialize(operation);
         WriteRequest request = WriteRequest.newBuilder()
             .setData(ByteString.copyFrom(data))
             .build();
-        
+
         Response response = processor.onApply(request);
-        
+
         assertNotNull(response);
         assertTrue(response.getSuccess());
         verify(pluginManager, times(1)).applyConfigChange("trace:otel", config);
     }
-    
+
     @Test
     void onApplyInvalidDataTest() {
         WriteRequest request = WriteRequest.newBuilder()
             .setData(ByteString.copyFrom(new byte[] {0, 1, 2, 3}))
             .build();
-        
+
         Response response = processor.onApply(request);
-        
+
         assertNotNull(response);
         assertFalse(response.getSuccess());
         assertNotNull(response.getErrMsg());
     }
-    
+
     @Test
     void onApplyUpdateConfigPreservesInvalidParameterError() throws Exception {
         Map<String, String> config = new HashMap<>();
@@ -204,14 +190,14 @@ class PluginStateProcessorTest {
         WriteRequest request = WriteRequest.newBuilder()
             .setData(ByteString.copyFrom(serializer.serialize(operation)))
             .build();
-        
+
         Response response = processor.onApply(request);
-        
+
         assertFalse(response.getSuccess());
         assertTrue(response.getErrMsg().startsWith(
             PluginStateOperation.INVALID_PARAM_ERROR_PREFIX));
     }
-    
+
     @Test
     void onApplyUpdateConfigReportsApplyFailureAfterUpdate() throws Exception {
         Map<String, String> config = Collections.singletonMap("endpoint", "invalid");
@@ -226,14 +212,14 @@ class PluginStateProcessorTest {
         WriteRequest request = WriteRequest.newBuilder()
             .setData(ByteString.copyFrom(serializer.serialize(operation)))
             .build();
-        
+
         Response response = processor.onApply(request);
-        
+
         assertFalse(response.getSuccess());
         assertTrue(response.getErrMsg().startsWith(
             PluginStateOperation.CONFIG_APPLY_ERROR_PREFIX));
     }
-    
+
     @Test
     void onApplyChangeStateWithNullEnabledTest() throws Exception {
         PluginStateOperation operation = PluginStateOperation.builder()
@@ -242,30 +228,30 @@ class PluginStateProcessorTest {
             .enabled(true)
             .build();
         operation.setEnabled(null);
-        
+
         byte[] data = serializer.serialize(operation);
         WriteRequest request = WriteRequest.newBuilder()
             .setData(ByteString.copyFrom(data))
             .build();
-        
+
         Response response = processor.onApply(request);
-        
+
         assertNotNull(response);
         assertFalse(response.getSuccess());
         assertNotNull(response.getErrMsg());
         assertTrue(response.getErrMsg().contains("trace:otel")
             || response.getErrMsg().contains("CHANGE_STATE"));
     }
-    
+
     @Test
     void loadSnapshotOperateTest() {
         List<SnapshotOperation> operations = processor.loadSnapshotOperate();
-        
+
         assertNotNull(operations);
         assertEquals(1, operations.size());
         assertTrue(operations.get(0) instanceof PluginStateSnapshotOperation);
     }
-    
+
     private WriteRequest changeStateRequest(boolean enabled) throws Exception {
         PluginStateOperation operation = PluginStateOperation.builder()
             .type(PluginStateOperation.OperationType.CHANGE_STATE)

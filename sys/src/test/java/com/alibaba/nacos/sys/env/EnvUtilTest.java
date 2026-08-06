@@ -82,17 +82,15 @@ class EnvUtilTest {
         if (!systemBeanManagerMocked.isClosed()) {
             systemBeanManagerMocked.close();
         }
+        CustomEnvironmentPluginManager.getInstance().initialize(Collections.emptyList());
         EnvUtil.setEnvironment(null);
     }
 
     @Test
     void testCustomEnvironment() {
         environment.setProperty("nacos.custom.environment.enabled", "true");
-        List<CustomEnvironmentPluginService> pluginServices =
-            (List<CustomEnvironmentPluginService>) ReflectionTestUtils.getField(
-                CustomEnvironmentPluginManager.getInstance(), "SERVICE_LIST");
-        pluginServices.add(new CustomEnvironmentPluginService() {
-            
+        CustomEnvironmentPluginService pluginService = new CustomEnvironmentPluginService() {
+
             @Override
             public Map<String, Object> customValue(Map<String, Object> property) {
                 return Collections.emptyMap();
@@ -110,9 +108,11 @@ class EnvUtilTest {
 
             @Override
             public String pluginName() {
-                return "";
+                return "test";
             }
-        });
+        };
+        CustomEnvironmentPluginManager.getInstance()
+            .initialize(Collections.singletonList(pluginService));
         MutablePropertySources mock = Mockito.mock(MutablePropertySources.class);
         ReflectionTestUtils.setField(environment, "propertySources", mock);
         EnvUtil.customEnvironment();
@@ -432,19 +432,19 @@ class EnvUtilTest {
         environment.setProperty(Constants.AVAILABLE_PROCESSORS_BASIC, "4");
         assertEquals(2, EnvUtil.getAvailableProcessors(0.5d));
     }
-    
+
     @Test
     void testConstructor() {
         new EnvUtil();
     }
-    
+
     @Test
     void testResolveRequiredPlaceholdersSuccess() {
         environment.setProperty("nacos.custom.environment.enabled", "true");
         assertEquals("true",
             EnvUtil.resolveRequiredPlaceholders("${nacos.custom.environment.enabled}"));
     }
-    
+
     @Test
     void testSystemExit() {
         Runtime runtimeMock = mock(Runtime.class);

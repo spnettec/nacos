@@ -20,6 +20,7 @@ import com.alibaba.nacos.common.notify.NotifyCenter;
 import com.alibaba.nacos.common.utils.JacksonUtils;
 import com.alibaba.nacos.config.server.constant.Constants;
 import com.alibaba.nacos.config.server.model.event.ConfigDumpEvent;
+import com.alibaba.nacos.config.server.service.dump.DumpService;
 import com.alibaba.nacos.consistency.entity.WriteRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,91 +35,91 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 
 class EmbeddedConfigDumpApplyHookTest {
-    
+
     private EmbeddedConfigDumpApplyHook hook;
-    
+
     private MockedStatic<NotifyCenter> notifyCenterMockedStatic;
-    
+
     @BeforeEach
     void setUp() {
         notifyCenterMockedStatic = Mockito.mockStatic(NotifyCenter.class);
-        hook = new EmbeddedConfigDumpApplyHook();
+        hook = new EmbeddedConfigDumpApplyHook(Mockito.mock(DumpService.class));
     }
-    
+
     @org.junit.jupiter.api.AfterEach
     void tearDown() {
         notifyCenterMockedStatic.close();
     }
-    
+
     @Test
     void testAfterApplyWithSingleDumpEvent() {
         ConfigDumpEvent event = ConfigDumpEvent.builder()
             .dataId("d").group("g").namespaceId("ns")
             .content("content").build();
         String json = JacksonUtils.toJson(event);
-        
+
         Map<String, String> extendInfo = new HashMap<>();
         extendInfo.put(Constants.EXTEND_INFO_CONFIG_DUMP_EVENT, json);
-        
+
         WriteRequest log = WriteRequest.newBuilder()
             .putAllExtendInfo(extendInfo).build();
         hook.afterApply(log);
-        
+
         notifyCenterMockedStatic.verify(
             () -> NotifyCenter.publishEvent(any(ConfigDumpEvent.class)));
     }
-    
+
     @Test
     void testAfterApplyWithMultipleDumpEvents() {
         ConfigDumpEvent event = ConfigDumpEvent.builder()
             .dataId("d").group("g").namespaceId("ns")
             .content("content").build();
         String json = JacksonUtils.toJson(Collections.singletonList(event));
-        
+
         Map<String, String> extendInfo = new HashMap<>();
         extendInfo.put(Constants.EXTEND_INFOS_CONFIG_DUMP_EVENT, json);
-        
+
         WriteRequest log = WriteRequest.newBuilder()
             .putAllExtendInfo(extendInfo).build();
         hook.afterApply(log);
-        
+
         notifyCenterMockedStatic.verify(
             () -> NotifyCenter.publishEvent(any(ConfigDumpEvent.class)));
     }
-    
+
     @Test
     void testAfterApplyWithBlankSingleEvent() {
         Map<String, String> extendInfo = new HashMap<>();
         extendInfo.put(Constants.EXTEND_INFO_CONFIG_DUMP_EVENT, "");
-        
+
         WriteRequest log = WriteRequest.newBuilder()
             .putAllExtendInfo(extendInfo).build();
         hook.afterApply(log);
-        
+
         notifyCenterMockedStatic.verify(
             () -> NotifyCenter.publishEvent(any(ConfigDumpEvent.class)),
             never());
     }
-    
+
     @Test
     void testAfterApplyWithBlankMultipleEvents() {
         Map<String, String> extendInfo = new HashMap<>();
         extendInfo.put(Constants.EXTEND_INFOS_CONFIG_DUMP_EVENT, "");
-        
+
         WriteRequest log = WriteRequest.newBuilder()
             .putAllExtendInfo(extendInfo).build();
         hook.afterApply(log);
-        
+
         notifyCenterMockedStatic.verify(
             () -> NotifyCenter.publishEvent(any(ConfigDumpEvent.class)),
             never());
     }
-    
+
     @Test
     void testAfterApplyWithEmptyExtendInfo() {
         WriteRequest log = WriteRequest.newBuilder().build();
         hook.afterApply(log);
-        
+
         notifyCenterMockedStatic.verify(
             () -> NotifyCenter.publishEvent(any(ConfigDumpEvent.class)),
             never());

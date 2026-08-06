@@ -30,114 +30,138 @@ import java.util.stream.Collectors;
  * @date 2022/8/31 12:27
  **/
 public enum AbilityKey {
-    
+
     /**
      * Server support register or deregister persistent instance by grpc.
      */
     SERVER_PERSISTENT_INSTANCE_BY_GRPC("supportPersistentInstanceByGrpc",
         "support persistent instance by grpc",
         AbilityMode.SERVER),
-    
+
     /**
      * For fuzzy watch naming or config.
      */
     SERVER_FUZZY_WATCH("fuzzyWatch", "Server whether support fuzzy watch service or config",
         AbilityMode.SERVER),
-    
+
     /**
      * For Distributed Lock.
      */
     SERVER_DISTRIBUTED_LOCK("lock", "Server whether support distributed lock", AbilityMode.SERVER),
-    
+
     /**
      * For AI module MCP registry.
      */
     SERVER_MCP_REGISTRY("mcp",
         "Server whether support release mcp server and register endpoint for mcp server",
         AbilityMode.SERVER),
-    
+
     /**
      * For AI module Agent & Agent Card registry.
      */
     SERVER_AGENT_REGISTRY("agent",
         "Server whether support release agent server and register endpoint for agent server",
         AbilityMode.SERVER),
-    
+
     /**
      * For AI module A2A AgentCard 1.0 protocol.
      */
     SERVER_AGENT_CARD_V1("agentCardV1", "Server whether support A2A AgentCard 1.0 protocol",
         AbilityMode.SERVER),
-    
+
+    /**
+     * Negotiation key for AI module RAD Search and Discover payloads.
+     *
+     * <p>Defining the wire key does not advertise the capability. The server ability registry
+     * enables it only after the matching SDK transport is available.</p>
+     */
+    SERVER_AGENT_DISCOVERY_V1("agentDiscoveryV1",
+        "Server whether support RAD Search and Discover payloads", AbilityMode.SERVER),
+
+    /**
+     * Negotiation key for AI module RAD Endpoint publication payloads.
+     *
+     * <p>Defining the wire key does not advertise the capability. The server ability registry
+     * enables it only after the matching SDK transport is available.</p>
+     */
+    SERVER_AGENT_ENDPOINT_V1("agentEndpointV1",
+        "Server whether support RAD Endpoint publication payloads", AbilityMode.SERVER),
+
+    /**
+     * Negotiation key for generic code-first Agent publication payloads.
+     */
+    SERVER_AGENT_PUBLISH_V1("agentPublishV1",
+        "Server whether support generic Agent publication payloads", AbilityMode.SERVER),
+
     /**
      * For fuzzy watch naming or config.
      */
     SDK_CLIENT_FUZZY_WATCH("fuzzyWatch", "Client whether support fuzzy watch service or config",
         AbilityMode.SDK_CLIENT),
-    
+
     /**
      * For Distributed Lock.
      */
     SDK_CLIENT_DISTRIBUTED_LOCK("lock", "Client whether support distributed lock",
         AbilityMode.SDK_CLIENT),
-    
+
     /**
      * For AI module MCP registry.
      */
     SDK_MCP_REGISTRY("mcp",
         "Client whether support release mcp server and register endpoint for mcp server",
         AbilityMode.SDK_CLIENT),
-    
+
     /**
      * For AI module Agent & Agent Card registry.
      */
     SDK_AGENT_REGISTRY("agent",
         "Client whether support release agent server and register endpoint for agent server",
         AbilityMode.SDK_CLIENT),
-    
+
     /**
      * For Test temporarily.
      */
     CLUSTER_CLIENT_TEST_1("test_1", "just for junit test", AbilityMode.CLUSTER_CLIENT);
-    
+
     /**
      * the name of a certain ability.
      */
     private final String keyName;
-    
+
     /**
      * description or comment about this ability.
      */
     private final String description;
-    
+
     /**
      * ability mode, which endpoint hold this ability.
      */
     private final AbilityMode mode;
-    
+
     AbilityKey(String keyName, String description, AbilityMode mode) {
         this.keyName = keyName;
         this.description = description;
         this.mode = mode;
     }
-    
+
     public String getName() {
         return keyName;
     }
-    
+
     public String getDescription() {
         return description;
     }
-    
+
     public AbilityMode getMode() {
         return mode;
     }
-    
+
     /**
      * All key set.
      */
     private static final Map<AbilityMode, Map<String, AbilityKey>> ALL_ABILITIES = new HashMap<>();
-    
+
     /**
      * Get all keys.
      *
@@ -146,7 +170,7 @@ public enum AbilityKey {
     public static Collection<AbilityKey> getAllValues(AbilityMode mode) {
         return Collections.unmodifiableCollection(ALL_ABILITIES.get(mode).values());
     }
-    
+
     /**
      * Get all names.
      *
@@ -155,7 +179,7 @@ public enum AbilityKey {
     public static Collection<String> getAllNames(AbilityMode mode) {
         return Collections.unmodifiableCollection(ALL_ABILITIES.get(mode).keySet());
     }
-    
+
     /**
      * Whether contains this name.
      *
@@ -165,7 +189,7 @@ public enum AbilityKey {
     public static boolean isLegalKey(AbilityMode mode, String name) {
         return ALL_ABILITIES.get(mode).containsKey(name);
     }
-    
+
     /**.
      * Map the string key to enum
      *
@@ -179,7 +203,7 @@ public enum AbilityKey {
         return abilities.entrySet().stream()
             .collect(Collectors.toMap((entry) -> entry.getKey().getName(), Map.Entry::getValue));
     }
-    
+
     /**.
      * getter to obtain enum
      *
@@ -189,7 +213,7 @@ public enum AbilityKey {
     public static AbilityKey getEnum(AbilityMode mode, String key) {
         return ALL_ABILITIES.get(mode).get(key);
     }
-    
+
     static {
         // check for developer
         // ensure that name filed is unique under a AbilityMode

@@ -52,29 +52,32 @@ import java.util.function.Supplier;
  *
  * @author xiweng.yy
  * @since 3.2.1
+ * @deprecated migrate clients to the unified AI resource import APIs. Planned for removal in
+ *     Nacos 3.4.0.
  */
+@Deprecated
 @Service
 public class McpLegacyImportAdapter {
-    
+
     private static final String STATUS_VALID = "valid";
-    
+
     private static final String STATUS_INVALID = "invalid";
-    
+
     private static final String STATUS_DUPLICATE = "duplicate";
-    
+
     private final McpServerImportService mcpServerImportService;
-    
+
     private final com.alibaba.nacos.ai.importer.manager.AiResourceImportManager importManager;
-    
+
     private Supplier<AiResourceImportProperties> propertiesSupplier =
         AiResourceImportProperties::loadFromEnvironment;
-    
+
     public McpLegacyImportAdapter(McpServerImportService mcpServerImportService,
         com.alibaba.nacos.ai.importer.manager.AiResourceImportManager importManager) {
         this.mcpServerImportService = mcpServerImportService;
         this.importManager = importManager;
     }
-    
+
     /**
      * Validate a legacy MCP import request.
      *
@@ -82,7 +85,10 @@ public class McpLegacyImportAdapter {
      * @param request legacy import request
      * @return legacy validation response
      * @throws NacosException if validation cannot start
+     * @deprecated use the unified AI resource import validation API instead. Planned for removal
+     *     in Nacos 3.4.0.
      */
+    @Deprecated
     public McpServerImportValidationResult validateImport(String namespaceId,
         McpServerImportRequest request) throws NacosException {
         if (!isLegacyApiEnabled()) {
@@ -100,7 +106,7 @@ public class McpLegacyImportAdapter {
             return failedValidation(e.getErrMsg());
         }
     }
-    
+
     /**
      * Execute a legacy MCP import request.
      *
@@ -108,7 +114,10 @@ public class McpLegacyImportAdapter {
      * @param request legacy import request
      * @return legacy execute response
      * @throws NacosException if import cannot start
+     * @deprecated use the unified AI resource import execute API instead. Planned for removal in
+     *     Nacos 3.4.0.
      */
+    @Deprecated
     public McpServerImportResponse executeImport(String namespaceId, McpServerImportRequest request)
         throws NacosException {
         if (!isLegacyApiEnabled()) {
@@ -126,21 +135,21 @@ public class McpLegacyImportAdapter {
             return failedResponse(e.getErrMsg());
         }
     }
-    
+
     private boolean shouldRouteToUnifiedImport(McpServerImportRequest request) {
         return request != null && ExternalDataTypeEnum.URL.getName().equals(request.getImportType())
             && !isUrl(request.getData());
     }
-    
+
     private boolean isLegacyApiEnabled() {
         return propertiesSupplier.get().isLegacyMcpImportApiEnabled();
     }
-    
+
     private boolean shouldRejectUserUrl(McpServerImportRequest request) {
         return request != null && ExternalDataTypeEnum.URL.getName().equals(request.getImportType())
             && isUrl(request.getData()) && !propertiesSupplier.get().isAllowUserUrl();
     }
-    
+
     private boolean isUrl(String value) {
         if (StringUtils.isBlank(value)) {
             return false;
@@ -153,7 +162,7 @@ public class McpLegacyImportAdapter {
             return false;
         }
     }
-    
+
     private AiResourceImportValidateRequest buildValidateRequest(String namespaceId,
         McpServerImportRequest request) throws NacosException {
         AiResourceImportValidateRequest result = new AiResourceImportValidateRequest();
@@ -164,7 +173,7 @@ public class McpLegacyImportAdapter {
         result.setSelectedItems(resolveSelectedItems(namespaceId, request));
         return result;
     }
-    
+
     private AiResourceImportExecuteRequest buildExecuteRequest(String namespaceId,
         McpServerImportRequest request) throws NacosException {
         AiResourceImportExecuteRequest result = new AiResourceImportExecuteRequest();
@@ -176,7 +185,7 @@ public class McpLegacyImportAdapter {
         result.setSelectedItems(resolveSelectedItems(namespaceId, request));
         return result;
     }
-    
+
     private List<AiResourceImportItem> resolveSelectedItems(String namespaceId,
         McpServerImportRequest request) throws NacosException {
         if (request.getSelectedServers() != null && request.getSelectedServers().length > 0) {
@@ -206,7 +215,7 @@ public class McpLegacyImportAdapter {
         }
         return result;
     }
-    
+
     private AiResourceImportItem selectedItem(String externalId, String name, String version) {
         AiResourceImportItem result = new AiResourceImportItem();
         result.setExternalId(externalId);
@@ -214,7 +223,7 @@ public class McpLegacyImportAdapter {
         result.setVersion(version);
         return result;
     }
-    
+
     private McpServerImportValidationResult toLegacyValidationResult(
         AiResourceImportValidateResponse response) {
         McpServerImportValidationResult result = new McpServerImportValidationResult();
@@ -242,7 +251,7 @@ public class McpLegacyImportAdapter {
         result.setErrors(Collections.emptyList());
         return result;
     }
-    
+
     private McpServerValidationItem toLegacyValidationItem(AiResourceImportValidationItem item) {
         McpServerValidationItem result = new McpServerValidationItem();
         result.setServerId(item.getExternalId());
@@ -260,7 +269,7 @@ public class McpLegacyImportAdapter {
         }
         return result;
     }
-    
+
     private McpServerImportResponse toLegacyExecuteResponse(
         AiResourceImportExecuteResponse response) {
         McpServerImportResponse result = new McpServerImportResponse();
@@ -276,7 +285,7 @@ public class McpLegacyImportAdapter {
         result.setResults(results);
         return result;
     }
-    
+
     private McpServerImportResult toLegacyImportResult(AiResourceImportResultItem item) {
         McpServerImportResult result = new McpServerImportResult();
         result.setServerId(item.getExternalId());
@@ -291,35 +300,35 @@ public class McpLegacyImportAdapter {
         }
         return result;
     }
-    
+
     private McpServerImportValidationResult rejectedValidation() {
         return failedValidation(
             "Legacy URL import is disabled. Please use a configured source id.");
     }
-    
+
     private McpServerImportResponse rejectedResponse() {
         return failedResponse("Legacy URL import is disabled. Please use a configured source id.");
     }
-    
+
     private McpServerImportValidationResult deprecatedValidation() {
         return failedValidation("Legacy MCP import API is disabled. Please use the unified "
             + "AI resource import API or enable nacos.ai.resource.import.legacy-mcp-api-enabled "
             + "for a compatibility window.");
     }
-    
+
     private McpServerImportResponse deprecatedResponse() {
         return failedResponse("Legacy MCP import API is disabled. Please use the unified "
             + "AI resource import API or enable nacos.ai.resource.import.legacy-mcp-api-enabled "
             + "for a compatibility window.");
     }
-    
+
     private McpServerImportValidationResult failedValidation(String errorMessage) {
         McpServerImportValidationResult result = new McpServerImportValidationResult();
         result.setValid(false);
         result.setErrors(Collections.singletonList(errorMessage));
         return result;
     }
-    
+
     private McpServerImportResponse failedResponse(String errorMessage) {
         McpServerImportResponse result = new McpServerImportResponse();
         result.setSuccess(false);

@@ -42,9 +42,9 @@ import org.springframework.jmx.support.RegistrationPolicy;
  */
 @SpringBootApplication
 public class NacosBootstrap {
-    
+
     private static final String SPRING_JMX_ENABLED = "spring.jmx.enabled";
-    
+
     public static void main(String[] args) {
         String type = System.getProperty(Constants.NACOS_DEPLOYMENT_TYPE,
             Constants.NACOS_DEPLOYMENT_TYPE_MERGED);
@@ -64,7 +64,7 @@ public class NacosBootstrap {
                 throw new IllegalArgumentException("Unsupported nacos deployment type " + type);
         }
     }
-    
+
     private static void prepareCoreContext(ConfigurableApplicationContext coreContext) {
         if (coreContext.getEnvironment().getProperty(SPRING_JMX_ENABLED, Boolean.class, false)) {
             // Avoid duplicate registration MBean to exporter.
@@ -72,7 +72,7 @@ public class NacosBootstrap {
                 .setRegistrationPolicy(RegistrationPolicy.IGNORE_EXISTING);
         }
     }
-    
+
     private static void startWithoutConsole(String[] args) {
         ConfigurableApplicationContext coreContext = startCoreContext(args);
         prepareCoreContext(coreContext);
@@ -82,7 +82,7 @@ public class NacosBootstrap {
                 startAiRegistryContext(args, coreContext);
         }
     }
-    
+
     private static void startWithConsole(String[] args) {
         ConfigurableApplicationContext coreContext = startCoreContext(args);
         prepareCoreContext(coreContext);
@@ -93,50 +93,52 @@ public class NacosBootstrap {
                 startAiRegistryContext(args, coreContext);
         }
     }
-    
+
     private static ConfigurableApplicationContext startCoreContext(String[] args) {
         NacosStartUpManager.start(NacosStartUp.CORE_START_UP_PHASE);
         return new SpringApplicationBuilder(NacosServerBasicApplication.class)
             .web(WebApplicationType.NONE)
             .banner(getBanner("core-banner.txt")).run(args);
     }
-    
+
     private static ConfigurableApplicationContext startServerWebContext(String[] args,
         ConfigurableApplicationContext coreContext) {
         NacosStartUpManager.start(NacosStartUp.WEB_START_UP_PHASE);
         return new SpringApplicationBuilder(NacosServerWebApplication.class).parent(coreContext)
             .banner(getBanner("nacos-server-web-banner.txt")).run(args);
     }
-    
+
     private static ConfigurableApplicationContext startConsoleContext(String[] args,
         ConfigurableApplicationContext coreContext) {
         NacosStartUpManager.start(NacosStartUp.CONSOLE_START_UP_PHASE);
         return new SpringApplicationBuilder(NacosConsole.class).parent(coreContext)
             .banner(getBanner("nacos-console-banner.txt")).run(args);
     }
-    
+
     private static ConfigurableApplicationContext startAiRegistryContext(String[] args,
         ConfigurableApplicationContext coreContext) {
         NacosStartUpManager.start(NacosStartUp.AI_REGISTRY_START_UP_PHASE);
         return new SpringApplicationBuilder(NacosAiRegistry.class).parent(coreContext)
             .banner(getBanner("nacos-ai-registry-banner.txt")).run(args);
     }
-    
+
     private static void startOnlyConsole(String[] args) {
         NacosStartUpManager.start(NacosStartUp.CONSOLE_START_UP_PHASE);
         new SpringApplicationBuilder(NacosConsole.class).banner(
             getBanner("nacos-console-banner.txt")).run(args);
     }
-    
+
     private static Banner getBanner(String bannerFileName) {
         return new ResourceBanner(new ClassPathResource(bannerFileName));
     }
-    
+
     private static boolean isEnabledAiRegistry(ConfigurableApplicationContext coreContext) {
         boolean mcpRegistryEnabled = coreContext.getEnvironment()
             .getProperty("nacos.ai.mcp.registry.enabled", Boolean.class, false);
         boolean skillRegistryEnabled = coreContext.getEnvironment()
             .getProperty("nacos.ai.skill.registry.enabled", Boolean.class, false);
-        return mcpRegistryEnabled || skillRegistryEnabled;
+        boolean ardEnabled = coreContext.getEnvironment()
+            .getProperty("nacos.ai.ard.enabled", Boolean.class, false);
+        return mcpRegistryEnabled || skillRegistryEnabled || ardEnabled;
     }
 }

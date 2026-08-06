@@ -28,28 +28,29 @@ import java.util.concurrent.Executor;
  * @author xiweng.yy
  */
 public interface NacosTraceSubscriber extends PluginConfigSpec {
-    
+
     /**
-     * Get the plugin name, if the same name has loaded by nacos, the older one will be replaced by new one.
+     * Get the plugin name. If another subscriber with the same name has already been loaded, Nacos
+     * keeps the first subscriber and ignores the later duplicate with a warning.
      *
      * @return plugin name
      */
     String getName();
-    
+
     /**
      * Event callback.
      *
      * @param event {@link TraceEvent}
      */
     void onEvent(TraceEvent event);
-    
+
     /**
      * Returns which trace events are this subscriber interested in.
      *
      * @return The interested event types.
      */
     List<Class<? extends TraceEvent>> subscribeTypes();
-    
+
     /**
      * It is up to the listener to determine whether the callback is asynchronous or synchronous.
      *

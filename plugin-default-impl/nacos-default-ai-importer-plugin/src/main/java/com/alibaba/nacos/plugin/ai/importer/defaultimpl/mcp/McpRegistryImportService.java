@@ -32,7 +32,6 @@ import com.alibaba.nacos.plugin.ai.importer.model.AiResourceImportCandidatePage;
 import com.alibaba.nacos.plugin.ai.importer.model.AiResourceImportContext;
 import com.alibaba.nacos.plugin.ai.importer.model.AiResourceImportItem;
 import com.alibaba.nacos.plugin.ai.importer.model.AiResourceImportPayloadKind;
-import com.alibaba.nacos.plugin.ai.importer.model.AiResourceImportSource;
 import com.alibaba.nacos.plugin.ai.importer.spi.AiResourceImportService;
 
 import java.util.ArrayList;
@@ -40,7 +39,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Built-in importer for the official MCP registry API.
@@ -49,46 +47,36 @@ import java.util.Set;
  * @since 3.2.1
  */
 public class McpRegistryImportService implements AiResourceImportService {
-    
+
     public static final String RESOURCE_TYPE_MCP = AiResourceImportConstants.RESOURCE_TYPE_MCP;
-    
+
     private static final int DEFAULT_FETCH_LIMIT = 30;
-    
+
     private static final String METADATA_ID = "id";
-    
+
     private static final String METADATA_PROTOCOL = "protocol";
-    
+
     private static final String METADATA_STATUS = "status";
-    
+
     private static final String METADATA_REPOSITORY = "repository";
-    
+
     private final McpRegistryClient client;
-    
-    public McpRegistryImportService() {
-        this(new McpRegistryClient());
+
+    public McpRegistryImportService(String endpoint, boolean allowHttp,
+        boolean allowPrivateNetwork, long maxArtifactSize) {
+        this(new McpRegistryClient(endpoint, allowHttp, allowPrivateNetwork, maxArtifactSize));
     }
-    
+
     McpRegistryImportService(McpRegistryClient client) {
         this.client = client;
     }
-    
-    @Override
-    public String importerType() {
-        return McpRegistryImportServiceBuilder.IMPORTER_TYPE;
-    }
-    
-    @Override
-    public Set<String> supportedResourceTypes() {
-        return Collections.singleton(RESOURCE_TYPE_MCP);
-    }
-    
+
     @Override
     public AiResourceImportCandidatePage search(AiResourceImportContext context)
         throws NacosException {
         try {
-            AiResourceImportSource source = requireSource(context.getSource());
             McpRegistryClient.Page registryPage = client.fetchOfficialRegistryPage(
-                source, context.getCursor(), context.getLimit(), context.getQuery());
+                context.getCursor(), context.getLimit(), context.getQuery());
             AiResourceImportCandidatePage result = new AiResourceImportCandidatePage();
             result.setItems(toCandidates(registryPage.getServers()));
             result.setNextCursor(registryPage.getNextCursor());
@@ -100,15 +88,14 @@ public class McpRegistryImportService implements AiResourceImportService {
             throw dataAccess("Search MCP registry source failed: " + e.getMessage(), e);
         }
     }
-    
+
     @Override
     public AiResourceImportArtifact fetch(AiResourceImportContext context,
         AiResourceImportItem item) throws NacosException {
         try {
-            AiResourceImportSource source = requireSource(context.getSource());
             String externalId = resolveExternalId(item);
             McpServerDetailInfo server = client.fetchOfficialRegistryServer(
-                source, externalId, resolveFetchLimit(context));
+                externalId, resolveFetchLimit(context));
             return toArtifact(externalId, server);
         } catch (NacosException e) {
             throw e;
@@ -116,15 +103,7 @@ public class McpRegistryImportService implements AiResourceImportService {
             throw dataAccess("Fetch MCP registry artifact failed: " + e.getMessage(), e);
         }
     }
-    
-    private AiResourceImportSource requireSource(AiResourceImportSource source)
-        throws NacosException {
-        if (source == null || StringUtils.isBlank(source.getEndpoint())) {
-            throw invalid("MCP registry import source endpoint must not be empty.");
-        }
-        return source;
-    }
-    
+
     private String resolveExternalId(AiResourceImportItem item) throws NacosException {
         if (item == null) {
             throw invalid("MCP registry import item must not be null.");
@@ -136,11 +115,11 @@ public class McpRegistryImportService implements AiResourceImportService {
         }
         return externalId;
     }
-    
+
     private int resolveFetchLimit(AiResourceImportContext context) {
         return context.getLimit() > 0 ? context.getLimit() : DEFAULT_FETCH_LIMIT;
     }
-    
+
     private List<AiResourceImportCandidate> toCandidates(List<McpServerDetailInfo> servers) {
         if (CollectionUtils.isEmpty(servers)) {
             return Collections.emptyList();
@@ -151,7 +130,7 @@ public class McpRegistryImportService implements AiResourceImportService {
         }
         return result;
     }
-    
+
     private AiResourceImportCandidate toCandidate(McpServerDetailInfo server) {
         AiResourceImportCandidate result = new AiResourceImportCandidate();
         result.setResourceType(RESOURCE_TYPE_MCP);
@@ -162,7 +141,7 @@ public class McpRegistryImportService implements AiResourceImportService {
         result.setMetadata(buildMetadata(server));
         return result;
     }
-    
+
     private AiResourceImportArtifact toArtifact(String externalId, McpServerDetailInfo server) {
         AiResourceImportArtifact result = new AiResourceImportArtifact();
         result.setResourceType(RESOURCE_TYPE_MCP);
@@ -175,12 +154,12 @@ public class McpRegistryImportService implements AiResourceImportService {
         result.setSourceMetadata(buildMetadata(server));
         return result;
     }
-    
+
     private String resolveVersion(McpServerDetailInfo server) {
         ServerVersionDetail versionDetail = server.getVersionDetail();
         return versionDetail == null ? server.getVersion() : versionDetail.getVersion();
     }
-    
+
     private Map<String, String> buildMetadata(McpServerDetailInfo server) {
         Map<String, String> metadata = new LinkedHashMap<>();
         putIfNotBlank(metadata, METADATA_ID, server.getId());
@@ -192,18 +171,18 @@ public class McpRegistryImportService implements AiResourceImportService {
         }
         return metadata;
     }
-    
+
     private void putIfNotBlank(Map<String, String> metadata, String key, String value) {
         if (StringUtils.isNotBlank(value)) {
             metadata.put(key, value);
         }
     }
-    
+
     private NacosException invalid(String message) {
         return new NacosApiException(NacosException.INVALID_PARAM,
             ErrorCode.PARAMETER_VALIDATE_ERROR, message);
     }
-    
+
     private NacosException dataAccess(String message, Throwable cause) {
         return new NacosApiException(NacosException.SERVER_ERROR, ErrorCode.DATA_ACCESS_ERROR,
             cause, message);

@@ -29,16 +29,25 @@ import com.alibaba.nacos.plugin.control.connection.rule.ConnectionControlRule;
  * @author shiyiyue
  */
 public class DefaultConnectionControlManager extends ConnectionControlManager {
-    
+
     @Override
     public String getName() {
         return "noLimit";
     }
-    
+
     public DefaultConnectionControlManager() {
         super();
     }
-    
+
+    /**
+     * Construct a no-limit manager with optional runtime resource initialization.
+     *
+     * @param initialize whether to initialize runtime resources
+     */
+    protected DefaultConnectionControlManager(boolean initialize) {
+        super(initialize);
+    }
+
     @Override
     public void applyConnectionLimitRule(ConnectionControlRule connectionControlRule) {
         super.connectionControlRule = connectionControlRule;
@@ -48,7 +57,7 @@ public class DefaultConnectionControlManager extends ConnectionControlManager {
         Loggers.CONTROL.warn(
             "Connection control updated, But connection control manager is no limit implementation.");
     }
-    
+
     @Override
     public ConnectionCheckResponse check(ConnectionCheckRequest connectionCheckRequest) {
         ConnectionCheckResponse connectionCheckResponse = new ConnectionCheckResponse();
@@ -56,5 +65,5 @@ public class DefaultConnectionControlManager extends ConnectionControlManager {
         connectionCheckResponse.setCode(ConnectionCheckCode.CHECK_SKIP);
         return connectionCheckResponse;
     }
-    
+
 }

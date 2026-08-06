@@ -26,76 +26,82 @@ import com.alibaba.nacos.plugin.ai.importer.model.AiResourceImportPayloadKind;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
-import java.util.Properties;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
 class AiResourceImportServiceTest {
-    
+
     @Test
-    void testBuilderCreatesImporterWithProperties() {
-        Properties properties = new Properties();
-        properties.setProperty("endpoint", "https://example.com");
+    void testBuilderCreatesRequestScopedImporter() throws Exception {
         FakeImportServiceBuilder builder = new FakeImportServiceBuilder();
-        
-        AiResourceImportService service = builder.build(properties);
-        
+
+        AiResourceImportService service = builder.build();
+
+        assertEquals("fake-source", builder.pluginName());
         assertEquals("fake-importer", builder.importerType());
-        assertEquals("fake-importer", service.importerType());
-        assertEquals(Collections.singleton("mcp"), service.supportedResourceTypes());
-        assertSame(properties, ((FakeImportService) service).properties);
+        assertEquals("Fake source", builder.displayName());
+        assertEquals("Fake description", builder.description());
+        assertEquals(Collections.singleton("mcp"), builder.supportedResourceTypes());
+        assertSame(builder.service, service);
+        service.close();
     }
-    
+
     @Test
     void testSearchAndFetchContract() throws NacosException {
-        AiResourceImportService service = new FakeImportService(new Properties());
+        AiResourceImportService service = new FakeImportService();
         AiResourceImportContext context = new AiResourceImportContext();
         context.setResourceType("mcp");
         AiResourceImportItem item = new AiResourceImportItem();
         item.setExternalId("server-1");
-        
+
         AiResourceImportCandidatePage page = service.search(context);
         AiResourceImportArtifact artifact = service.fetch(context, item);
-        
+
         assertEquals(1, page.getItems().size());
         assertEquals("server-1", page.getItems().get(0).getExternalId());
         assertEquals("server-1", artifact.getExternalId());
         assertEquals(AiResourceImportPayloadKind.MCP_DETAIL, artifact.getPayloadKind());
     }
-    
+
     private static class FakeImportServiceBuilder implements AiResourceImportServiceBuilder {
-        
+
+        private final FakeImportService service = new FakeImportService();
+
+        @Override
+        public String pluginName() {
+            return "fake-source";
+        }
+
         @Override
         public String importerType() {
             return "fake-importer";
         }
-        
+
         @Override
-        public AiResourceImportService build(Properties properties) {
-            return new FakeImportService(properties);
+        public String displayName() {
+            return "Fake source";
         }
-    }
-    
-    private static class FakeImportService implements AiResourceImportService {
-        
-        private final Properties properties;
-        
-        private FakeImportService(Properties properties) {
-            this.properties = properties;
-        }
-        
+
         @Override
-        public String importerType() {
-            return "fake-importer";
+        public String description() {
+            return "Fake description";
         }
-        
+
         @Override
         public Set<String> supportedResourceTypes() {
             return Collections.singleton("mcp");
         }
-        
+
+        @Override
+        public AiResourceImportService build() {
+            return service;
+        }
+    }
+
+    private static class FakeImportService implements AiResourceImportService {
+
         @Override
         public AiResourceImportCandidatePage search(AiResourceImportContext context) {
             AiResourceImportCandidate candidate = new AiResourceImportCandidate();
@@ -106,7 +112,7 @@ class AiResourceImportServiceTest {
             page.setItems(Collections.singletonList(candidate));
             return page;
         }
-        
+
         @Override
         public AiResourceImportArtifact fetch(AiResourceImportContext context,
             AiResourceImportItem item) {

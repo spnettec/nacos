@@ -49,6 +49,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -67,17 +68,17 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class NacosRoleServiceRemoteImplTest {
-    
+
     @Mock
     private NacosRestTemplate restTemplate;
-    
+
     @BeforeEach
     void setUp() {
         if (EnvUtil.getEnvironment() == null) {
             EnvUtil.setEnvironment(new MockEnvironment());
         }
     }
-    
+
     @Test
     void testGetPermissionsReadsCachedMapOnceOnHit() throws Exception {
         // Reproduces the same TOCTOU pattern as getUser/getRoles: previously
@@ -93,15 +94,15 @@ class NacosRoleServiceRemoteImplTest {
         CountingMap<String, List<PermissionInfo>> cache = new CountingMap<>();
         cache.put("admin", permissions);
         injectField("permissionInfoMap", service, cache);
-        
+
         List<PermissionInfo> result = service.getPermissions("admin");
-        
+
         assertSame(permissions, result, "cache hit must return the cached permission list");
         assertEquals(1, cache.getCount.get(), "cache hit must read the map exactly once");
         assertEquals(0, cache.containsKeyCount.get(),
             "fix must not consult containsKey separately");
     }
-    
+
     @Test
     void testGetRolesReadsCachedMapOnceOnHit() throws Exception {
         NacosRoleServiceRemoteImpl service = new NacosRoleServiceRemoteImpl();
@@ -112,15 +113,15 @@ class NacosRoleServiceRemoteImplTest {
         CountingMap<String, List<RoleInfo>> cache = new CountingMap<>();
         cache.put("alice", roles);
         injectField("roleInfoMap", service, cache);
-        
+
         List<RoleInfo> result = service.getRoles("alice");
-        
+
         assertSame(roles, result, "cache hit must return the cached role list");
         assertEquals(1, cache.getCount.get(), "cache hit must read the map exactly once");
         assertEquals(0, cache.containsKeyCount.get(),
             "fix must not consult containsKey separately");
     }
-    
+
     @Test
     void testRemoteRoleAndPermissionOperations() throws Exception {
         prepareRemoteServer();
@@ -147,7 +148,7 @@ class NacosRoleServiceRemoteImplTest {
             eq(String.class))).thenReturn(okText());
         when(restTemplate.<String>delete(anyString(), any(Header.class), any(Query.class),
             eq(String.class))).thenReturn(okText());
-        
+
         assertEquals("admin", service.getPermissions("admin", 1, 10).getPageItems().get(0)
             .getRole());
         assertEquals("admin", service.findPermissions("adm", 1, 10).getPageItems().get(0)
@@ -164,7 +165,30 @@ class NacosRoleServiceRemoteImplTest {
         service.deleteRole("developer", "alice");
         service.deleteRole("developer");
     }
-    
+
+    @Test
+    void testAddAndDeletePermissionInvalidatePermissionCache() throws Exception {
+        prepareRemoteServer();
+        NacosRoleServiceRemoteImpl service = newServiceWithRestTemplate();
+        Map<String, List<PermissionInfo>> cache = new ConcurrentHashMap<>();
+        cache.put("admin", Collections.singletonList(permissionInfo("admin", "public:*:*", "r")));
+        injectField("permissionInfoMap", service, cache);
+        when(restTemplate.<String>postForm(anyString(), any(Header.class), nullable(Query.class),
+            anyMap(), eq(String.class))).thenReturn(okText());
+        when(restTemplate.<String>delete(anyString(), any(Header.class), any(Query.class),
+            eq(String.class))).thenReturn(okText());
+
+        service.addPermission("admin", "public:*:*", "rw");
+
+        assertFalse(cache.containsKey("admin"));
+
+        cache.put("admin", Collections.singletonList(permissionInfo("admin", "public:*:*", "rw")));
+
+        service.deletePermission("admin", "public:*:*", "rw");
+
+        assertFalse(cache.containsKey("admin"));
+    }
+
     @Test
     void testAddAdminRoleUpdatesLocalCache() throws Exception {
         prepareRemoteServer();
@@ -173,22 +197,22 @@ class NacosRoleServiceRemoteImplTest {
         rolePage.setPageItems(Collections.emptyList());
         when(restTemplate.<String>get(anyString(), any(Header.class), any(Query.class),
             eq(String.class))).thenReturn(okJson(rolePage));
-        
+
         service.addAdminRole("nacos");
-        
+
         assertTrue(getCachedRoleSet(service).contains(AuthConstants.GLOBAL_ADMIN_ROLE));
         assertTrue(service.hasGlobalAdminRole());
     }
-    
+
     @Test
     void testAddAdminRoleSkipsWhenAdminAlreadyExists() throws Exception {
         prepareRemoteServer();
         NacosRoleServiceRemoteImpl service = newServiceWithRestTemplate();
         ReflectionTestUtils.setField(service, "hasGlobalAdminRole", true);
-        
+
         service.addAdminRole("nacos");
     }
-    
+
     @Test
     void testCacheMissReloadsRolesAndPermissions() throws Exception {
         prepareRemoteServer();
@@ -206,28 +230,28 @@ class NacosRoleServiceRemoteImplTest {
         permissionPage.setPageItems(Collections.singletonList(permissionInfo));
         when(restTemplate.<String>get(anyString(), any(Header.class), any(Query.class),
             eq(String.class))).thenReturn(okJson(rolePage), okJson(permissionPage));
-        
+
         assertEquals("admin", roleService.getRoles("alice").get(0).getRole());
-        
+
         reset(restTemplate);
         NacosRoleServiceRemoteImpl permissionService = newServiceWithRestTemplate();
         when(restTemplate.<String>get(anyString(), any(Header.class), any(Query.class),
             eq(String.class))).thenReturn(okJson(rolePage), okJson(permissionPage));
-        
+
         assertEquals("public:*:*", permissionService.getPermissions("admin").get(0).getResource());
     }
-    
+
     @Test
     void testAddRoleRejectsReservedRoles() throws Exception {
         prepareRemoteServer();
         NacosRoleServiceRemoteImpl service = newServiceWithRestTemplate();
-        
+
         assertThrows(IllegalArgumentException.class,
             () -> service.addRole(AuthConstants.GLOBAL_ADMIN_ROLE, "alice"));
         assertThrows(IllegalArgumentException.class,
             () -> service.addRole(AuthConstants.ANONYMOUS_ROLE, "alice"));
     }
-    
+
     @Test
     void testRemoteRoleOperationWrapsNacosException() throws Exception {
         prepareRemoteServer();
@@ -235,53 +259,53 @@ class NacosRoleServiceRemoteImplTest {
         when(restTemplate.<String>postForm(anyString(), any(Header.class), nullable(Query.class),
             anyMap(),
             eq(String.class))).thenThrow(new NacosException(403, "denied"));
-        
+
         NacosRuntimeException exception = assertThrows(NacosRuntimeException.class,
             () -> service.addPermission("admin", "public:*:*", "rw"));
-        
+
         assertEquals(403, exception.getErrCode());
     }
-    
+
     @Test
     void testRemoteRoleOperationWrapsUnexpectedException() throws Exception {
         prepareRemoteServer();
         NacosRoleServiceRemoteImpl service = newServiceWithRestTemplate();
         when(restTemplate.<String>delete(anyString(), any(Header.class), any(Query.class),
             eq(String.class))).thenThrow(new IllegalStateException("boom"));
-        
+
         NacosRuntimeException exception = assertThrows(NacosRuntimeException.class,
             () -> service.deletePermission("admin", "public:*:*", "rw"));
-        
+
         assertEquals(NacosException.SERVER_ERROR, exception.getErrCode());
     }
-    
+
     @Test
     void testRemoteRoleReadOperationsWrapExceptions() throws Exception {
         prepareRemoteServer();
         NacosRoleServiceRemoteImpl service = newServiceWithRestTemplate();
         when(restTemplate.<String>get(anyString(), any(Header.class), any(Query.class),
             eq(String.class))).thenThrow(new NacosException(500, "denied"));
-        
+
         assertEquals(500, assertThrows(NacosRuntimeException.class,
             () -> service.findRoleNames("admin")).getErrCode());
-        
+
         reset(restTemplate);
         NacosRoleServiceRemoteImpl rolePageService = newServiceWithRestTemplate();
         when(restTemplate.<String>get(anyString(), any(Header.class), any(Query.class),
             eq(String.class))).thenThrow(new IllegalStateException("boom"));
-        
+
         assertEquals(NacosException.SERVER_ERROR, assertThrows(NacosRuntimeException.class,
             () -> rolePageService.getRoles("alice", "admin", 1, 10)).getErrCode());
-        
+
         reset(restTemplate);
         NacosRoleServiceRemoteImpl permissionPageService = newServiceWithRestTemplate();
         when(restTemplate.<String>get(anyString(), any(Header.class), any(Query.class),
             eq(String.class))).thenThrow(new NacosException(403, "denied"));
-        
+
         assertEquals(403, assertThrows(NacosRuntimeException.class,
             () -> permissionPageService.getPermissions("admin", 1, 10)).getErrCode());
     }
-    
+
     @Test
     void testRemoteRoleWriteOperationsWrapRemainingExceptions() throws Exception {
         prepareRemoteServer();
@@ -289,90 +313,90 @@ class NacosRoleServiceRemoteImplTest {
         when(restTemplate.<String>postForm(anyString(), any(Header.class), nullable(Query.class),
             anyMap(),
             eq(String.class))).thenThrow(new IllegalStateException("boom"));
-        
+
         assertEquals(NacosException.SERVER_ERROR, assertThrows(NacosRuntimeException.class,
             () -> service.addPermission("admin", "public:*:*", "rw")).getErrCode());
-        
+
         reset(restTemplate);
         NacosRoleServiceRemoteImpl deletePermissionService = newServiceWithRestTemplate();
         when(restTemplate.<String>delete(anyString(), any(Header.class), any(Query.class),
             eq(String.class))).thenThrow(new NacosException(403, "denied"));
-        
+
         assertEquals(403, assertThrows(NacosRuntimeException.class,
             () -> deletePermissionService.deletePermission("admin", "public:*:*", "rw"))
             .getErrCode());
-        
+
         reset(restTemplate);
         NacosRoleServiceRemoteImpl addRoleService = newServiceWithRestTemplate();
         when(restTemplate.<String>postForm(anyString(), any(Header.class), anyMap(),
             eq(String.class))).thenThrow(new NacosException(500, "denied"));
-        
+
         assertEquals(500, assertThrows(NacosRuntimeException.class,
             () -> addRoleService.addRole("developer", "alice")).getErrCode());
-        
+
         reset(restTemplate);
         NacosRoleServiceRemoteImpl deleteRoleService = newServiceWithRestTemplate();
         when(restTemplate.<String>delete(anyString(), any(Header.class), any(Query.class),
             eq(String.class))).thenThrow(new NacosException(500, "denied"))
             .thenThrow(new IllegalStateException("boom"));
-        
+
         assertEquals(500, assertThrows(NacosRuntimeException.class,
             () -> deleteRoleService.deleteRole("developer", "alice")).getErrCode());
         assertEquals(NacosException.SERVER_ERROR, assertThrows(NacosRuntimeException.class,
             () -> deleteRoleService.deleteRole("developer")).getErrCode());
     }
-    
+
     @Test
     void testRemoteRoleOperationsWrapAdditionalExceptionBranches() throws Exception {
         prepareRemoteServer();
         NacosRoleServiceRemoteImpl findNamesService = newServiceWithRestTemplate();
         when(restTemplate.<String>get(anyString(), any(Header.class), any(Query.class),
             eq(String.class))).thenThrow(new IllegalStateException("boom"));
-        
+
         assertEquals(NacosException.SERVER_ERROR, assertThrows(NacosRuntimeException.class,
             () -> findNamesService.findRoleNames("admin")).getErrCode());
-        
+
         reset(restTemplate);
         NacosRoleServiceRemoteImpl addRoleService = newServiceWithRestTemplate();
         when(restTemplate.<String>postForm(anyString(), any(Header.class), anyMap(),
             eq(String.class))).thenThrow(new IllegalStateException("boom"));
-        
+
         assertEquals(NacosException.SERVER_ERROR, assertThrows(NacosRuntimeException.class,
             () -> addRoleService.addRole("developer", "alice")).getErrCode());
-        
+
         reset(restTemplate);
         NacosRoleServiceRemoteImpl deleteUserRoleService = newServiceWithRestTemplate();
         when(restTemplate.<String>delete(anyString(), any(Header.class), any(Query.class),
             eq(String.class))).thenThrow(new IllegalStateException("boom"));
-        
+
         assertEquals(NacosException.SERVER_ERROR, assertThrows(NacosRuntimeException.class,
             () -> deleteUserRoleService.deleteRole("developer", "alice")).getErrCode());
-        
+
         reset(restTemplate);
         NacosRoleServiceRemoteImpl deleteRoleService = newServiceWithRestTemplate();
         when(restTemplate.<String>delete(anyString(), any(Header.class), any(Query.class),
             eq(String.class))).thenThrow(new NacosException(500, "denied"));
-        
+
         assertEquals(500, assertThrows(NacosRuntimeException.class,
             () -> deleteRoleService.deleteRole("developer")).getErrCode());
-        
+
         reset(restTemplate);
         NacosRoleServiceRemoteImpl permissionPageService = newServiceWithRestTemplate();
         when(restTemplate.<String>get(anyString(), any(Header.class), any(Query.class),
             eq(String.class))).thenThrow(new IllegalStateException("boom"));
-        
+
         assertEquals(NacosException.SERVER_ERROR, assertThrows(NacosRuntimeException.class,
             () -> permissionPageService.getPermissions("admin", 1, 10)).getErrCode());
-        
+
         reset(restTemplate);
         NacosRoleServiceRemoteImpl rolePageService = newServiceWithRestTemplate();
         when(restTemplate.<String>get(anyString(), any(Header.class), any(Query.class),
             eq(String.class))).thenThrow(new NacosException(500, "denied"));
-        
+
         assertEquals(500, assertThrows(NacosRuntimeException.class,
             () -> rolePageService.getRoles("alice", "admin", 1, 10)).getErrCode());
     }
-    
+
     private NacosRoleServiceRemoteImpl newServiceWithRestTemplate() throws Exception {
         NacosRoleServiceRemoteImpl service = new NacosRoleServiceRemoteImpl();
         Field field = NacosRoleServiceRemoteImpl.class.getDeclaredField("nacosRestTemplate");
@@ -380,7 +404,7 @@ class NacosRoleServiceRemoteImplTest {
         field.set(service, restTemplate);
         return service;
     }
-    
+
     @SuppressWarnings("unchecked")
     private static java.util.Set<String> getCachedRoleSet(NacosRoleServiceRemoteImpl service)
         throws Exception {
@@ -388,28 +412,28 @@ class NacosRoleServiceRemoteImplTest {
         field.setAccessible(true);
         return (java.util.Set<String>) field.get(service);
     }
-    
+
     private static HttpRestResult<String> okText() {
         return new HttpRestResult<>(Header.newInstance(), 200, "ok", "success");
     }
-    
+
     private static HttpRestResult<String> okJson(Object data) {
         return new HttpRestResult<>(Header.newInstance(), 200,
             JacksonUtils.toJson(Result.success(data)), "success");
     }
-    
+
     private static void prepareRemoteServer() throws Exception {
         setRemoteServerUtilField("serverAddresses", Collections.singletonList("127.0.0.1:8848"));
         setRemoteServerUtilField("index", new AtomicInteger());
         setRemoteServerUtilField("remoteServerContextPath", "/nacos");
     }
-    
+
     private static void setRemoteServerUtilField(String fieldName, Object value) throws Exception {
         Field field = RemoteServerUtil.class.getDeclaredField(fieldName);
         field.setAccessible(true);
         field.set(null, value);
     }
-    
+
     private static void injectField(String fieldName, NacosRoleServiceRemoteImpl service,
         Map<String, ?> map)
         throws Exception {
@@ -417,21 +441,29 @@ class NacosRoleServiceRemoteImplTest {
         field.setAccessible(true);
         field.set(service, map);
     }
-    
+
+    private static PermissionInfo permissionInfo(String role, String resource, String action) {
+        PermissionInfo permissionInfo = new PermissionInfo();
+        permissionInfo.setRole(role);
+        permissionInfo.setResource(resource);
+        permissionInfo.setAction(action);
+        return permissionInfo;
+    }
+
     private static final class CountingMap<K, V> extends ConcurrentHashMap<K, V> {
-        
+
         private static final long serialVersionUID = 1L;
-        
+
         final AtomicInteger getCount = new AtomicInteger();
-        
+
         final AtomicInteger containsKeyCount = new AtomicInteger();
-        
+
         @Override
         public V get(Object key) {
             getCount.incrementAndGet();
             return super.get(key);
         }
-        
+
         @Override
         public boolean containsKey(Object key) {
             containsKeyCount.incrementAndGet();

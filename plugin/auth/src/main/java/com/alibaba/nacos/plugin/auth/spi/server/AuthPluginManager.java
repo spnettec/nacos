@@ -17,7 +17,7 @@
 package com.alibaba.nacos.plugin.auth.spi.server;
 
 import com.alibaba.nacos.common.spi.NacosServiceLoader;
-import com.alibaba.nacos.common.utils.StringUtils;
+import com.alibaba.nacos.common.spi.PluginRegistryUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,41 +37,37 @@ import java.util.Optional;
  * @author xiweng.yy
  */
 public class AuthPluginManager {
-    
+
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthPluginManager.class);
-    
+
     private static final AuthPluginManager INSTANCE = new AuthPluginManager();
-    
+
     /**
      * The relationship of context type and {@link AuthPluginService}.
      */
     private final Map<String, AuthPluginService> authServiceMap = new HashMap<>();
-    
+
     private AuthPluginManager() {
         initAuthServices();
     }
-    
+
     private void initAuthServices() {
         Collection<AuthPluginService> authPluginServices =
             NacosServiceLoader.load(AuthPluginService.class);
         for (AuthPluginService each : authPluginServices) {
-            if (StringUtils.isEmpty(each.getAuthServiceName())) {
-                LOGGER.warn(
-                    "[AuthPluginManager] Load AuthPluginService({}) AuthServiceName(null/empty) fail. Please Add AuthServiceName to resolve.",
-                    each.getClass());
-                continue;
+            String authServiceName = each == null ? null : each.getAuthServiceName();
+            if (PluginRegistryUtils.registerFirst(authServiceMap, PluginType.AUTH.getType(),
+                authServiceName, each, LOGGER)) {
+                LOGGER.info("[AuthPluginManager] Load AuthPluginService({}) "
+                    + "AuthServiceName({}) successfully.", each.getClass(), authServiceName);
             }
-            authServiceMap.put(each.getAuthServiceName(), each);
-            LOGGER.info(
-                "[AuthPluginManager] Load AuthPluginService({}) AuthServiceName({}) successfully.",
-                each.getClass(), each.getAuthServiceName());
         }
     }
-    
+
     public static AuthPluginManager getInstance() {
         return INSTANCE;
     }
-    
+
     /**
      * get AuthPluginService instance which AuthPluginService.getType() is type.
      *
@@ -86,7 +82,7 @@ public class AuthPluginManager {
         }
         return Optional.ofNullable(authServiceMap.get(authServiceName));
     }
-    
+
     /**
      * Get all registered auth plugins.
      *
@@ -95,5 +91,5 @@ public class AuthPluginManager {
     public Map<String, AuthPluginService> getAllPlugins() {
         return Collections.unmodifiableMap(authServiceMap);
     }
-    
+
 }

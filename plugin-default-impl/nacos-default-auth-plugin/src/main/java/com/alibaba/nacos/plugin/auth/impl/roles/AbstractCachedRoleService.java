@@ -36,28 +36,36 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author xiweng.yy
  */
 public abstract class AbstractCachedRoleService implements NacosRoleService {
-    
+
     protected static final int DEFAULT_PAGE_NO = 1;
-    
+
     private volatile Set<String> roleSet = new ConcurrentHashSet<>();
-    
+
     private volatile Map<String, List<RoleInfo>> roleInfoMap = new ConcurrentHashMap<>();
-    
+
     private volatile Map<String, List<PermissionInfo>> permissionInfoMap =
         new ConcurrentHashMap<>();
-    
+
     protected Set<String> getCachedRoleSet() {
         return roleSet;
     }
-    
+
     protected Map<String, List<RoleInfo>> getCachedRoleInfoMap() {
         return roleInfoMap;
     }
-    
+
     protected Map<String, List<PermissionInfo>> getCachedPermissionInfoMap() {
         return permissionInfoMap;
     }
-    
+
+    protected void invalidateUserRoles(String username) {
+        roleInfoMap.remove(username);
+    }
+
+    protected void invalidateRolePermissions(String role) {
+        permissionInfoMap.remove(role);
+    }
+
     @Scheduled(initialDelay = 5000, fixedDelay = 15000)
     protected void reload() {
         try {
@@ -71,14 +79,14 @@ public abstract class AbstractCachedRoleService implements NacosRoleService {
                 tmpRoleInfoMap.get(roleInfo.getUsername()).add(roleInfo);
                 tmpRoleSet.add(roleInfo.getRole());
             }
-            
+
             Map<String, List<PermissionInfo>> tmpPermissionInfoMap = new ConcurrentHashMap<>(16);
             for (String role : tmpRoleSet) {
                 Page<PermissionInfo> permissionInfoPage =
                     getPermissions(role, DEFAULT_PAGE_NO, Integer.MAX_VALUE);
                 tmpPermissionInfoMap.put(role, permissionInfoPage.getPageItems());
             }
-            
+
             roleSet = tmpRoleSet;
             roleInfoMap = tmpRoleInfoMap;
             permissionInfoMap = tmpPermissionInfoMap;

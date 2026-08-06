@@ -51,15 +51,15 @@ import java.util.List;
 @RestController
 @RequestMapping(Constants.AI_RESOURCE_IMPORT_CONSOLE_PATH)
 public class ConsoleAiResourceImportController {
-    
+
     private final AiResourceImportProxy importProxy;
-    
+
     public ConsoleAiResourceImportController(AiResourceImportProxy importProxy) {
         this.importProxy = importProxy;
     }
-    
+
     /**
-     * List configured import sources for Console.
+     * List enabled managed importer plugins as import sources for Console.
      *
      * @param form source list form
      * @return source list
@@ -73,7 +73,7 @@ public class ConsoleAiResourceImportController {
         form.validate();
         return Result.success(importProxy.listSources(form.getResourceType()));
     }
-    
+
     /**
      * Search external import candidates for Console.
      *
@@ -89,7 +89,7 @@ public class ConsoleAiResourceImportController {
         form.validate();
         return Result.success(importProxy.search(form.toRequest()));
     }
-    
+
     /**
      * Validate selected import candidates for Console.
      *
@@ -105,7 +105,7 @@ public class ConsoleAiResourceImportController {
         form.validate();
         return Result.success(importProxy.validate(form.toRequest()));
     }
-    
+
     /**
      * Execute import for selected candidates from Console.
      *
