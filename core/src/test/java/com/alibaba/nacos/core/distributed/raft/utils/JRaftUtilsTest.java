@@ -20,6 +20,7 @@ import com.alibaba.nacos.core.cluster.ServerMemberManager;
 import com.alibaba.nacos.core.distributed.raft.JRaftServer;
 import com.alibaba.nacos.core.distributed.raft.RaftConfig;
 import com.alibaba.nacos.core.distributed.raft.RaftSysConstants;
+import com.alibaba.nacos.core.distributed.raft.auth.JRaftAuthUpgradeCoordinator;
 import com.alibaba.nacos.sys.utils.ApplicationUtils;
 import com.alipay.sofa.jraft.CliService;
 import com.alipay.sofa.jraft.RouteTable;
@@ -56,24 +57,27 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class JRaftUtilsTest {
-    
+
     private static final String GROUP = "naming_persistent_service";
-    
+
     @Mock
     private ServerMemberManager serverMemberManager;
-    
+
     @Mock
     private CliService cliService;
-    
+
     @Mock
     private RouteTable routeTable;
-    
+
     @Mock
     private JRaftServer server;
-    
+
+    @Mock
+    private JRaftAuthUpgradeCoordinator jRaftAuthUpgradeCoordinator;
+
     private MockedStatic<ApplicationUtils> applicationUtilsMock;
     private MockedStatic<RouteTable> routeTableMock;
-    
+
     @BeforeEach
     void setUp() {
         RaftConfig config = new RaftConfig();
@@ -81,7 +85,7 @@ class JRaftUtilsTest {
         config.setVal(RaftSysConstants.RAFT_CLI_SERVICE_THREAD_NUM, "1");
         RaftExecutor.init(config);
     }
-    
+
     @AfterEach
     void tearDown() {
         if (applicationUtilsMock != null) {
@@ -99,13 +103,13 @@ class JRaftUtilsTest {
             routeTableMock = null;
         }
     }
-    
+
     @Test
     void testToStringsWithEmptyList() {
         List<String> result = JRaftUtils.toStrings(Collections.emptyList());
         assertEquals(Collections.emptyList(), result);
     }
-    
+
     @Test
     void testToStringsWithSinglePeerId() throws Exception {
         PeerId peerId = PeerId.parsePeer("127.0.0.1:8080");
@@ -113,7 +117,7 @@ class JRaftUtilsTest {
         assertEquals(1, result.size());
         assertEquals("127.0.0.1:8080", result.get(0));
     }
-    
+
     @Test
     void testToStringsWithMultiplePeerIds() throws Exception {
         PeerId p1 = PeerId.parsePeer("192.168.1.1:8848");
@@ -123,7 +127,7 @@ class JRaftUtilsTest {
         assertEquals("192.168.1.1:8848", result.get(0));
         assertEquals("192.168.1.2:8848", result.get(1));
     }
-    
+
     @Test
     void testInitDirectory() throws Exception {
         java.io.File tempDir = Files.createTempDirectory("raft-utils-test").toFile();
@@ -152,12 +156,12 @@ class JRaftUtilsTest {
             }
         }
     }
-    
+
     @Test
     void testToStringsWithNullListThrowsNpe() {
         assertThrows(NullPointerException.class, () -> JRaftUtils.toStrings(null));
     }
-    
+
     @Test
     void testInitDirectoryWithEmptyGroupName() throws Exception {
         Path tempDir = Files.createTempDirectory("raft-utils-empty-group");
@@ -178,7 +182,7 @@ class JRaftUtilsTest {
             }
         }
     }
-    
+
     @Test
     void testInitDirectoryThrowsWhenGroupPathIsFile() throws Exception {
         Path tempDir = Files.createTempDirectory("raft-utils-file-group");
@@ -198,25 +202,25 @@ class JRaftUtilsTest {
             }
         }
     }
-    
+
     // ---------- joinCluster ----------
-    
+
     @Test
     void joinClusterWhenNotFirstIpReturnsImmediately() {
         applicationUtilsMock = Mockito.mockStatic(ApplicationUtils.class);
         applicationUtilsMock.when(() -> ApplicationUtils.getBean(ServerMemberManager.class))
             .thenReturn(serverMemberManager);
         when(serverMemberManager.isFirstIp()).thenReturn(false);
-        
+
         Configuration conf = new Configuration();
         PeerId self = PeerId.parsePeer("127.0.0.1:8080");
-        
+
         assertDoesNotThrow(() -> JRaftUtils.joinCluster(cliService,
             Collections.singletonList("127.0.0.1:8081"), conf, GROUP, self));
-        
+
         verify(cliService, never()).addPeer(any(), any(), any());
     }
-    
+
     @Test
     void joinClusterWhenFirstIpAndPeerAlreadyInConfExitsLoop() {
         applicationUtilsMock = Mockito.mockStatic(ApplicationUtils.class);
@@ -224,21 +228,21 @@ class JRaftUtilsTest {
         applicationUtilsMock.when(() -> ApplicationUtils.getBean(ServerMemberManager.class))
             .thenReturn(serverMemberManager);
         when(serverMemberManager.isFirstIp()).thenReturn(true);
-        
+
         PeerId peer = PeerId.parsePeer("127.0.0.1:8081");
         Configuration conf = new Configuration();
         conf.addPeer(peer);
         routeTableMock.when(RouteTable::getInstance).thenReturn(routeTable);
         when(routeTable.getConfiguration(GROUP)).thenReturn(conf);
-        
+
         PeerId self = PeerId.parsePeer("127.0.0.1:8080");
-        
+
         assertDoesNotThrow(() -> JRaftUtils.joinCluster(cliService,
             Collections.singletonList("127.0.0.1:8081"), conf, GROUP, self));
-        
+
         verify(cliService, never()).addPeer(any(), any(), any());
     }
-    
+
     @Test
     void joinClusterWhenFirstIpAndAddPeerSucceedsExitsLoop() {
         applicationUtilsMock = Mockito.mockStatic(ApplicationUtils.class);
@@ -246,37 +250,38 @@ class JRaftUtilsTest {
         applicationUtilsMock.when(() -> ApplicationUtils.getBean(ServerMemberManager.class))
             .thenReturn(serverMemberManager);
         when(serverMemberManager.isFirstIp()).thenReturn(true);
-        
+
         Configuration conf = new Configuration();
         conf.addPeer(PeerId.parsePeer("127.0.0.1:8080"));
         routeTableMock.when(RouteTable::getInstance).thenReturn(routeTable);
         when(routeTable.getConfiguration(GROUP)).thenReturn(conf);
-        
+
         when(cliService.addPeer(eq(GROUP), any(Configuration.class), any(PeerId.class)))
             .thenReturn(Status.OK());
-        
+
         PeerId self = PeerId.parsePeer("127.0.0.1:8080");
-        
+
         assertDoesNotThrow(() -> JRaftUtils.joinCluster(cliService,
             Collections.singletonList("127.0.0.1:8081"), conf, GROUP, self));
-        
+
         verify(cliService).addPeer(eq(GROUP), any(Configuration.class), any(PeerId.class));
     }
-    
+
     // ---------- initRpcServer ----------
-    
+
     @Test
     void initRpcServerReturnsNonNullAndReleasesInFinally() {
         RpcServer rpcServer = null;
         try {
             PeerId peerId = PeerId.parsePeer("127.0.0.1:18080");
-            rpcServer = JRaftUtils.initRpcServer(server, peerId);
+            rpcServer = JRaftUtils.initRpcServer(server, peerId,
+                jRaftAuthUpgradeCoordinator);
             assertNotNull(rpcServer);
         } finally {
             shutdownRpcServerQuietly(rpcServer);
         }
     }
-    
+
     private static void shutdownRpcServerQuietly(RpcServer rpcServer) {
         try {
             if (rpcServer == null) {

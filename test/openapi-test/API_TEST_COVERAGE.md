@@ -58,14 +58,15 @@ rows. Effective coverage counts `Covered` rows as `1.0` and `Partial` rows as
 | Client OpenAPI | 11 | 11 | 0 | 0 | 100.00% | 100.00% |
 | Admin API | 38 | 31 | 7 | 0 | 81.58% | 90.79% |
 | Console API | 28 | 25 | 3 | 0 | 88.89% | 94.44% |
-| Auth API | 4 | 0 | 1 | 3 | 0.00% | 12.50% |
-| Total | 81 | 67 | 11 | 3 | 82.72% | 89.51% |
+| Auth API | 4 | 0 | 2 | 2 | 0.00% | 25.00% |
+| Total | 81 | 67 | 12 | 2 | 82.72% | 90.12% |
 
 Partial rows are documented in the matching scenario document. The current
 partial set is limited to operations whose remaining success paths mutate
 shared runtime/storage state, require publish-pipeline plugin data, require a
-data-plane publisher binding not yet present in standalone IT, or require an
-external LLM provider.
+data-plane publisher binding not yet present in standalone IT, require an
+external LLM provider, or belong to the remaining default-auth user management
+operations outside the covered login contract.
 
 External protocol adaptors are tracked separately from the Nacos API coverage
 totals because they run in independent web contexts. The ARD adaptor currently
@@ -94,7 +95,8 @@ namespace inputs are expected to use `public`, and beta/tag gray behavior is
 verified through the current gray model. Batch delete and export-by-id scenarios
 verify that storage IDs remain scoped by the requested namespace, and clone
 scenarios verify that storage IDs are resolved only within the requested source
-namespace before writing to the target namespace. Removed pre-3.0 compatibility
+namespace before writing to the target namespace. Config, history, and capacity
+responses also verify that storage IDs remain JSON strings. Removed pre-3.0 compatibility
 migration paths, including empty-tenant storage migration and legacy
 `config_info_beta` / `config_info_tag` old-table migration, are not counted as
 missing OpenAPI IT coverage.
@@ -117,6 +119,14 @@ covered by service tests because the standalone suite does not install a
 deterministic publish pipeline that can create those states. Service tests also
 verify that a terminal result marked `historical=true` remains an idempotent
 `reviewing` submit because it belongs to a previous review cycle.
+
+AI Agent, AgentSpec, Prompt, and Skill deletion success and post-delete absence
+remain covered by the existing Admin and Console rows. Storage-provider failure,
+multi-file partial failure, persisted-provider routing, and deletion of more
+than one storage page are covered by focused service tests because the
+standalone suite has no storage fault-injection provider and cannot safely seed
+those failure states. Those tests verify that the HTTP service reports the
+cleanup error and retains the resource/version descriptors for retry.
 
 Agent Admin definition creation is counted in the existing Agent Admin and
 Version scenario rows. The unified `POST /v3/admin/ai/agents/draft` operation

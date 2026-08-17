@@ -34,16 +34,16 @@ import java.util.Set;
  * @author Nacos
  */
 public class AiStoragePluginTypePolicy implements PluginTypePolicy {
-    
+
     private static final String FUNCTION_MODE_PROPERTY = "nacos.functionMode";
-    
+
     private static final String FUNCTION_MODE_AI = "ai";
-    
+
     private Set<String> requiredPluginNames =
         Collections.singleton(NacosConfigAiResourceStorage.TYPE);
-    
+
     private boolean supportedMode = true;
-    
+
     @Override
     public void initialize(PluginTypeConfiguration configuration) {
         String functionMode = configuration.getProperty(FUNCTION_MODE_PROPERTY);
@@ -59,43 +59,47 @@ public class AiStoragePluginTypePolicy implements PluginTypePolicy {
             Constants.Agent.AGENT_STORAGE_PROVIDER_CONFIG_KEY));
         requiredPluginNames = Collections.unmodifiableSet(result);
     }
-    
+
     @Override
     public PluginType getPluginType() {
         return PluginType.AI_STORAGE;
     }
-    
+
     @Override
     public boolean isActive(PluginTypeConfiguration configuration) {
         return supportedMode
             && configuration.getBooleanProperty(AiEnabledFilter.AI_ENABLED_KEY, true);
     }
-    
+
     @Override
     public boolean supportsPreRefreshValidation() {
         return false;
     }
-    
+
     @Override
     public Set<String> getRequiredPluginNames(PluginTypeConfiguration configuration) {
         return requiredPluginNames;
     }
-    
+
     @Override
     public String getSelectionProperty() {
-        return Constants.Prompt.PROMPT_STORAGE_PROVIDER_CONFIG_KEY + ", "
+        return Constants.AI_STORAGE_PROVIDER_CONFIG_KEY + ", "
+            + Constants.Prompt.PROMPT_STORAGE_PROVIDER_CONFIG_KEY + ", "
             + Constants.Skills.SKILL_STORAGE_PROVIDER_CONFIG_KEY + ", "
             + Constants.AgentSpecs.AGENTSPEC_STORAGE_PROVIDER_CONFIG_KEY + ", "
             + Constants.Agent.AGENT_STORAGE_PROVIDER_CONFIG_KEY;
     }
-    
+
     @Override
     public String getActivationDescription() {
-        return "the AI module requires the configured Prompt, Skill, AgentSpec, and Agent storage providers";
+        return "the AI module requires the configured AI Resource storage providers";
     }
-    
+
     private String resolveProvider(PluginTypeConfiguration configuration, String property) {
         String provider = configuration.getProperty(property);
+        if (StringUtils.isBlank(provider)) {
+            provider = configuration.getProperty(Constants.AI_STORAGE_PROVIDER_CONFIG_KEY);
+        }
         return StringUtils.isBlank(provider) ? NacosConfigAiResourceStorage.TYPE : provider.trim();
     }
 }

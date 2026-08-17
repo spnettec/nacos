@@ -33,20 +33,20 @@ import tools.jackson.core.type.TypeReference;
  * @author xiweng.yy
  */
 public class StsCredentialHolder {
-    
+
     private static final Logger LOGGER = LoggerFactory.getLogger(StsCredentialHolder.class);
-    
+
     private static final StsCredentialHolder INSTANCE = new StsCredentialHolder();
-    
-    private StsCredential stsCredential;
-    
+
+    private volatile StsCredential stsCredential;
+
     private StsCredentialHolder() {
     }
-    
+
     public static StsCredentialHolder getInstance() {
         return INSTANCE;
     }
-    
+
     /**
      * Get Sts Credential.
      *
@@ -72,7 +72,7 @@ public class StsCredentialHolder {
             stsCredential.getExpiration());
         return stsCredential;
     }
-    
+
     private static String getStsResponse() {
         String securityCredentials = StsConfig.getInstance().getSecurityCredentials();
         if (securityCredentials != null) {
@@ -82,7 +82,7 @@ public class StsCredentialHolder {
         try {
             HttpRestResult<String> result = HttpClientManager.getInstance().getNacosRestTemplate()
                 .get(securityCredentialsUrl, Header.EMPTY, Query.EMPTY, String.class);
-            
+
             if (!result.ok()) {
                 LOGGER.error(
                     "can not get security credentials, securityCredentialsUrl: {}, responseCode: {}, response: {}",

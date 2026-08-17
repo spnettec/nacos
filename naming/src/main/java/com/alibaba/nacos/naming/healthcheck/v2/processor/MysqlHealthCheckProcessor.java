@@ -34,6 +34,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeoutException;
@@ -49,35 +50,47 @@ import static com.alibaba.nacos.naming.misc.Loggers.SRV_LOG;
  */
 @Component
 public class MysqlHealthCheckProcessor implements HealthCheckProcessorV2 {
-    
+
     public static final String TYPE = HealthCheckType.MYSQL.name();
-    
+
     private final HealthCheckCommonV2 healthCheckCommon;
-    
+
     private final SwitchDomain switchDomain;
-    
+
     public static final int CONNECT_TIMEOUT_MS = 500;
-    
+
     // TODO: Move MySQL health check capability to a dedicated plugin so naming no longer needs mysql driver visibility.
     private static final String CHECK_MYSQL_MASTER_SQL =
         "show global variables where variable_name='read_only'";
-    
+
     private static final String MYSQL_SLAVE_READONLY = "ON";
-    
+
+    private static final String CONNECT_TIMEOUT_PROPERTY = "connectTimeout";
+
+    private static final String SOCKET_TIMEOUT_PROPERTY = "socketTimeout";
+
+    private static final String LOGIN_TIMEOUT_PROPERTY = "loginTimeout";
+
+    private static final String ALLOW_LOAD_LOCAL_INFILE_PROPERTY = "allowLoadLocalInfile";
+
+    private static final String ALLOW_URL_IN_LOCAL_INFILE_PROPERTY = "allowUrlInLocalInfile";
+
+    private static final String ALLOW_MULTI_QUERIES_PROPERTY = "allowMultiQueries";
+
     private static final ConcurrentMap<String, Connection> CONNECTION_POOL =
         new ConcurrentHashMap<String, Connection>();
-    
+
     public MysqlHealthCheckProcessor(HealthCheckCommonV2 healthCheckCommon,
         SwitchDomain switchDomain) {
         this.healthCheckCommon = healthCheckCommon;
         this.switchDomain = switchDomain;
     }
-    
+
     @Override
     public String getType() {
         return TYPE;
     }
-    
+
     @Override
     public void process(HealthCheckTaskV2 task, Service service, ClusterMetadata metadata) {
         HealthCheckInstancePublishInfo instance = (HealthCheckInstancePublishInfo) task.getClient()
@@ -108,19 +121,19 @@ public class MysqlHealthCheckProcessor implements HealthCheckProcessorV2 {
                 switchDomain.getMysqlHealthParams());
         }
     }
-    
+
     private class MysqlCheckTask implements Runnable {
-        
+
         private final HealthCheckTaskV2 task;
-        
+
         private final Service service;
-        
+
         private final HealthCheckInstancePublishInfo instance;
-        
+
         private final ClusterMetadata metadata;
-        
+
         private long startTime = System.currentTimeMillis();
-        
+
         public MysqlCheckTask(HealthCheckTaskV2 task, Service service,
             HealthCheckInstancePublishInfo instance,
             ClusterMetadata metadata) {
@@ -129,7 +142,7 @@ public class MysqlHealthCheckProcessor implements HealthCheckProcessorV2 {
             this.instance = instance;
             this.metadata = metadata;
         }
-        
+
         @Override
         public void run() {
             try {
@@ -140,23 +153,19 @@ public class MysqlHealthCheckProcessor implements HealthCheckProcessorV2 {
                             .getPort();
                 Connection connection = CONNECTION_POOL.get(key);
                 Mysql config = (Mysql) metadata.getHealthChecker();
-                
+
                 if (connection == null || connection.isClosed()) {
-                    String url = "jdbc:mysql://" + instance.getIp() + ":" + instance.getPort()
-                        + "?connectTimeout="
-                        + CONNECT_TIMEOUT_MS + "&socketTimeout=" + CONNECT_TIMEOUT_MS
-                        + "&loginTimeout=" + 1;
-                    connection =
-                        DriverManager.getConnection(url, config.getUser(), config.getPwd());
+                    connection = DriverManager.getConnection(buildJdbcUrl(instance),
+                        buildConnectionProperties(config));
                     CONNECTION_POOL.put(key, connection);
                 }
-                
+
                 try (Statement statement = connection.createStatement()) {
                     statement.setQueryTimeout(1);
-                    
+
                     try (ResultSet resultSet = statement.executeQuery(config.getCmd())) {
                         int resultColumnIndex = 2;
-                        
+
                         if (CHECK_MYSQL_MASTER_SQL.equals(config.getCmd())) {
                             resultSet.next();
                             if (MYSQL_SLAVE_READONLY
@@ -166,7 +175,7 @@ public class MysqlHealthCheckProcessor implements HealthCheckProcessorV2 {
                         }
                     }
                 }
-                
+
                 healthCheckCommon.checkOk(task, service, "mysql:+ok");
                 healthCheckCommon.reEvaluateCheckRt(System.currentTimeMillis() - startTime, task,
                     switchDomain.getMysqlHealthParams());
@@ -183,17 +192,17 @@ public class MysqlHealthCheckProcessor implements HealthCheckProcessorV2 {
                     if (cause instanceof SocketTimeoutException || cause instanceof ConnectException
                         || cause instanceof TimeoutException
                         || cause.getCause() instanceof TimeoutException) {
-                        
+
                         healthCheckCommon.checkFail(task, service,
                             "mysql:timeout:" + cause.getMessage());
                         healthCheckCommon.reEvaluateCheckRt(task.getCheckRtNormalized() * 2, task,
                             switchDomain.getMysqlHealthParams());
                         return;
                     }
-                    
+
                     cause = cause.getCause();
                 }
-                
+
                 // connection error, probably not reachable
                 healthCheckCommon.checkFail(task, service, "mysql:error:" + t.getMessage());
                 healthCheckCommon.reEvaluateCheckRt(switchDomain.getMysqlHealthParams().getMax(),
@@ -203,5 +212,26 @@ public class MysqlHealthCheckProcessor implements HealthCheckProcessorV2 {
                 instance.setCheckRt(System.currentTimeMillis() - startTime);
             }
         }
+    }
+
+    static String buildJdbcUrl(HealthCheckInstancePublishInfo instance) {
+        return "jdbc:mysql://" + instance.getIp() + ":" + instance.getPort();
+    }
+
+    static Properties buildConnectionProperties(Mysql config) {
+        Properties properties = new Properties();
+        if (config.getUser() != null) {
+            properties.setProperty("user", config.getUser());
+        }
+        if (config.getPwd() != null) {
+            properties.setProperty("password", config.getPwd());
+        }
+        properties.setProperty(CONNECT_TIMEOUT_PROPERTY, String.valueOf(CONNECT_TIMEOUT_MS));
+        properties.setProperty(SOCKET_TIMEOUT_PROPERTY, String.valueOf(CONNECT_TIMEOUT_MS));
+        properties.setProperty(LOGIN_TIMEOUT_PROPERTY, "1");
+        properties.setProperty(ALLOW_LOAD_LOCAL_INFILE_PROPERTY, Boolean.FALSE.toString());
+        properties.setProperty(ALLOW_URL_IN_LOCAL_INFILE_PROPERTY, Boolean.FALSE.toString());
+        properties.setProperty(ALLOW_MULTI_QUERIES_PROPERTY, Boolean.FALSE.toString());
+        return properties;
     }
 }

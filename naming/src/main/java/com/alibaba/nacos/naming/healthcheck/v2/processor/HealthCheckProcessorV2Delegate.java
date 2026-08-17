@@ -17,6 +17,7 @@
 package com.alibaba.nacos.naming.healthcheck.v2.processor;
 
 import com.alibaba.nacos.naming.core.v2.metadata.ClusterMetadata;
+import com.alibaba.nacos.naming.core.v2.pojo.InstancePublishInfo;
 import com.alibaba.nacos.naming.core.v2.pojo.Service;
 import com.alibaba.nacos.naming.healthcheck.extend.HealthCheckExtendProvider;
 import com.alibaba.nacos.naming.healthcheck.extend.HealthCheckProcessorExtendV2;
@@ -36,15 +37,21 @@ import java.util.stream.Collectors;
  */
 @Component("healthCheckDelegateV2")
 public class HealthCheckProcessorV2Delegate implements HealthCheckProcessorV2 {
-    
+
+    static final String INVALID_ADDRESS_MESSAGE = "active health check address is invalid";
+
     private final Map<String, HealthCheckProcessorV2> healthCheckProcessorMap = new HashMap<>();
-    
+
+    private final HealthCheckCommonV2 healthCheckCommon;
+
     public HealthCheckProcessorV2Delegate(HealthCheckExtendProvider provider,
-        HealthCheckProcessorExtendV2 healthCheckProcessorExtend) {
+        HealthCheckProcessorExtendV2 healthCheckProcessorExtend,
+        HealthCheckCommonV2 healthCheckCommon) {
         provider.setHealthCheckProcessorExtend(healthCheckProcessorExtend);
         provider.init();
+        this.healthCheckCommon = healthCheckCommon;
     }
-    
+
     /**
      * Add health check processors.
      */
@@ -54,7 +61,7 @@ public class HealthCheckProcessorV2Delegate implements HealthCheckProcessorV2 {
             .filter(processor -> processor.getType() != null)
             .collect(Collectors.toMap(HealthCheckProcessorV2::getType, processor -> processor)));
     }
-    
+
     @Override
     public void process(HealthCheckTaskV2 task, Service service, ClusterMetadata metadata) {
         String type = metadata.getHealthyCheckType();
@@ -62,9 +69,22 @@ public class HealthCheckProcessorV2Delegate implements HealthCheckProcessorV2 {
         if (processor == null) {
             processor = healthCheckProcessorMap.get(NoneHealthCheckProcessor.TYPE);
         }
+        if (isInvalidActiveCheckAddress(task, service, processor)) {
+            healthCheckCommon.checkFailNow(task, service, INVALID_ADDRESS_MESSAGE);
+            return;
+        }
         processor.process(task, service, metadata);
     }
-    
+
+    private boolean isInvalidActiveCheckAddress(HealthCheckTaskV2 task, Service service,
+        HealthCheckProcessorV2 processor) {
+        if (NoneHealthCheckProcessor.TYPE.equals(processor.getType())) {
+            return false;
+        }
+        InstancePublishInfo instance = task.getClient().getInstancePublishInfo(service);
+        return instance != null && !HealthCheckAddressValidator.isValid(instance.getIp());
+    }
+
     @Override
     public String getType() {
         return null;

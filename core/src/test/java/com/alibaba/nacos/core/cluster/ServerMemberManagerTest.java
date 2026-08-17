@@ -65,20 +65,20 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class ServerMemberManagerTest {
-    
+
     private static final AtomicBoolean EVENT_PUBLISH = new AtomicBoolean(false);
-    
+
     @Mock
     private ConfigurableEnvironment environment;
-    
+
     @Mock
     private EventPublisher eventPublisher;
-    
+
     @Mock
     private ConfigurableApplicationContext context;
-    
+
     private ServerMemberManager serverMemberManager;
-    
+
     @BeforeEach
     void setUp() throws Exception {
         when(environment.getProperty("nacos.server.main.port", Integer.class, 8848))
@@ -103,7 +103,7 @@ class ServerMemberManagerTest {
         serverMemberManager.getMemberAddressInfos().add(serverMemberManager.getSelf().getAddress());
         serverMemberManager.getMemberAddressInfos().add("1.1.1.1:8848");
     }
-    
+
     @AfterEach
     void tearDown() throws NacosException {
         EVENT_PUBLISH.set(false);
@@ -121,7 +121,7 @@ class ServerMemberManagerTest {
         assertFalse(serverMemberManager
             .update(Member.builder().ip("10.0.0.1").port(9999).state(NodeState.UP).build()));
     }
-    
+
     @Test
     void testUpdateDownMember() {
         Member newMember = Member.builder().ip("1.1.1.1").port(8848).state(NodeState.DOWN).build();
@@ -129,7 +129,7 @@ class ServerMemberManagerTest {
         assertFalse(serverMemberManager.getMemberAddressInfos().contains("1.1.1.1:8848"));
         verify(eventPublisher).publish(any(MembersChangeEvent.class));
     }
-    
+
     @Test
     void testUpdateVersionMember() {
         Member newMember = Member.builder().ip("1.1.1.1").port(8848).state(NodeState.UP).build();
@@ -141,7 +141,13 @@ class ServerMemberManagerTest {
                 .getExtendVal(MemberMetaDataConstants.VERSION));
         verify(eventPublisher).publish(any(MembersChangeEvent.class));
     }
-    
+
+    @Test
+    void testSelfReportsJRaftAuthenticationCapability() {
+        assertEquals(Boolean.TRUE, serverMemberManager.getSelf()
+            .getExtendVal(MemberMetaDataConstants.SUPPORT_JRAFT_AUTH));
+    }
+
     @Test
     void testUpdateNonBasicExtendInfoMember() {
         Member newMember = Member.builder().ip("1.1.1.1").port(8848).state(NodeState.UP).build();
@@ -152,12 +158,12 @@ class ServerMemberManagerTest {
             serverMemberManager.getServerList().get("1.1.1.1:8848").getExtendVal("naming"));
         verify(eventPublisher, never()).publish(any(MembersChangeEvent.class));
     }
-    
+
     @Test
     void testHasMember() {
         assertTrue(serverMemberManager.hasMember("1.1.1.1"));
     }
-    
+
     @Test
     void testHasMemberExactAddress() {
         assertTrue(serverMemberManager.hasMember("1.1.1.1:8848"));
@@ -174,7 +180,7 @@ class ServerMemberManagerTest {
         assertFalse(serverMemberManager.hasMember("1.1.1.1:88"));
         assertFalse(serverMemberManager.hasMember("8848"));
     }
-    
+
     @Test
     void testHasMemberIpv4PrefixCollision() {
         Member member =
@@ -185,7 +191,7 @@ class ServerMemberManagerTest {
         // "192.168.1.10" is a prefix of the member IP but is not a member itself.
         assertFalse(serverMemberManager.hasMember("192.168.1.10"));
     }
-    
+
     @Test
     void testHasMemberIpv6() {
         Member member = Member.builder().ip("[::1]").port(8848).state(NodeState.UP).build();
@@ -195,37 +201,37 @@ class ServerMemberManagerTest {
         assertTrue(serverMemberManager.hasMember(member.getAddress()));
         assertFalse(serverMemberManager.hasMember("[::2]"));
     }
-    
+
     @Test
     void testMemberLeave() {
         Member member = Member.builder().ip("1.1.3.3").port(8848).state(NodeState.DOWN).build();
         boolean joinResult = serverMemberManager.memberJoin(Collections.singletonList(member));
         assertTrue(joinResult);
-        
+
         List<String> ips = serverMemberManager.getServerListUnhealth();
         assertEquals(1, ips.size());
-        
+
         boolean result = serverMemberManager.memberLeave(Collections.singletonList(member));
         assertTrue(result);
     }
-    
+
     @Test
     void testIsUnHealth() {
         assertFalse(serverMemberManager.isUnHealth("1.1.1.1"));
     }
-    
+
     @Test
     void testIsUnHealthWhenMemberDown() {
         serverMemberManager
             .update(Member.builder().ip("1.1.1.1").port(8848).state(NodeState.DOWN).build());
         assertTrue(serverMemberManager.isUnHealth("1.1.1.1:8848"));
     }
-    
+
     @Test
     void testIsUnHealthUnknownAddress() {
         assertFalse(serverMemberManager.isUnHealth("10.0.0.1:8848"));
     }
-    
+
     @Test
     void testStateCheck() {
         assertTrue(serverMemberManager.stateCheck("1.1.1.1:8848",
@@ -244,7 +250,7 @@ class ServerMemberManagerTest {
     void testIsFirstIp() {
         assertFalse(serverMemberManager.isFirstIp());
     }
-    
+
     @Test
     void testGetServerList() {
         assertEquals(2, serverMemberManager.getServerList().size());
@@ -252,7 +258,7 @@ class ServerMemberManagerTest {
         assertThrows(UnsupportedOperationException.class,
             () -> list.put("x", Member.builder().ip("x").port(1).build()));
     }
-    
+
     /**
      * After init(), serverList always contains at least self (line 168). Nothing between 168 and 177 removes it,
      * so the throw at line 177-178 (serverList.isEmpty()) is theoretically unreachable in normal flow.
@@ -263,13 +269,13 @@ class ServerMemberManagerTest {
         assertTrue(serverMemberManager.getServerList()
             .containsKey(serverMemberManager.getSelf().getAddress()));
     }
-    
+
     @Test
     void testSetSelfReady() {
         serverMemberManager.setSelfReady(8848);
         assertEquals(NodeState.UP, serverMemberManager.getSelf().getState());
     }
-    
+
     @Test
     void testUnhealthyMemberInfoReportTaskRunsAfter() {
         Member downMember = Member.builder().ip("1.1.1.1").port(8848).state(NodeState.DOWN).build();
@@ -280,7 +286,7 @@ class ServerMemberManagerTest {
             ReflectionTestUtils.getField(serverMemberManager, "unhealthyMemberInfoReportTask");
         ((Runnable) unhealthyTask).run();
     }
-    
+
     /**
      * Covers memberChange() when self is not in the incoming members list (lines 367-370: isInIpList = false, add self, warn log).
      * Must pass a mutable collection because memberChange() adds self when not in list.
@@ -295,7 +301,7 @@ class ServerMemberManagerTest {
             .containsKey(serverMemberManager.getSelf().getAddress()));
         assertTrue(serverMemberManager.getServerList().containsKey("2.2.2.2:8848"));
     }
-    
+
     /**
      * Covers memberChange() when there is no change (lines 411-414: hasChange false, debug log branch).
      */
@@ -306,7 +312,7 @@ class ServerMemberManagerTest {
         assertFalse(result);
         assertEquals(current.size(), serverMemberManager.getServerList().size());
     }
-    
+
     /**
      * Covers stateCheck(address, ...) and isUnHealth(address) when member is null (address not in serverList) — lines 451-453 and 471-472.
      */
@@ -316,7 +322,7 @@ class ServerMemberManagerTest {
             Collections.singletonList(NodeState.UP)));
         assertFalse(serverMemberManager.isUnHealth("0.0.0.0:9999"));
     }
-    
+
     @Test
     void testHttpReportTaskWithoutMemberInfo() throws NacosException {
         Member testMember = Member.builder().ip("1.1.1.1").port(8848).state(NodeState.DOWN)
@@ -342,7 +348,7 @@ class ServerMemberManagerTest {
             serverMemberManager.find("1.1.1.1:8848").getExtendVal(MemberMetaDataConstants.VERSION));
         assertEquals(NodeState.UP, serverMemberManager.find("1.1.1.1:8848").getState());
     }
-    
+
     @Test
     void testGrpcReportTaskWithoutMemberInfo() throws NacosException {
         Member testMember = Member.builder().ip("1.1.1.1").port(8848).state(NodeState.DOWN)
@@ -386,7 +392,7 @@ class ServerMemberManagerTest {
         serverMemberManager.getInfoReportTask().run();
         assertEquals(NodeState.UP, serverMemberManager.find("1.1.1.1:8848").getState());
     }
-    
+
     @Test
     void testHttpReportTaskHandleReportResultBooleanTrue() {
         Member testMember = Member.builder().ip("1.1.1.1").port(8848).state(NodeState.DOWN).build();
@@ -405,7 +411,7 @@ class ServerMemberManagerTest {
         serverMemberManager.getInfoReportTask().run();
         assertEquals(NodeState.UP, serverMemberManager.find("1.1.1.1:8848").getState());
     }
-    
+
     @Test
     void testHttpReportTaskWithMemberInfoChanged() {
         Member testMember = Member.builder().ip("1.1.1.1").port(8848).state(NodeState.DOWN)
@@ -433,7 +439,7 @@ class ServerMemberManagerTest {
             serverMemberManager.find("1.1.1.1:8848").getExtendVal(MemberMetaDataConstants.VERSION));
         assertEquals(NodeState.UP, serverMemberManager.find("1.1.1.1:8848").getState());
     }
-    
+
     @Test
     void testGrpcReportTaskWithMemberInfoChanged() throws NacosException {
         Member testMember = Member.builder().ip("1.1.1.1").port(8848).state(NodeState.DOWN)
@@ -459,7 +465,7 @@ class ServerMemberManagerTest {
             serverMemberManager.find("1.1.1.1:8848").getExtendVal(MemberMetaDataConstants.VERSION));
         assertEquals(NodeState.UP, serverMemberManager.find("1.1.1.1:8848").getState());
     }
-    
+
     @Test
     void testUnhealthyMemberInfoReportTaskRun() throws NacosException {
         Member downMember = Member.builder().ip("1.1.1.1").port(8848).state(NodeState.DOWN).build();
@@ -467,7 +473,7 @@ class ServerMemberManagerTest {
         downMember.getAbilities().getRemoteAbility().setSupportRemoteConnection(true);
         downMember.getAbilities().getRemoteAbility().setGrpcReportEnabled(true);
         serverMemberManager.updateMember(downMember);
-        
+
         Object unhealthyTask =
             ReflectionTestUtils.getField(serverMemberManager, "unhealthyMemberInfoReportTask");
         assertTrue(unhealthyTask instanceof Runnable);
@@ -477,11 +483,11 @@ class ServerMemberManagerTest {
         Member upMember = Member.builder().ip("1.1.1.1").port(8848).state(NodeState.UP).build();
         when(clusterRpcClientProxy.sendRequest(any(), any()))
             .thenReturn(new MemberReportResponse(upMember));
-        
+
         ((Runnable) unhealthyTask).run();
         assertEquals(NodeState.UP, serverMemberManager.find("1.1.1.1:8848").getState());
     }
-    
+
     @Test
     void testMemberInfoReportTaskRunWhenMembersEmpty() {
         ConcurrentSkipListMap<String, Member> onlySelf = new ConcurrentSkipListMap<>();
@@ -491,7 +497,7 @@ class ServerMemberManagerTest {
         serverMemberManager.getMemberAddressInfos().add(serverMemberManager.getSelf().getAddress());
         serverMemberManager.getInfoReportTask().run();
     }
-    
+
     @Test
     void testHttpReportTaskCallbackOnReceiveNotOk() {
         Member testMember = Member.builder().ip("1.1.1.1").port(8848).state(NodeState.DOWN).build();
@@ -510,7 +516,7 @@ class ServerMemberManagerTest {
         serverMemberManager.getInfoReportTask().run();
         assertTrue(serverMemberManager.find("1.1.1.1:8848").isGrpcReportEnabled());
     }
-    
+
     @Test
     void testHttpReportTaskCallbackOnError() {
         Member testMember = Member.builder().ip("1.1.1.1").port(8848).state(NodeState.DOWN).build();
@@ -528,7 +534,7 @@ class ServerMemberManagerTest {
         serverMemberManager.getInfoReportTask().run();
         assertTrue(serverMemberManager.find("1.1.1.1:8848").isGrpcReportEnabled());
     }
-    
+
     @Test
     void testHttpReportTaskCallbackOnCancel() {
         Member testMember = Member.builder().ip("1.1.1.1").port(8848).state(NodeState.DOWN).build();
@@ -545,7 +551,7 @@ class ServerMemberManagerTest {
         }).when(mockAsyncRestTemplate).post(anyString(), any(), any(), any(), any(), any());
         serverMemberManager.getInfoReportTask().run();
     }
-    
+
     @Test
     void testHttpReportTaskPostThrows() {
         Member testMember = Member.builder().ip("1.1.1.1").port(8848).state(NodeState.DOWN).build();
@@ -561,7 +567,7 @@ class ServerMemberManagerTest {
         serverMemberManager.getInfoReportTask().run();
         assertTrue(serverMemberManager.find("1.1.1.1:8848").isGrpcReportEnabled());
     }
-    
+
     @Test
     void testGrpcReportTaskWhenNotRunning() throws NacosException {
         Member testMember = Member.builder().ip("1.1.1.1").port(8848).state(NodeState.DOWN).build();
@@ -576,7 +582,7 @@ class ServerMemberManagerTest {
         when(clusterRpcClientProxy.isRunning(any())).thenReturn(false);
         infoReportTask.run();
     }
-    
+
     @Test
     void testGrpcReportTaskResponseNotSuccess() throws NacosException {
         Member testMember = Member.builder().ip("1.1.1.1").port(8848).state(NodeState.DOWN).build();
@@ -594,7 +600,7 @@ class ServerMemberManagerTest {
         when(clusterRpcClientProxy.sendRequest(any(), any())).thenReturn(errorResponse);
         infoReportTask.run();
     }
-    
+
     @Test
     void testGrpcReportTaskNoHandlerException() throws NacosException {
         Member testMember = Member.builder().ip("1.1.1.1").port(8848).state(NodeState.DOWN).build();
@@ -615,7 +621,7 @@ class ServerMemberManagerTest {
             .isGrpcReportEnabled());
         assertFalse(serverMemberManager.find("1.1.1.1:8848").isGrpcReportEnabled());
     }
-    
+
     @Test
     void testIpChangeEventSubscriber() throws InterruptedException {
         // Use fixed IPs so test is deterministic across environments (e.g. cloud runners use hostnames).
@@ -635,7 +641,7 @@ class ServerMemberManagerTest {
         serverList.put(oldAddress, self);
         serverMemberManager.getMemberAddressInfos().remove(previousAddress);
         serverMemberManager.getMemberAddressInfos().add(oldAddress);
-        
+
         InetUtils.IPChangeEvent event = new InetUtils.IPChangeEvent();
         event.setOldIP(oldIp);
         event.setNewIP(newIp);

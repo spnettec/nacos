@@ -30,7 +30,7 @@ import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.model.Page;
 import com.alibaba.nacos.plugin.ai.storage.AiResourceStorageRouter;
 import com.alibaba.nacos.plugin.ai.storage.spi.AiResourceStorage;
-import com.alibaba.nacos.plugin.visibility.spi.VisibilityPluginManager;
+import com.alibaba.nacos.core.plugin.visibility.VisibilityPluginManager;
 import com.alibaba.nacos.sys.env.EnvUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -62,28 +62,28 @@ import static org.mockito.Mockito.when;
  */
 @ExtendWith(MockitoExtension.class)
 class AgentSpecListFilterTest {
-    
+
     @Mock
     private AiResourceStorage storage;
-    
+
     @Mock
     private AiResourcePersistService aiResourcePersistService;
-    
+
     @Mock
     private AiResourceVersionPersistService aiResourceVersionPersistService;
-    
+
     @Mock
     private PipelineExecutionRepository pipelineExecutionRepository;
-    
+
     private AgentSpecOperationServiceImpl service;
-    
+
     private static final org.springframework.core.env.ConfigurableEnvironment CACHED_ENVIRONMENT =
         EnvUtil.getEnvironment();
-    
+
     private MockedStatic<VisibilityPluginManager> visibilityManagerStatic;
-    
+
     private VisibilityPluginManager mockVisibilityManager;
-    
+
     @BeforeEach
     void setUp() {
         EnvUtil.setEnvironment(new StandardEnvironment());
@@ -106,7 +106,7 @@ class AgentSpecListFilterTest {
         visibilityManagerStatic.when(VisibilityPluginManager::getInstance)
             .thenReturn(mockVisibilityManager);
     }
-    
+
     @AfterEach
     void tearDown() {
         if (visibilityManagerStatic != null) {
@@ -116,7 +116,7 @@ class AgentSpecListFilterTest {
         TestAiPipelineSupport.clearStateChecker();
         EnvUtil.setEnvironment(CACHED_ENVIRONMENT);
     }
-    
+
     private Page<AiResource> emptyPage() {
         Page<AiResource> page = new Page<>();
         page.setPageItems(List.of());
@@ -124,50 +124,50 @@ class AgentSpecListFilterTest {
         page.setPagesAvailable(0);
         return page;
     }
-    
+
     @Test
     void listAgentSpecsWithOwnerFilterShouldSetOwnerOnQueryCondition() throws NacosException {
         when(aiResourcePersistService.list(any(QueryCondition.class), anyInt(), anyInt()))
             .thenReturn(emptyPage());
-        
+
         service.listAgentSpecs("public", null, null, null, "alice", null, 1, 10);
-        
+
         ArgumentCaptor<QueryCondition> captor = ArgumentCaptor.forClass(QueryCondition.class);
         verify(aiResourcePersistService).list(captor.capture(), anyInt(), anyInt());
         assertEquals("alice", captor.getValue().getOwner());
     }
-    
+
     @Test
     void listAgentSpecsWithScopePublicShouldSetScopeOnQueryCondition() throws NacosException {
         when(aiResourcePersistService.list(any(QueryCondition.class), anyInt(), anyInt()))
             .thenReturn(emptyPage());
-        
+
         service.listAgentSpecs("public", null, null, null, null, "PUBLIC", 1, 10);
-        
+
         ArgumentCaptor<QueryCondition> captor = ArgumentCaptor.forClass(QueryCondition.class);
         verify(aiResourcePersistService).list(captor.capture(), anyInt(), anyInt());
         assertEquals("PUBLIC", captor.getValue().getScope());
     }
-    
+
     @Test
     void listAgentSpecsWithScopePrivateShouldSetScopeOnQueryCondition() throws NacosException {
         when(aiResourcePersistService.list(any(QueryCondition.class), anyInt(), anyInt()))
             .thenReturn(emptyPage());
-        
+
         service.listAgentSpecs("public", null, null, null, null, "PRIVATE", 1, 10);
-        
+
         ArgumentCaptor<QueryCondition> captor = ArgumentCaptor.forClass(QueryCondition.class);
         verify(aiResourcePersistService).list(captor.capture(), anyInt(), anyInt());
         assertEquals("PRIVATE", captor.getValue().getScope());
     }
-    
+
     @Test
     void listAgentSpecsWithOwnerAndScopeShouldSetBothOnQueryCondition() throws NacosException {
         when(aiResourcePersistService.list(any(QueryCondition.class), anyInt(), anyInt()))
             .thenReturn(emptyPage());
-        
+
         service.listAgentSpecs("public", null, null, "download_count", "bob", "PRIVATE", 1, 10);
-        
+
         ArgumentCaptor<QueryCondition> captor = ArgumentCaptor.forClass(QueryCondition.class);
         verify(aiResourcePersistService).list(captor.capture(), anyInt(), anyInt());
         QueryCondition condition = captor.getValue();
@@ -175,62 +175,62 @@ class AgentSpecListFilterTest {
         assertEquals("PRIVATE", condition.getScope());
         assertEquals("download_count", condition.getOrderBy());
     }
-    
+
     @Test
     void listAgentSpecsWithNullOwnerShouldNotSetOwnerOnQueryCondition() throws NacosException {
         when(aiResourcePersistService.list(any(QueryCondition.class), anyInt(), anyInt()))
             .thenReturn(emptyPage());
-        
+
         service.listAgentSpecs("public", null, null, null, null, null, 1, 10);
-        
+
         ArgumentCaptor<QueryCondition> captor = ArgumentCaptor.forClass(QueryCondition.class);
         verify(aiResourcePersistService).list(captor.capture(), anyInt(), anyInt());
         assertNull(captor.getValue().getOwner());
     }
-    
+
     @Test
     void listAgentSpecsWithNullScopeShouldNotSetScopeOnQueryCondition() throws NacosException {
         when(aiResourcePersistService.list(any(QueryCondition.class), anyInt(), anyInt()))
             .thenReturn(emptyPage());
-        
+
         service.listAgentSpecs("public", null, null, null, null, null, 1, 10);
-        
+
         ArgumentCaptor<QueryCondition> captor = ArgumentCaptor.forClass(QueryCondition.class);
         verify(aiResourcePersistService).list(captor.capture(), anyInt(), anyInt());
         assertNull(captor.getValue().getScope());
     }
-    
+
     @Test
     void listAgentSpecsWithEmptyOwnerShouldNotSetOwnerOnQueryCondition() throws NacosException {
         when(aiResourcePersistService.list(any(QueryCondition.class), anyInt(), anyInt()))
             .thenReturn(emptyPage());
-        
+
         service.listAgentSpecs("public", null, null, null, "", "PUBLIC", 1, 10);
-        
+
         ArgumentCaptor<QueryCondition> captor = ArgumentCaptor.forClass(QueryCondition.class);
         verify(aiResourcePersistService).list(captor.capture(), anyInt(), anyInt());
         assertNull(captor.getValue().getOwner());
     }
-    
+
     @Test
     void listAgentSpecsWithEmptyScopeShouldNotSetScopeOnQueryCondition() throws NacosException {
         when(aiResourcePersistService.list(any(QueryCondition.class), anyInt(), anyInt()))
             .thenReturn(emptyPage());
-        
+
         service.listAgentSpecs("public", null, null, null, "alice", "", 1, 10);
-        
+
         ArgumentCaptor<QueryCondition> captor = ArgumentCaptor.forClass(QueryCondition.class);
         verify(aiResourcePersistService).list(captor.capture(), anyInt(), anyInt());
         assertNull(captor.getValue().getScope());
     }
-    
+
     @Test
     void listAgentSpecsViaLegacy5ParamDelegatesWithNullFilters() throws NacosException {
         when(aiResourcePersistService.list(any(QueryCondition.class), anyInt(), anyInt()))
             .thenReturn(emptyPage());
-        
+
         Page<AgentSpecSummary> result = service.listAgentSpecs("public", null, null, 1, 10);
-        
+
         ArgumentCaptor<QueryCondition> captor = ArgumentCaptor.forClass(QueryCondition.class);
         verify(aiResourcePersistService).list(captor.capture(), anyInt(), anyInt());
         assertNotNull(result);
@@ -238,26 +238,26 @@ class AgentSpecListFilterTest {
         assertNull(captor.getValue().getScope());
         assertNull(captor.getValue().getOrderBy());
     }
-    
+
     @Test
     void listAgentSpecsWithOrderByShouldSetOrderByOnQueryCondition() throws NacosException {
         when(aiResourcePersistService.list(any(QueryCondition.class), anyInt(), anyInt()))
             .thenReturn(emptyPage());
-        
+
         service.listAgentSpecs("public", null, null, "download_count", null, null, 1, 10);
-        
+
         ArgumentCaptor<QueryCondition> captor = ArgumentCaptor.forClass(QueryCondition.class);
         verify(aiResourcePersistService).list(captor.capture(), anyInt(), anyInt());
         assertEquals("download_count", captor.getValue().getOrderBy());
     }
-    
+
     @Test
     void listAgentSpecsWithNullOrderByShouldLeaveOrderByNull() throws NacosException {
         when(aiResourcePersistService.list(any(QueryCondition.class), anyInt(), anyInt()))
             .thenReturn(emptyPage());
-        
+
         service.listAgentSpecs("public", null, null, null, null, null, 1, 10);
-        
+
         ArgumentCaptor<QueryCondition> captor = ArgumentCaptor.forClass(QueryCondition.class);
         verify(aiResourcePersistService).list(captor.capture(), anyInt(), anyInt());
         assertNull(captor.getValue().getOrderBy());

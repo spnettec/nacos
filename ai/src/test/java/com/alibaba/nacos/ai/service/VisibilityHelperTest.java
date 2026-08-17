@@ -17,7 +17,7 @@
 package com.alibaba.nacos.ai.service;
 
 import com.alibaba.nacos.plugin.visibility.constant.VisibilityConstants;
-import com.alibaba.nacos.plugin.visibility.spi.VisibilityPluginManager;
+import com.alibaba.nacos.core.plugin.visibility.VisibilityPluginManager;
 import com.alibaba.nacos.plugin.visibility.spi.VisibilityService;
 import com.alibaba.nacos.sys.env.EnvUtil;
 import org.junit.jupiter.api.AfterEach;
@@ -37,13 +37,13 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
 class VisibilityHelperTest {
-    
+
     private static final ConfigurableEnvironment CACHED_ENVIRONMENT = EnvUtil.getEnvironment();
-    
+
     private MockedStatic<VisibilityPluginManager> visibilityManagerStatic;
-    
+
     private VisibilityPluginManager visibilityPluginManager;
-    
+
     @BeforeEach
     void setUp() throws Exception {
         EnvUtil.setEnvironment(new StandardEnvironment());
@@ -53,7 +53,7 @@ class VisibilityHelperTest {
         visibilityManagerStatic.when(VisibilityPluginManager::getInstance)
             .thenReturn(visibilityPluginManager);
     }
-    
+
     @AfterEach
     void tearDown() throws Exception {
         if (visibilityManagerStatic != null) {
@@ -62,7 +62,7 @@ class VisibilityHelperTest {
         EnvUtil.setEnvironment(CACHED_ENVIRONMENT);
         resetCachedVisibilityServiceName();
     }
-    
+
     @Test
     void resolveDefaultScopeForCreateShouldFallbackToPrivateWhenPluginAbsent() {
         when(visibilityPluginManager.findVisibilityService(anyString()))
@@ -70,7 +70,7 @@ class VisibilityHelperTest {
         String actual = VisibilityHelper.resolveDefaultScopeForCreate("skill");
         assertEquals(VisibilityConstants.SCOPE_PRIVATE, actual);
     }
-    
+
     @Test
     void resolveDefaultScopeForCreateShouldUsePluginScopeAndNormalizeUppercase() {
         VisibilityService visibilityService = mock(VisibilityService.class);
@@ -81,7 +81,7 @@ class VisibilityHelperTest {
         String actual = VisibilityHelper.resolveDefaultScopeForCreate("skill");
         assertEquals(VisibilityConstants.SCOPE_PUBLIC, actual);
     }
-    
+
     @Test
     void resolveDefaultScopeForCreateShouldFallbackToPrivateWhenPluginReturnsBlank() {
         VisibilityService visibilityService = mock(VisibilityService.class);
@@ -92,7 +92,7 @@ class VisibilityHelperTest {
         String actual = VisibilityHelper.resolveDefaultScopeForCreate("skill");
         assertEquals(VisibilityConstants.SCOPE_PRIVATE, actual);
     }
-    
+
     private static void resetCachedVisibilityServiceName() throws Exception {
         Field field = VisibilityHelper.class.getDeclaredField("cachedVisibilityServiceName");
         field.setAccessible(true);

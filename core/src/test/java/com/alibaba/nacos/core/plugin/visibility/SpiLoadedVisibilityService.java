@@ -14,34 +14,37 @@
  * limitations under the License.
  */
 
-package com.alibaba.nacos.plugin.visibility.spi;
+package com.alibaba.nacos.core.plugin.visibility;
 
 import com.alibaba.nacos.plugin.visibility.model.VisibilityQueryContext;
 import com.alibaba.nacos.plugin.visibility.model.VisibilityResource;
+import com.alibaba.nacos.plugin.visibility.spi.QueryAdvisor;
+import com.alibaba.nacos.plugin.visibility.spi.ValidationResult;
+import com.alibaba.nacos.plugin.visibility.spi.VisibilityService;
 
 import java.util.Properties;
 
 public class SpiLoadedVisibilityService implements VisibilityService {
-    
+
     static Properties initProperties;
-    
+
     @Override
     public void init(Properties properties) {
         initProperties = properties;
     }
-    
+
     @Override
     public ValidationResult validateVisibility(String identity, String action, String apiType,
         VisibilityResource resource) {
         return ValidationResult.allow();
     }
-    
+
     @Override
     public QueryAdvisor adviseQuery(String identity, String action, String apiType,
         VisibilityQueryContext context) {
         return new QueryAdvisor();
     }
-    
+
     @Override
     public String getVisibilityServiceName() {
         return "spi-loaded";

@@ -30,7 +30,7 @@ import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.model.Page;
 import com.alibaba.nacos.plugin.ai.storage.AiResourceStorageRouter;
 import com.alibaba.nacos.plugin.ai.storage.spi.AiResourceStorage;
-import com.alibaba.nacos.plugin.visibility.spi.VisibilityPluginManager;
+import com.alibaba.nacos.core.plugin.visibility.VisibilityPluginManager;
 import com.alibaba.nacos.sys.env.EnvUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -62,31 +62,31 @@ import static org.mockito.Mockito.when;
  */
 @ExtendWith(MockitoExtension.class)
 class SkillListFilterTest {
-    
+
     @Mock
     private AiResourceStorage storage;
-    
+
     @Mock
     private AiResourcePersistService aiResourcePersistService;
-    
+
     @Mock
     private AiResourceVersionPersistService aiResourceVersionPersistService;
-    
+
     @Mock
     private PipelineExecutionRepository pipelineExecutionRepository;
-    
+
     @Mock
     private SkillIndexManifestService manifestService;
-    
+
     private SkillOperationServiceImpl skillOperationService;
-    
+
     private static final org.springframework.core.env.ConfigurableEnvironment CACHED_ENVIRONMENT =
         EnvUtil.getEnvironment();
-    
+
     private MockedStatic<VisibilityPluginManager> visibilityManagerStatic;
-    
+
     private VisibilityPluginManager mockVisibilityManager;
-    
+
     @BeforeEach
     void setUp() {
         EnvUtil.setEnvironment(new StandardEnvironment());
@@ -109,7 +109,7 @@ class SkillListFilterTest {
         visibilityManagerStatic.when(VisibilityPluginManager::getInstance)
             .thenReturn(mockVisibilityManager);
     }
-    
+
     @AfterEach
     void tearDown() {
         if (visibilityManagerStatic != null) {
@@ -119,7 +119,7 @@ class SkillListFilterTest {
         TestAiPipelineSupport.clearStateChecker();
         EnvUtil.setEnvironment(CACHED_ENVIRONMENT);
     }
-    
+
     private Page<AiResource> emptyPage() {
         Page<AiResource> page = new Page<>();
         page.setPageItems(List.of());
@@ -127,51 +127,51 @@ class SkillListFilterTest {
         page.setPagesAvailable(0);
         return page;
     }
-    
+
     @Test
     void listSkillsWithOwnerFilterShouldSetOwnerOnQueryCondition() throws NacosException {
         when(aiResourcePersistService.list(any(QueryCondition.class), anyInt(), anyInt()))
             .thenReturn(emptyPage());
-        
+
         skillOperationService.listSkills("public", null, null, null, "alice", null, 1, 10);
-        
+
         ArgumentCaptor<QueryCondition> captor = ArgumentCaptor.forClass(QueryCondition.class);
         verify(aiResourcePersistService).list(captor.capture(), anyInt(), anyInt());
         assertEquals("alice", captor.getValue().getOwner());
     }
-    
+
     @Test
     void listSkillsWithScopePublicShouldSetScopeOnQueryCondition() throws NacosException {
         when(aiResourcePersistService.list(any(QueryCondition.class), anyInt(), anyInt()))
             .thenReturn(emptyPage());
-        
+
         skillOperationService.listSkills("public", null, null, null, null, "PUBLIC", 1, 10);
-        
+
         ArgumentCaptor<QueryCondition> captor = ArgumentCaptor.forClass(QueryCondition.class);
         verify(aiResourcePersistService).list(captor.capture(), anyInt(), anyInt());
         assertEquals("PUBLIC", captor.getValue().getScope());
     }
-    
+
     @Test
     void listSkillsWithScopePrivateShouldSetScopeOnQueryCondition() throws NacosException {
         when(aiResourcePersistService.list(any(QueryCondition.class), anyInt(), anyInt()))
             .thenReturn(emptyPage());
-        
+
         skillOperationService.listSkills("public", null, null, null, null, "PRIVATE", 1, 10);
-        
+
         ArgumentCaptor<QueryCondition> captor = ArgumentCaptor.forClass(QueryCondition.class);
         verify(aiResourcePersistService).list(captor.capture(), anyInt(), anyInt());
         assertEquals("PRIVATE", captor.getValue().getScope());
     }
-    
+
     @Test
     void listSkillsWithOwnerAndScopeShouldSetBothOnQueryCondition() throws NacosException {
         when(aiResourcePersistService.list(any(QueryCondition.class), anyInt(), anyInt()))
             .thenReturn(emptyPage());
-        
+
         skillOperationService.listSkills("public", null, null, "download_count", "bob", "PRIVATE",
             1, 10);
-        
+
         ArgumentCaptor<QueryCondition> captor = ArgumentCaptor.forClass(QueryCondition.class);
         verify(aiResourcePersistService).list(captor.capture(), anyInt(), anyInt());
         QueryCondition condition = captor.getValue();
@@ -179,62 +179,62 @@ class SkillListFilterTest {
         assertEquals("PRIVATE", condition.getScope());
         assertEquals("download_count", condition.getOrderBy());
     }
-    
+
     @Test
     void listSkillsWithNullOwnerShouldNotSetOwnerOnQueryCondition() throws NacosException {
         when(aiResourcePersistService.list(any(QueryCondition.class), anyInt(), anyInt()))
             .thenReturn(emptyPage());
-        
+
         skillOperationService.listSkills("public", null, null, null, null, null, 1, 10);
-        
+
         ArgumentCaptor<QueryCondition> captor = ArgumentCaptor.forClass(QueryCondition.class);
         verify(aiResourcePersistService).list(captor.capture(), anyInt(), anyInt());
         assertNull(captor.getValue().getOwner());
     }
-    
+
     @Test
     void listSkillsWithNullScopeShouldNotSetScopeOnQueryCondition() throws NacosException {
         when(aiResourcePersistService.list(any(QueryCondition.class), anyInt(), anyInt()))
             .thenReturn(emptyPage());
-        
+
         skillOperationService.listSkills("public", null, null, null, null, null, 1, 10);
-        
+
         ArgumentCaptor<QueryCondition> captor = ArgumentCaptor.forClass(QueryCondition.class);
         verify(aiResourcePersistService).list(captor.capture(), anyInt(), anyInt());
         assertNull(captor.getValue().getScope());
     }
-    
+
     @Test
     void listSkillsWithEmptyOwnerShouldNotSetOwnerOnQueryCondition() throws NacosException {
         when(aiResourcePersistService.list(any(QueryCondition.class), anyInt(), anyInt()))
             .thenReturn(emptyPage());
-        
+
         skillOperationService.listSkills("public", null, null, null, "", "PUBLIC", 1, 10);
-        
+
         ArgumentCaptor<QueryCondition> captor = ArgumentCaptor.forClass(QueryCondition.class);
         verify(aiResourcePersistService).list(captor.capture(), anyInt(), anyInt());
         assertNull(captor.getValue().getOwner());
     }
-    
+
     @Test
     void listSkillsWithEmptyScopeShouldNotSetScopeOnQueryCondition() throws NacosException {
         when(aiResourcePersistService.list(any(QueryCondition.class), anyInt(), anyInt()))
             .thenReturn(emptyPage());
-        
+
         skillOperationService.listSkills("public", null, null, null, "alice", "", 1, 10);
-        
+
         ArgumentCaptor<QueryCondition> captor = ArgumentCaptor.forClass(QueryCondition.class);
         verify(aiResourcePersistService).list(captor.capture(), anyInt(), anyInt());
         assertNull(captor.getValue().getScope());
     }
-    
+
     @Test
     void listSkillsViaLegacy5ParamDelegatesWithNullFilters() throws NacosException {
         when(aiResourcePersistService.list(any(QueryCondition.class), anyInt(), anyInt()))
             .thenReturn(emptyPage());
-        
+
         Page<SkillSummary> result = skillOperationService.listSkills("public", null, null, 1, 10);
-        
+
         ArgumentCaptor<QueryCondition> captor = ArgumentCaptor.forClass(QueryCondition.class);
         verify(aiResourcePersistService).list(captor.capture(), anyInt(), anyInt());
         assertNotNull(result);
@@ -242,15 +242,15 @@ class SkillListFilterTest {
         assertNull(captor.getValue().getScope());
         assertNull(captor.getValue().getOrderBy());
     }
-    
+
     @Test
     void listSkillsViaLegacy6ParamDelegatesWithNullFilters() throws NacosException {
         when(aiResourcePersistService.list(any(QueryCondition.class), anyInt(), anyInt()))
             .thenReturn(emptyPage());
-        
+
         Page<SkillSummary> result =
             skillOperationService.listSkills("public", null, null, "download_count", 1, 10);
-        
+
         ArgumentCaptor<QueryCondition> captor = ArgumentCaptor.forClass(QueryCondition.class);
         verify(aiResourcePersistService).list(captor.capture(), anyInt(), anyInt());
         assertNotNull(result);

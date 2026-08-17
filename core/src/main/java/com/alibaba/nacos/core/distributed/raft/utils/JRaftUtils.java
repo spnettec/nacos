@@ -24,6 +24,8 @@ import com.alibaba.nacos.consistency.entity.Response;
 import com.alibaba.nacos.consistency.entity.WriteRequest;
 import com.alibaba.nacos.core.cluster.ServerMemberManager;
 import com.alibaba.nacos.core.distributed.raft.JRaftServer;
+import com.alibaba.nacos.core.distributed.raft.auth.JRaftAuthUpgradeCoordinator;
+import com.alibaba.nacos.core.distributed.raft.auth.NacosJRaftServerInterceptor;
 import com.alibaba.nacos.core.distributed.raft.processor.NacosReadRequestProcessor;
 import com.alibaba.nacos.core.distributed.raft.processor.NacosWriteRequestProcessor;
 import com.alibaba.nacos.core.utils.Loggers;
@@ -38,6 +40,7 @@ import com.alipay.sofa.jraft.option.NodeOptions;
 import com.alipay.sofa.jraft.rpc.RaftRpcServerFactory;
 import com.alipay.sofa.jraft.rpc.RpcServer;
 import com.alipay.sofa.jraft.rpc.impl.GrpcRaftRpcFactory;
+import com.alipay.sofa.jraft.rpc.impl.GrpcServer;
 import com.alipay.sofa.jraft.rpc.impl.MarshallerRegistry;
 import com.alipay.sofa.jraft.util.RpcFactoryHelper;
 
@@ -57,8 +60,9 @@ import java.util.stream.Collectors;
  */
 @SuppressWarnings("all")
 public class JRaftUtils {
-    
-    public static RpcServer initRpcServer(JRaftServer server, PeerId peerId) {
+
+    public static RpcServer initRpcServer(JRaftServer server, PeerId peerId,
+        JRaftAuthUpgradeCoordinator jRaftAuthUpgradeCoordinator) {
         GrpcRaftRpcFactory raftRpcFactory = (GrpcRaftRpcFactory) RpcFactoryHelper.rpcFactory();
         raftRpcFactory.registerProtobufSerializer(Log.class.getName(), Log.getDefaultInstance());
         raftRpcFactory.registerProtobufSerializer(GetRequest.class.getName(),
@@ -69,32 +73,37 @@ public class JRaftUtils {
             ReadRequest.getDefaultInstance());
         raftRpcFactory.registerProtobufSerializer(Response.class.getName(),
             Response.getDefaultInstance());
-        
+
         MarshallerRegistry registry = raftRpcFactory.getMarshallerRegistry();
         registry.registerResponseInstance(Log.class.getName(), Response.getDefaultInstance());
         registry.registerResponseInstance(GetRequest.class.getName(),
             Response.getDefaultInstance());
-        
+
         registry.registerResponseInstance(WriteRequest.class.getName(),
             Response.getDefaultInstance());
         registry.registerResponseInstance(ReadRequest.class.getName(),
             Response.getDefaultInstance());
-        
+
         final RpcServer rpcServer = raftRpcFactory.createRpcServer(peerId.getEndpoint());
+        boolean interceptorAdded = ((GrpcServer) rpcServer).addServerInterceptor(
+            new NacosJRaftServerInterceptor(jRaftAuthUpgradeCoordinator));
+        if (!interceptorAdded) {
+            throw new IllegalStateException("Failed to install JRaft authentication interceptor");
+        }
         RaftRpcServerFactory.addRaftRequestProcessors(rpcServer, RaftExecutor.getRaftCoreExecutor(),
             RaftExecutor.getRaftCliServiceExecutor());
-        
+
         rpcServer.registerProcessor(new NacosWriteRequestProcessor(server));
         rpcServer.registerProcessor(new NacosReadRequestProcessor(server));
-        
+
         return rpcServer;
     }
-    
+
     public static final void initDirectory(String parentPath, String groupName, NodeOptions copy) {
         final String logUri = Paths.get(parentPath, groupName, "log").toString();
         final String snapshotUri = Paths.get(parentPath, groupName, "snapshot").toString();
         final String metaDataUri = Paths.get(parentPath, groupName, "meta-data").toString();
-        
+
         // Initialize the raft file storage path for different services
         try {
             DiskUtils.forceMkdir(new File(logUri));
@@ -104,17 +113,17 @@ public class JRaftUtils {
             Loggers.RAFT.error("Init Raft-File dir have some error, cause: ", e);
             throw new RuntimeException(e);
         }
-        
+
         copy.setLogUri(logUri);
         copy.setRaftMetaUri(metaDataUri);
         copy.setSnapshotUri(snapshotUri);
     }
-    
+
     public static List<String> toStrings(List<PeerId> peerIds) {
         return peerIds.stream().map(peerId -> peerId.getEndpoint().toString())
             .collect(Collectors.toList());
     }
-    
+
     public static void joinCluster(CliService cliService, Collection<String> members,
         Configuration conf, String group,
         PeerId self) {
@@ -135,12 +144,12 @@ public class JRaftUtils {
             Iterator<PeerId> iterator = peerIds.iterator();
             while (iterator.hasNext()) {
                 final PeerId peerId = iterator.next();
-                
+
                 if (conf.contains(peerId)) {
                     iterator.remove();
                     continue;
                 }
-                
+
                 Status status = cliService.addPeer(group, conf, peerId);
                 if (status.isOk()) {
                     iterator.remove();
@@ -149,5 +158,5 @@ public class JRaftUtils {
             ThreadUtils.sleep(1000L);
         }
     }
-    
+
 }

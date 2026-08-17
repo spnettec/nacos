@@ -32,6 +32,7 @@ import org.springframework.mock.env.MockEnvironment;
 import java.util.Arrays;
 import java.util.Collections;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
@@ -43,50 +44,58 @@ import static org.mockito.Mockito.when;
  */
 @ExtendWith(MockitoExtension.class)
 class InnerApiAuthEnabledTest {
-    
+
     @Mock
     private ServerMemberManager serverMemberManager;
-    
+
     private InnerApiAuthEnabled innerApiAuthEnabled;
-    
+
     @BeforeEach
     void setUp() {
         EnvUtil.setEnvironment(new MockEnvironment());
         innerApiAuthEnabled = new InnerApiAuthEnabled(serverMemberManager);
     }
-    
+
     @AfterEach
     void tearDown() {
         EnvUtil.setEnvironment(null);
     }
-    
+
     @Test
     void testIsEnabledInitiallyFalse() {
         assertFalse(innerApiAuthEnabled.isEnabled());
     }
-    
+
+    @Test
+    void testDeprecatedForRemoval() {
+        assertTrue(InnerApiAuthEnabled.class.isAnnotationPresent(Deprecated.class));
+        Deprecated deprecated = InnerApiAuthEnabled.class.getAnnotation(Deprecated.class);
+        assertTrue(deprecated.forRemoval());
+        assertEquals("3.0.0", deprecated.since());
+    }
+
     @Test
     void testDoCheckStaysDisabledWhenMemberVersionBlank() {
         Member member = Member.builder().build();
         member.setExtendVal(MemberMetaDataConstants.VERSION, "");
         when(serverMemberManager.allMembers()).thenReturn(Collections.singletonList(member));
-        
+
         innerApiAuthEnabled.doCheck();
-        
+
         assertFalse(innerApiAuthEnabled.isEnabled());
     }
-    
+
     @Test
     void testDoCheckStaysDisabledWhenMemberVersionNot3x() {
         Member member = Member.builder().build();
         member.setExtendVal(MemberMetaDataConstants.VERSION, "2.2.3");
         when(serverMemberManager.allMembers()).thenReturn(Collections.singletonList(member));
-        
+
         innerApiAuthEnabled.doCheck();
-        
+
         assertFalse(innerApiAuthEnabled.isEnabled());
     }
-    
+
     @Test
     void testDoCheckStaysDisabledWhenOneMemberNot3x() {
         Member m1 = Member.builder().build();
@@ -94,12 +103,12 @@ class InnerApiAuthEnabledTest {
         Member m2 = Member.builder().build();
         m2.setExtendVal(MemberMetaDataConstants.VERSION, "2.2.3");
         when(serverMemberManager.allMembers()).thenReturn(Arrays.asList(m1, m2));
-        
+
         innerApiAuthEnabled.doCheck();
-        
+
         assertFalse(innerApiAuthEnabled.isEnabled());
     }
-    
+
     @Test
     void testDoCheckEnablesWhenAllMembers3x() {
         Member m1 = Member.builder().build();
@@ -107,34 +116,34 @@ class InnerApiAuthEnabledTest {
         Member m2 = Member.builder().build();
         m2.setExtendVal(MemberMetaDataConstants.VERSION, "3.1.0");
         when(serverMemberManager.allMembers()).thenReturn(Arrays.asList(m1, m2));
-        
+
         innerApiAuthEnabled.doCheck();
-        
+
         assertTrue(innerApiAuthEnabled.isEnabled());
     }
-    
+
     @Test
     void testDoCheckEnablesWhenAllMembersHave3xVersion() {
         Member member = Member.builder().build();
         member.setExtendVal(MemberMetaDataConstants.VERSION, "3.2.0");
         when(serverMemberManager.allMembers()).thenReturn(Collections.singletonList(member));
-        
+
         innerApiAuthEnabled.doCheck();
-        
+
         assertTrue(innerApiAuthEnabled.isEnabled());
     }
-    
+
     @Test
     void testDoCheckReturnsEarlyWhenAlreadyEnabled() {
         Member m1 = Member.builder().build();
         m1.setExtendVal(MemberMetaDataConstants.VERSION, "3.0.0");
         when(serverMemberManager.allMembers()).thenReturn(Collections.singletonList(m1));
-        
+
         innerApiAuthEnabled.doCheck();
         assertTrue(innerApiAuthEnabled.isEnabled());
-        
+
         innerApiAuthEnabled.doCheck();
-        
+
         assertTrue(innerApiAuthEnabled.isEnabled());
     }
 }

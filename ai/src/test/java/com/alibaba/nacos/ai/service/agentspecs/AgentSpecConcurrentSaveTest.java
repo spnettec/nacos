@@ -72,24 +72,24 @@ import static org.mockito.Mockito.verify;
  */
 @ExtendWith(MockitoExtension.class)
 class AgentSpecConcurrentSaveTest {
-    
+
     @Mock
     private AiResourceStorage storage;
-    
+
     @Mock
     private AiResourcePersistService aiResourcePersistService;
-    
+
     @Mock
     private AiResourceVersionPersistService aiResourceVersionPersistService;
-    
+
     @Mock
     private PipelineExecutionRepository pipelineExecutionRepository;
-    
+
     private AgentSpecOperationServiceImpl service;
-    
+
     private static final org.springframework.core.env.ConfigurableEnvironment CACHED_ENVIRONMENT =
         EnvUtil.getEnvironment();
-    
+
     @BeforeAll
     static void initEnvBeforeClassLoad() {
         // ExecutorUtils' static initializer reads EnvUtil during class loading; if EnvUtil
@@ -97,12 +97,12 @@ class AgentSpecConcurrentSaveTest {
         // the class as NoClassDefFoundError, breaking every subsequent test in the JVM.
         EnvUtil.setEnvironment(new StandardEnvironment());
     }
-    
+
     @AfterAll
     static void restoreEnv() {
         EnvUtil.setEnvironment(CACHED_ENVIRONMENT);
     }
-    
+
     @BeforeEach
     void setUp() {
         EnvUtil.setEnvironment(new StandardEnvironment());
@@ -118,26 +118,26 @@ class AgentSpecConcurrentSaveTest {
             new AiResourceManager(aiResourcePersistService, aiResourceVersionPersistService,
                 pipelineExecutionRepository));
     }
-    
+
     @AfterEach
     void tearDown() {
         AiResourceStorageRouter.reset();
         TestAiPipelineSupport.clearStateChecker();
         EnvUtil.setEnvironment(CACHED_ENVIRONMENT);
     }
-    
+
     @Test
     void saveAgentSpecWithoutResourcesShouldPersistOnlyManifest() throws Exception {
         AgentSpec agentSpec = new AgentSpec();
         agentSpec.setName("only-main-agent");
         agentSpec.setDescription("manifest only");
-        
+
         invokeConcurrentSave("public", agentSpec, "v1", System.currentTimeMillis());
-        
+
         verify(storage, org.mockito.Mockito.times(1))
             .save(any(StorageKey.class), any(byte[].class));
     }
-    
+
     @Test
     void saveAgentSpecWithMultipleResourcesShouldPersistMainAndAllResources() throws Exception {
         AgentSpec agentSpec = new AgentSpec();
@@ -148,16 +148,16 @@ class AgentSpecConcurrentSaveTest {
         resources.put("res-b", buildResource("res-b", "skill", "beta"));
         resources.put("res-c", buildResource("res-c", "other", "gamma"));
         agentSpec.setResource(resources);
-        
+
         Set<String> capturedKeys = ConcurrentHashMap.newKeySet();
         lenient().doAnswer(invocation -> {
             StorageKey key = invocation.getArgument(0);
             capturedKeys.add(key.getKey());
             return null;
         }).when(storage).save(any(StorageKey.class), any(byte[].class));
-        
+
         invokeConcurrentSave("public", agentSpec, "v1", System.currentTimeMillis());
-        
+
         verify(storage, org.mockito.Mockito.times(4))
             .save(any(StorageKey.class), any(byte[].class));
         // Each StorageKey must be unique to avoid resources stomping each other when
@@ -165,7 +165,7 @@ class AgentSpecConcurrentSaveTest {
         assertEquals(4, capturedKeys.size(),
             "Each saved file must use a distinct StorageKey, captured: " + capturedKeys);
     }
-    
+
     @Test
     void allSavesShouldRunOnAgentSpecStorageIoExecutor() throws Exception {
         AgentSpec agentSpec = new AgentSpec();
@@ -174,15 +174,15 @@ class AgentSpecConcurrentSaveTest {
         resources.put("a", buildResource("a", "config", "x"));
         resources.put("b", buildResource("b", "config", "y"));
         agentSpec.setResource(resources);
-        
+
         ConcurrentLinkedQueue<String> threadNames = new ConcurrentLinkedQueue<>();
         lenient().doAnswer(invocation -> {
             threadNames.add(Thread.currentThread().getName());
             return null;
         }).when(storage).save(any(StorageKey.class), any(byte[].class));
-        
+
         invokeConcurrentSave("public", agentSpec, "v1", System.currentTimeMillis());
-        
+
         // 1 manifest + 2 resources = 3 save invocations, all routed to the dedicated executor.
         assertEquals(3, threadNames.size());
         for (String name : threadNames) {
@@ -191,7 +191,7 @@ class AgentSpecConcurrentSaveTest {
                 "save() must run on the AgentSpec storage IO executor, but got: " + name);
         }
     }
-    
+
     @Test
     void nacosExceptionFromSaveTaskShouldBeUnwrapped() throws Exception {
         AgentSpec agentSpec = new AgentSpec();
@@ -199,10 +199,10 @@ class AgentSpecConcurrentSaveTest {
         Map<String, AgentSpecResource> resources = new LinkedHashMap<>();
         resources.put("boom", buildResource("boom", "config", "payload"));
         agentSpec.setResource(resources);
-        
+
         NacosException expected = new NacosException(NacosException.SERVER_ERROR, "boom");
         lenient().doThrow(expected).when(storage).save(any(StorageKey.class), any(byte[].class));
-        
+
         InvocationTargetException ite = assertThrows(InvocationTargetException.class,
             () -> invokeConcurrentSave("public", agentSpec, "v1", System.currentTimeMillis()));
         Throwable cause = ite.getCause();
@@ -212,7 +212,7 @@ class AgentSpecConcurrentSaveTest {
         assertSame(expected, cause,
             "The NacosException raised by storage.save must be propagated as-is");
     }
-    
+
     private AgentSpecResource buildResource(String name, String type, String content) {
         AgentSpecResource resource = new AgentSpecResource();
         resource.setName(name);
@@ -221,13 +221,13 @@ class AgentSpecConcurrentSaveTest {
         resource.setMetadata(new HashMap<>());
         return resource;
     }
-    
+
     private void invokeConcurrentSave(String namespaceId, AgentSpec agentSpec, String version,
         long uniformId) throws Exception {
         Method method = AgentSpecOperationServiceImpl.class
-            .getDeclaredMethod("saveAgentSpecFilesConcurrently", String.class, AgentSpec.class,
-                String.class, long.class);
+            .getDeclaredMethod("saveAgentSpecFilesConcurrently", String.class, String.class,
+                AgentSpec.class, String.class, long.class);
         method.setAccessible(true);
-        method.invoke(service, namespaceId, agentSpec, version, uniformId);
+        method.invoke(service, storage.type(), namespaceId, agentSpec, version, uniformId);
     }
 }

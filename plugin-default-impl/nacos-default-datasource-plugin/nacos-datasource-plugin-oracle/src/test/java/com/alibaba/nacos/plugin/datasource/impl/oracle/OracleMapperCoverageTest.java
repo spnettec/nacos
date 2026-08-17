@@ -35,29 +35,29 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class OracleMapperCoverageTest {
-    
+
     private final int startRow = 3;
-    
+
     private final int pageSize = 7;
-    
+
     private final String tenantId = "tenantId";
-    
+
     private final String groupId = "groupId";
-    
+
     private final String dataId = "dataId";
-    
+
     private final String appName = "appName";
-    
+
     private final String content = "content";
-    
+
     private final String namespaceId = "namespaceId";
-    
+
     private final Timestamp startTime = new Timestamp(1000L);
-    
+
     private final Timestamp endTime = new Timestamp(2000L);
-    
+
     private MapperContext context;
-    
+
     @BeforeEach
     void setUp() {
         context = new MapperContext(startRow, pageSize);
@@ -81,14 +81,14 @@ class OracleMapperCoverageTest {
         context.putWhereParameter(FieldConstant.NID, 100L);
         context.putUpdateParameter(FieldConstant.GMT_MODIFIED, 3000L);
     }
-    
+
     @Test
     void testOracleDatabaseDialect() {
         OracleDatabaseDialect dialect = new OracleDatabaseDialect();
         assertEquals(DatabaseTypeConstant.ORACLE, dialect.getType());
         assertEquals("SYSDATE", dialect.getFunction("NOW()"));
     }
-    
+
     @Test
     void testConfigInfoOptionalBranches() {
         ConfigInfoMapperByOracle mapper = new ConfigInfoMapperByOracle();
@@ -106,7 +106,7 @@ class OracleMapperCoverageTest {
                 + "OFFSET 3 ROWS FETCH NEXT 7 ROWS ONLY",
             dataId, groupId, content);
     }
-    
+
     @Test
     void testConfigTagsRelationTypeFilter() {
         ConfigTagsRelationMapperByOracle mapper = new ConfigTagsRelationMapperByOracle();
@@ -121,15 +121,15 @@ class OracleMapperCoverageTest {
                 + "t.config_tags FROM config_info a JOIN "
                 + "(SELECT DISTINCT a.id FROM config_info a "
                 + "LEFT JOIN config_tags_relation b ON a.id=b.id "
-                + "WHERE a.tenant_id LIKE ? AND a.data_id LIKE ? "
-                + "AND a.group_id LIKE ? AND a.app_name = ? "
-                + "AND a.content LIKE ? AND ( b.tag_name LIKE ? ) "
+                + "WHERE a.tenant_id LIKE ? ESCAPE '\\' AND a.data_id LIKE ? ESCAPE '\\' "
+                + "AND a.group_id LIKE ? ESCAPE '\\' AND a.app_name = ? "
+                + "AND a.content LIKE ? ESCAPE '\\' AND ( b.tag_name LIKE ? ESCAPE '\\' ) "
                 + "AND a.type IN (?, ?) ORDER BY a.id OFFSET 3 ROWS "
                 + "FETCH NEXT 7 ROWS ONLY) x ON a.id = x.id "
                 + "LEFT JOIN tag_agg t ON a.id = t.id",
             tenantId, dataId, groupId, appName, content, "tag", "yaml", "properties");
     }
-    
+
     @Test
     void testCapacitySelectBranches() {
         TenantCapacityMapperByOracle tenantCapacityMapper = new TenantCapacityMapperByOracle();
@@ -138,7 +138,7 @@ class OracleMapperCoverageTest {
             "SELECT id, quota, usage, max_size, max_aggr_count, max_aggr_size, "
                 + "tenant_id FROM tenant_capacity WHERE tenant_id = ?",
             tenantId);
-        
+
         GroupCapacityMapperByOracle groupCapacityMapper = new GroupCapacityMapperByOracle();
         assertEquals(DataSourceConstant.ORACLE, groupCapacityMapper.getDataSource());
         assertResult(groupCapacityMapper.select(context),
@@ -146,7 +146,7 @@ class OracleMapperCoverageTest {
                 + "group_id FROM group_capacity WHERE group_id = ?",
             groupId);
     }
-    
+
     @Test
     void testHistoryGrayBranch() {
         HistoryConfigInfoMapperByOracle mapper = new HistoryConfigInfoMapperByOracle();
@@ -161,7 +161,7 @@ class OracleMapperCoverageTest {
                 + "ORDER BY nid FETCH FIRST 1 ROWS ONLY",
             dataId, groupId, tenantId, "formal", "gray", 100L);
     }
-    
+
     @Test
     void testAiResourceMapper() {
         AiResourceMapperByOracle mapper = new AiResourceMapperByOracle();
@@ -174,11 +174,11 @@ class OracleMapperCoverageTest {
             "SELECT id,gmt_create,gmt_modified,name,type,c_desc,status,namespace_id,"
                 + "biz_tags,ext,c_from,version_info,meta_version,scope,owner,"
                 + "download_count FROM ai_resource WHERE namespace_id = ? "
-                + "AND name LIKE ? AND biz_tags LIKE ? AND type = ? "
+                + "AND name LIKE ? ESCAPE '\\' AND biz_tags LIKE ? ESCAPE '\\' AND type = ? "
                 + "AND scope = ? AND owner = ? ORDER BY download_count DESC "
                 + "OFFSET 3 ROWS FETCH NEXT 7 ROWS ONLY",
             namespaceId, "nacos", "tag", "mcp", "public", "owner");
-        
+
         MapperContext alwaysEmptyContext = new MapperContext(startRow, pageSize);
         alwaysEmptyContext.putWhereParameter(FieldConstant.NAMESPACE_ID, namespaceId);
         alwaysEmptyContext.putWhereParameter(AiResourceMapper.QUERY_CONDITION_ALWAYS_EMPTY, true);
@@ -189,7 +189,7 @@ class OracleMapperCoverageTest {
                 + "AND 1 = ? ORDER BY gmt_modified DESC OFFSET 3 ROWS "
                 + "FETCH NEXT 7 ROWS ONLY",
             namespaceId, 0);
-        
+
         MapperContext orContext = new MapperContext(startRow, pageSize);
         orContext.putWhereParameter(FieldConstant.NAMESPACE_ID, namespaceId);
         Map<Object, Object> orGroup = new LinkedHashMap<>();
@@ -204,7 +204,7 @@ class OracleMapperCoverageTest {
                 + "ORDER BY gmt_modified DESC OFFSET 3 ROWS FETCH NEXT 7 ROWS ONLY",
             namespaceId, "stable", "mcp", "a2a");
     }
-    
+
     @Test
     void testAiResourceVersionMapper() {
         AiResourceVersionMapperByOracle mapper = new AiResourceVersionMapperByOracle();
@@ -216,7 +216,7 @@ class OracleMapperCoverageTest {
                 + "AND type = ? AND status = ? AND version = ? "
                 + "ORDER BY gmt_modified DESC OFFSET 3 ROWS FETCH NEXT 7 ROWS ONLY",
             namespaceId, "nacos", "mcp", "stable", "1.0.0");
-        
+
         MapperContext minimalContext = new MapperContext(startRow, pageSize);
         minimalContext.putWhereParameter(FieldConstant.NAMESPACE_ID, namespaceId);
         minimalContext.putWhereParameter(FieldConstant.NAME, "nacos");
@@ -230,12 +230,12 @@ class OracleMapperCoverageTest {
                 + "ORDER BY gmt_modified DESC OFFSET 3 ROWS FETCH NEXT 7 ROWS ONLY",
             namespaceId, "nacos");
     }
-    
+
     private static void assertResult(MapperResult result, String sql, Object... parameters) {
         assertEquals(normalizeSql(sql), normalizeSql(result.getSql()));
         assertArrayEquals(parameters, result.getParamList().toArray());
     }
-    
+
     private static String normalizeSql(String sql) {
         return sql.replaceAll("\\s+", " ").trim();
     }

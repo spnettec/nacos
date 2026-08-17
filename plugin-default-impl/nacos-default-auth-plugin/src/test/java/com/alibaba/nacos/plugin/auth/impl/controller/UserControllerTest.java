@@ -20,6 +20,7 @@ import com.alibaba.nacos.api.common.ApiType;
 import com.alibaba.nacos.auth.config.NacosAuthConfig;
 import com.alibaba.nacos.auth.config.NacosAuthConfigHolder;
 import com.alibaba.nacos.common.model.RestResult;
+import com.alibaba.nacos.plugin.auth.exception.AccessException;
 import com.alibaba.nacos.plugin.auth.impl.authenticate.IAuthenticationManager;
 import com.alibaba.nacos.plugin.auth.impl.constant.AuthConstants;
 import com.alibaba.nacos.plugin.auth.impl.constant.AuthSystemTypes;
@@ -39,6 +40,8 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Collections;
@@ -60,54 +63,54 @@ import static org.mockito.Mockito.when;
  */
 @ExtendWith(MockitoExtension.class)
 class UserControllerTest {
-    
+
     @Mock
     private HttpServletRequest request;
-    
+
     @Mock
     private HttpServletResponse response;
-    
+
     @Mock
     private NacosAuthConfig serverAuthConfig;
-    
+
     @Mock
     private IAuthenticationManager authenticationManager;
-    
+
     @Mock
     private AuthenticationManager legacyAuthenticationManager;
-    
+
     @Mock
     private Authentication legacyAuthentication;
-    
+
     @Mock
     private TokenManagerDelegate tokenManagerDelegate;
-    
+
     @InjectMocks
     private UserController userController;
-    
+
     private NacosUser user;
-    
+
     private Map<String, NacosAuthConfig> cachedConfigMap;
-    
+
     @BeforeEach
     void setUp() throws Exception {
         user = new NacosUser();
         user.setUserName("nacos");
         user.setGlobalAdmin(true);
         user.setToken("1234567890");
-        
+
         cachedConfigMap = getAuthConfigMap();
         ReflectionTestUtils.setField(NacosAuthConfigHolder.getInstance(), "nacosAuthConfigMap",
             Collections.singletonMap(ApiType.OPEN_API.name(), serverAuthConfig));
     }
-    
+
     @AfterEach
     void tearDown() {
         ReflectionTestUtils.setField(NacosAuthConfigHolder.getInstance(), "nacosAuthConfigMap",
             cachedConfigMap);
         SecurityContextHolder.clearContext();
     }
-    
+
     @Test
     void testLoginWithAuthedUser() throws Exception {
         when(authenticationManager.authenticate(request)).thenReturn(user);
@@ -124,22 +127,36 @@ class UserControllerTest {
         assertEquals(true, map.get(GLOBAL_ADMIN));
         assertEquals(user.getUserName(), map.get(USERNAME));
     }
-    
+
     @Test
     void testLoginWithLdapAuthedUser() throws Exception {
         when(authenticationManager.authenticate(request)).thenReturn(user);
         when(authenticationManager.hasGlobalAdminRole(user)).thenReturn(false);
         when(serverAuthConfig.getNacosAuthSystemType()).thenReturn(AuthSystemTypes.LDAP.name());
         when(tokenManagerDelegate.getTokenTtlInSeconds(anyString())).thenReturn(60L);
-        
+
         Object actual = userController.login("nacos", "nacos", response, request);
-        
+
         assertTrue(actual instanceof Map);
         String actualString = actual.toString();
         assertTrue(actualString.contains("accessToken=1234567890"));
         assertTrue(actualString.contains("globalAdmin=false"));
     }
-    
+
+    @Test
+    void testLoginWithInvalidCredentials() throws Exception {
+        when(serverAuthConfig.getNacosAuthSystemType()).thenReturn(AuthSystemTypes.NACOS.name());
+        when(authenticationManager.authenticate(request))
+            .thenThrow(new AccessException("authentication detail"));
+
+        Object actual = userController.login("nacos", "bad", response, request);
+
+        assertTrue(actual instanceof ResponseEntity);
+        ResponseEntity<?> result = (ResponseEntity<?>) actual;
+        assertEquals(HttpStatus.FORBIDDEN, result.getStatusCode());
+        assertEquals(AuthConstants.INVALID_CREDENTIALS_MESSAGE, result.getBody());
+    }
+
     @Test
     void testLoginWithLegacySpringAuthentication() throws Exception {
         when(serverAuthConfig.getNacosAuthSystemType()).thenReturn("custom");
@@ -147,31 +164,31 @@ class UserControllerTest {
             .authenticate(any(UsernamePasswordAuthenticationToken.class)))
             .thenReturn(legacyAuthentication);
         when(tokenManagerDelegate.createToken(legacyAuthentication)).thenReturn("legacy-token");
-        
+
         Object actual = userController.login("nacos", "password", response, request);
-        
+
         assertTrue(actual instanceof RestResult);
         RestResult<?> result = (RestResult<?>) actual;
         assertTrue(result.ok());
         assertEquals("Bearer legacy-token", result.getData());
         verify(response).addHeader(AuthConstants.AUTHORIZATION_HEADER, "Bearer legacy-token");
     }
-    
+
     @Test
     void testLoginWithLegacySpringAuthenticationFailure() throws Exception {
         when(serverAuthConfig.getNacosAuthSystemType()).thenReturn("custom");
         when(legacyAuthenticationManager
             .authenticate(any(UsernamePasswordAuthenticationToken.class)))
             .thenThrow(new BadCredentialsException("bad"));
-        
+
         Object actual = userController.login("nacos", "bad", response, request);
-        
+
         assertTrue(actual instanceof RestResult);
         RestResult<?> result = (RestResult<?>) actual;
         assertEquals(401, result.getCode());
         assertEquals("Login failed", result.getMessage());
     }
-    
+
     @SuppressWarnings("unchecked")
     private Map<String, NacosAuthConfig> getAuthConfigMap() {
         return (Map<String, NacosAuthConfig>) ReflectionTestUtils.getField(

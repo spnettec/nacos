@@ -17,6 +17,7 @@
 package com.alibaba.nacos.plugin.datasource.mapper.ext;
 
 import com.alibaba.nacos.common.constant.Symbols;
+import com.alibaba.nacos.plugin.datasource.mapper.Mapper;
 import com.alibaba.nacos.plugin.datasource.model.MapperResult;
 
 import java.util.ArrayList;
@@ -30,22 +31,22 @@ import java.util.function.Consumer;
  * @date 2024/08/13
  */
 public final class WhereBuilder {
-    
+
     /**
      * Base sql.
      */
     private final String sql;
-    
+
     /**
      * Parameters.
      */
     private final List<Object> parameters = new ArrayList<>();
-    
+
     /**
      * Where Conditional.
      */
     private final StringBuilder where = new StringBuilder(" WHERE ");
-    
+
     /**
      * Default Construct.
      *
@@ -54,7 +55,7 @@ public final class WhereBuilder {
     public WhereBuilder(String sql) {
         this.sql = sql;
     }
-    
+
     /**
      * Build AND.
      *
@@ -64,17 +65,17 @@ public final class WhereBuilder {
         where.append(" AND ");
         return this;
     }
-    
+
     public WhereBuilder startParentheses() {
         where.append(" ( ");
         return this;
     }
-    
+
     public WhereBuilder endParentheses() {
         where.append(" ) ");
         return this;
     }
-    
+
     /**
      * Build OR.
      *
@@ -84,7 +85,7 @@ public final class WhereBuilder {
         where.append(" OR ");
         return this;
     }
-    
+
     /**
      * Build Equals.
      *
@@ -97,7 +98,7 @@ public final class WhereBuilder {
         parameters.add(parameter);
         return this;
     }
-    
+
     /**
      * Build LIKE.
      *
@@ -106,11 +107,27 @@ public final class WhereBuilder {
      * @return Return {@link WhereBuilder}
      */
     public WhereBuilder like(String filed, Object parameter) {
-        where.append(filed).append(" LIKE ? ");
+        return like(filed, parameter, "");
+    }
+
+    /**
+     * Build LIKE with the escape clause required by the current dialect.
+     *
+     * <p>Fuzzy search parameters escape {@code _} with a backslash, so a dialect which has no
+     * default LIKE escape character must declare one explicitly, otherwise the backslash is
+     * matched literally and the query returns no row.</p>
+     *
+     * @param filed Filed name
+     * @param parameter Parameters
+     * @param escapeClause The escape clause of the dialect, empty means no escape clause is needed
+     * @return Return {@link WhereBuilder}
+     */
+    public WhereBuilder like(String filed, Object parameter, String escapeClause) {
+        where.append(filed).append(" LIKE ? ").append(escapeClause);
         parameters.add(parameter);
         return this;
     }
-    
+
     /**
      * Build LIKE with escape.
      *
@@ -119,11 +136,9 @@ public final class WhereBuilder {
      * @return Return {@link WhereBuilder}
      */
     public WhereBuilder likeWithEscape(String filed, Object parameter) {
-        where.append(filed).append(" LIKE ? ESCAPE '\\' ");
-        parameters.add(parameter);
-        return this;
+        return like(filed, parameter, Mapper.LIKE_ESCAPE_CLAUSE);
     }
-    
+
     /**
      * Build IN.
      *
@@ -143,7 +158,7 @@ public final class WhereBuilder {
         where.append(") ");
         return this;
     }
-    
+
     /**
      * Build offset.
      *
@@ -159,7 +174,7 @@ public final class WhereBuilder {
             .append(" ROWS ONLY");
         return this;
     }
-    
+
     /**
      * Build limit.
      *
@@ -174,7 +189,7 @@ public final class WhereBuilder {
             .append(pageSize);
         return this;
     }
-    
+
     /**
      * Build GROUP BY.
      *
@@ -185,7 +200,7 @@ public final class WhereBuilder {
         where.append(" GROUP BY ").append(fields);
         return this;
     }
-    
+
     /**
      * Build ORDER BY.
      *
@@ -196,7 +211,7 @@ public final class WhereBuilder {
         where.append(" ORDER BY ").append(fields);
         return this;
     }
-    
+
     /**
      * Build EXISTS conditional.
      * <p>
@@ -216,15 +231,15 @@ public final class WhereBuilder {
         subBuilder.where.setLength(0);
         consumer.accept(subBuilder);
         MapperResult res = subBuilder.build();
-        
+
         where.append(" EXISTS ( ").append(subSqlPrefix).append(res.getSql()).append(" ) ");
-        
+
         if (res.getParamList() != null) {
             parameters.addAll(res.getParamList());
         }
         return this;
     }
-    
+
     /**
      * Build column-to-column equality.
      * <p>
@@ -239,7 +254,7 @@ public final class WhereBuilder {
         where.append(field1).append(" = ").append(field2).append(" ");
         return this;
     }
-    
+
     /**
      * Build.
      *

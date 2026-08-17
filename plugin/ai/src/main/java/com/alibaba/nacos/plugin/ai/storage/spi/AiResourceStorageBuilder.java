@@ -27,18 +27,22 @@ package com.alibaba.nacos.plugin.ai.storage.spi;
  * @since 3.2.0
  */
 public interface AiResourceStorageBuilder {
-    
+
     /**
      * Type identifier, corresponding to {@link AiResourceStorage#type()}.
      *
      * @return storage provider type, e.g. "nacos_config", "oss"
      */
     String type();
-    
+
     /**
      * Build an {@link AiResourceStorage} instance.
      *
-     * @return a fully initialized {@link AiResourceStorage} instance
+     * <p>Unified plugin configuration is applied to configurable storage instances after
+     * registration. An optional provider may return {@code null} when its bootstrap properties
+     * are absent.</p>
+     *
+     * @return storage instance to register, or {@code null} to skip registration
      */
     AiResourceStorage build();
 }

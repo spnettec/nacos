@@ -22,6 +22,7 @@ import com.alibaba.nacos.consistency.entity.ReadRequest;
 import com.alibaba.nacos.consistency.entity.Response;
 import com.alibaba.nacos.consistency.entity.WriteRequest;
 import com.alibaba.nacos.core.cluster.ServerMemberManager;
+import com.alibaba.nacos.core.distributed.raft.auth.JRaftAuthUpgradeCoordinator;
 import com.alibaba.nacos.core.distributed.raft.exception.NoSuchRaftGroupException;
 import com.alipay.sofa.jraft.Node;
 import com.google.protobuf.Message;
@@ -53,97 +54,100 @@ import static org.mockito.Mockito.when;
 // todo remove this
 @MockitoSettings(strictness = Strictness.LENIENT)
 class JRaftProtocolTest {
-    
+
     @Mock
     private JRaftServer serverMock;
-    
+
     private JRaftProtocol raftProtocol;
-    
+
     @Mock
     private JRaftMaintainService jRaftMaintainService;
-    
+
     @Mock
     private ServerMemberManager memberManager;
-    
+
+    @Mock
+    private JRaftAuthUpgradeCoordinator jRaftAuthUpgradeCoordinator;
+
     private ReadRequest readRequest;
-    
+
     private WriteRequest writeRequest;
-    
+
     @Mock
     private CompletableFuture<Response> futureMock;
-    
+
     @Mock
     private Node nodeMock;
-    
+
     private String groupId;
-    
+
     @BeforeEach
     void setUp() throws Exception {
-        raftProtocol = new JRaftProtocol(memberManager);
+        raftProtocol = new JRaftProtocol(memberManager, jRaftAuthUpgradeCoordinator);
         ReadRequest.Builder readRequestBuilder = ReadRequest.newBuilder();
         readRequest = readRequestBuilder.build();
-        
+
         WriteRequest.Builder writeRequestBuilder = WriteRequest.newBuilder();
         writeRequest = writeRequestBuilder.build();
-        
+
         Field raftServerField = JRaftProtocol.class.getDeclaredField("raftServer");
         raftServerField.setAccessible(true);
         raftServerField.set(raftProtocol, serverMock);
-        
+
         Field jRaftMaintainServiceField =
             JRaftProtocol.class.getDeclaredField("jRaftMaintainService");
         jRaftMaintainServiceField.setAccessible(true);
         jRaftMaintainServiceField.set(raftProtocol, jRaftMaintainService);
-        
+
         when(serverMock.get(readRequest)).thenReturn(futureMock);
         when(serverMock.commit(any(String.class), any(Message.class), any(CompletableFuture.class)))
             .thenReturn(
                 futureMock);
-        
+
         groupId = "test_group";
         when(serverMock.findNodeByGroup(groupId)).thenReturn(nodeMock);
     }
-    
+
     @Test
     void testGetData() throws Exception {
         raftProtocol.getData(readRequest);
         verify(serverMock).get(readRequest);
     }
-    
+
     @Test
     void testWrite() throws Exception {
         raftProtocol.write(writeRequest);
         verify(serverMock).commit(any(String.class), eq(writeRequest),
             any(CompletableFuture.class));
     }
-    
+
     @Test
     void testMemberChange() {
         Set<String> addresses = new HashSet<>();
         raftProtocol.memberChange(addresses);
         verify(serverMock, times(5)).peerChange(jRaftMaintainService, addresses);
     }
-    
+
     @Test
     void testIsLeader() {
         raftProtocol.isLeader(groupId);
         verify(serverMock).findNodeByGroup(groupId);
         verify(nodeMock).isLeader();
     }
-    
+
     @Test
     void testIsReady() {
         raftProtocol.isReady();
         verify(serverMock).isReady();
     }
-    
+
     @Test
     void testIsLeaderWhenNodeNotFoundThrowsNoSuchRaftGroupException() {
         when(serverMock.findNodeByGroup("missing-group")).thenReturn(null);
         assertThrows(NoSuchRaftGroupException.class, () -> raftProtocol.isLeader("missing-group"));
         verify(serverMock).findNodeByGroup("missing-group");
     }
-    
+
     @Test
     void testExecuteDelegatesToMaintainService() {
         when(jRaftMaintainService.execute(anyMap())).thenReturn(RestResultUtils.success("ok"));
@@ -151,13 +155,13 @@ class JRaftProtocolTest {
             raftProtocol.execute(Collections.singletonMap("command", "doSnapshot"));
         verify(jRaftMaintainService).execute(anyMap());
     }
-    
+
     @Test
     void testAddRequestProcessors() {
         raftProtocol.addRequestProcessors(Collections.emptyList());
         verify(serverMock, never()).createMultiRaftGroup(Collections.emptyList());
     }
-    
+
     @Test
     void testShutdownWhenInitializedCallsRaftServerShutdown() throws Exception {
         Field initializedField = JRaftProtocol.class.getDeclaredField("initialized");
@@ -166,7 +170,7 @@ class JRaftProtocolTest {
         raftProtocol.shutdown();
         verify(serverMock).shutdown();
     }
-    
+
     @Test
     void testShutdownWhenNotInitializedDoesNotCallRaftServerShutdown() throws Exception {
         Field initializedField = JRaftProtocol.class.getDeclaredField("initialized");
@@ -175,20 +179,20 @@ class JRaftProtocolTest {
         raftProtocol.shutdown();
         verify(serverMock, never()).shutdown();
     }
-    
+
     @Test
     void testAGetDataDelegatesToRaftServer() {
         raftProtocol.aGetData(readRequest);
         verify(serverMock).get(readRequest);
     }
-    
+
     @Test
     void testWriteAsyncDelegatesToRaftServer() {
         raftProtocol.writeAsync(writeRequest);
         verify(serverMock).commit(eq(writeRequest.getGroup()), eq(writeRequest),
             any(CompletableFuture.class));
     }
-    
+
     /**
      * When peerChange returns true on first call, memberChange returns without retrying 5 times.
      */
@@ -200,7 +204,7 @@ class JRaftProtocolTest {
         raftProtocol.memberChange(addresses);
         verify(serverMock, times(1)).peerChange(any(JRaftMaintainService.class), eq(addresses));
     }
-    
+
     /**
      * Second shutdown does not call raftServer.shutdown again (idempotent).
      */
@@ -215,7 +219,7 @@ class JRaftProtocolTest {
         raftProtocol.shutdown();
         verify(serverMock, times(1)).shutdown();
     }
-    
+
     /**
      * When already initialized, second init() does not call raftServer.init/start again.
      */

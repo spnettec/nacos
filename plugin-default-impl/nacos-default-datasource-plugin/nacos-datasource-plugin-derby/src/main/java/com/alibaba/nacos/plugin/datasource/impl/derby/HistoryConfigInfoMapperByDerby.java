@@ -17,11 +17,15 @@
 package com.alibaba.nacos.plugin.datasource.impl.derby;
 
 import com.alibaba.nacos.common.utils.CollectionUtils;
+import com.alibaba.nacos.common.utils.StringUtils;
 import com.alibaba.nacos.plugin.datasource.constants.DataSourceConstant;
 import com.alibaba.nacos.plugin.datasource.constants.FieldConstant;
 import com.alibaba.nacos.plugin.datasource.mapper.HistoryConfigInfoMapper;
 import com.alibaba.nacos.plugin.datasource.model.MapperContext;
 import com.alibaba.nacos.plugin.datasource.model.MapperResult;
+
+import java.util.List;
+import java.util.Objects;
 
 /**
  * The derby implementation of ConfigInfoMapper.
@@ -31,7 +35,7 @@ import com.alibaba.nacos.plugin.datasource.model.MapperResult;
 
 public class HistoryConfigInfoMapperByDerby extends AbstractMapperByDerby
     implements HistoryConfigInfoMapper {
-    
+
     @Override
     public MapperResult removeConfigHistory(MapperContext context) {
         String sql = "DELETE FROM his_config_info WHERE nid IN( "
@@ -40,7 +44,7 @@ public class HistoryConfigInfoMapperByDerby extends AbstractMapperByDerby
             CollectionUtils.list(context.getWhereParameter(FieldConstant.START_TIME),
                 context.getWhereParameter(FieldConstant.LIMIT_SIZE)));
     }
-    
+
     @Override
     public MapperResult pageFindConfigHistoryFetchRows(MapperContext context) {
         String sql =
@@ -59,7 +63,31 @@ public class HistoryConfigInfoMapperByDerby extends AbstractMapperByDerby
     public String getDataSource() {
         return DataSourceConstant.DERBY;
     }
-    
+
+    @Override
+    public MapperResult getNextHistoryInfo(MapperContext context) {
+        Object grayName = context.getWhereParameter(FieldConstant.GRAY_NAME);
+        boolean filterByGrayName = StringUtils.isNotBlank(Objects.toString(grayName, null));
+        String sql =
+            "SELECT nid,data_id,group_id,tenant_id,app_name,content,md5,src_user,src_ip,op_type,publish_type,"
+                + "gray_name,ext_info,gmt_create,gmt_modified,encrypted_data_key FROM his_config_info "
+                + "WHERE data_id = ? AND group_id = ? AND tenant_id = ? AND publish_type = ? "
+                + (filterByGrayName ? "AND gray_name = ? " : "")
+                + "AND nid > ? ORDER BY nid FETCH FIRST 1 ROWS ONLY";
+
+        List<Object> paramList = CollectionUtils.list(
+            context.getWhereParameter(FieldConstant.DATA_ID),
+            context.getWhereParameter(FieldConstant.GROUP_ID),
+            context.getWhereParameter(FieldConstant.TENANT_ID),
+            context.getWhereParameter(FieldConstant.PUBLISH_TYPE),
+            context.getWhereParameter(FieldConstant.NID));
+        if (filterByGrayName) {
+            paramList.add(4, grayName);
+        }
+
+        return new MapperResult(sql, paramList);
+    }
+
     @Override
     public MapperResult findDeletedConfig(MapperContext context) {
         return new MapperResult(
