@@ -54,9 +54,6 @@ public final class JsonAdapterLogUtils {
     }
     
     private static String formatEffectiveAdapter(String effectiveAdapter) {
-        if (NacosJsonAdapterNames.JACKSON2.equals(effectiveAdapter)) {
-            return "Jackson 2 (adapter: " + effectiveAdapter + ")";
-        }
         if (NacosJsonAdapterNames.JACKSON3.equals(effectiveAdapter)) {
             return "Jackson 3 (adapter: " + effectiveAdapter + ")";
         }

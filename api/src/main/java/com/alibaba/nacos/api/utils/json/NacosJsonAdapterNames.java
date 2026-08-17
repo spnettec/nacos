@@ -29,11 +29,6 @@ public final class NacosJsonAdapterNames {
     public static final String AUTO = "auto";
     
     /**
-     * Jackson 2 adapter name.
-     */
-    public static final String JACKSON2 = "jackson2";
-    
-    /**
      * Jackson 3 adapter name.
      */
     public static final String JACKSON3 = "jackson3";

@@ -45,7 +45,7 @@ class JsonUtilsTest {
         assertEquals("json:input", JsonUtils.toJson("input"));
         assertArrayEquals("bytes:input".getBytes(), JsonUtils.toJsonBytes("input"));
         assertEquals("canonical:input", JsonUtils.toCanonicalJson("input"));
-        assertEquals(NacosJsonAdapterNames.JACKSON2, JsonUtils.selectedAdapterName());
+        assertEquals(NacosJsonAdapterNames.JACKSON3, JsonUtils.selectedAdapterName());
     }
     
     @Test
@@ -117,7 +117,7 @@ class JsonUtilsTest {
         
         @Override
         public String name() {
-            return NacosJsonAdapterNames.JACKSON2;
+            return NacosJsonAdapterNames.JACKSON3;
         }
         
         @Override

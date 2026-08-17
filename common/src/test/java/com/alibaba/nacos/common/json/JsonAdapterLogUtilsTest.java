@@ -55,15 +55,6 @@ class JsonAdapterLogUtilsTest {
     }
     
     @Test
-    void testLogSelectedAdapterWithExplicitJackson2() {
-        System.setProperty(JsonUtils.ADAPTER_PROPERTY_NAME, NacosJsonAdapterNames.JACKSON2);
-        
-        JsonAdapterLogUtils.logSelectedAdapter();
-        
-        assertEquals(NacosJsonAdapterNames.JACKSON2, JsonUtils.selectedAdapterName());
-    }
-    
-    @Test
     void testConstructor() throws Exception {
         Constructor<JsonAdapterLogUtils> constructor =
             JsonAdapterLogUtils.class.getDeclaredConstructor();
@@ -81,10 +72,6 @@ class JsonAdapterLogUtilsTest {
         assertEquals("effective Jackson adapter: Jackson 3 (adapter: jackson3), "
             + "configured nacos.client.json.adapter: auto",
             formatMethod.invoke(null, NacosJsonAdapterNames.JACKSON3, NacosJsonAdapterNames.AUTO));
-        assertEquals("effective Jackson adapter: Jackson 2 (adapter: jackson2), "
-            + "configured nacos.client.json.adapter: jackson2",
-            formatMethod.invoke(null, NacosJsonAdapterNames.JACKSON2,
-                NacosJsonAdapterNames.JACKSON2));
         assertEquals(
             "effective Jackson adapter: custom, configured nacos.client.json.adapter: custom",
             formatMethod.invoke(null, "custom", "custom"));

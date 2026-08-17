@@ -27,20 +27,25 @@ import com.alibaba.nacos.api.utils.json.NacosJsonAdapter;
 import com.alibaba.nacos.api.utils.json.NacosJsonAdapterNames;
 import com.alibaba.nacos.api.utils.json.NacosJsonSubtype;
 import com.alibaba.nacos.api.utils.json.NacosTypeReference;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.jsontype.NamedType;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.JavaType;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.jsontype.NamedType;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.function.UnaryOperator;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -129,9 +134,9 @@ class HealthCheckerFactoryTest {
     }
     
     private static class NoRegisterHealthChecker extends AbstractHealthChecker {
-        
+
         private static final long serialVersionUID = 9020783491111797559L;
-        
+
         private String testValue;
         
         protected NoRegisterHealthChecker() {
@@ -170,11 +175,13 @@ class HealthCheckerFactoryTest {
     
     private static class JacksonTestJsonAdapter implements NacosJsonAdapter {
         
-        private final ObjectMapper mapper = createObjectMapper();
+        private final List<NacosJsonSubtype> subtypes = new ArrayList<NacosJsonSubtype>();
+
+        private volatile ObjectMapper mapper = createObjectMapper(subtypes);
         
         @Override
         public String name() {
-            return NacosJsonAdapterNames.JACKSON2;
+            return NacosJsonAdapterNames.JACKSON3;
         }
         
         @Override
@@ -186,7 +193,7 @@ class HealthCheckerFactoryTest {
         public String toJson(Object obj) {
             try {
                 return mapper.writeValueAsString(obj);
-            } catch (JsonProcessingException e) {
+            } catch (JacksonException e) {
                 throw new NacosSerializationException(obj.getClass(), e);
             }
         }
@@ -205,7 +212,7 @@ class HealthCheckerFactoryTest {
         public <T> T toObj(byte[] json, Class<T> cls) {
             try {
                 return mapper.readValue(json, cls);
-            } catch (IOException e) {
+            } catch (JacksonException e) {
                 throw new NacosDeserializationException(cls, e);
             }
         }
@@ -214,7 +221,7 @@ class HealthCheckerFactoryTest {
         public <T> T toObj(byte[] json, Type type) {
             try {
                 return mapper.readValue(json, constructJavaType(type));
-            } catch (IOException e) {
+            } catch (JacksonException e) {
                 throw new NacosDeserializationException(type, e);
             }
         }
@@ -228,7 +235,7 @@ class HealthCheckerFactoryTest {
         public <T> T toObj(String json, Class<T> cls) {
             try {
                 return mapper.readValue(json, cls);
-            } catch (IOException e) {
+            } catch (JacksonException e) {
                 throw new NacosDeserializationException(cls, e);
             }
         }
@@ -237,7 +244,7 @@ class HealthCheckerFactoryTest {
         public <T> T toObj(String json, Type type) {
             try {
                 return mapper.readValue(json, constructJavaType(type));
-            } catch (IOException e) {
+            } catch (JacksonException e) {
                 throw new NacosDeserializationException(type, e);
             }
         }
@@ -251,7 +258,7 @@ class HealthCheckerFactoryTest {
         public <T> T toObj(InputStream inputStream, Class<T> cls) {
             try {
                 return mapper.readValue(inputStream, cls);
-            } catch (IOException e) {
+            } catch (JacksonException e) {
                 throw new NacosDeserializationException(cls, e);
             }
         }
@@ -260,25 +267,39 @@ class HealthCheckerFactoryTest {
         public <T> T toObj(InputStream inputStream, Type type) {
             try {
                 return mapper.readValue(inputStream, constructJavaType(type));
-            } catch (IOException e) {
+            } catch (JacksonException e) {
                 throw new NacosDeserializationException(type, e);
             }
         }
         
         @Override
         public void registerSubtype(NacosJsonSubtype subtype) {
-            mapper.registerSubtypes(new NamedType(subtype.getSubtype(), subtype.getTypeName()));
+            if (!subtypes.contains(subtype)) {
+                subtypes.add(subtype);
+            }
+            mapper = createObjectMapper(subtypes);
         }
         
         private JavaType constructJavaType(Type type) {
             return mapper.constructType(type);
         }
         
-        private static ObjectMapper createObjectMapper() {
-            ObjectMapper objectMapper = new ObjectMapper();
-            objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-            objectMapper.setSerializationInclusion(Include.NON_NULL);
-            return objectMapper;
+        private static ObjectMapper createObjectMapper(Collection<NacosJsonSubtype> subtypes) {
+            JsonMapper.Builder builder = JsonMapper.builderWithJackson2Defaults();
+            builder.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+            builder.changeDefaultPropertyInclusion(new NonNullPropertyInclusion());
+            for (NacosJsonSubtype subtype : subtypes) {
+                builder.registerSubtypes(new NamedType(subtype.getSubtype(), subtype.getTypeName()));
+            }
+            return builder.build();
+        }
+
+        private static class NonNullPropertyInclusion implements UnaryOperator<JsonInclude.Value> {
+
+            @Override
+            public JsonInclude.Value apply(JsonInclude.Value value) {
+                return JsonInclude.Value.construct(Include.NON_NULL, Include.NON_NULL);
+            }
         }
     }
 }

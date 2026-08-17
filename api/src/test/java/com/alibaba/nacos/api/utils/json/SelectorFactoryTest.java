@@ -135,7 +135,7 @@ class SelectorFactoryTest {
         
         @Override
         public String name() {
-            return NacosJsonAdapterNames.JACKSON2;
+            return NacosJsonAdapterNames.JACKSON3;
         }
         
         @Override

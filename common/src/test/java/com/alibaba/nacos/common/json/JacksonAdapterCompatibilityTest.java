@@ -42,26 +42,14 @@ class JacksonAdapterCompatibilityTest {
     void testDefaultAdaptersAreRegisteredAndAvailable() {
         Map<String, NacosJsonAdapter> adapters = loadAdapters();
         
-        assertTrue(adapters.containsKey(NacosJsonAdapterNames.JACKSON2));
         assertTrue(adapters.containsKey(NacosJsonAdapterNames.JACKSON3));
-        assertTrue(adapters.get(NacosJsonAdapterNames.JACKSON2).isAvailable());
         assertTrue(adapters.get(NacosJsonAdapterNames.JACKSON3).isAvailable());
     }
     
     @Test
-    void testAutoSelectsJackson3WhenBothAdaptersAreAvailable() {
+    void testAutoSelectsJackson3() {
         assertEquals(NacosJsonAdapterNames.JACKSON3, JsonUtils.selectedAdapterName());
         assertEquals("{\"name\":\"nacos\"}", JsonUtils.toJson(new SampleModel("nacos")));
-    }
-    
-    @Test
-    void testExplicitJackson2SelectionWorks() throws Exception {
-        System.setProperty(JsonUtils.ADAPTER_PROPERTY_NAME, NacosJsonAdapterNames.JACKSON2);
-        resetJsonUtils();
-        
-        assertEquals(NacosJsonAdapterNames.JACKSON2, JsonUtils.selectedAdapterName());
-        assertEquals(new SampleModel("nacos"),
-            JsonUtils.toObj("{\"name\":\"nacos\",\"unknown\":\"ignored\"}", SampleModel.class));
     }
     
     @Test

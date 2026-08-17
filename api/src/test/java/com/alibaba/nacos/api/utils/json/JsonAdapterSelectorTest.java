@@ -55,36 +55,24 @@ class JsonAdapterSelectorTest {
     }
     
     @Test
-    void testSelectJackson3WhenJackson2AndJackson3Available() {
-        FakeAdapter jackson2 = new FakeAdapter(NacosJsonAdapterNames.JACKSON2, true);
+    void testSelectJackson3WhenCustomAndJackson3Available() {
+        FakeAdapter custom = new FakeAdapter("custom", true);
         FakeAdapter jackson3 = new FakeAdapter(NacosJsonAdapterNames.JACKSON3, true);
         
         NacosJsonAdapter selected =
-            new JsonAdapterSelector(Arrays.<NacosJsonAdapter>asList(jackson2, jackson3)).select();
+            new JsonAdapterSelector(Arrays.<NacosJsonAdapter>asList(custom, jackson3)).select();
         
         assertSame(jackson3, selected);
     }
     
     @Test
-    void testSelectJackson2WhenExplicitlyConfigured() {
-        System.setProperty(JsonUtils.ADAPTER_PROPERTY_NAME, NacosJsonAdapterNames.JACKSON2);
-        FakeAdapter jackson2 = new FakeAdapter(NacosJsonAdapterNames.JACKSON2, true);
-        FakeAdapter jackson3 = new FakeAdapter(NacosJsonAdapterNames.JACKSON3, true);
-        
-        NacosJsonAdapter selected =
-            new JsonAdapterSelector(Arrays.<NacosJsonAdapter>asList(jackson2, jackson3)).select();
-        
-        assertSame(jackson2, selected);
-    }
-    
-    @Test
     void testSelectJackson3WhenExplicitlyConfigured() {
         System.setProperty(JsonUtils.ADAPTER_PROPERTY_NAME, NacosJsonAdapterNames.JACKSON3);
-        FakeAdapter jackson2 = new FakeAdapter(NacosJsonAdapterNames.JACKSON2, true);
+        FakeAdapter custom = new FakeAdapter("custom", true);
         FakeAdapter jackson3 = new FakeAdapter(NacosJsonAdapterNames.JACKSON3, true);
         
         NacosJsonAdapter selected =
-            new JsonAdapterSelector(Arrays.<NacosJsonAdapter>asList(jackson2, jackson3)).select();
+            new JsonAdapterSelector(Arrays.<NacosJsonAdapter>asList(custom, jackson3)).select();
         
         assertSame(jackson3, selected);
     }
@@ -100,11 +88,11 @@ class JsonAdapterSelectorTest {
     @Test
     void testFailWhenSelectedAdapterUnavailable() {
         System.setProperty(JsonUtils.ADAPTER_PROPERTY_NAME, NacosJsonAdapterNames.JACKSON3);
-        FakeAdapter jackson2 = new FakeAdapter(NacosJsonAdapterNames.JACKSON2, true);
+        FakeAdapter custom = new FakeAdapter("custom", true);
         FakeAdapter jackson3 = new FakeAdapter(NacosJsonAdapterNames.JACKSON3, false);
         
         NacosLoadException exception = assertThrows(NacosLoadException.class,
-            () -> new JsonAdapterSelector(Arrays.<NacosJsonAdapter>asList(jackson2, jackson3))
+            () -> new JsonAdapterSelector(Arrays.<NacosJsonAdapter>asList(custom, jackson3))
                 .select());
         
         assertTrue(exception.getMessage().contains("jackson3"));
@@ -113,12 +101,12 @@ class JsonAdapterSelectorTest {
     @Test
     void testBrokenAdapterIsIgnoredAndDiagnosed() {
         BrokenAdapter brokenAdapter = new BrokenAdapter();
-        FakeAdapter jackson2 = new FakeAdapter(NacosJsonAdapterNames.JACKSON2, true);
+        FakeAdapter jackson3 = new FakeAdapter(NacosJsonAdapterNames.JACKSON3, true);
         
         NacosJsonAdapter selected = new JsonAdapterSelector(
-            Arrays.<NacosJsonAdapter>asList(brokenAdapter, jackson2)).select();
+            Arrays.<NacosJsonAdapter>asList(brokenAdapter, jackson3)).select();
         
-        assertSame(jackson2, selected);
+        assertSame(jackson3, selected);
     }
     
     @Test
@@ -176,7 +164,7 @@ class JsonAdapterSelectorTest {
             new URLClassLoader(new URL[] {serviceRoot.toURI().toURL()}, originalClassLoader);
         try {
             Thread.currentThread().setContextClassLoader(serviceClassLoader);
-            System.setProperty(JsonUtils.ADAPTER_PROPERTY_NAME, NacosJsonAdapterNames.JACKSON2);
+            System.setProperty(JsonUtils.ADAPTER_PROPERTY_NAME, NacosJsonAdapterNames.JACKSON3);
             
             NacosLoadException exception =
                 assertThrows(NacosLoadException.class, () -> new JsonAdapterSelector().select());

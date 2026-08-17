@@ -14,5 +14,4 @@
 # limitations under the License.
 #
 
-com.alibaba.nacos.common.json.Jackson2JsonAdapter
 com.alibaba.nacos.common.json.Jackson3JsonAdapter

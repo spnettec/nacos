@@ -120,8 +120,7 @@ final class JsonAdapterSelector {
     }
     
     private NacosJsonAdapter selectExplicit(String name, List<NacosJsonAdapter> availableAdapters) {
-        if (!NacosJsonAdapterNames.JACKSON2.equals(name)
-            && !NacosJsonAdapterNames.JACKSON3.equals(name)) {
+        if (!NacosJsonAdapterNames.JACKSON3.equals(name)) {
             throw unavailable("Unsupported JSON adapter '" + name + "'.");
         }
         for (NacosJsonAdapter adapter : availableAdapters) {
@@ -139,10 +138,6 @@ final class JsonAdapterSelector {
         NacosJsonAdapter jackson3 = findByName(availableAdapters, NacosJsonAdapterNames.JACKSON3);
         if (jackson3 != null) {
             return jackson3;
-        }
-        NacosJsonAdapter jackson2 = findByName(availableAdapters, NacosJsonAdapterNames.JACKSON2);
-        if (jackson2 != null) {
-            return jackson2;
         }
         if (availableAdapters.size() == 1) {
             return availableAdapters.get(0);
