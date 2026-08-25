@@ -28,23 +28,23 @@ import java.util.List;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ArdListResponse {
-
+    
     private List<ArdCatalogEntry> items = new ArrayList<>();
-
+    
     private String pageToken;
-
+    
     public List<ArdCatalogEntry> getItems() {
         return items;
     }
-
+    
     public void setItems(List<ArdCatalogEntry> items) {
         this.items = items;
     }
-
+    
     public String getPageToken() {
         return pageToken;
     }
-
+    
     public void setPageToken(String pageToken) {
         this.pageToken = pageToken;
     }

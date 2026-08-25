@@ -27,11 +27,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PostgresqlAiSearchSchemaResourceTest {
-
+    
     @Test
     void testMainSchemaDoesNotRequirePgvector() throws IOException {
         String mainSchema = readSchema("META-INF/pg-schema.sql");
-
+        
         assertTrue(mainSchema.contains("CREATE TABLE \"ai_resource_search_document\""));
         assertTrue(mainSchema.contains("CREATE TABLE \"ai_resource_search_chunk\""));
         assertTrue(mainSchema.contains("CREATE TABLE \"ai_resource_task\""));
@@ -51,8 +51,14 @@ class PostgresqlAiSearchSchemaResourceTest {
         assertFalse(mainSchema.contains("CREATE EXTENSION IF NOT EXISTS vector"));
         assertFalse(mainSchema.contains("\"ai_resource_search_embedding_pg\""));
         assertFalse(mainSchema.contains("\"embedding\" vector"));
+        assertTrue(mainSchema.contains("CREATE INDEX \"idx_search_document_type_status\" "
+            + "ON \"ai_resource_search_document\" USING btree ("
+            + System.lineSeparator() + "  \"namespace_id\"," + System.lineSeparator()
+            + "  \"resource_type\"," + System.lineSeparator() + "  \"status\","
+            + System.lineSeparator() + "  \"resource_name\"," + System.lineSeparator()
+            + "  \"id\"" + System.lineSeparator() + ");"));
     }
-
+    
     private String readSchema(String resource) throws IOException {
         try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(resource)) {
             assertNotNull(inputStream);

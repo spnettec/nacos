@@ -26,11 +26,11 @@ import com.alibaba.nacos.common.utils.StringUtils;
  * @author Nacos
  */
 public class AgentVersionListForm extends AgentAdminForm {
-
+    
     private static final long serialVersionUID = 1L;
-
+    
     private String status;
-
+    
     @Override
     public void validate() throws NacosApiException {
         super.validate();
@@ -43,11 +43,11 @@ public class AgentVersionListForm extends AgentAdminForm {
             throw new IllegalArgumentException("Invalid Agent Version status: " + status);
         }
     }
-
+    
     public String getStatus() {
         return status;
     }
-
+    
     public void setStatus(String status) {
         this.status = status;
     }

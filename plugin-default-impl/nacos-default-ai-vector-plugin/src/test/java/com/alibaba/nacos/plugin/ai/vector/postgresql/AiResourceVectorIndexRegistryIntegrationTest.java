@@ -29,12 +29,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * @author nacos
  */
 class AiResourceVectorIndexRegistryIntegrationTest {
-
+    
     @Test
     void shouldDiscoverPostgresqlVectorIndexWithoutSpringContext() {
         AiResourceVectorIndex index = AiResourceVectorIndexRegistry.getInstance()
             .getAllIndexes().get(PostgresqlAiResourceVectorIndex.TYPE);
-
+        
         assertNotNull(index);
         assertEquals(PostgresqlAiResourceVectorIndex.class, index.getClass());
     }

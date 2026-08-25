@@ -30,57 +30,59 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AiVectorPluginTypePolicyTest {
-
+    
     private final AiVectorPluginTypePolicy policy = new AiVectorPluginTypePolicy();
-
+    
     @Test
-    void shouldBeActiveOnlyWhenArdIsEnabled() {
+    void shouldFollowSharedSearchCoreActivation() {
         MapConfiguration configuration = new MapConfiguration();
-
+        
         assertEquals(PluginType.AI_VECTOR, policy.getPluginType());
-        assertFalse(policy.isActive(configuration));
-        configuration.setProperty(Constants.ARD_ENABLED_KEY, "true");
         assertTrue(policy.isActive(configuration));
+        configuration.setProperty(Constants.ARD_ENABLED_KEY, "false");
+        assertTrue(policy.isActive(configuration));
+        configuration.setProperty(Constants.AI_RESOURCE_SEARCH_ENABLED_KEY, "false");
+        assertFalse(policy.isActive(configuration));
         assertEquals(AiResourceVectorIndexRouter.KEY_VECTOR_PROVIDER,
             policy.getSelectionProperty());
     }
-
+    
     @Test
     void shouldEnableConfiguredProviderByDefault() {
         MapConfiguration configuration = new MapConfiguration();
-
+        
         assertTrue(policy.isPluginEnabledByDefault(
             AiResourceVectorIndexRouter.DEFAULT_VECTOR_PROVIDER, configuration));
         assertFalse(policy.isPluginEnabledByDefault("custom", configuration));
-
+        
         configuration.setProperty(AiResourceVectorIndexRouter.KEY_VECTOR_PROVIDER, " custom ");
         assertTrue(policy.isPluginEnabledByDefault("custom", configuration));
         assertFalse(policy.isPluginEnabledByDefault(
             AiResourceVectorIndexRouter.DEFAULT_VECTOR_PROVIDER, configuration));
     }
-
+    
     @Test
     void shouldPreferImplementationStateProperty() {
         MapConfiguration configuration = new MapConfiguration();
         configuration.setProperty(AiResourceVectorIndexRouter.KEY_VECTOR_PROVIDER, "custom");
         configuration.setProperty("nacos.plugin.ai-vector.custom.enabled", "false");
-
+        
         assertFalse(policy.isPluginEnabledByDefault("custom", configuration));
     }
-
+    
     private static class MapConfiguration implements PluginTypeConfiguration {
-
+        
         private final Map<String, String> properties = new HashMap<>();
-
+        
         void setProperty(String key, String value) {
             properties.put(key, value);
         }
-
+        
         @Override
         public String getProperty(String key) {
             return properties.get(key);
         }
-
+        
         @Override
         public boolean containsProperty(String key) {
             return properties.containsKey(key);

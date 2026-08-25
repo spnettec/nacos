@@ -33,7 +33,7 @@ public class AotConfiguration {
     public static String reflectToNativeLibraryLoader() {
         try {
             Class<?> clazz = Class.forName("org.rocksdb.NativeLibraryLoader", false,
-                    Thread.currentThread().getContextClassLoader());
+                Thread.currentThread().getContextClassLoader());
             Field jniLibraryFileNameField = clazz.getDeclaredField("jniLibraryFileName");
             jniLibraryFileNameField.setAccessible(true);
             Field fallbackJniLibraryFileNameField =

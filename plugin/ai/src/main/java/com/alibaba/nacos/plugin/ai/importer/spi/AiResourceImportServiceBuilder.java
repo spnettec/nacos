@@ -32,42 +32,42 @@ import java.util.Set;
  * @since 3.2.1
  */
 public interface AiResourceImportServiceBuilder extends PluginConfigSpec {
-
+    
     /**
      * Managed plugin name and import source identifier.
      *
      * @return unique plugin name
      */
     String pluginName();
-
+    
     /**
      * Importer protocol name retained for API metadata compatibility.
      *
      * @return importer type, for example {@code mcp-registry}
      */
     String importerType();
-
+    
     /**
      * Current display name from the applied configuration snapshot.
      *
      * @return display name
      */
     String displayName();
-
+    
     /**
      * Current description from the applied configuration snapshot.
      *
      * @return description
      */
     String description();
-
+    
     /**
      * Resource types supported by this source.
      *
      * @return supported resource type set
      */
     Set<String> supportedResourceTypes();
-
+    
     /**
      * Build an import service from the current immutable configuration snapshot.
      *

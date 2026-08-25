@@ -25,25 +25,25 @@ import com.alibaba.nacos.api.ai.utils.AgentValidationUtils;
  * @author Nacos
  */
 final class AgentAdminRequestUtils {
-
+    
     private AgentAdminRequestUtils() {
     }
-
+    
     static void validateIdentity(String agentName) {
         AgentValidationUtils.validateAgentName(agentName);
     }
-
+    
     static void validateVersion(String version) {
         AgentValidationUtils.validateVersion(version);
     }
-
+    
     static void validateWritableStatus(String status) {
         if (!AiConstants.Agent.RESOURCE_STATUS_ENABLE.equals(status)
             && !AiConstants.Agent.RESOURCE_STATUS_DISABLE.equals(status)) {
             throw new IllegalArgumentException("Invalid Agent resource status: " + status);
         }
     }
-
+    
     static boolean isBlank(String value) {
         if (value == null) {
             return true;

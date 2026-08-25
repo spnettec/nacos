@@ -45,20 +45,20 @@ import java.util.Map;
  * @author Zhengcy05
  */
 public class RemoteVisibilityGrantService implements VisibilityGrantService {
-
+    
     private static final Logger LOGGER =
         LoggerFactory.getLogger(RemoteVisibilityGrantService.class);
-
+    
     private final NacosRestTemplate nacosRestTemplate;
-
+    
     public RemoteVisibilityGrantService() {
         this(new DefaultHttpClientFactory(LOGGER).createNacosRestTemplate());
     }
-
+    
     public RemoteVisibilityGrantService(NacosRestTemplate nacosRestTemplate) {
         this.nacosRestTemplate = nacosRestTemplate;
     }
-
+    
     @Override
     public void grant(String namespaceId, String resourceType, String resourceName, String username,
         String action) throws NacosException {
@@ -79,7 +79,7 @@ public class RemoteVisibilityGrantService implements VisibilityGrantService {
                 unexpectedException.getMessage());
         }
     }
-
+    
     @Override
     public void revoke(String namespaceId, String resourceType, String resourceName,
         String username, String action) throws NacosException {
@@ -97,18 +97,18 @@ public class RemoteVisibilityGrantService implements VisibilityGrantService {
                 unexpectedException.getMessage());
         }
     }
-
+    
     @Override
     public List<String> findAuthorizedResourceNames(String username, String namespaceId,
         String resourceType, String action) {
         return Collections.emptyList();
     }
-
+    
     private String buildRemoteUrl() {
         return RequestUrlConstants.HTTP_PREFIX + RemoteServerUtil.getOneNacosServerAddress()
             + RemoteServerUtil.getRemoteServerContextPath() + AuthConstants.VISIBILITY_PATH;
     }
-
+    
     private Header buildForwardedIdentityHeader() {
         Header header = Header.newInstance();
         HttpServletRequest request = getCurrentRequest();
@@ -121,7 +121,7 @@ public class RemoteVisibilityGrantService implements VisibilityGrantService {
         }
         return header;
     }
-
+    
     private Query buildForwardedAccessTokenQuery(String namespaceId) {
         Query query = Query.newInstance().addParam("namespaceId", namespaceId);
         HttpServletRequest request = getCurrentRequest();
@@ -134,7 +134,7 @@ public class RemoteVisibilityGrantService implements VisibilityGrantService {
         }
         return query;
     }
-
+    
     private HttpServletRequest getCurrentRequest() {
         RequestAttributes attributes = RequestContextHolder.getRequestAttributes();
         if (!(attributes instanceof ServletRequestAttributes servletRequestAttributes)) {

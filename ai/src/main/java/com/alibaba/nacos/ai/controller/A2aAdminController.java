@@ -58,13 +58,13 @@ import java.util.List;
 @RequestMapping(Constants.A2A.ADMIN_PATH)
 @ExtractorManager.Extractor(httpExtractor = AgentHttpParamExtractor.class)
 public class A2aAdminController {
-
+    
     private final A2aCompatibilityOperationService a2aServerOperationService;
-
+    
     public A2aAdminController(A2aCompatibilityOperationService a2aServerOperationService) {
         this.a2aServerOperationService = a2aServerOperationService;
     }
-
+    
     /**
      * Register agent.
      *
@@ -82,7 +82,7 @@ public class A2aAdminController {
             form.getRegistrationType());
         return Result.success("ok");
     }
-
+    
     /**
      * Get agent card.
      *
@@ -100,7 +100,7 @@ public class A2aAdminController {
                 form.getVersion(),
                 form.getRegistrationType()));
     }
-
+    
     /**
      * Update agent.
      *
@@ -119,7 +119,7 @@ public class A2aAdminController {
             form.getSetAsLatest());
         return Result.success("ok");
     }
-
+    
     /**
      * Delete agent.
      *
@@ -136,7 +136,7 @@ public class A2aAdminController {
             form.getVersion());
         return Result.success("ok");
     }
-
+    
     /**
      * List agents.
      *
@@ -158,7 +158,7 @@ public class A2aAdminController {
                 agentListForm.getAgentName(),
                 agentListForm.getSearch(), pageForm.getPageNo(), pageForm.getPageSize()));
     }
-
+    
     /**
      * List all versions for target Agent.
      *

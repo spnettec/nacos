@@ -60,17 +60,17 @@ import static com.alibaba.nacos.plugin.auth.constant.Constants.Tag.ALLOW_ANONYMO
 @RequestMapping(ArdProtocolConstants.CLIENT_PATH)
 @ExtractorManager.Extractor(httpExtractor = ExtractorManager.DefaultHttpExtractor.class)
 public class ArdSearchController {
-
+    
     private final ArdSearchService ardSearchService;
-
+    
     private final ArdArtifactService ardArtifactService;
-
+    
     public ArdSearchController(ArdSearchService ardSearchService,
         ArdArtifactService ardArtifactService) {
         this.ardSearchService = ardSearchService;
         this.ardArtifactService = ardArtifactService;
     }
-
+    
     /**
      * Search online/latest AI resources from the local Nacos registry.
      */
@@ -84,7 +84,7 @@ public class ArdSearchController {
         bindNamespaceId(namespaceId, request);
         return ardSearchService.search(request);
     }
-
+    
     /**
      * Explore online/latest AI resources from the local Nacos registry.
      */
@@ -98,7 +98,7 @@ public class ArdSearchController {
         bindNamespaceId(namespaceId, request);
         return ardSearchService.explore(request);
     }
-
+    
     /**
      * Return the permission-controlled local ARD catalog document.
      */
@@ -110,7 +110,7 @@ public class ArdSearchController {
         throws NacosException {
         return ardSearchService.catalog(namespaceId);
     }
-
+    
     /**
      * List local ARD resources from the local Nacos registry.
      */
@@ -126,21 +126,21 @@ public class ArdSearchController {
         @RequestParam(required = false) String pageToken) throws NacosException {
         return ardSearchService.list(namespaceId, filter, orderBy, pageSize, pageToken);
     }
-
+    
     private void bindNamespaceId(String queryNamespaceId, ArdSearchRequest request)
         throws NacosApiException {
         if (request != null) {
             request.setNamespaceId(resolveNamespaceId(queryNamespaceId, request.getNamespaceId()));
         }
     }
-
+    
     private void bindNamespaceId(String queryNamespaceId, ArdExploreRequest request)
         throws NacosApiException {
         if (request != null) {
             request.setNamespaceId(resolveNamespaceId(queryNamespaceId, request.getNamespaceId()));
         }
     }
-
+    
     private String resolveNamespaceId(String queryNamespaceId, String bodyNamespaceId)
         throws NacosApiException {
         if (StringUtils.isBlank(queryNamespaceId)) {
@@ -160,7 +160,7 @@ public class ArdSearchController {
         }
         return queryNamespaceId;
     }
-
+    
     /**
      * Return the versioned artifact document behind an ARD catalog entry URL.
      */
@@ -173,9 +173,11 @@ public class ArdSearchController {
         @RequestParam String resourceType,
         @RequestParam String resourceName,
         @RequestParam String version,
-        @RequestParam(required = false) String mcpName) throws NacosException {
+        @RequestParam(required = false) String mcpName,
+        @RequestParam(required = false) String contentDigest,
+        @RequestParam(required = false) String representation) throws NacosException {
         ArdArtifact artifact = ardArtifactService.get(namespaceId, resourceType, resourceName,
-            version, mcpName);
+            version, mcpName, contentDigest, representation);
         return ResponseEntity.ok().contentType(MediaType.parseMediaType(artifact.getMediaType()))
             .body(artifact.getBody());
     }

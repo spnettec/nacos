@@ -27,17 +27,17 @@ import java.util.function.Supplier;
  * @author Nacos
  */
 class DefaultPluginStateSynchronizationContext implements PluginStateSynchronizationContext {
-
+    
     private final PluginStatePersistenceService persistence;
-
+    
     private final Supplier<PluginStateApplier> applierSupplier;
-
+    
     DefaultPluginStateSynchronizationContext(PluginStatePersistenceService persistence,
         Supplier<PluginStateApplier> applierSupplier) {
         this.persistence = persistence;
         this.applierSupplier = applierSupplier;
     }
-
+    
     @Override
     public void applyStateChange(String pluginId, boolean enabled) {
         PluginStateApplier applier = getApplier();
@@ -45,12 +45,12 @@ class DefaultPluginStateSynchronizationContext implements PluginStateSynchroniza
         persistence.saveState(pluginId, enabled);
         applier.applyStateChange(pluginId, enabled);
     }
-
+    
     @Override
     public void applyConfigChange(String pluginId, Map<String, String> config) {
         getApplier().applyConfigChange(pluginId, config);
     }
-
+    
     private PluginStateApplier getApplier() {
         PluginStateApplier result = applierSupplier.get();
         if (result == null) {

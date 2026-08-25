@@ -47,26 +47,26 @@ import java.util.regex.Pattern;
  */
 @Service
 public class AgentHttpClientLifecycleService {
-
+    
     static final String IDENTITY_ATTRIBUTE = "httpClientIdentity";
-
+    
     static final String NAMESPACE_ATTRIBUTE = "httpClientNamespace";
-
+    
     private static final int MAX_EXTERNAL_CLIENT_ID_LENGTH = 256;
-
+    
     private static final Pattern EXTERNAL_CLIENT_ID_PATTERN =
         Pattern.compile("[A-Za-z0-9._:-]+");
-
+    
     private final HttpConnectionBasedClientManager clientManager;
-
+    
     private final AgentRuntimeRegistryService runtimeRegistryService;
-
+    
     public AgentHttpClientLifecycleService(HttpConnectionBasedClientManager clientManager,
         AgentRuntimeRegistryService runtimeRegistryService) {
         this.clientManager = clientManager;
         this.runtimeRegistryService = runtimeRegistryService;
     }
-
+    
     /**
      * Refresh an existing HTTP Client without changing Publisher liveness.
      *
@@ -87,7 +87,7 @@ public class AgentHttpClientLifecycleService {
         validateExistingBinding(client, namespaceId);
         clientManager.renewClient(client.getClientId());
     }
-
+    
     /**
      * Replace one HTTP Publisher's complete Agent Endpoint batch.
      *
@@ -113,7 +113,7 @@ public class AgentHttpClientLifecycleService {
             throw e;
         }
     }
-
+    
     /**
      * Remove one HTTP Publisher's complete Agent Endpoint publication.
      *
@@ -136,7 +136,7 @@ public class AgentHttpClientLifecycleService {
             namespaceId, agentName, protocol);
         clientManager.disconnectIfEmpty(client.getClientId());
     }
-
+    
     /**
      * Refresh one HTTP Client and all publications it currently owns.
      *
@@ -158,7 +158,7 @@ public class AgentHttpClientLifecycleService {
         }
         return buildLivenessInfo();
     }
-
+    
     private String ensureBoundClient(String externalClientId, String namespaceId)
         throws NacosApiException {
         String internalClientId =
@@ -181,7 +181,7 @@ public class AgentHttpClientLifecycleService {
         validateExistingBinding(client, namespaceId);
         return internalClientId;
     }
-
+    
     private void bindMissingAttributes(HttpConnectionBasedClient client, String namespaceId)
         throws NacosApiException {
         ClientAttributes attributes = client.getClientAttributes();
@@ -196,7 +196,7 @@ public class AgentHttpClientLifecycleService {
             attributes.addClientAttribute(NAMESPACE_ATTRIBUTE, namespaceId);
         }
     }
-
+    
     private void validateExistingBinding(HttpConnectionBasedClient client, String namespaceId)
         throws NacosApiException {
         validateIdentity(client);
@@ -206,7 +206,7 @@ public class AgentHttpClientLifecycleService {
             throw accessDenied("HTTP Client namespace does not match its initial binding.");
         }
     }
-
+    
     private void validateIdentity(HttpConnectionBasedClient client) throws NacosApiException {
         ClientAttributes attributes = client.getClientAttributes();
         Object boundIdentity =
@@ -215,7 +215,7 @@ public class AgentHttpClientLifecycleService {
             throw accessDenied("HTTP Client identity does not match its initial binding.");
         }
     }
-
+    
     private HttpConnectionBasedClient getClient(String externalClientId) {
         String internalClientId =
             HttpConnectionBasedClient.getInternalClientId(externalClientId);
@@ -223,7 +223,7 @@ public class AgentHttpClientLifecycleService {
         return client instanceof HttpConnectionBasedClient
             ? (HttpConnectionBasedClient) client : null;
     }
-
+    
     private void validateStatefulHeaders(String externalClientId, String requestModule)
         throws NacosApiException {
         validateExternalClientId(externalClientId);
@@ -233,7 +233,7 @@ public class AgentHttpClientLifecycleService {
                 "Request header `" + HttpHeaderConsts.REQUEST_MODULE + "` must be `AI`.");
         }
     }
-
+    
     private void validateExternalClientId(String externalClientId) throws NacosApiException {
         if (StringUtils.isBlank(externalClientId)
             || externalClientId.length() > MAX_EXTERNAL_CLIENT_ID_LENGTH
@@ -244,7 +244,7 @@ public class AgentHttpClientLifecycleService {
                     + "` must match `[A-Za-z0-9._:-]+` and contain 1 to 256 characters.");
         }
     }
-
+    
     private ClientLivenessInfo buildLivenessInfo() {
         // These are the effective fixed intervals used by HttpConnectionBasedClientManager.
         // The response keeps the SDK independent from those server defaults and can carry
@@ -256,17 +256,17 @@ public class AgentHttpClientLifecycleService {
         result.setExpireTimeoutMillis(Constants.DEFAULT_IP_DELETE_TIMEOUT);
         return result;
     }
-
+    
     private NacosApiException clientNotFound() {
         return clientNotFound(
             "HTTP Client does not exist or owns no Agent Endpoint publication.");
     }
-
+    
     private NacosApiException clientNotFound(String message) {
         return new NacosApiException(NacosException.NOT_FOUND, ErrorCode.HTTP_CLIENT_NOT_FOUND,
             message);
     }
-
+    
     private NacosApiException accessDenied(String message) {
         return new NacosApiException(NacosException.NO_RIGHT, ErrorCode.ACCESS_DENIED, message);
     }

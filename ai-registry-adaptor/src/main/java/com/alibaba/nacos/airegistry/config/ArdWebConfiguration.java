@@ -36,13 +36,13 @@ import java.util.Set;
 @ConditionalOnArdEnabled
 @Import({AuthConfig.class, HttpRequestContextConfig.class})
 public class ArdWebConfiguration {
-
+    
     private final ControllerMethodsCache methodsCache;
-
+    
     public ArdWebConfiguration(ControllerMethodsCache methodsCache) {
         this.methodsCache = methodsCache;
     }
-
+    
     @PostConstruct
     public void init() {
         methodsCache

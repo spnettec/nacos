@@ -41,11 +41,11 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @date 2023/12/28
  */
 class ReuseHttpServletRequestTest {
-
+    
     private MockHttpServletRequest target;
-
+    
     private ReuseHttpServletRequest reuseHttpServletRequest;
-
+    
     @BeforeEach
     void setUp() throws IOException {
         target = new MockHttpServletRequest();
@@ -54,7 +54,7 @@ class ReuseHttpServletRequestTest {
         target.setParameter("value", "123");
         reuseHttpServletRequest = new ReuseHttpServletRequest(target);
     }
-
+    
     @Test
     void testConstructor() throws IOException {
         try {
@@ -66,24 +66,24 @@ class ReuseHttpServletRequestTest {
         ReuseHttpServletRequest request = new ReuseHttpServletRequest(target);
         assertNotNull(request);
     }
-
+    
     @Test
     void testGetBody() throws Exception {
         Object body = reuseHttpServletRequest.getBody();
         assertNotNull(body);
         assertEquals("name=test&value=123&", body.toString());
-
+        
         target.setContentType(MediaType.MULTIPART_FORM_DATA);
         body = reuseHttpServletRequest.getBody();
         assertNotNull(body);
     }
-
+    
     @Test
     void testGetReader() throws IOException {
         BufferedReader reader = reuseHttpServletRequest.getReader();
         assertNotNull(reader);
     }
-
+    
     @Test
     void testGetParameterMap() {
         Map<String, String[]> parameterMap = reuseHttpServletRequest.getParameterMap();
@@ -92,14 +92,14 @@ class ReuseHttpServletRequestTest {
         assertEquals("test", parameterMap.get("name")[0]);
         assertEquals("123", parameterMap.get("value")[0]);
     }
-
+    
     @Test
     void testGetParameter() {
         String name = reuseHttpServletRequest.getParameter("name");
         assertNotNull(name);
         assertEquals("test", name);
     }
-
+    
     @Test
     void testGetParameterValues() {
         String[] values = reuseHttpServletRequest.getParameterValues("value");
@@ -107,7 +107,7 @@ class ReuseHttpServletRequestTest {
         assertEquals(1, values.length);
         assertEquals("123", values[0]);
     }
-
+    
     @Test
     void testGetInputStream() throws IOException {
         ServletInputStream inputStream = reuseHttpServletRequest.getInputStream();

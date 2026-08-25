@@ -64,13 +64,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping(Constants.Agent.CLIENT_PATH)
 @ExtractorManager.Extractor(httpExtractor = AgentClientHttpParamExtractor.class)
 public class AgentClientController {
-
+    
     private final AgentDiscoveryApplicationService discoveryService;
-
+    
     private final AgentHttpClientLifecycleService clientLifecycleService;
-
+    
     private final AgentPublishApplicationService publishService;
-
+    
     public AgentClientController(AgentDiscoveryApplicationService discoveryService,
         AgentHttpClientLifecycleService clientLifecycleService,
         AgentPublishApplicationService publishService) {
@@ -78,7 +78,7 @@ public class AgentClientController {
         this.clientLifecycleService = clientLifecycleService;
         this.publishService = publishService;
     }
-
+    
     /**
      * Publish one exact Agent Version from application code.
      */
@@ -89,7 +89,7 @@ public class AgentClientController {
         AgentPublishRequest request = form.toRequest();
         return Result.success(publishService.publish(form.getNamespaceId(), request));
     }
-
+    
     /**
      * Search visible Agent catalog entries.
      */
@@ -104,7 +104,7 @@ public class AgentClientController {
         clientLifecycleService.renewForQuery(clientId, request.getNamespaceId());
         return Result.success(discoveryService.search(request));
     }
-
+    
     /**
      * Discover one exact Agent Version and its current Endpoint sets.
      */
@@ -119,7 +119,7 @@ public class AgentClientController {
         clientLifecycleService.renewForQuery(clientId, request.getNamespaceId());
         return Result.success(discoveryService.discover(request));
     }
-
+    
     /**
      * Replace one HTTP Publisher's complete Agent Endpoint batch.
      */
@@ -135,7 +135,7 @@ public class AgentClientController {
         AgentEndpointRegistrationBatch batch = form.toRequest();
         return Result.success(clientLifecycleService.register(clientId, requestModule, batch));
     }
-
+    
     /**
      * Remove one HTTP Publisher's complete Agent Endpoint publication.
      */
@@ -153,7 +153,7 @@ public class AgentClientController {
             form.getAgentName(), form.getProtocol());
         return Result.success();
     }
-
+    
     /**
      * Refresh one HTTP Client and all Agent Endpoint publications it owns.
      */

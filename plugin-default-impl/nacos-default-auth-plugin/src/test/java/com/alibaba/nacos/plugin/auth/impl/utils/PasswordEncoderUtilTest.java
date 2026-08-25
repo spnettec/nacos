@@ -73,7 +73,7 @@ class PasswordEncoderUtilTest {
         assertTrue(new BCryptPasswordEncoder().matches(raw73Password, encodedPassword));
         assertFalse(new SafeBcryptPasswordEncoder().matches(raw73Password, encodedPassword));
         assertFalse(PasswordEncoderUtil.matches(raw73Password, encodedPassword));
-
+        
     }
     
     @Test

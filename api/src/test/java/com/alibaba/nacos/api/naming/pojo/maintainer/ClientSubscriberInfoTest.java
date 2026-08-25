@@ -37,7 +37,7 @@ class ClientSubscriberInfoTest {
     @BeforeEach
     void setUp() throws Exception {
         mapper = JsonMapper.builder().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-                .build();
+            .build();
         clientSubscriberInfo = new ClientSubscriberInfo();
         clientSubscriberInfo.setClientId("clientId");
         clientSubscriberInfo.setAppName("appName");

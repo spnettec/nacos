@@ -64,18 +64,18 @@ import java.util.Set;
 @Component
 public class BatchAgentEndpointRequestHandler
     extends RequestHandler<BatchAgentEndpointRequest, AgentEndpointResponse> {
-
+    
     private static final Logger LOGGER =
         LoggerFactory.getLogger(BatchAgentEndpointRequestHandler.class);
-
+    
     private final EphemeralClientOperationServiceImpl clientOperationService;
-
+    
     private final AgentIdCodecHolder agentIdCodecHolder;
-
+    
     private final A2aCompatibilityModeResolver compatibilityModeResolver;
-
+    
     private final CanonicalA2aEndpointOperationService canonicalEndpointOperationService;
-
+    
     public BatchAgentEndpointRequestHandler(
         EphemeralClientOperationServiceImpl clientOperationService,
         AgentIdCodecHolder agentIdCodecHolder,
@@ -86,7 +86,7 @@ public class BatchAgentEndpointRequestHandler
         this.compatibilityModeResolver = compatibilityModeResolver;
         this.canonicalEndpointOperationService = canonicalEndpointOperationService;
     }
-
+    
     @Override
     @NamespaceValidation
     @ExtractorManager.Extractor(rpcExtractor = AgentRequestParamExtractor.class)
@@ -121,7 +121,7 @@ public class BatchAgentEndpointRequestHandler
         }
         return response;
     }
-
+    
     private void validateRequest(BatchAgentEndpointRequest request) throws NacosApiException {
         if (StringUtils.isBlank(request.getAgentName())) {
             throw new NacosApiException(NacosException.INVALID_PARAM, ErrorCode.PARAMETER_MISSING,
@@ -149,7 +149,7 @@ public class BatchAgentEndpointRequestHandler
                     String.join(",", versions)));
         }
     }
-
+    
     private void publishBatchRegisterInstanceTraceEvent(Service service, List<Instance> instances,
         RequestMeta meta) {
         long eventTime = System.currentTimeMillis();

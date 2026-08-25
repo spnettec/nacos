@@ -32,15 +32,15 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @SPI(priority = 100)
 public class NacosGrpcRaftRpcFactory extends GrpcRaftRpcFactory {
-
+    
     private final Map<String, Message> parserClasses = new ConcurrentHashMap<>();
-
+    
     @Override
     public void registerProtobufSerializer(String className, Object... args) {
         super.registerProtobufSerializer(className, args);
         parserClasses.put(className, (Message) args[0]);
     }
-
+    
     @Override
     public RpcClient createRpcClient(RaftRpcFactory.ConfigHelper<RpcClient> helper) {
         RpcClient rpcClient = new NacosGrpcClient(parserClasses, getMarshallerRegistry());

@@ -39,17 +39,17 @@ import java.util.Objects;
  * @author Nacos
  */
 public final class ControlPluginAdapter implements PluginConfigSpec, PluginStartupLifecycle {
-
+    
     private final ControlManagerBuilder builder;
-
+    
     private final ControlManagerCenter managerCenter;
-
+    
     private final List<ConfigItemDefinition> configDefinitions;
-
+    
     private volatile Map<String, String> currentConfig = Collections.emptyMap();
-
+    
     private boolean initialized;
-
+    
     /**
      * Create control plugin adapter.
      *
@@ -58,14 +58,14 @@ public final class ControlPluginAdapter implements PluginConfigSpec, PluginStart
     public ControlPluginAdapter(ControlManagerBuilder builder) {
         this(builder, ControlManagerCenter.getInstance());
     }
-
+    
     ControlPluginAdapter(ControlManagerBuilder builder, ControlManagerCenter managerCenter) {
         this.builder = Objects.requireNonNull(builder, "Control manager builder cannot be null");
         this.managerCenter =
             Objects.requireNonNull(managerCenter, "Control manager center cannot be null");
         this.configDefinitions = filterConfigDefinitions(builder);
     }
-
+    
     /**
      * Get control plugin name.
      *
@@ -74,24 +74,24 @@ public final class ControlPluginAdapter implements PluginConfigSpec, PluginStart
     public String getPluginName() {
         return builder.getName();
     }
-
+    
     @Override
     public List<ConfigItemDefinition> getConfigDefinitions() {
         return configDefinitions;
     }
-
+    
     @Override
     public void applyConfig(Map<String, String> config) {
         Map<String, String> target =
             config == null ? Collections.emptyMap() : new LinkedHashMap<>(config);
         currentConfig = Collections.unmodifiableMap(target);
     }
-
+    
     @Override
     public Map<String, String> getCurrentConfig() {
         return new LinkedHashMap<>(currentConfig);
     }
-
+    
     @Override
     public synchronized void initialize() {
         if (initialized) {
@@ -105,7 +105,7 @@ public final class ControlPluginAdapter implements PluginConfigSpec, PluginStart
             new ControlManagerBundle(connectionControlManager, tpsControlManager));
         initialized = true;
     }
-
+    
     private ConnectionControlManager buildConnectionControlManager(
         Map<String, String> configSnapshot) {
         try {
@@ -124,7 +124,7 @@ public final class ControlPluginAdapter implements PluginConfigSpec, PluginStart
         }
         return new DefaultConnectionControlManager();
     }
-
+    
     private TpsControlManager buildTpsControlManager(Map<String, String> configSnapshot) {
         try {
             TpsControlManager result = builder.buildTpsControlManager(configSnapshot);
@@ -141,7 +141,7 @@ public final class ControlPluginAdapter implements PluginConfigSpec, PluginStart
         }
         return new DefaultTpsControlManager();
     }
-
+    
     private static List<ConfigItemDefinition> filterConfigDefinitions(
         ControlManagerBuilder builder) {
         List<ConfigItemDefinition> definitions = builder.getConfigDefinitions();

@@ -32,11 +32,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author nacos
  */
 class DerbyAiResourceTaskSchemaTest {
-
+    
     @Test
     void testAiResourceTaskUsesGenericPayloadSchema() throws IOException {
         String schema = readSchema();
-
+        
         assertTrue(schema.contains("CREATE TABLE ai_resource_task"));
         assertTrue(schema.contains("task_type varchar(64)"));
         assertTrue(schema.contains("task_stage varchar(32)"));
@@ -54,7 +54,7 @@ class DerbyAiResourceTaskSchemaTest {
         assertFalse(schema.contains("next_execute_time timestamp"));
         assertFalse(schema.contains("lease_until timestamp"));
     }
-
+    
     private String readSchema() throws IOException {
         try (InputStream inputStream = getClass().getClassLoader()
             .getResourceAsStream("META-INF/derby-schema.sql")) {

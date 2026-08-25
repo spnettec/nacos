@@ -30,7 +30,7 @@ import java.util.List;
  * @author Nacos
  */
 public class AgentAdminHttpParamExtractor extends AbstractHttpParamExtractor {
-
+    
     @Override
     public List<ParamInfo> extractParam(HttpServletRequest request) throws NacosException {
         ParamInfo result = new ParamInfo();

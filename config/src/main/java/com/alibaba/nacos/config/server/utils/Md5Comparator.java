@@ -28,14 +28,14 @@ import java.util.Map;
  * @author Sunrisea
  */
 public interface Md5Comparator {
-
+    
     /**
      * Gets md 5 comparator name.
      *
      * @return the md 5 comparator name
      */
     public String getName();
-
+    
     /**
      * Compare md 5 list.
      *

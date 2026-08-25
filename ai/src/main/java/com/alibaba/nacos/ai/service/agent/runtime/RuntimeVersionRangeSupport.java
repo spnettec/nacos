@@ -25,15 +25,15 @@ import com.alibaba.nacos.api.ai.utils.AgentValidationUtils;
  * @author Nacos
  */
 final class RuntimeVersionRangeSupport {
-
+    
     private RuntimeVersionRangeSupport() {
     }
-
+    
     static String exact(String version) {
         AgentValidationUtils.validateVersion(version);
         return '[' + version + ']';
     }
-
+    
     static String canonicalize(String versionRange) {
         AgentValidationUtils.validateVersionRange(versionRange);
         ParsedRange parsed = ParsedRange.parse(versionRange);
@@ -44,7 +44,7 @@ final class RuntimeVersionRangeSupport {
         }
         return versionRange;
     }
-
+    
     static boolean contains(String versionRange, String version) {
         AgentValidationUtils.validateVersionRange(versionRange);
         AgentValidationUtils.validateVersion(version);
@@ -63,17 +63,17 @@ final class RuntimeVersionRangeSupport {
         }
         return true;
     }
-
+    
     private static final class ParsedRange {
-
+        
         private final String lowerBound;
-
+        
         private final String upperBound;
-
+        
         private final boolean lowerInclusive;
-
+        
         private final boolean upperInclusive;
-
+        
         private ParsedRange(String lowerBound, String upperBound, boolean lowerInclusive,
             boolean upperInclusive) {
             this.lowerBound = lowerBound;
@@ -81,7 +81,7 @@ final class RuntimeVersionRangeSupport {
             this.lowerInclusive = lowerInclusive;
             this.upperInclusive = upperInclusive;
         }
-
+        
         private static ParsedRange parse(String value) {
             int comma = value.indexOf(',');
             if (comma < 0) {

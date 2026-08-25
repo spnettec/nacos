@@ -41,7 +41,7 @@ class NacosDuplicateSpringBeanPostProcessorTest {
     
     @Mock
     ConfigurableApplicationContext context;
-
+    
     @Mock
     ConfigurableApplicationContext coreContext;
     

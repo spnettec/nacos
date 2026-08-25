@@ -37,7 +37,7 @@ import com.alibaba.nacos.common.lifecycle.Closeable;
  * @author nacos
  */
 public interface AiClientProxy extends Closeable {
-
+    
     /**
      * Publish one exact Agent definition Version.
      *
@@ -46,7 +46,7 @@ public interface AiClientProxy extends Closeable {
      * @throws NacosException when the transport request fails
      */
     AgentVersionDetail publishAgent(AgentPublishRequest request) throws NacosException;
-
+    
     /**
      * Search visible Agent catalog entries.
      *
@@ -55,7 +55,7 @@ public interface AiClientProxy extends Closeable {
      * @throws NacosException when the transport request fails
      */
     Page<AgentCatalogEntry> searchAgents(AgentSearchRequest request) throws NacosException;
-
+    
     /**
      * Discover one Agent Version and its Endpoint sets.
      *
@@ -64,7 +64,7 @@ public interface AiClientProxy extends Closeable {
      * @throws NacosException when the transport request fails
      */
     AgentDiscoveryResult discoverAgent(AgentDiscoveryRequest request) throws NacosException;
-
+    
     /**
      * Replace one complete Agent Endpoint publication.
      *
@@ -74,7 +74,7 @@ public interface AiClientProxy extends Closeable {
      */
     ClientLivenessInfo registerAgentEndpoints(AgentEndpointRegistrationBatch batch)
         throws NacosException;
-
+    
     /**
      * Remove one complete Agent Endpoint publication.
      *
@@ -85,7 +85,7 @@ public interface AiClientProxy extends Closeable {
      */
     void deregisterAgentEndpoints(String namespaceId, String agentName, String protocol)
         throws NacosException;
-
+    
     /**
      * Renew HTTP Agent Endpoint publications.
      *
@@ -93,7 +93,7 @@ public interface AiClientProxy extends Closeable {
      * @throws NacosException when heartbeat fails or the transport has no heartbeat operation
      */
     ClientLivenessInfo heartbeatAgentEndpoints() throws NacosException;
-
+    
     /**
      * Query prompt by latest/version/label with optional md5 for conditional query.
      *
@@ -106,7 +106,7 @@ public interface AiClientProxy extends Closeable {
      */
     Prompt queryPrompt(String promptKey, String version, String label, String md5)
         throws NacosException;
-
+    
     /**
      * Query skill by latest/version/label with optional md5 for conditional download.
      *
@@ -123,7 +123,7 @@ public interface AiClientProxy extends Closeable {
      */
     SkillQueryResponse querySkill(String skillName, String version, String label, String md5)
         throws NacosException;
-
+    
     /**
      * Query agentspec by latest/version/label with optional md5 for conditional query.
      *

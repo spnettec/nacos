@@ -53,15 +53,15 @@ import static com.alibaba.nacos.config.server.constant.Constants.CAPACITY_CONTRO
 @RequestMapping(CAPACITY_CONTROLLER_V3_ADMIN_PATH)
 @ExtractorManager.Extractor(httpExtractor = ConfigDefaultHttpParamExtractor.class)
 public class CapacityControllerV3 {
-
+    
     private static final Logger LOGGER = LoggerFactory.getLogger(CapacityControllerV3.class);
-
+    
     private final CapacityService capacityService;
-
+    
     public CapacityControllerV3(CapacityService capacityService) {
         this.capacityService = capacityService;
     }
-
+    
     /**
      * Get capacity information.
      */
@@ -75,7 +75,7 @@ public class CapacityControllerV3 {
             throw new NacosApiException(HttpStatus.BAD_REQUEST.value(), ErrorCode.PARAMETER_MISSING,
                 "At least one of the parameters (groupName or namespaceId) must be provided");
         }
-
+        
         try {
             Capacity capacity = capacityService.getCapacityWithDefault(groupName, namespaceId);
             if (capacity == null) {
@@ -95,7 +95,7 @@ public class CapacityControllerV3 {
             return Result.failure(ErrorCode.SERVER_ERROR.getCode(), e.getMessage(), null);
         }
     }
-
+    
     /**
      * Modify group or capacity of namespaceId, and init record when capacity information are still initial.
      */
@@ -107,14 +107,14 @@ public class CapacityControllerV3 {
         throws NacosApiException {
         updateCapacityForm.checkNamespaceIdAndGroupName(capacityService);
         updateCapacityForm.validate();
-
+        
         String groupName = updateCapacityForm.getGroupName();
         String namespaceId = updateCapacityForm.getNamespaceId();
         Integer quota = updateCapacityForm.getQuota();
         Integer maxSize = updateCapacityForm.getMaxSize();
         Integer maxAggrCount = updateCapacityForm.getMaxAggrCount();
         Integer maxAggrSize = updateCapacityForm.getMaxAggrSize();
-
+        
         try {
             boolean isSuccess =
                 capacityService.insertOrUpdateCapacity(groupName, namespaceId, quota, maxSize,

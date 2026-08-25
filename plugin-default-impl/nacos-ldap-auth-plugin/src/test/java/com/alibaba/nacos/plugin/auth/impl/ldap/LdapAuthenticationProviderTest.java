@@ -57,38 +57,38 @@ import static org.mockito.Mockito.when;
 // todo remove this
 @MockitoSettings(strictness = Strictness.LENIENT)
 class LdapAuthenticationProviderTest {
-
+    
     private static final String LDAP_PREFIX = "LDAP_";
-
+    
     private final String adminUserName = "nacos";
-
+    
     private final String normalUserName = "normal";
-
+    
     private final String filterPrefix = "uid";
-
+    
     private final boolean caseSensitive = true;
-
+    
     Method isAdmin;
-
+    
     Method ldapLogin;
-
+    
     @Mock
     private NacosUserService userDetailsService;
-
+    
     @Mock
     private NacosRoleService nacosRoleService;
-
+    
     @Mock
     private LdapTemplate ldapTemplate;
-
+    
     private LdapAuthenticationProvider ldapAuthenticationProvider;
-
+    
     private LdapAuthenticationProvider ldapAuthenticationProviderForCloseCaseSensitive;
-
+    
     private List<RoleInfo> roleInfos = new ArrayList<>();
-
+    
     private String defaultPassWord = System.getProperty("ldap.default.password", "nacos");
-
+    
     @BeforeEach
     void setUp() throws NoSuchMethodException {
         RoleInfo adminRole = new RoleInfo();
@@ -124,7 +124,7 @@ class LdapAuthenticationProviderTest {
             String.class);
         ldapLogin.setAccessible(true);
     }
-
+    
     @Test
     void testIsAdmin() {
         try {
@@ -143,9 +143,9 @@ class LdapAuthenticationProviderTest {
         } catch (InvocationTargetException e) {
             fail();
         }
-
+        
     }
-
+    
     @Test
     void testldapLogin() {
         try {
@@ -167,7 +167,7 @@ class LdapAuthenticationProviderTest {
             fail();
         }
     }
-
+    
     @Test
     void testDefaultCaseSensitive() {
         String userName = StringUtils.upperCase(normalUserName);
@@ -197,7 +197,7 @@ class LdapAuthenticationProviderTest {
         NacosUserDetails nacosUserDetails = (NacosUserDetails) result.getPrincipal();
         assertEquals(nacosUserDetails.getUsername(), LDAP_PREFIX + userName);
     }
-
+    
     @Test
     void testCloseCaseSensitive() {
         when(ldapTemplate.authenticate("", "(" + filterPrefix + "=" + normalUserName + ")",

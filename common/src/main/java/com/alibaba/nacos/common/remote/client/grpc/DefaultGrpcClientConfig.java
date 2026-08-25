@@ -37,7 +37,7 @@ public class DefaultGrpcClientConfig implements GrpcClientConfig {
     private String name;
     
     private final int retryTimes;
-
+    
     private final long retryWaitMills;
     
     private final long timeOutMills;
@@ -118,12 +118,12 @@ public class DefaultGrpcClientConfig implements GrpcClientConfig {
     public int retryTimes() {
         return retryTimes;
     }
-
+    
     @Override
     public long retryWaitMills() {
         return retryWaitMills;
     }
-
+    
     @Override
     public long timeOutMills() {
         return timeOutMills;
@@ -226,9 +226,9 @@ public class DefaultGrpcClientConfig implements GrpcClientConfig {
         private String name;
         
         private int retryTimes = 3;
-
+        
         private long retryWaitMills = 1000L;
-
+        
         private long timeOutMills = 3000L;
         
         private long connectionKeepAlive = 5000L;
@@ -295,7 +295,8 @@ public class DefaultGrpcClientConfig implements GrpcClientConfig {
                     Integer.parseInt(properties.getProperty(GrpcConstants.GRPC_RETRY_TIMES));
             }
             if (properties.containsKey(GrpcConstants.GRPC_RETRY_WAITMILLS)) {
-                this.retryWaitMills = Long.parseLong(properties.getProperty(GrpcConstants.GRPC_RETRY_WAITMILLS));
+                this.retryWaitMills =
+                    Long.parseLong(properties.getProperty(GrpcConstants.GRPC_RETRY_WAITMILLS));
             }
             if (properties.containsKey(GrpcConstants.GRPC_TIMEOUT_MILLS)) {
                 this.timeOutMills =

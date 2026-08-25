@@ -35,29 +35,29 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class VisibilityGrantControllerV3Test {
-
+    
     @Test
     void grantShouldDelegateToService() throws Exception {
         TestVisibilityGrantService service = new TestVisibilityGrantService();
         VisibilityGrantControllerV3 controller = new VisibilityGrantControllerV3(service);
-
+        
         Result<String> result = controller.grant("public", "skill", "demo-skill", "bob", "r");
-
+        
         assertEquals("grant:public:skill:demo-skill:bob:r", service.invocation);
         assertEquals("grant visibility permission ok!", result.getData());
     }
-
+    
     @Test
     void revokeShouldDelegateToService() throws Exception {
         TestVisibilityGrantService service = new TestVisibilityGrantService();
         VisibilityGrantControllerV3 controller = new VisibilityGrantControllerV3(service);
-
+        
         Result<String> result = controller.revoke("public", "skill", "demo-skill", "bob", "w");
-
+        
         assertEquals("revoke:public:skill:demo-skill:bob:w", service.invocation);
         assertEquals("revoke visibility permission ok!", result.getData());
     }
-
+    
     @Test
     void grantAndRevokeShouldUseAdminApiSecuredMetadata() throws Exception {
         assertWriteAdminApiSecured(VisibilityGrantControllerV3.class.getDeclaredMethod("grant",
@@ -65,12 +65,12 @@ class VisibilityGrantControllerV3Test {
         assertWriteAdminApiSecured(VisibilityGrantControllerV3.class.getDeclaredMethod("revoke",
             String.class, String.class, String.class, String.class, String.class));
     }
-
+    
     @Test
     void visibilityGrantControllerShouldUseNacosApiExceptionHandling() {
         assertNotNull(VisibilityGrantControllerV3.class.getAnnotation(NacosApi.class));
     }
-
+    
     private void assertWriteAdminApiSecured(Method method) {
         Secured secured = method.getAnnotation(Secured.class);
         assertNotNull(secured);
@@ -79,25 +79,25 @@ class VisibilityGrantControllerV3Test {
         assertEquals(ApiType.ADMIN_API, secured.apiType());
         assertArrayEquals(new String[] {Constants.Tag.ONLY_IDENTITY}, secured.tags());
     }
-
+    
     private static class TestVisibilityGrantService implements VisibilityGrantService {
-
+        
         private String invocation;
-
+        
         @Override
         public void grant(String namespaceId, String resourceType, String resourceName,
             String username, String action) throws NacosException {
             invocation = String.join(":", "grant", namespaceId, resourceType, resourceName,
                 username, action);
         }
-
+        
         @Override
         public void revoke(String namespaceId, String resourceType, String resourceName,
             String username, String action) throws NacosException {
             invocation = String.join(":", "revoke", namespaceId, resourceType, resourceName,
                 username, action);
         }
-
+        
         @Override
         public List<String> findAuthorizedResourceNames(String username, String namespaceId,
             String resourceType, String action) {

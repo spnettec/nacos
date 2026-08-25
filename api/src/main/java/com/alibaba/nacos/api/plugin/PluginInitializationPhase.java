@@ -22,12 +22,12 @@ package com.alibaba.nacos.api.plugin;
  * @author Nacos
  */
 public enum PluginInitializationPhase {
-
+    
     /**
      * Initialize before custom environment values are applied to the Spring context.
      */
     PRE_CONTEXT,
-
+    
     /**
      * Initialize through the standard plugin manager after the Spring context is refreshed.
      */

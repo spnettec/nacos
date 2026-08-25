@@ -30,17 +30,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
 class NacosAuthPluginPersistenceConfigTest {
-
+    
     @Test
     void testPersistenceConfigConstructor() {
         assertNotNull(new NacosAuthPluginPersistenceConfig());
     }
-
+    
     @Test
     void testEmbeddedStorageBeans() {
         NacosAuthPluginEmbeddedStorageConfig config = new NacosAuthPluginEmbeddedStorageConfig();
         DatabaseOperate databaseOperate = mock(DatabaseOperate.class);
-
+        
         assertNotNull(config.authRowMapperManager());
         assertTrue(config.permissionPersistService(
             databaseOperate) instanceof EmbeddedPermissionPersistServiceImpl);
@@ -49,11 +49,11 @@ class NacosAuthPluginPersistenceConfigTest {
         assertTrue(
             config.userPersistService(databaseOperate) instanceof EmbeddedUserPersistServiceImpl);
     }
-
+    
     @Test
     void testExternalStorageBeans() {
         NacosAuthPluginExternalStorageConfig config = new NacosAuthPluginExternalStorageConfig();
-
+        
         assertTrue(
             config.permissionPersistService() instanceof ExternalPermissionPersistServiceImpl);
         assertTrue(config.rolePersistService() instanceof ExternalRolePersistServiceImpl);

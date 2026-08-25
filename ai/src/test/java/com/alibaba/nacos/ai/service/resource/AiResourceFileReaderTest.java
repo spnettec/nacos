@@ -41,12 +41,12 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  * @author nacos
  */
 class AiResourceFileReaderTest {
-
+    
     @AfterEach
     void tearDown() {
         AiResourceStorageRouter.reset();
     }
-
+    
     @Test
     void readShouldSupportSkillAndTypedResourceKeys() throws Exception {
         TestStorage storage = new TestStorage();
@@ -60,51 +60,51 @@ class AiResourceFileReaderTest {
             PromptUtils.PROMPT_MAIN_DATA_ID), promptContent);
         AiResourceFileReader reader = new AiResourceFileReader(
             AiResourceStorageRouter.getInstance());
-
+        
         assertArrayEquals(skillContent, reader.read(version("SKILL.md"), "public",
             AiResourceConstants.RESOURCE_TYPE_SKILL, "demo-skill", "1.0.0", "SKILL.md"));
         assertArrayEquals(promptContent, reader.read(version(PromptUtils.PROMPT_MAIN_DATA_ID),
             "public", AiResourceConstants.RESOURCE_TYPE_PROMPT, "demo-prompt", "1.0.0",
             PromptUtils.PROMPT_MAIN_DATA_ID));
     }
-
+    
     @Test
     void readShouldIgnoreFilesNotDeclaredByVersion() throws Exception {
         TestStorage storage = new TestStorage();
         AiResourceStorageRouter.join(storage);
         AiResourceFileReader reader = new AiResourceFileReader(
             AiResourceStorageRouter.getInstance());
-
+        
         assertNull(reader.read(version("README.md"), "public",
             AiResourceConstants.RESOURCE_TYPE_SKILL, "demo-skill", "1.0.0", "SKILL.md"));
     }
-
+    
     private AiResourceVersion version(String filePath) {
         AiResourceVersion version = new AiResourceVersion();
         version.setStorage(JacksonUtils.toJson(Map.of("provider", "test", "files",
             List.of(filePath))));
         return version;
     }
-
+    
     private static class TestStorage implements AiResourceStorage {
-
+        
         private final Map<String, byte[]> values = new HashMap<>();
-
+        
         @Override
         public String type() {
             return "test";
         }
-
+        
         @Override
         public void save(StorageKey storageKey, byte[] content) {
             values.put(storageKey.getKey(), content);
         }
-
+        
         @Override
         public byte[] get(StorageKey storageKey) {
             return values.get(storageKey.getKey());
         }
-
+        
         @Override
         public void delete(StorageKey storageKey) {
             values.remove(storageKey.getKey());

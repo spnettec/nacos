@@ -28,12 +28,12 @@ import java.util.List;
  * @author nacos
  */
 public interface AiResourceIndexContentLoader {
-
+    
     /**
      * No-op loader used by tests and unsupported resource types.
      */
     AiResourceIndexContentLoader NOOP = (entry, version) -> Collections.emptyList();
-
+    
     /**
      * Load source content snippets for one search document.
      */

@@ -28,10 +28,10 @@ import com.alibaba.nacos.api.remote.response.Response;
  * @author Nacos
  */
 final class AgentGrpcResponseErrorMapper {
-
+    
     private AgentGrpcResponseErrorMapper() {
     }
-
+    
     static void apply(Response response, Exception exception) {
         if (exception instanceof NacosApiException) {
             NacosApiException apiException = (NacosApiException) exception;

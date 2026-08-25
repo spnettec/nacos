@@ -35,40 +35,40 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * @author lixiaoshuang
  */
 class EncryptionHandlerTest {
-
+    
     private EncryptionPluginService mockEncryptionPluginService;
-
+    
     private EncryptionPluginService previousEncryptionPluginService;
-
+    
     @BeforeEach
     void setUp() throws Exception {
         mockEncryptionPluginService = new EncryptionPluginService() {
-
+            
             @Override
             public String encrypt(String secretKey, String content) {
                 return secretKey + content;
             }
-
+            
             @Override
             public String decrypt(String secretKey, String content) {
                 return content.replaceFirst(secretKey, "");
             }
-
+            
             @Override
             public String generateSecretKey() {
                 return "12345678";
             }
-
+            
             @Override
             public String algorithmName() {
                 return "mockAlgo";
             }
-
+            
             @Override
             public String encryptSecretKey(String secretKey) {
                 return secretKey + secretKey;
             }
-
+            
             @Override
             public String decryptSecretKey(String secretKey) {
                 return generateSecretKey();
@@ -78,7 +78,7 @@ class EncryptionHandlerTest {
             getPlugins().remove(mockEncryptionPluginService.algorithmName());
         EncryptionPluginManager.join(mockEncryptionPluginService);
     }
-
+    
     @AfterEach
     void tearDown() throws Exception {
         Map<String, EncryptionPluginService> plugins = getPlugins();
@@ -88,20 +88,20 @@ class EncryptionHandlerTest {
                 previousEncryptionPluginService);
         }
     }
-
+    
     @Test
     void testEncryptHandler() {
         Pair<String, String> pair = EncryptionHandler.encryptHandler("test-dataId", "content");
         assertNotNull(pair);
     }
-
+    
     @Test
     void testDecryptHandler() {
         Pair<String, String> pair =
             EncryptionHandler.decryptHandler("test-dataId", "12345678", "content");
         assertNotNull(pair);
     }
-
+    
     @Test
     void testCornerCaseDataIdAlgoParse() {
         String dataId = "cipher-";
@@ -109,7 +109,7 @@ class EncryptionHandlerTest {
         assertNotNull(pair,
             "should not throw exception when parsing enc algo for dataId '" + dataId + "'");
     }
-
+    
     @Test
     void testUnknownAlgorithmNameEnc() {
         String dataId = "cipher-mySM4-application";
@@ -119,7 +119,7 @@ class EncryptionHandlerTest {
         assertEquals(content, pair.getSecond(),
             "should return original content if algorithm is not defined.");
     }
-
+    
     @Test
     void testUnknownAlgorithmNameDecrypt() {
         String dataId = "cipher-mySM4-application";
@@ -129,7 +129,7 @@ class EncryptionHandlerTest {
         assertEquals(content, pair.getSecond(),
             "should return original content if algorithm is not defined.");
     }
-
+    
     @Test
     void testEncrypt() {
         String dataId = "cipher-mockAlgo-application";
@@ -142,7 +142,7 @@ class EncryptionHandlerTest {
         assertEquals(mockEncryptionPluginService.encryptSecretKey(sec), pair.getFirst(),
             "should return encrypted secret key.");
     }
-
+    
     @Test
     void testDecrypt() {
         String dataId = "cipher-mockAlgo-application";
@@ -155,7 +155,7 @@ class EncryptionHandlerTest {
         assertEquals(oContent, pair.getSecond(), "should return original content.");
         assertEquals(oSec, pair.getFirst(), "should return original secret key.");
     }
-
+    
     @SuppressWarnings("unchecked")
     private Map<String, EncryptionPluginService> getPlugins() throws Exception {
         Field field = EncryptionPluginManager.class.getDeclaredField("ENCRYPTION_SPI_MAP");

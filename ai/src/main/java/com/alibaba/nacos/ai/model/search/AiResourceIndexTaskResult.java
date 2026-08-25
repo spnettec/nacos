@@ -22,32 +22,32 @@ package com.alibaba.nacos.ai.model.search;
  * @author nacos
  */
 public class AiResourceIndexTaskResult {
-
+    
     public static final int CURRENT_SCHEMA_VERSION = 1;
-
+    
     private int schemaVersion = CURRENT_SCHEMA_VERSION;
-
+    
     private String enhancementFingerprint;
-
+    
     public AiResourceIndexTaskResult() {
     }
-
+    
     public AiResourceIndexTaskResult(String enhancementFingerprint) {
         this.enhancementFingerprint = enhancementFingerprint;
     }
-
+    
     public int getSchemaVersion() {
         return schemaVersion;
     }
-
+    
     public void setSchemaVersion(int schemaVersion) {
         this.schemaVersion = schemaVersion;
     }
-
+    
     public String getEnhancementFingerprint() {
         return enhancementFingerprint;
     }
-
+    
     public void setEnhancementFingerprint(String enhancementFingerprint) {
         this.enhancementFingerprint = enhancementFingerprint;
     }

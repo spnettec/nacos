@@ -36,9 +36,9 @@ class AbstractHealthCheckerTest {
     @BeforeEach
     void setUp() {
         objectMapper = JsonMapper.builder()
-                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-                .registerSubtypes(new NamedType(TestChecker.class, TestChecker.TYPE))
-                .build();
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .registerSubtypes(new NamedType(TestChecker.class, TestChecker.TYPE))
+            .build();
     }
     
     @Test

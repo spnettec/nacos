@@ -24,24 +24,24 @@ import com.alibaba.nacos.api.model.v2.ErrorCode;
  * @author nacos
  */
 public class BatchUploadItemResult {
-
+    
     public static final String ERROR_CODE_SUCCESS = "SUCCESS";
-
+    
     public static final String ERROR_CODE_UPLOAD_FAILED = "UPLOAD_FAILED";
-
+    
     private String name;
-
+    
     private boolean success;
-
+    
     private String errorCode;
-
+    
     private String errorMessage;
-
+    
     private String owner;
-
+    
     public BatchUploadItemResult() {
     }
-
+    
     public BatchUploadItemResult(String name, boolean success, String errorCode,
         String errorMessage, String owner) {
         this.name = name;
@@ -50,58 +50,58 @@ public class BatchUploadItemResult {
         this.errorMessage = errorMessage;
         this.owner = owner;
     }
-
+    
     public static BatchUploadItemResult success(String skillName) {
         return new BatchUploadItemResult(skillName, true, ERROR_CODE_SUCCESS,
             ErrorCode.SUCCESS.getMsg(), null);
     }
-
+    
     public static BatchUploadItemResult failure(String skillName, String errorCode,
         String errorMessage) {
         return failure(skillName, errorCode, errorMessage, null);
     }
-
+    
     public static BatchUploadItemResult failure(String skillName, String errorCode,
         String errorMessage, String owner) {
         return new BatchUploadItemResult(skillName, false, errorCode, errorMessage, owner);
     }
-
+    
     public String getName() {
         return name;
     }
-
+    
     public void setName(String name) {
         this.name = name;
     }
-
+    
     public boolean isSuccess() {
         return success;
     }
-
+    
     public void setSuccess(boolean success) {
         this.success = success;
     }
-
+    
     public String getErrorCode() {
         return errorCode;
     }
-
+    
     public void setErrorCode(String errorCode) {
         this.errorCode = errorCode;
     }
-
+    
     public String getErrorMessage() {
         return errorMessage;
     }
-
+    
     public void setErrorMessage(String errorMessage) {
         this.errorMessage = errorMessage;
     }
-
+    
     public String getOwner() {
         return owner;
     }
-
+    
     public void setOwner(String owner) {
         this.owner = owner;
     }

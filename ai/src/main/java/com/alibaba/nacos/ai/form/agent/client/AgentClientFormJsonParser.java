@@ -30,10 +30,10 @@ import com.alibaba.nacos.api.utils.json.NacosTypeReference;
  * @author Nacos
  */
 final class AgentClientFormJsonParser {
-
+    
     private AgentClientFormJsonParser() {
     }
-
+    
     static <T> T parseOptional(String fieldName, String value,
         NacosTypeReference<T> targetType) throws NacosApiException {
         if (StringUtils.isBlank(value)) {

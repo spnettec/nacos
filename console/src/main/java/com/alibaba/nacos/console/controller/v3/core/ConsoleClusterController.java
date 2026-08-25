@@ -43,9 +43,9 @@ import java.util.Collection;
 @RestController
 @RequestMapping("/v3/console/core/cluster")
 public class ConsoleClusterController {
-
+    
     private final ClusterProxy clusterProxy;
-
+    
     /**
      * Constructs a new ConsoleClusterController with the provided ClusterProxy.
      *
@@ -54,7 +54,7 @@ public class ConsoleClusterController {
     public ConsoleClusterController(ClusterProxy clusterProxy) {
         this.clusterProxy = clusterProxy;
     }
-
+    
     /**
      * The console displays the list of cluster members.
      *

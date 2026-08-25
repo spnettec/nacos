@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  * @author nacos
  */
 class ParamInfoTest {
-
+    
     @Test
     @DisplayName("Getter and setter for namespaceShowName should work correctly")
     void testNamespaceShowNameGetterSetter() {
@@ -41,7 +41,7 @@ class ParamInfoTest {
         paramInfo.setNamespaceShowName("testNamespace");
         assertEquals("testNamespace", paramInfo.getNamespaceShowName());
     }
-
+    
     @Test
     @DisplayName("Getter and setter for namespaceId should work correctly")
     void testNamespaceIdGetterSetter() {
@@ -50,7 +50,7 @@ class ParamInfoTest {
         paramInfo.setNamespaceId("ns-123");
         assertEquals("ns-123", paramInfo.getNamespaceId());
     }
-
+    
     @Test
     @DisplayName("Getter and setter for dataId should work correctly")
     void testDataIdGetterSetter() {
@@ -59,7 +59,7 @@ class ParamInfoTest {
         paramInfo.setDataId("data-123");
         assertEquals("data-123", paramInfo.getDataId());
     }
-
+    
     @Test
     @DisplayName("Getter and setter for serviceName should work correctly")
     void testServiceNameGetterSetter() {
@@ -68,7 +68,7 @@ class ParamInfoTest {
         paramInfo.setServiceName("service-123");
         assertEquals("service-123", paramInfo.getServiceName());
     }
-
+    
     @Test
     @DisplayName("Getter and setter for group should work correctly")
     void testGroupGetterSetter() {
@@ -77,7 +77,7 @@ class ParamInfoTest {
         paramInfo.setGroup("group-123");
         assertEquals("group-123", paramInfo.getGroup());
     }
-
+    
     @Test
     @DisplayName("Getter and setter for cluster should work correctly")
     void testClusterGetterSetter() {
@@ -86,7 +86,7 @@ class ParamInfoTest {
         paramInfo.setCluster("cluster-123");
         assertEquals("cluster-123", paramInfo.getCluster());
     }
-
+    
     @Test
     @DisplayName("Getter and setter for clusters should work correctly")
     void testClustersGetterSetter() {
@@ -95,7 +95,7 @@ class ParamInfoTest {
         paramInfo.setClusters("cluster1,cluster2");
         assertEquals("cluster1,cluster2", paramInfo.getClusters());
     }
-
+    
     @Test
     @DisplayName("Getter and setter for ip should work correctly")
     void testIpGetterSetter() {
@@ -104,7 +104,7 @@ class ParamInfoTest {
         paramInfo.setIp("192.168.1.1");
         assertEquals("192.168.1.1", paramInfo.getIp());
     }
-
+    
     @Test
     @DisplayName("Getter and setter for port should work correctly")
     void testPortGetterSetter() {
@@ -113,7 +113,7 @@ class ParamInfoTest {
         paramInfo.setPort("8848");
         assertEquals("8848", paramInfo.getPort());
     }
-
+    
     @Test
     @DisplayName("Getter and setter for metadata should work correctly")
     void testMetadataGetterSetter() {
@@ -125,7 +125,7 @@ class ParamInfoTest {
         assertNotNull(paramInfo.getMetadata());
         assertEquals("value1", paramInfo.getMetadata().get("key1"));
     }
-
+    
     @Test
     @DisplayName("Getter and setter for mcpName should work correctly")
     void testMcpNameGetterSetter() {
@@ -134,7 +134,7 @@ class ParamInfoTest {
         paramInfo.setMcpName("mcp-123");
         assertEquals("mcp-123", paramInfo.getMcpName());
     }
-
+    
     @Test
     @DisplayName("Getter and setter for mcpId should work correctly")
     void testMcpIdGetterSetter() {
@@ -143,7 +143,7 @@ class ParamInfoTest {
         paramInfo.setMcpId("mcp-id-123");
         assertEquals("mcp-id-123", paramInfo.getMcpId());
     }
-
+    
     @Test
     @DisplayName("Getter and setter for agentName should work correctly")
     void testAgentNameGetterSetter() {
@@ -152,7 +152,7 @@ class ParamInfoTest {
         paramInfo.setAgentName("agent-123");
         assertEquals("agent-123", paramInfo.getAgentName());
     }
-
+    
     @Test
     @DisplayName("Getter and setter for skillName should work correctly")
     void testSkillNameGetterSetter() {
@@ -161,7 +161,7 @@ class ParamInfoTest {
         paramInfo.setSkillName("skill-123");
         assertEquals("skill-123", paramInfo.getSkillName());
     }
-
+    
     @Test
     @DisplayName("Getter and setter for skillSearchName should work correctly")
     void testSkillSearchNameGetterSetter() {

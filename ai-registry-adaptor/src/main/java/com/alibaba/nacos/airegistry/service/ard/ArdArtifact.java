@@ -22,20 +22,20 @@ package com.alibaba.nacos.airegistry.service.ard;
  * @author nacos
  */
 public class ArdArtifact {
-
+    
     private final String mediaType;
-
+    
     private final Object body;
-
+    
     public ArdArtifact(String mediaType, Object body) {
         this.mediaType = mediaType;
         this.body = body;
     }
-
+    
     public String getMediaType() {
         return mediaType;
     }
-
+    
     public Object getBody() {
         return body;
     }

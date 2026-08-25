@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertTimeout;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RuntimeEndpointRevisionTest {
-
+    
     private static final String DUAL_ENDPOINT_FRAME_HEX =
         "0000000200000017687474703a2f2f612e6578616d706c653a38302f727063000000044854"
             + "54500000000a3fe000000000000000000000010000000100000005312e302e30000000075b"
@@ -44,7 +44,7 @@ class RuntimeEndpointRevisionTest {
             + "3d3226613d31000000074a534f4e525043000000003ff00000000000000000000200000002"
             + "617a0000000162000000047a6f6e65000000027a32000000000100000005312e302e300000"
             + "00075b312e302e305d";
-
+    
     private static final String NATURAL_KEY_FRAME_HEX =
         "0000000300000018687474703a2f2f73616d652e6578616d706c653a38302f61000000044752"
             + "5043000000003ff000000000000000000000010000000100000005312e302e30000000075b31"
@@ -53,7 +53,7 @@ class RuntimeEndpointRevisionTest {
             + "00075b312e302e305d0000001a687474703a2f2f73616d652e6578616d706c653a313030302f"
             + "7a0000000448545450000000003ff000000000000000000000010000000100000005312e302e"
             + "30000000075b312e302e305d";
-
+    
     @Test
     void testEmptyProjectionGoldenVector() {
         byte[] frame = RuntimeEndpointRevision.revisionBytes("public", "Order Agent", "a2a",
@@ -65,7 +65,7 @@ class RuntimeEndpointRevisionTest {
         assertEquals("murmur3-x64-128-v1", RuntimeEndpointRevision.ALGORITHM_ID);
         assertEquals("murmur3-x64-128-v1:", RuntimeEndpointRevision.TOKEN_PREFIX);
     }
-
+    
     @Test
     void testDualEndpointGoldenVectorAndNaturalKeyOrdering() {
         AgentDiscoveryEndpoint b =
@@ -78,7 +78,7 @@ class RuntimeEndpointRevisionTest {
         a.setPriority(10);
         a.setWeight(0.5D);
         List<AgentDiscoveryEndpoint> reversedInput = Arrays.asList(b, a);
-
+        
         byte[] frame = RuntimeEndpointRevision.revisionBytes("public", "Order Agent", "a2a",
             reversedInput);
         assertEquals(194, frame.length);
@@ -89,7 +89,7 @@ class RuntimeEndpointRevisionTest {
             RuntimeEndpointRevision.revisionBytes("public", "Order Agent", "a2a",
                 Arrays.asList(a, b)));
     }
-
+    
     @Test
     void testNaturalKeyOrdersNumericPortThenTransport() {
         AgentDiscoveryEndpoint port1000 =
@@ -100,7 +100,7 @@ class RuntimeEndpointRevisionTest {
             createEndpoint("http://same.example/a", "GRPC", true);
         List<AgentDiscoveryEndpoint> reversed =
             Arrays.asList(port1000, port80Json, port80Grpc);
-
+        
         byte[] frame = RuntimeEndpointRevision.revisionBytes("public", "Agent", "a2a",
             reversed);
         assertEquals(240, frame.length);
@@ -111,7 +111,7 @@ class RuntimeEndpointRevisionTest {
             RuntimeEndpointRevision.revisionBytes("public", "Agent", "a2a",
                 Arrays.asList(port80Grpc, port80Json, port1000)));
     }
-
+    
     @Test
     void testEquivalentDefaultsAndMetadataOrderHaveSameRevision() {
         AgentDiscoveryEndpoint omitted =
@@ -122,7 +122,7 @@ class RuntimeEndpointRevisionTest {
         explicit.setWeight(1D);
         explicit.setMetadata(Collections.<String, String>emptyMap());
         assertEquals(revision(omitted), revision(explicit));
-
+        
         AgentDiscoveryEndpoint firstOrder =
             createEndpoint("http://example.com/rpc", "HTTP", true);
         Map<String, String> firstMetadata = new LinkedHashMap<String, String>();
@@ -136,7 +136,7 @@ class RuntimeEndpointRevisionTest {
         secondMetadata.put("zone", "z1");
         secondOrder.setMetadata(secondMetadata);
         assertEquals(revision(firstOrder), revision(secondOrder));
-
+        
         AgentDiscoveryEndpoint firstBindingOrder =
             createEndpoint("http://bindings.example.com/rpc", "HTTP", true);
         firstBindingOrder.setBindings(Arrays.asList(binding("2.0.0", "[2.0.0]"),
@@ -147,7 +147,7 @@ class RuntimeEndpointRevisionTest {
             binding("2.0.0", "[2.0.0]")));
         assertEquals(revision(firstBindingOrder), revision(secondBindingOrder));
     }
-
+    
     @Test
     void testEquivalentSignedZeroWeightsHaveSameRevision() {
         AgentDiscoveryEndpoint positiveZero =
@@ -158,7 +158,7 @@ class RuntimeEndpointRevisionTest {
         negativeZero.setWeight(-0D);
         assertEquals(revision(positiveZero), revision(negativeZero));
     }
-
+    
     @Test
     void testAdjacentWeightsHaveDifferentRevisions() {
         AgentDiscoveryEndpoint baseline =
@@ -169,11 +169,11 @@ class RuntimeEndpointRevisionTest {
         adjacent.setWeight(Math.nextUp(1D));
         assertNotEquals(revision(baseline), revision(adjacent));
     }
-
+    
     @Test
     void testEveryIncludedEndpointFieldChangesRevision() {
         String baseline = revision(createEndpoint("http://example.com/a", "HTTP", true));
-
+        
         AgentDiscoveryEndpoint uri = createEndpoint("http://example.com/b", "HTTP", true);
         assertNotEquals(baseline, revision(uri));
         AgentDiscoveryEndpoint transport =
@@ -194,13 +194,13 @@ class RuntimeEndpointRevisionTest {
         AgentDiscoveryEndpoint health =
             createEndpoint("http://example.com/a", "HTTP", false);
         assertNotEquals(baseline, revision(health));
-
+        
         AgentDiscoveryEndpoint bindings =
             createEndpoint("http://example.com/a", "HTTP", true);
         bindings.setBindings(Collections.singletonList(binding("1.0.1", "[1.0.1]")));
         assertNotEquals(baseline, revision(bindings));
     }
-
+    
     @Test
     void testProjectionIdentityIsValidatedButExcludedFromRevisionBytes() {
         AgentDiscoveryEndpoint endpoint =
@@ -211,7 +211,7 @@ class RuntimeEndpointRevisionTest {
             Collections.singletonList(endpoint));
         assertArrayEquals(first, second);
     }
-
+    
     @Test
     void testRejectInvalidProjectionAndDuplicateNaturalKeys() {
         assertThrows(IllegalArgumentException.class,
@@ -227,22 +227,22 @@ class RuntimeEndpointRevisionTest {
                 Collections.<AgentDiscoveryEndpoint>emptyList()));
         assertThrows(IllegalArgumentException.class,
             () -> revision(null));
-
+        
         AgentDiscoveryEndpoint missingHealth =
             createEndpoint("http://example.com/rpc", "HTTP", null);
         assertThrows(IllegalArgumentException.class,
             () -> revision(missingHealth));
-
+        
         AgentDiscoveryEndpoint missingBindings =
             createEndpoint("http://missing.example.com/rpc", "HTTP", true);
         missingBindings.setBindings(null);
         assertThrows(IllegalArgumentException.class, () -> revision(missingBindings));
-
+        
         AgentDiscoveryEndpoint incompleteBinding =
             createEndpoint("http://binding.example.com/rpc", "HTTP", true);
         incompleteBinding.setBindings(Collections.singletonList(new RuntimeVersionBinding()));
         assertThrows(IllegalArgumentException.class, () -> revision(incompleteBinding));
-
+        
         AgentDiscoveryEndpoint first =
             createEndpoint("http://EXAMPLE.COM/a", "HTTP", true);
         AgentDiscoveryEndpoint duplicate =
@@ -251,7 +251,7 @@ class RuntimeEndpointRevisionTest {
             () -> RuntimeEndpointRevision.compute("public", "Agent", "a2a",
                 Arrays.asList(first, duplicate)));
     }
-
+    
     @Test
     void testMaximumProjectionIsBoundedAndPractical() {
         List<AgentDiscoveryEndpoint> endpoints = new ArrayList<AgentDiscoveryEndpoint>();
@@ -262,17 +262,17 @@ class RuntimeEndpointRevisionTest {
             String revision = RuntimeEndpointRevision.compute("public", "Agent", "a2a", endpoints);
             assertTrue(revision.startsWith(RuntimeEndpointRevision.TOKEN_PREFIX));
         });
-
+        
         endpoints.add(createEndpoint("http://overflow.example.com/rpc", "HTTP", true));
         assertThrows(IllegalArgumentException.class,
             () -> RuntimeEndpointRevision.compute("public", "Agent", "a2a", endpoints));
     }
-
+    
     private String revision(AgentDiscoveryEndpoint endpoint) {
         return RuntimeEndpointRevision.compute("public", "Agent", "a2a",
             Collections.singletonList(endpoint));
     }
-
+    
     private AgentDiscoveryEndpoint createEndpoint(String uri, String transport,
         Boolean healthy) {
         AgentDiscoveryEndpoint result = new AgentDiscoveryEndpoint();
@@ -282,14 +282,14 @@ class RuntimeEndpointRevisionTest {
         result.setBindings(Collections.singletonList(binding("1.0.0", "[1.0.0]")));
         return result;
     }
-
+    
     private RuntimeVersionBinding binding(String runtimeVersion, String versionRange) {
         RuntimeVersionBinding result = new RuntimeVersionBinding();
         result.setRuntimeVersion(runtimeVersion);
         result.setVersionRange(versionRange);
         return result;
     }
-
+    
     private String toHex(byte[] value) {
         char[] alphabet = "0123456789abcdef".toCharArray();
         char[] result = new char[value.length * 2];

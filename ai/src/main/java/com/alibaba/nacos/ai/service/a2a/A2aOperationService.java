@@ -31,7 +31,7 @@ import java.util.List;
  * @author Nacos
  */
 public interface A2aOperationService {
-
+    
     /**
      * Register the first AgentCard version.
      *
@@ -42,7 +42,7 @@ public interface A2aOperationService {
      */
     void registerAgent(AgentCard agentCard, String namespaceId, String registrationType)
         throws NacosException;
-
+    
     /**
      * Release one AgentCard version from the client surface.
      *
@@ -54,7 +54,7 @@ public interface A2aOperationService {
      */
     void releaseAgent(AgentCard agentCard, String namespaceId, String registrationType,
         boolean setAsLatest) throws NacosException;
-
+    
     /**
      * Update or add one AgentCard version.
      *
@@ -66,7 +66,7 @@ public interface A2aOperationService {
      */
     void updateAgentCard(AgentCard agentCard, String namespaceId, String registrationType,
         boolean setAsLatest) throws NacosException;
-
+    
     /**
      * Delete one AgentCard version or the complete AgentCard definition.
      *
@@ -76,7 +76,7 @@ public interface A2aOperationService {
      * @throws NacosException when deletion fails
      */
     void deleteAgent(String namespaceId, String agentName, String version) throws NacosException;
-
+    
     /**
      * Query one AgentCard for a management surface.
      *
@@ -89,7 +89,7 @@ public interface A2aOperationService {
      */
     AgentCardDetailInfo getAgentCard(String namespaceId, String agentName, String version,
         String registrationType) throws NacosException;
-
+    
     /**
      * Query one AgentCard for the client data plane.
      *
@@ -102,7 +102,7 @@ public interface A2aOperationService {
      */
     AgentCardDetailInfo getAgentCardForClient(String namespaceId, String agentName, String version,
         String registrationType) throws NacosException;
-
+    
     /**
      * List AgentCard definitions.
      *
@@ -116,7 +116,7 @@ public interface A2aOperationService {
      */
     Page<AgentCardVersionInfo> listAgents(String namespaceId, String agentName, String search,
         int pageNo, int pageSize) throws NacosException;
-
+    
     /**
      * List versions of one AgentCard definition.
      *

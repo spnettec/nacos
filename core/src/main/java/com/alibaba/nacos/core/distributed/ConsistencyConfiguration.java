@@ -35,7 +35,7 @@ import java.util.concurrent.Callable;
  */
 @Configuration
 public class ConsistencyConfiguration {
-
+    
     @Bean(value = "strongAgreementProtocol")
     public CPProtocol strongAgreementProtocol(ServerMemberManager memberManager,
         JRaftAuthUpgradeCoordinator jRaftAuthUpgradeCoordinator) throws Exception {
@@ -44,12 +44,12 @@ public class ConsistencyConfiguration {
                 () -> new JRaftProtocol(memberManager, jRaftAuthUpgradeCoordinator));
         return protocol;
     }
-
+    
     private <T> T getProtocol(Class<T> cls, Callable<T> builder) throws Exception {
         Collection<T> protocols = NacosServiceLoader.load(cls);
-
+        
         // Select only the first implementation
-
+        
         Iterator<T> iterator = protocols.iterator();
         if (iterator.hasNext()) {
             return iterator.next();
@@ -57,5 +57,5 @@ public class ConsistencyConfiguration {
             return builder.call();
         }
     }
-
+    
 }

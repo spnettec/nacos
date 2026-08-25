@@ -30,13 +30,13 @@ import java.util.Collections;
  */
 public class SkillsShImportServiceBuilder
     extends AbstractAiResourceImportServiceBuilder {
-
+    
     public static final String PLUGIN_NAME = "skills-sh";
-
+    
     public static final String IMPORTER_TYPE = "skills-sh";
-
+    
     public static final String SKILLS_SH_ENDPOINT = "https://skills.sh";
-
+    
     /**
      * Legacy skills.sh importer configuration prefix.
      *
@@ -46,13 +46,13 @@ public class SkillsShImportServiceBuilder
     @Deprecated
     private static final String LEGACY_PREFIX =
         "nacos.plugin.ai.importer.skills.skills-sh.";
-
+    
     public SkillsShImportServiceBuilder() {
         super(PLUGIN_NAME, IMPORTER_TYPE, "skills.sh", "Import Skills from skills.sh.",
             Collections.singleton(AiResourceImportConstants.RESOURCE_TYPE_SKILL),
             SKILLS_SH_ENDPOINT, LEGACY_PREFIX);
     }
-
+    
     @Override
     protected AiResourceImportService createService(ConfigSnapshot config) {
         return new SkillsShImportService(config.getEndpoint(), config.isAllowHttp(),

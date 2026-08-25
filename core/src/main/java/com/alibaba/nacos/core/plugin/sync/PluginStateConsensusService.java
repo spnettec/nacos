@@ -44,41 +44,41 @@ import java.util.concurrent.atomic.AtomicReference;
 @Lazy
 @Conditional(ConditionOnClusterMode.class)
 public class PluginStateConsensusService {
-
+    
     private static final Logger LOGGER =
         LoggerFactory.getLogger(PluginStateConsensusService.class);
-
+    
     private static final ExecutorService REGISTRATION_EXECUTOR =
         ExecutorFactory.Managed.newSingleExecutorService(
             ClassUtils.getCanonicalName(PluginStateConsensusService.class),
             new NameThreadFactory("nacos-plugin-consensus"));
-
+    
     private final PluginStateProcessor processor;
-
+    
     private final ProtocolManager protocolManager;
-
+    
     private final Executor executor;
-
+    
     private final AtomicReference<RegistrationState> state =
         new AtomicReference<>(RegistrationState.NEW);
-
+    
     private volatile CPProtocol protocol;
-
+    
     private volatile Throwable failure;
-
+    
     @Autowired
     public PluginStateConsensusService(PluginStateProcessor processor,
         ProtocolManager protocolManager) {
         this(processor, protocolManager, REGISTRATION_EXECUTOR);
     }
-
+    
     PluginStateConsensusService(PluginStateProcessor processor,
         ProtocolManager protocolManager, Executor executor) {
         this.processor = processor;
         this.protocolManager = protocolManager;
         this.executor = executor;
     }
-
+    
     /**
      * Start group registration without blocking Nacos startup.
      */
@@ -92,7 +92,7 @@ public class PluginStateConsensusService {
             markUnavailable(e);
         }
     }
-
+    
     /**
      * Get the successfully registered protocol.
      *
@@ -106,7 +106,7 @@ public class PluginStateConsensusService {
         }
         return protocol;
     }
-
+    
     /**
      * Whether the plugin consensus group is registered.
      *
@@ -115,11 +115,11 @@ public class PluginStateConsensusService {
     public boolean isAvailable() {
         return RegistrationState.AVAILABLE == state.get();
     }
-
+    
     RegistrationState getState() {
         return state.get();
     }
-
+    
     private void register() {
         try {
             CPProtocol currentProtocol = protocolManager.getCpProtocol();
@@ -134,7 +134,7 @@ public class PluginStateConsensusService {
             markUnavailable(e);
         }
     }
-
+    
     private void markUnavailable(Throwable cause) {
         failure = cause;
         protocol = null;
@@ -143,7 +143,7 @@ public class PluginStateConsensusService {
             + "Nacos startup continues with the accepted local plugin state and config view; "
             + "cluster plugin writes are unavailable.", cause);
     }
-
+    
     private String getFailureSuffix() {
         Throwable currentFailure = failure;
         if (currentFailure == null) {
@@ -152,15 +152,15 @@ public class PluginStateConsensusService {
         String message = currentFailure.getMessage();
         return ", cause=" + (message == null ? currentFailure.getClass().getName() : message);
     }
-
+    
     enum RegistrationState {
-
+        
         NEW,
-
+        
         INITIALIZING,
-
+        
         AVAILABLE,
-
+        
         UNAVAILABLE
     }
 }

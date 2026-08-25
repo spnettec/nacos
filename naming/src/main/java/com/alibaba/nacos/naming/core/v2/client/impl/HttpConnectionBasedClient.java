@@ -38,15 +38,15 @@ import java.util.Map;
  * @author Nacos
  */
 public class HttpConnectionBasedClient extends AbstractClient {
-
+    
     private final String clientId;
-
+    
     private volatile long publisherLastUpdatedTime;
-
+    
     private volatile boolean publisherHealthy;
-
+    
     private volatile long lastRenewTime;
-
+    
     public HttpConnectionBasedClient(String clientId, ClientAttributes attributes) {
         super(readLong(attributes, ClientConstants.REVISION, 0L));
         this.clientId = clientId;
@@ -59,7 +59,7 @@ public class HttpConnectionBasedClient extends AbstractClient {
             ClientConstants.HTTP_PUBLISHER_HEALTHY, true);
         this.lastRenewTime = System.currentTimeMillis();
     }
-
+    
     /**
      * Convert an external HTTP client id to its Naming internal id.
      *
@@ -69,7 +69,7 @@ public class HttpConnectionBasedClient extends AbstractClient {
     public static String getInternalClientId(String externalClientId) {
         return ClientConstants.HTTP_CLIENT_ID_PREFIX + externalClientId;
     }
-
+    
     /**
      * Whether the supplied id belongs to an HTTP connection-based client.
      *
@@ -79,24 +79,24 @@ public class HttpConnectionBasedClient extends AbstractClient {
     public static boolean isHttpClientId(String clientId) {
         return clientId != null && clientId.startsWith(ClientConstants.HTTP_CLIENT_ID_PREFIX);
     }
-
+    
     @Override
     public String getClientId() {
         return clientId;
     }
-
+    
     @Override
     public boolean isEphemeral() {
         return true;
     }
-
+    
     /**
      * Renew only the HTTP client lifecycle.
      */
     public void renewClient() {
         super.setLastUpdatedTime();
     }
-
+    
     /**
      * Renew the client and its publisher lifecycle.
      *
@@ -112,7 +112,7 @@ public class HttpConnectionBasedClient extends AbstractClient {
         updatePublisherHealth(true);
         return true;
     }
-
+    
     /**
      * Mark all publications unhealthy.
      *
@@ -126,7 +126,7 @@ public class HttpConnectionBasedClient extends AbstractClient {
         updatePublisherHealth(false);
         return true;
     }
-
+    
     /**
      * Reset publisher liveness after all publications expire.
      */
@@ -134,7 +134,7 @@ public class HttpConnectionBasedClient extends AbstractClient {
         publisherLastUpdatedTime = 0L;
         publisherHealthy = true;
     }
-
+    
     /**
      * Whether the publisher is currently healthy.
      *
@@ -143,7 +143,7 @@ public class HttpConnectionBasedClient extends AbstractClient {
     public boolean isPublisherHealthy() {
         return publisherHealthy;
     }
-
+    
     /**
      * Get the last publisher activity time.
      *
@@ -152,7 +152,7 @@ public class HttpConnectionBasedClient extends AbstractClient {
     public long getPublisherLastUpdatedTime() {
         return publisherLastUpdatedTime;
     }
-
+    
     /**
      * Get the latest Distro verification time observed by this replica.
      *
@@ -161,14 +161,14 @@ public class HttpConnectionBasedClient extends AbstractClient {
     public long getLastRenewTime() {
         return lastRenewTime;
     }
-
+    
     /**
      * Refresh the local observation time for a Distro replica.
      */
     public void renewReplica() {
         lastRenewTime = System.currentTimeMillis();
     }
-
+    
     /**
      * Update lifecycle attributes received from Distro.
      *
@@ -185,7 +185,7 @@ public class HttpConnectionBasedClient extends AbstractClient {
             ClientConstants.HTTP_PUBLISHER_HEALTHY, this.publisherHealthy);
         renewReplica();
     }
-
+    
     @Override
     public ClientSyncData generateSyncData() {
         ClientSyncData result = super.generateSyncData();
@@ -207,24 +207,24 @@ public class HttpConnectionBasedClient extends AbstractClient {
         result.setAttributes(syncAttributes);
         return result;
     }
-
+    
     @Override
     public boolean isExpire(long currentTime) {
         return currentTime - Math.max(getLastUpdatedTime(), lastRenewTime) > ClientConfig
             .getInstance().getClientExpiredTime();
     }
-
+    
     @Override
     public long recalculateRevision() {
         return revision.addAndGet(1);
     }
-
+    
     private void updatePublisherHealth(boolean healthy) {
         for (Service service : publishers.keySet()) {
             updateHealth(publishers.get(service), healthy);
         }
     }
-
+    
     private void updateHealth(InstancePublishInfo publishInfo, boolean healthy) {
         publishInfo.setHealthy(healthy);
         if (publishInfo instanceof BatchInstancePublishInfo) {
@@ -234,7 +234,7 @@ public class HttpConnectionBasedClient extends AbstractClient {
             }
         }
     }
-
+    
     private static long readLong(ClientAttributes attributes, String key, long defaultValue) {
         if (attributes == null) {
             return defaultValue;
@@ -242,7 +242,7 @@ public class HttpConnectionBasedClient extends AbstractClient {
         Object value = attributes.getClientAttribute(key);
         return value instanceof Number ? ((Number) value).longValue() : defaultValue;
     }
-
+    
     private static boolean readBoolean(ClientAttributes attributes, String key,
         boolean defaultValue) {
         if (attributes == null) {

@@ -33,22 +33,22 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class AgentVersionCatalogBuilderTest {
-
+    
     @Test
     void testEmptyOnlineVersionsRemoveLatestAndPreserveOtherLabels() {
         Map<String, String> labels = new LinkedHashMap<String, String>();
         labels.put("latest", "1.0.0");
         labels.put("archived", "0.9.0");
-
+        
         AgentVersionCatalogBuilder.Result result = AgentVersionCatalogBuilder.build(
             Collections.<String, List<String>>emptyMap(), labels);
-
+        
         assertNull(result.getVersionCatalog().getLatestVersion());
         assertEquals(Collections.emptyList(),
             result.getVersionCatalog().getOnlineVersions());
         assertEquals(Collections.singletonMap("archived", "0.9.0"), result.getLabels());
     }
-
+    
     @Test
     void testBuildSortsVersionsAndLabelsButPreservesInterfaceOrder() {
         Map<String, List<String>> versions = new HashMap<String, List<String>>();
@@ -61,11 +61,11 @@ class AgentVersionCatalogBuilderTest {
         labels.put("canary", "2.0.0");
         labels.put("beta", "2.0.0");
         labels.put("offline", "0.9.0");
-
+        
         AgentVersionCatalogBuilder.Result result =
             AgentVersionCatalogBuilder.build(versions, labels);
         AgentVersionCatalog catalog = result.getVersionCatalog();
-
+        
         assertEquals("1.0.0", catalog.getLatestVersion());
         assertEquals(Arrays.asList("2.0.0", "2.0.0-RC1", "1.0.0"),
             catalogVersions(catalog));
@@ -80,45 +80,45 @@ class AgentVersionCatalogBuilderTest {
         assertEquals(Arrays.asList("beta", "canary", "latest", "offline", "stable"),
             new ArrayList<String>(result.getLabels().keySet()));
     }
-
+    
     @Test
     void testRepairMissingOrStaleLatestToGreatestOnlineVersion() {
         Map<String, List<String>> versions = new LinkedHashMap<String, List<String>>();
         versions.put("1.0.0-RC2", Collections.singletonList("a2a"));
         versions.put("1.0.0", Collections.singletonList("a2a"));
-
+        
         AgentVersionCatalogBuilder.Result missingLatest = AgentVersionCatalogBuilder.build(
             versions, Collections.<String, String>emptyMap());
         assertEquals("1.0.0", missingLatest.getVersionCatalog().getLatestVersion());
         assertEquals("1.0.0", missingLatest.getLabels().get("latest"));
-
+        
         AgentVersionCatalogBuilder.Result staleLatest = AgentVersionCatalogBuilder.build(
             versions, Collections.singletonMap("latest", "2.0.0"));
         assertEquals("1.0.0", staleLatest.getVersionCatalog().getLatestVersion());
         assertEquals("1.0.0", staleLatest.getLabels().get("latest"));
     }
-
+    
     @Test
     void testVersionAndProtocolIdentityRemainCaseSensitive() {
         Map<String, List<String>> versions = new LinkedHashMap<String, List<String>>();
         versions.put("1.0.0-RC1", Arrays.asList("A2A", "a2a"));
         versions.put("1.0.0-rc1", Collections.singletonList("a2a"));
-
+        
         AgentVersionCatalogBuilder.Result result = AgentVersionCatalogBuilder.build(versions,
             Collections.singletonMap("latest", "1.0.0-rc1"));
-
+        
         assertEquals(Arrays.asList("1.0.0-rc1", "1.0.0-RC1"),
             catalogVersions(result.getVersionCatalog()));
         assertEquals(Arrays.asList("A2A", "a2a"),
             result.getVersionCatalog().getOnlineVersions().get(1).getProtocols());
     }
-
+    
     @Test
     void testResultCollectionsAreImmutable() {
         AgentVersionCatalogBuilder.Result result = AgentVersionCatalogBuilder.build(
             Collections.singletonMap("1.0.0", Collections.singletonList("a2a")),
             Collections.<String, String>emptyMap());
-
+        
         assertThrows(UnsupportedOperationException.class,
             () -> result.getLabels().put("stable", "1.0.0"));
         assertThrows(UnsupportedOperationException.class,
@@ -131,7 +131,7 @@ class AgentVersionCatalogBuilderTest {
             () -> result.getVersionCatalog().getOnlineVersions().get(0)
                 .getLabels().add("stable"));
     }
-
+    
     @Test
     void testRejectInvalidInputs() {
         assertThrows(IllegalArgumentException.class,
@@ -144,7 +144,7 @@ class AgentVersionCatalogBuilderTest {
         assertRejectedVersion("1.0.0", Collections.nCopies(17, "a2a"));
         assertRejectedVersion("1.0.0", Arrays.asList("a2a", "a2a"));
         assertRejectedVersion("1.0.0", Collections.singletonList("a2a_rpc"));
-
+        
         assertThrows(IllegalArgumentException.class,
             () -> AgentVersionCatalogBuilder.build(Collections.emptyMap(),
                 Collections.singletonMap("-label", "1.0.0")));
@@ -152,13 +152,13 @@ class AgentVersionCatalogBuilderTest {
             () -> AgentVersionCatalogBuilder.build(Collections.emptyMap(),
                 Collections.singletonMap("stable", "v1.0.0")));
     }
-
+    
     private void assertRejectedVersion(String version, List<String> protocols) {
         assertThrows(IllegalArgumentException.class,
             () -> AgentVersionCatalogBuilder.build(
                 Collections.singletonMap(version, protocols), Collections.emptyMap()));
     }
-
+    
     private List<String> catalogVersions(AgentVersionCatalog catalog) {
         List<String> result = new ArrayList<String>();
         for (AgentVersionCatalogEntry entry : catalog.getOnlineVersions()) {

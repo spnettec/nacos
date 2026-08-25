@@ -109,68 +109,68 @@ import static org.mockito.Mockito.when;
 // todo remove this
 @MockitoSettings(strictness = Strictness.LENIENT)
 class JRaftServerTest {
-
+    
     @TempDir
     private static Path temporaryDirectory;
-
+    
     private final String groupId = "test_group";
-
+    
     private PeerId peerId1;
-
+    
     private PeerId peerId2;
-
+    
     private PeerId peerId3;
-
+    
     private Configuration conf;
-
+    
     private JRaftServer server;
-
+    
     private RaftConfig config;
-
+    
     @Mock
     private RequestProcessor4CP mockProcessor4CP;
-
+    
     @Mock
     private JRaftAuthUpgradeCoordinator jRaftAuthUpgradeCoordinator;
-
+    
     @Mock
     private CliClientServiceImpl cliClientServiceMock;
-
+    
     @Mock
     private CliService cliServiceMock;
-
+    
     @Mock
     private RpcClient rpcClient;
-
+    
     @Mock
     private CompletableFuture<Response> future;
-
+    
     private ReadRequest readRequest;
-
+    
     @Mock
     private Node node;
-
+    
     @Mock
     private RequestProcessor requestProcessor;
-
+    
     @Mock
     private RaftGroupService raftGroupService;
-
+    
     @Mock
     private NacosStateMachine nacosStateMachine;
-
+    
     @BeforeAll
     static void beforeClass() {
         EnvUtil.setEnvironment(new MockEnvironment());
         EnvUtil.setNacosHomePath(temporaryDirectory.toString());
     }
-
+    
     @AfterAll
     static void afterClass() {
         EnvUtil.setNacosHomePath(null);
         EnvUtil.setEnvironment(null);
     }
-
+    
     @BeforeEach
     void before() throws NoSuchFieldException, IllegalAccessException {
         initPeersAndConfiguration();
@@ -178,23 +178,23 @@ class JRaftServerTest {
         Collection<Member> initEvent =
             Collections.singletonList(Member.builder().ip("1.1.1.1").port(7848).build());
         config.setMembers("1.1.1.1:7848", ProtocolManager.toCPMembersInfo(initEvent));
-
+        
         server = new JRaftServer(jRaftAuthUpgradeCoordinator) {
-
+            
             @Override
             boolean peerChange(JRaftMaintainService maintainService, Set<String> newPeers) {
                 return super.peerChange(maintainService, newPeers);
             }
         };
-
+        
         server.init(config);
-
+        
         Map<String, JRaftServer.RaftGroupTuple> map = new HashMap<>();
         map.put("test_nacos",
             new JRaftServer.RaftGroupTuple(node, requestProcessor, raftGroupService,
                 nacosStateMachine));
         server.mockMultiRaftGroup(map);
-
+        
         mockcliClientService();
         mockcliService();
         setLeaderAs(peerId1);
@@ -202,26 +202,26 @@ class JRaftServerTest {
         Field cliClientServiceField = JRaftServer.class.getDeclaredField("cliClientService");
         cliClientServiceField.setAccessible(true);
         cliClientServiceField.set(server, cliClientServiceMock);
-
+        
         // Inject the mocked cliServiceMock into server.
         Field cliServiceField = JRaftServer.class.getDeclaredField("cliService");
         cliServiceField.setAccessible(true);
         cliServiceField.set(server, cliServiceMock);
-
+        
         // currently useless
         ReadRequest.Builder readRequestBuilder = ReadRequest.newBuilder();
         readRequest = readRequestBuilder.build();
-
+        
         when(mockProcessor4CP.loadSnapshotOperate()).thenReturn(Collections.emptyList());
         when(mockProcessor4CP.group()).thenReturn(groupId);
-
+        
         when(future.completeExceptionally(any(IllegalArgumentException.class))).thenReturn(true);
-
+        
         Field isStartedField = JRaftServer.class.getDeclaredField("isStarted");
         isStartedField.setAccessible(true);
         isStartedField.set(server, true);
     }
-
+    
     private void initPeersAndConfiguration() {
         peerId1 = new PeerId("11.11.11.11", 7848);
         peerId2 = new PeerId("22.22.22.22", 7848);
@@ -232,7 +232,7 @@ class JRaftServerTest {
         conf.addPeer(peerId3);
         RouteTable.getInstance().updateConfiguration(groupId, conf);
     }
-
+    
     private void mockcliClientService() {
         when(cliClientServiceMock.connect(any(Endpoint.class))).thenReturn(true);
         // Assign PeerId1 as the leader
@@ -245,7 +245,7 @@ class JRaftServerTest {
         final CliRequests.GetLeaderResponse getLeaderResponse = gb.build();
         getLeaderFuture.setResult(getLeaderResponse);
     }
-
+    
     private void mockcliService() {
         List<PeerId> peerIds = new ArrayList<>();
         peerIds.add(peerId1);
@@ -255,11 +255,11 @@ class JRaftServerTest {
         when(cliServiceMock.addPeer(eq(groupId), eq(conf), any(PeerId.class)))
             .thenReturn(Status.OK());
     }
-
+    
     private void setLeaderAs(PeerId peerId) {
         RouteTable.getInstance().updateLeader(groupId, peerId);
     }
-
+    
     @Test
     void testInvokeToLeader()
         throws NoSuchMethodException, InvocationTargetException, IllegalAccessException,
@@ -277,7 +277,7 @@ class JRaftServerTest {
             any(InvokeCallback.class),
             any(long.class));
     }
-
+    
     @Test
     void testRefreshRouteTable() {
         server.refreshRouteTable(groupId);
@@ -286,7 +286,7 @@ class JRaftServerTest {
             any(CliRequests.GetLeaderRequest.class),
             eq(null));
     }
-
+    
     /** refreshRouteTable when isShutdown returns immediately without refreshing. */
     @Test
     void testRefreshRouteTableWhenShutdown() {
@@ -294,64 +294,64 @@ class JRaftServerTest {
         server.refreshRouteTable(groupId);
         verify(cliClientServiceMock, never()).connect(any(Endpoint.class));
     }
-
+    
     @Test
     void testCommit() throws NoSuchFieldException, IllegalAccessException, TimeoutException,
         InterruptedException {
         WriteRequest.Builder writeRequestBuilder = WriteRequest.newBuilder();
         WriteRequest writeRequest = writeRequestBuilder.build();
-
+        
         // No group is set, and make sure that an IllegalArgumentException will be thrown.
         CompletableFuture<Response> future = server.commit(groupId, writeRequest, this.future);
         verify(future).completeExceptionally(any(IllegalArgumentException.class));
-
+        
         // Set an group.
         Collection<RequestProcessor4CP> processors = Collections.singletonList(mockProcessor4CP);
         server.createMultiRaftGroup(processors);
-
+        
         Field cliClientServiceField = JRaftServer.class.getDeclaredField("cliClientService");
         cliClientServiceField.setAccessible(true);
         cliClientServiceField.set(server, cliClientServiceMock);
-
+        
         // Make the node leader and verify the invokeToLeader is never called.
         NodeImpl node = (NodeImpl) server.findNodeByGroup(groupId);
         Field stateField = NodeImpl.class.getDeclaredField("state");
         stateField.setAccessible(true);
         stateField.set(node, State.STATE_LEADER);
-
+        
         server.commit(groupId, writeRequest, future);
         verify(cliClientServiceMock, never()).getRpcClient();
-
+        
         // make the node follower and verify the invokeToLeader is called.
         node = (NodeImpl) server.findNodeByGroup(groupId);
         stateField.setAccessible(true);
         stateField.set(node, State.STATE_FOLLOWER);
-
+        
         RouteTable.getInstance().updateLeader(groupId, peerId1);
         server.commit(groupId, writeRequest, future);
         verify(cliClientServiceMock).getRpcClient();
     }
-
+    
     @Test
     void testRegisterSelfToCluster() {
         PeerId selfPeerId = new PeerId("4.4.4.4", 8080);
         server.registerSelfToCluster(groupId, selfPeerId, conf);
         verify(cliServiceMock).addPeer(groupId, conf, selfPeerId);
     }
-
+    
     @Test
     void testPeerChange() {
         AtomicBoolean changed = new AtomicBoolean(false);
-
+        
         JRaftMaintainService service = new JRaftMaintainService(server) {
-
+            
             @Override
             public RestResult<String> execute(Map<String, String> args) {
                 changed.set(true);
                 return RestResultUtils.success();
             }
         };
-
+        
         Collection<Member> firstEvent =
             Arrays.asList(Member.builder().ip("1.1.1.1").port(7848).build(),
                 Member.builder().ip("127.0.0.1").port(80).build(),
@@ -360,7 +360,7 @@ class JRaftServerTest {
         server.peerChange(service, ProtocolManager.toCPMembersInfo(firstEvent));
         assertFalse(changed.get());
         changed.set(false);
-
+        
         Collection<Member> secondEvent =
             Arrays.asList(Member.builder().ip("1.1.1.1").port(7848).build(),
                 Member.builder().ip("127.0.0.1").port(80).build(),
@@ -369,7 +369,7 @@ class JRaftServerTest {
         server.peerChange(service, ProtocolManager.toCPMembersInfo(secondEvent));
         assertTrue(changed.get());
         changed.set(false);
-
+        
         Collection<Member> thirdEvent =
             Arrays.asList(Member.builder().ip("1.1.1.1").port(7848).build(),
                 Member.builder().ip("127.0.0.2").port(81).build(),
@@ -377,14 +377,14 @@ class JRaftServerTest {
         server.peerChange(service, ProtocolManager.toCPMembersInfo(thirdEvent));
         assertTrue(changed.get());
         changed.set(false);
-
+        
         Collection<Member> fourEvent =
             Arrays.asList(Member.builder().ip("1.1.1.1").port(7848).build(),
                 Member.builder().ip("127.0.0.1").port(80).build());
         server.peerChange(service, ProtocolManager.toCPMembersInfo(fourEvent));
         assertTrue(changed.get());
         changed.set(false);
-
+        
         Collection<Member> fiveEvent =
             Arrays.asList(Member.builder().ip("1.1.1.1").port(7848).build(),
                 Member.builder().ip("127.0.0.1").port(80).build(),
@@ -393,7 +393,7 @@ class JRaftServerTest {
         assertFalse(changed.get());
         changed.set(false);
     }
-
+    
     @Test
     void testIsReady() {
         assertTrue(server.isReady());
@@ -404,7 +404,7 @@ class JRaftServerTest {
         setLeaderAs(null);
         assertFalse(server.isReady());
     }
-
+    
     @Test
     void testGetWhenTupleNotFoundCompletesExceptionally() throws Exception {
         ReadRequest request = ReadRequest.newBuilder().setGroup("nonexistent_group").build();
@@ -417,7 +417,7 @@ class JRaftServerTest {
             assertTrue(e.getCause().getMessage().contains("nonexistent_group"));
         }
     }
-
+    
     @Test
     void testCommitWhenTupleNotFoundCompletesExceptionally() {
         CompletableFuture<Response> future = new CompletableFuture<>();
@@ -430,13 +430,13 @@ class JRaftServerTest {
             assertTrue(e.getCause().getMessage().contains("No corresponding Raft Group"));
         }
     }
-
+    
     @Test
     void testSetFailoverRetries() {
         server.setFailoverRetries(10);
         assertEquals(10, ReflectionTestUtils.getField(server, "failoverRetries"));
     }
-
+    
     /** get() with existing group and readIndex success completes future with processor response. */
     @Test
     void testGetWhenTupleExistsAndReadIndexSucceeds() throws Exception {
@@ -448,12 +448,12 @@ class JRaftServerTest {
             closure.run(Status.OK(), 1L, new byte[0]);
             return null;
         }).when(node).readIndex(any(byte[].class), any(ReadIndexClosure.class));
-
+        
         CompletableFuture<Response> future = server.get(request);
         assertEquals(expectedResponse, future.get(2, java.util.concurrent.TimeUnit.SECONDS));
         verify(requestProcessor).onRequest(eq(request));
     }
-
+    
     /** get() when readIndex fails (status not OK) falls back to readFromLeader (commit path). */
     @Test
     void testGetWhenReadIndexFailsFallsBackToLeader() throws Exception {
@@ -475,11 +475,11 @@ class JRaftServerTest {
             }
             return (Object) null;
         }).when(node).apply(any(com.alipay.sofa.jraft.entity.Task.class));
-
+        
         CompletableFuture<Response> future = server.get(request);
         assertTrue(future.get(2, java.util.concurrent.TimeUnit.SECONDS).getSuccess());
     }
-
+    
     /** get() when readIndex throws falls back to readFromLeader (catch block). */
     @Test
     void testGetWhenReadIndexThrowsFallsBackToLeader() throws Exception {
@@ -502,7 +502,7 @@ class JRaftServerTest {
         CompletableFuture<Response> future = server.get(request);
         assertTrue(future.get(2, java.util.concurrent.TimeUnit.SECONDS).getSuccess());
     }
-
+    
     /** get() when readIndex is OK but processor.onRequest throws completes with ConsistencyException. */
     @Test
     void testGetWhenProcessorOnRequestThrowsCompletesExceptionally() throws Exception {
@@ -523,7 +523,7 @@ class JRaftServerTest {
             assertTrue(e.getCause().getCause().getMessage().contains("processor error"));
         }
     }
-
+    
     /** applyOperation enqueues task with request-type prefix and invokes node.apply. */
     @Test
     void testApplyOperation() {
@@ -534,7 +534,7 @@ class JRaftServerTest {
         server.applyOperation(node, writeRequest, closure);
         verify(node).apply(any(com.alipay.sofa.jraft.entity.Task.class));
     }
-
+    
     /** applyOperation with ReadRequest uses REQUEST_TYPE_READ in task data. */
     @Test
     void testApplyOperationWithReadRequest() {
@@ -545,17 +545,17 @@ class JRaftServerTest {
         server.applyOperation(node, readReq, closure);
         verify(node).apply(any(com.alipay.sofa.jraft.entity.Task.class));
     }
-
+    
     @Test
     void testFindNodeByGroupReturnsNullWhenTupleMissing() {
         assertNull(server.findNodeByGroup("nonexistent"));
     }
-
+    
     @Test
     void testFindNodeByGroupReturnsNodeWhenTupleExists() {
         assertEquals(node, server.findNodeByGroup("test_nacos"));
     }
-
+    
     /** RaftGroupTuple getters return injected components. */
     @Test
     void testRaftGroupTupleGetters() {
@@ -565,7 +565,7 @@ class JRaftServerTest {
         assertEquals(requestProcessor, tuple.getProcessor());
         assertEquals(raftGroupService, tuple.getRaftGroupService());
     }
-
+    
     /** Second shutdown returns immediately and does not double-close services. */
     @Test
     void testShutdownWhenAlreadyShutdownReturnsEarly() {
@@ -573,7 +573,7 @@ class JRaftServerTest {
         server.shutdown();
         verify(cliServiceMock, times(1)).shutdown();
     }
-
+    
     /** shutdown() catches Throwable from tuple and does not propagate. */
     @Test
     void testShutdownWhenTupleShutdownThrowsCatchesAndDoesNotPropagate() {
@@ -583,7 +583,7 @@ class JRaftServerTest {
         server.shutdown();
         verify(node).shutdown();
     }
-
+    
     /** When new peers equal current members (no removal), peerChange returns true without execute. */
     @Test
     void testPeerChangeWhenNoRemovalReturnsTrue() {
@@ -591,12 +591,12 @@ class JRaftServerTest {
         JRaftMaintainService service = new JRaftMaintainService(server);
         assertTrue(server.peerChange(service, sameAsCurrent));
     }
-
+    
     /** When execute returns failure for a group, peerChange returns false. */
     @Test
     void testPeerChangeWhenExecuteFailsReturnsFalse() {
         JRaftMaintainService service = new JRaftMaintainService(server) {
-
+            
             @Override
             public RestResult<String> execute(Map<String, String> args) {
                 return RestResultUtils.failed(500, "remove peer failed");
@@ -606,7 +606,7 @@ class JRaftServerTest {
         boolean result = server.peerChange(service, ProtocolManager.toCPMembersInfo(newEvent));
         assertFalse(result);
     }
-
+    
     /** When isStarted is false, createMultiRaftGroup only adds to processors and returns. */
     @Test
     void testCreateMultiRaftGroupWhenNotStartedOnlyAddsProcessors() throws Exception {
@@ -629,7 +629,7 @@ class JRaftServerTest {
                 "processors");
         assertTrue(processors.contains(processor));
     }
-
+    
     /** createMultiRaftGroup with same group id throws DuplicateRaftGroupException. */
     @Test
     void testCreateMultiRaftGroupThrowsWhenDuplicateGroup() {
@@ -640,7 +640,7 @@ class JRaftServerTest {
         assertThrows(DuplicateRaftGroupException.class,
             () -> server.createMultiRaftGroup(Collections.singletonList(duplicateProcessor)));
     }
-
+    
     /** start() success: NodeManager and JRaftUtils mocked, createMultiRaftGroup stubbed, isStarted becomes true. */
     @Test
     void testStartSuccess() throws Exception {
@@ -665,7 +665,7 @@ class JRaftServerTest {
                     any(PeerId.class), any(JRaftAuthUpgradeCoordinator.class)));
         }
     }
-
+    
     /** start() when JRaftUtils.initRpcServer throws wraps in JRaftException. */
     @Test
     void testStartWithException() throws Exception {
@@ -684,7 +684,7 @@ class JRaftServerTest {
             assertFalse((Boolean) ReflectionTestUtils.getField(server, "isStarted"));
         }
     }
-
+    
     /** start() when rpcServer.init(null) returns false throws RuntimeException. */
     @Test
     void testStartWhenRpcServerInitReturnsFalseThrows() throws Exception {
@@ -703,7 +703,7 @@ class JRaftServerTest {
             assertFalse((Boolean) ReflectionTestUtils.getField(server, "isStarted"));
         }
     }
-
+    
     /** invokeToLeader callback with exception sets throwable and runs closure. */
     @Test
     void testInvokeToLeaderCallbackWithException() throws Exception {
@@ -727,7 +727,7 @@ class JRaftServerTest {
             ReadRequest.newBuilder().setGroup(groupId).build(), 3000, closure);
         assertTrue(ReflectionTestUtils.getField(closure, "throwable") == ex);
     }
-
+    
     /** invokeToLeader callback with response.getSuccess() false sets throwable and runs closure. */
     @Test
     void testInvokeToLeaderCallbackWithFailedResponse() throws Exception {
@@ -754,12 +754,12 @@ class JRaftServerTest {
         assertInstanceOf(IllegalStateException.class, t);
         assertTrue(t.getMessage().contains("raft error"));
     }
-
+    
     /** invokeToLeader when no leader throws NoLeaderException. */
     @Test
     void testInvokeToLeaderWhenNoLeaderThrowsNoLeaderException() throws Exception {
         JRaftServer serverWithNoLeader = new JRaftServer(jRaftAuthUpgradeCoordinator) {
-
+            
             @Override
             protected PeerId getLeader(String raftGroupId) {
                 return null;
@@ -780,10 +780,10 @@ class JRaftServerTest {
         Throwable throwable = (Throwable) ReflectionTestUtils.getField(closure, "throwable");
         assertInstanceOf(NoLeaderException.class, throwable);
     }
-
+    
     @AfterEach
     void shutdown() {
         server.shutdown();
     }
-
+    
 }

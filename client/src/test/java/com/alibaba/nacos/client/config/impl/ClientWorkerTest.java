@@ -160,7 +160,7 @@ class ClientWorkerTest {
         String group = "b";
         
         Listener listener = new AbstractListener() {
-
+            
             @Override
             public void receiveConfigInfo(String configInfo) {
             }
@@ -190,7 +190,7 @@ class ClientWorkerTest {
         ClientWorker clientWorker = new ClientWorker(filter, agent, nacosClientProperties);
         
         Listener listener = new AbstractListener() {
-
+            
             @Override
             public void receiveConfigInfo(String configInfo) {
             }
@@ -578,7 +578,7 @@ class ClientWorkerTest {
             normalNotConsistentCache(filter, agent.getName(), dataIdNormal, group, tenant);
         AtomicReference<String> normalContent = new AtomicReference<>();
         cacheNormal.addListener(new Listener() {
-
+            
             @Override
             public Executor getExecutor() {
                 return null;

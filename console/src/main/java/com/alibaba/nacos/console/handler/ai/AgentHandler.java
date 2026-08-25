@@ -35,100 +35,100 @@ import com.alibaba.nacos.api.model.Page;
  * @author Nacos
  */
 public interface AgentHandler {
-
+    
     /**
      * Get one Agent overview.
      */
     AgentOverview getAgent(String namespaceId, String agentName) throws NacosException;
-
+    
     /**
      * Replace writable Agent metadata.
      */
     Agent updateAgent(String namespaceId, AgentUpdateRequest request) throws NacosException;
-
+    
     /**
      * Delete one Agent definition.
      */
     void deleteAgent(String namespaceId, String agentName) throws NacosException;
-
+    
     /**
      * List Agent summaries.
      */
     Page<AgentSummary> listAgents(String namespaceId, String agentName, String bizTag,
         String scope, String owner, String orderBy, int pageNo, int pageSize)
         throws NacosException;
-
+    
     /**
      * List Agent Version summaries.
      */
     Page<AgentVersionSummary> listVersions(String namespaceId, String agentName, String status,
         int pageNo, int pageSize) throws NacosException;
-
+    
     /**
      * Get one exact Agent Version.
      */
     AgentVersionDetail getVersion(String namespaceId, String agentName, String version)
         throws NacosException;
-
+    
     /**
      * Get one protocol's complete Runtime Endpoint snapshot.
      */
     RuntimeEndpointSnapshot getRuntimeEndpoints(String namespaceId, String agentName,
         String protocol, String version) throws NacosException;
-
+    
     /**
      * Create one initial or subsequent Agent draft.
      */
     AgentVersionDetail createDraft(String namespaceId, AgentDraftCreateRequest request)
         throws NacosException;
-
+    
     /**
      * Replace one exact Agent draft.
      */
     AgentVersionDetail updateDraft(String namespaceId, AgentDraftUpdateRequest request)
         throws NacosException;
-
+    
     /**
      * Delete one exact Agent draft.
      */
     void deleteDraft(String namespaceId, String agentName, String version) throws NacosException;
-
+    
     /**
      * Submit one exact Agent Version.
      */
     AgentVersionSummary submit(String namespaceId, String agentName, String version)
         throws NacosException;
-
+    
     /**
      * Publish one exact reviewed Agent Version.
      */
     AgentVersionSummary publish(String namespaceId, String agentName, String version)
         throws NacosException;
-
+    
     /**
      * Force-publish one exact Agent Version.
      */
     AgentVersionSummary forcePublish(String namespaceId, String agentName, String version)
         throws NacosException;
-
+    
     /**
      * Move one exact reviewed Agent Version back to draft.
      */
     AgentVersionSummary redraft(String namespaceId, String agentName, String version)
         throws NacosException;
-
+    
     /**
      * Bring one exact offline Agent Version online.
      */
     AgentVersionSummary online(String namespaceId, String agentName, String version)
         throws NacosException;
-
+    
     /**
      * Take one exact online Agent Version offline.
      */
     AgentVersionSummary offline(String namespaceId, String agentName, String version)
         throws NacosException;
-
+    
     /**
      * Replace custom Agent labels.
      */

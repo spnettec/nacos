@@ -36,24 +36,24 @@ import java.util.Set;
  * @author nacos
  */
 public class AiResourceVectorIndexRegistry {
-
+    
     private static final Logger LOGGER =
         LoggerFactory.getLogger(AiResourceVectorIndexRegistry.class);
-
+    
     private static final AiResourceVectorIndexRegistry INSTANCE =
         new AiResourceVectorIndexRegistry(NacosServiceLoader.load(
             AiResourceVectorIndexBuilder.class));
-
+    
     private final Map<String, AiResourceVectorIndex> indexes;
-
+    
     AiResourceVectorIndexRegistry(Collection<AiResourceVectorIndexBuilder> builders) {
         this.indexes = Collections.unmodifiableMap(loadIndexes(builders));
     }
-
+    
     public static AiResourceVectorIndexRegistry getInstance() {
         return INSTANCE;
     }
-
+    
     /**
      * Return all installed vector index plugins by provider type.
      *
@@ -62,7 +62,7 @@ public class AiResourceVectorIndexRegistry {
     public Map<String, AiResourceVectorIndex> getAllIndexes() {
         return indexes;
     }
-
+    
     private Map<String, AiResourceVectorIndex> loadIndexes(
         Collection<AiResourceVectorIndexBuilder> builders) {
         Map<String, AiResourceVectorIndex> result = new LinkedHashMap<>();

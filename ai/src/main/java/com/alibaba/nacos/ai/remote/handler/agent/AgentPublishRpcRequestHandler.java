@@ -42,13 +42,13 @@ import org.springframework.stereotype.Component;
 @Component
 public class AgentPublishRpcRequestHandler
     extends RequestHandler<AgentPublishRpcRequest, AgentPublishRpcResponse> {
-
+    
     private final AgentPublishApplicationService publishService;
-
+    
     public AgentPublishRpcRequestHandler(AgentPublishApplicationService publishService) {
         this.publishService = publishService;
     }
-
+    
     @Override
     @NamespaceValidation
     @ExtractorManager.Extractor(rpcExtractor = AgentClientRpcParamExtractor.class)
@@ -65,7 +65,7 @@ public class AgentPublishRpcRequestHandler
         }
         return response;
     }
-
+    
     private AgentPublishRequest requireRequest(AgentPublishRequest request) {
         if (request == null) {
             throw new IllegalArgumentException("publishRequest must not be null");

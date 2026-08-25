@@ -34,21 +34,21 @@ import java.util.zip.CRC32;
 @Service
 @ConditionalOnAiResourceSearchEnabled
 public class HashingAiResourceEmbeddingService implements AiResourceEmbeddingService {
-
+    
     private static final String MODEL = "nacos-local-hashing-embedding-v1";
-
+    
     private static final int DIMENSION = 384;
-
+    
     @Override
     public String model() {
         return MODEL;
     }
-
+    
     @Override
     public int dimension() {
         return DIMENSION;
     }
-
+    
     @Override
     public double[] embed(String text) {
         double[] vector = new double[DIMENSION];
@@ -60,7 +60,7 @@ public class HashingAiResourceEmbeddingService implements AiResourceEmbeddingSer
         normalize(vector);
         return vector;
     }
-
+    
     private List<String> tokens(String text) {
         if (StringUtils.isBlank(text)) {
             return new ArrayList<>();
@@ -81,13 +81,13 @@ public class HashingAiResourceEmbeddingService implements AiResourceEmbeddingSer
         }
         return result;
     }
-
+    
     private long hash(String token) {
         CRC32 crc32 = new CRC32();
         crc32.update(token.getBytes(StandardCharsets.UTF_8));
         return crc32.getValue();
     }
-
+    
     private void normalize(double[] vector) {
         double norm = 0D;
         for (double value : vector) {

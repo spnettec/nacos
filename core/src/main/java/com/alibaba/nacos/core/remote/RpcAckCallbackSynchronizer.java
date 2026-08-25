@@ -92,7 +92,7 @@ public class RpcAckCallbackSynchronizer {
     public static void syncCallback(String connectionId, String requestId,
         DefaultRequestFuture defaultPushFuture)
         throws NacosException {
-
+        
         Map<String, DefaultRequestFuture> stringDefaultPushFutureMap =
             initContextIfNecessary(connectionId);
         
@@ -141,7 +141,7 @@ public class RpcAckCallbackSynchronizer {
     public static void clearFuture(String connectionId, String requestId) {
         Map<String, DefaultRequestFuture> stringDefaultPushFutureMap =
             CALLBACK_CONTEXT.get(connectionId);
-
+        
         if (stringDefaultPushFutureMap == null
             || !stringDefaultPushFutureMap.containsKey(requestId)) {
             return;

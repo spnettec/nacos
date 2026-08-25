@@ -23,8 +23,11 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.node.MissingNode;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -52,18 +55,18 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author xiweng.yy
  */
 public class AgentDiscoveryClientOpenApiITCase extends AgentClientOpenApiBaseITCase {
-
+    
     @Test
     public void testSearchAndDiscoverOnlineAgent() throws Exception {
         String agentName = randomAiName("agent-client-discovery");
         String version = "1.0.0";
         publishAgent(agentName, version);
-
-        JsonNode search = getJsonOk(AGENT_SEARCH_PATH,
-                Query.newInstance().addParam("agentNameContains", agentName)
-                        .addParam("tagsAll", "openapi-it")
-                        .addParam("protocolsAny", "a2a")
-                        .addParam("pageNo", "1").addParam("pageSize", "10"));
+        
+        JsonNode search = waitForSearchTotal(Query.newInstance()
+                .addParam("agentNameContains", agentName)
+                .addParam("tagsAll", "openapi-it")
+                .addParam("protocolsAny", "a2a")
+                .addParam("pageNo", "1").addParam("pageSize", "10"), 1);
         JsonNode page = search.get("data");
         assertEmptyPageShape(page);
         assertEquals(1, page.get("totalCount").asInt(), page.toString());
@@ -74,7 +77,7 @@ public class AgentDiscoveryClientOpenApiITCase extends AgentClientOpenApiBaseITC
                 catalog.toString());
         assertEquals("a2a", catalog.get("versions").get(0).get("protocols").get(0).asText(),
                 catalog.toString());
-
+        
         JsonNode discovered = getJsonOk(AGENT_CLIENT_PATH,
                 Query.newInstance().addParam("agentName", agentName)).get("data");
         assertEquals(DEFAULT_NAMESPACE, discovered.get("namespaceId").asText(),
@@ -91,21 +94,21 @@ public class AgentDiscoveryClientOpenApiITCase extends AgentClientOpenApiBaseITC
                 callInterface.toString());
         assertEquals(0, callInterface.get("endpointSets").get(0).get("endpoints").size(),
                 callInterface.toString());
-
+        
         JsonNode filtered = getJsonOk(AGENT_CLIENT_PATH,
                 Query.newInstance().addParam("agentName", agentName)
                         .addParam("protocol", "jsonrpc")).get("data");
         assertEquals(0, filtered.get("callInterfaces").size(), filtered.toString());
     }
-
+    
     @Test
     public void testSearchAndDiscoverValidationAndNotFound() throws Exception {
         String absentName = randomAiName("agent-client-absent");
-        JsonNode empty = getJsonOk(AGENT_SEARCH_PATH,
-                Query.newInstance().addParam("agentNameContains", absentName)).get("data");
+        JsonNode empty = waitForSearch(Query.newInstance()
+                .addParam("agentNameContains", absentName)).get("data");
         assertEquals(0, empty.get("totalCount").asInt(), empty.toString());
         assertEquals(0, empty.get("pageItems").size(), empty.toString());
-
+        
         assertError(getRaw(AGENT_SEARCH_PATH + "?pageNo=0"), 400,
                 ErrorCode.PARAMETER_VALIDATE_ERROR, "pageNo");
         assertError(getRaw(AGENT_SEARCH_PATH + "?pageSize=101"), 400,
@@ -129,6 +132,10 @@ public class AgentDiscoveryClientOpenApiITCase extends AgentClientOpenApiBaseITC
         String versionOneClient = randomHttpClientId();
         String versionTwoClient = randomHttpClientId();
         publishAgent(agentName, versionOne);
+        JsonNode versionOneCatalog = waitForCatalog(agentName, versionOne, 1);
+        assertEquals(versionOne,
+                versionOneCatalog.get("versions").get(0).get("version").asText(),
+                versionOneCatalog.toString());
         addCleanup(() -> deleteEndpointForm(versionOneClient, "AI",
                 endpointIdentity(agentName)));
         addCleanup(() -> deleteEndpointForm(versionTwoClient, "AI",
@@ -145,6 +152,13 @@ public class AgentDiscoveryClientOpenApiITCase extends AgentClientOpenApiBaseITC
                 agentDraftCreateRequest(null, agentName, versionTwo, null)));
         postFormOk(ADMIN_AGENT_PATH + "/force-publish", agentForm(
                 agentVersionCommand(null, agentName, versionTwo)));
+        JsonNode versionTwoCatalog = waitForCatalog(agentName, versionTwo, 2);
+        assertEquals(versionTwo,
+                versionTwoCatalog.get("versions").get(0).get("version").asText(),
+                versionTwoCatalog.toString());
+        assertEquals(versionOne,
+                versionTwoCatalog.get("versions").get(1).get("version").asText(),
+                versionTwoCatalog.toString());
 
         JsonNode defaultBeforeVersionTwoEndpoint = waitForRuntimeEndpointCount(agentName,
                 null, null, 1);
@@ -162,6 +176,8 @@ public class AgentDiscoveryClientOpenApiITCase extends AgentClientOpenApiBaseITC
 
         assertEndpointRegistration(postEndpointForm(versionTwoClient, "AI",
                 endpointRegistration(agentName, versionTwo, 18102)));
+        assertEquals(versionTwoCatalog, waitForCatalog(agentName, versionTwo, 2),
+                "Runtime Endpoint publication must not change the Search catalog");
         JsonNode combinedDefault = waitForRuntimeEndpointCount(agentName,
                 null, null, 2);
         JsonNode latestOnly = waitForRuntimeEndpointCount(agentName,
@@ -188,8 +204,76 @@ public class AgentDiscoveryClientOpenApiITCase extends AgentClientOpenApiBaseITC
                         .get("sourceRevision").asText(),
                 runtimeEndpointSet(defaultAfterVersionOneOffline)
                         .get("sourceRevision").asText());
+        JsonNode onlyVersionTwoCatalog = waitForCatalog(agentName, versionTwo, 1);
+        assertEquals(versionTwo,
+                onlyVersionTwoCatalog.get("versions").get(0).get("version").asText(),
+                onlyVersionTwoCatalog.toString());
+
+        postFormOk(ADMIN_AGENT_PATH + "/offline", agentForm(
+                agentVersionCommand(null, agentName, versionTwo)));
+        waitForCatalogAbsent(agentName);
     }
 
+    @Test
+    public void testSearchProjectionFiltersLiteralNamesAndStablePagination() throws Exception {
+        String stem = randomAiName("agent-search-index");
+        List<String> expectedNames = new ArrayList<>(Arrays.asList(
+                stem + "-%", stem + "-A", stem + "-B", stem + "-\\",
+                stem + "-_", stem + "-Case"));
+        publishSearchAgent(expectedNames.get(0), Arrays.asList("openapi-it", "other"),
+                Collections.singletonList("a2a"));
+        publishSearchAgent(expectedNames.get(1),
+                Arrays.asList("openapi-it", "shared", "blue"),
+                Collections.singletonList("a2a"));
+        publishSearchAgent(expectedNames.get(2),
+                Arrays.asList("openapi-it", "shared", "blue"),
+                Collections.singletonList("mcp"));
+        for (int i = 3; i < expectedNames.size(); i++) {
+            publishSearchAgent(expectedNames.get(i),
+                    Arrays.asList("openapi-it", "other"),
+                    Collections.singletonList("a2a"));
+        }
+        Collections.sort(expectedNames);
+
+        List<String> actualNames = new ArrayList<>();
+        int expectedPages = (expectedNames.size() + 1) / 2;
+        for (int pageNo = 1; pageNo <= expectedPages; pageNo++) {
+            JsonNode page = waitForSearchTotal(Query.newInstance()
+                    .addParam("agentNameContains", stem)
+                    .addParam("pageNo", String.valueOf(pageNo))
+                    .addParam("pageSize", "2"), expectedNames.size()).get("data");
+            assertEquals(expectedNames.size(), page.get("totalCount").asInt(), page.toString());
+            assertEquals(expectedPages, page.get("pagesAvailable").asInt(), page.toString());
+            for (JsonNode item : page.get("pageItems")) {
+                actualNames.add(item.get("agentName").asText());
+            }
+        }
+        assertEquals(expectedNames, actualNames);
+        JsonNode outOfRange = waitForSearch(Query.newInstance()
+                .addParam("agentNameContains", stem)
+                .addParam("pageNo", String.valueOf(expectedPages + 1))
+                .addParam("pageSize", "2")).get("data");
+        assertEquals(expectedNames.size(), outOfRange.get("totalCount").asInt(),
+                outOfRange.toString());
+        assertEquals(0, outOfRange.get("pageItems").size(), outOfRange.toString());
+
+        assertLiteralSearch(stem, "%", stem + "-%");
+        assertLiteralSearch(stem, "_", stem + "-_");
+        assertLiteralSearch(stem, "\\", stem + "-\\");
+        JsonNode caseSensitive = waitForSearch(Query.newInstance()
+                .addParam("agentNameContains", stem + "-case")).get("data");
+        assertEquals(0, caseSensitive.get("totalCount").asInt(), caseSensitive.toString());
+
+        JsonNode combined = waitForSearch(Query.newInstance()
+                .addParam("agentNameContains", stem)
+                .addParam("tagsAll", "shared,blue")
+                .addParam("protocolsAny", "mcp,jsonrpc")).get("data");
+        assertEquals(1, combined.get("totalCount").asInt(), combined.toString());
+        assertEquals(stem + "-B",
+                combined.get("pageItems").get(0).get("agentName").asText(),
+                combined.toString());
+    }
+    
     private JsonNode findCatalog(JsonNode page, String agentName) {
         for (JsonNode item : page.get("pageItems")) {
             if (agentName.equals(item.get("agentName").asText())) {
@@ -197,6 +281,90 @@ public class AgentDiscoveryClientOpenApiITCase extends AgentClientOpenApiBaseITC
             }
         }
         return MissingNode.getInstance();
+    }
+
+    private void publishSearchAgent(String agentName, List<String> tags,
+            List<String> protocols) throws Exception {
+        Map<String, Object> draft = agentInitialDraftRequest(null, agentName, "1.0.0");
+        draft.put("iconUrl", "https://example.com/agent-search-index/icon.png");
+        draft.put("tags", tags);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> template = (Map<String, Object>)
+                ((List<?>) draft.get("callInterfaces")).get(0);
+        List<Map<String, Object>> interfaces = new ArrayList<>();
+        for (String protocol : protocols) {
+            Map<String, Object> callInterface = new LinkedHashMap<>(template);
+            callInterface.put("protocol", protocol);
+            interfaces.add(callInterface);
+        }
+        draft.put("callInterfaces", interfaces);
+        postFormOk(ADMIN_AGENT_PATH + "/draft", agentForm(draft));
+        addCleanup(() -> deleteAgentDefinitionQuietly(DEFAULT_NAMESPACE, agentName));
+        postFormOk(ADMIN_AGENT_PATH + "/force-publish", agentForm(
+                agentVersionCommand(null, agentName, "1.0.0")));
+    }
+
+    private void assertLiteralSearch(String stem, String literal, String expectedName)
+            throws Exception {
+        JsonNode page = waitForSearchTotal(Query.newInstance()
+                .addParam("agentNameContains", stem + "-" + literal), 1).get("data");
+        assertEquals(1, page.get("totalCount").asInt(), page.toString());
+        assertEquals(expectedName, page.get("pageItems").get(0).get("agentName").asText(),
+                page.toString());
+    }
+
+    private JsonNode waitForCatalog(String agentName, String expectedLatest,
+            int expectedVersionCount) throws Exception {
+        JsonNode last = null;
+        for (int retry = 0; retry < 100; retry++) {
+            JsonNode page = waitForSearch(Query.newInstance()
+                    .addParam("agentNameContains", agentName)).get("data");
+            last = findCatalog(page, agentName);
+            if (!last.isMissingNode()
+                    && expectedLatest.equals(last.path("latestVersion").asText())
+                    && last.path("versions").size() == expectedVersionCount) {
+                return last;
+            }
+            TimeUnit.MILLISECONDS.sleep(200L);
+        }
+        throw new AssertionError("Expected Search catalog latest=" + expectedLatest
+                + ", versions=" + expectedVersionCount + ", last=" + last);
+    }
+
+    private void waitForCatalogAbsent(String agentName) throws Exception {
+        JsonNode last = null;
+        for (int retry = 0; retry < 100; retry++) {
+            JsonNode page = waitForSearch(Query.newInstance()
+                    .addParam("agentNameContains", agentName)).get("data");
+            last = findCatalog(page, agentName);
+            if (last.isMissingNode()) {
+                return;
+            }
+            TimeUnit.MILLISECONDS.sleep(200L);
+        }
+        throw new AssertionError("Expected Agent to leave Search after all Versions offline: "
+                + last);
+    }
+
+    private JsonNode waitForSearch(Query query) throws Exception {
+        HttpResponse response = getRaw(AGENT_SEARCH_PATH, query);
+        assertEquals(200, response.code(), response.body());
+        JsonNode result = JacksonUtils.toObj(response.body());
+        assertSuccess(result);
+        return result;
+    }
+
+    private JsonNode waitForSearchTotal(Query query, int expectedTotal) throws Exception {
+        JsonNode last = null;
+        for (int retry = 0; retry < 100; retry++) {
+            last = waitForSearch(query);
+            if (last.path("data").path("totalCount").asInt() == expectedTotal) {
+                return last;
+            }
+            TimeUnit.MILLISECONDS.sleep(200L);
+        }
+        throw new AssertionError("Agent Search did not converge to total=" + expectedTotal
+                + ", last=" + last);
     }
 
     private Map<String, String> endpointRegistration(String agentName, String runtimeVersion,

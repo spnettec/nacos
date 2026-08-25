@@ -28,12 +28,12 @@ import java.util.Map;
  * @author xiweng.yy
  */
 public class VisibilityPluginProvider implements PluginProvider<VisibilityService> {
-
+    
     @Override
     public PluginType getPluginType() {
         return PluginType.VISIBILITY;
     }
-
+    
     @Override
     public Map<String, VisibilityService> getAllPlugins() {
         return VisibilityPluginManager.getInstance().getAllPlugins();

@@ -27,11 +27,11 @@ import java.util.Objects;
  * @author Nacos
  */
 public final class ControlManagerBundle {
-
+    
     private final ConnectionControlManager connectionControlManager;
-
+    
     private final TpsControlManager tpsControlManager;
-
+    
     /**
      * Create control manager bundle.
      *
@@ -45,7 +45,7 @@ public final class ControlManagerBundle {
         this.tpsControlManager = Objects.requireNonNull(tpsControlManager,
             "TPS control manager cannot be null");
     }
-
+    
     /**
      * Get connection control manager.
      *
@@ -54,7 +54,7 @@ public final class ControlManagerBundle {
     public ConnectionControlManager getConnectionControlManager() {
         return connectionControlManager;
     }
-
+    
     /**
      * Get TPS control manager.
      *

@@ -27,16 +27,16 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
 class PluginConfigStorageRegistryTest {
-
+    
     @Test
     void selectsBuiltInProviderByDefault() {
         TestProvider builtIn = new TestProvider("local-file", Integer.MAX_VALUE, true);
         PluginConfigStorageRegistry registry = registry(builtIn, Collections.emptyList(),
             (property, defaultValue) -> defaultValue);
-
+        
         assertSame(builtIn, registry.getSelectedProvider());
     }
-
+    
     @Test
     void selectsFirstEnabledProviderByOrder() {
         TestProvider builtIn = new TestProvider("local-file", Integer.MAX_VALUE, true);
@@ -44,10 +44,10 @@ class PluginConfigStorageRegistryTest {
         TestProvider later = new TestProvider("remote", 20, false);
         PluginConfigStorageRegistry registry = registry(builtIn, Arrays.asList(later, first),
             (property, defaultValue) -> true);
-
+        
         assertSame(first, registry.getSelectedProvider());
     }
-
+    
     @Test
     void duplicateNameUsesFirstProviderAfterDeterministicSort() {
         TestProvider builtIn = new TestProvider("local-file", Integer.MAX_VALUE, true);
@@ -55,16 +55,16 @@ class PluginConfigStorageRegistryTest {
         TestProvider duplicate = new TestProvider("database", 2, true);
         PluginConfigStorageRegistry registry = registry(builtIn,
             Arrays.asList(duplicate, first), (property, defaultValue) -> defaultValue);
-
+        
         assertSame(first, registry.getSelectedProvider());
     }
-
+    
     @Test
     void invalidProviderMetadataLeavesSourceUnavailable() {
         TestProvider builtIn = new TestProvider("local-file", Integer.MAX_VALUE, true);
         PluginConfigStorageProvider blank = new TestProvider(" ", 0, true);
         PluginConfigStorageProvider broken = new TestProvider("broken", 0, true) {
-
+            
             @Override
             public int getOrder() {
                 throw new IllegalStateException("metadata failed");
@@ -78,13 +78,13 @@ class PluginConfigStorageRegistryTest {
             Collections.singletonList(broken), (property, defaultValue) -> defaultValue);
         PluginConfigStorageRegistry invalidBuiltIn = registry(null, Collections.emptyList(),
             (property, defaultValue) -> defaultValue);
-
+        
         assertNull(nullProvider.getSelectedProvider());
         assertNull(blankProvider.getSelectedProvider());
         assertNull(brokenProvider.getSelectedProvider());
         assertNull(invalidBuiltIn.getSelectedProvider());
     }
-
+    
     @Test
     void discoveryFailureLeavesSourceUnavailable() {
         TestProvider builtIn = new TestProvider("local-file", Integer.MAX_VALUE, true);
@@ -100,21 +100,21 @@ class PluginConfigStorageRegistryTest {
             () -> {
                 throw new LinkageError("broken linkage");
             }, (property, defaultValue) -> defaultValue);
-
+        
         assertNull(runtimeFailure.getSelectedProvider());
         assertNull(serviceFailure.getSelectedProvider());
         assertNull(linkageFailure.getSelectedProvider());
     }
-
+    
     @Test
     void nullDiscoveryResultFallsBackToBuiltIn() {
         TestProvider builtIn = new TestProvider("local-file", Integer.MAX_VALUE, true);
         PluginConfigStorageRegistry registry = new PluginConfigStorageRegistry(builtIn,
             () -> null, (property, defaultValue) -> defaultValue);
-
+        
         assertSame(builtIn, registry.getSelectedProvider());
     }
-
+    
     @Test
     void propertyFailureLeavesSourceUnavailable() {
         TestProvider builtIn = new TestProvider("local-file", Integer.MAX_VALUE, true);
@@ -126,55 +126,55 @@ class PluginConfigStorageRegistryTest {
             (property, defaultValue) -> {
                 throw new LinkageError("environment linkage unavailable");
             });
-
+        
         assertNull(runtimeFailure.getSelectedProvider());
         assertNull(linkageFailure.getSelectedProvider());
     }
-
+    
     @Test
     void allProvidersDisabledLeavesSourceUnavailable() {
         TestProvider builtIn = new TestProvider("local-file", Integer.MAX_VALUE, true);
         PluginConfigStorageRegistry registry = registry(builtIn, Collections.emptyList(),
             (property, defaultValue) -> false);
-
+        
         assertNull(registry.getSelectedProvider());
     }
-
+    
     private PluginConfigStorageRegistry registry(PluginConfigStorageProvider builtIn,
         Collection<PluginConfigStorageProvider> providers,
         java.util.function.BiFunction<String, Boolean, Boolean> enabledResolver) {
         return new PluginConfigStorageRegistry(builtIn, () -> providers, enabledResolver);
     }
-
+    
     private static class TestProvider implements PluginConfigStorageProvider {
-
+        
         private final String name;
-
+        
         private final int order;
-
+        
         private final boolean enabledByDefault;
-
+        
         TestProvider(String name, int order, boolean enabledByDefault) {
             this.name = name;
             this.order = order;
             this.enabledByDefault = enabledByDefault;
         }
-
+        
         @Override
         public String getName() {
             return name;
         }
-
+        
         @Override
         public int getOrder() {
             return order;
         }
-
+        
         @Override
         public boolean isEnabledByDefault() {
             return enabledByDefault;
         }
-
+        
         @Override
         public PluginConfigStorage createStorage() {
             return null;

@@ -40,22 +40,22 @@ import java.util.Map;
  * @author nacos
  */
 public class AiResourceSearchChunkBuilder {
-
+    
     private static final String SKILL_MD_RESOURCE_NAME = "SKILL.md";
-
+    
     private static final String MCP_CONTENT_PATH_PREFIX = "mcp-";
-
+    
     private static final TypeReference<List<String>> STRING_LIST_TYPE =
         new TypeReference<List<String>>() {
         };
-
+    
     private static final TypeReference<Map<String, Object>> MAP_TYPE =
         new TypeReference<Map<String, Object>>() {
         };
-
+    
     private final SkillMarkdownSearchTextExtractor skillMarkdownSearchTextExtractor =
         new SkillMarkdownSearchTextExtractor();
-
+    
     /**
      * Build chunks used by keyword and vector retrieval.
      */
@@ -79,7 +79,7 @@ public class AiResourceSearchChunkBuilder {
             "notFor");
         return chunks;
     }
-
+    
     /**
      * Build deterministic search chunks from stored or supplied resource content.
      */
@@ -101,7 +101,28 @@ public class AiResourceSearchChunkBuilder {
         }
         return dedupeByHash(chunks);
     }
-
+    
+    /**
+     * Build deterministic source chunks with a type selected by a resource type handler.
+     */
+    public List<AiResourceSearchChunk> buildSourceContentChunks(AiResourceSearchDocument entry,
+        List<AiResourceIndexEnhancementContent> contents, String chunkType) {
+        if (contents == null || contents.isEmpty() || StringUtils.isBlank(chunkType)) {
+            return Collections.emptyList();
+        }
+        List<AiResourceSearchChunk> chunks = new ArrayList<>();
+        for (AiResourceIndexEnhancementContent content : contents) {
+            if (content == null) {
+                continue;
+            }
+            for (String text : skillMarkdownSearchTextExtractor.extract(content.getText())) {
+                addChunk(chunks, entry, chunkType, text, sourceContentMetadata(content.getPath(),
+                    sourceContentType(chunkType)));
+            }
+        }
+        return dedupeByHash(chunks);
+    }
+    
     /**
      * Build chunks from optional AI-generated index enhancement text.
      */
@@ -120,7 +141,7 @@ public class AiResourceSearchChunkBuilder {
         }
         return dedupeByHash(chunks);
     }
-
+    
     private void addListChunks(List<AiResourceSearchChunk> chunks, AiResourceSearchDocument entry,
         String chunkType,
         List<String> values) {
@@ -128,7 +149,7 @@ public class AiResourceSearchChunkBuilder {
             addChunk(chunks, entry, chunkType, value, null);
         }
     }
-
+    
     private void addMetadataChunk(List<AiResourceSearchChunk> chunks,
         AiResourceSearchDocument entry,
         Map<String, Object> metadata, String chunkType, String... keys) {
@@ -149,7 +170,7 @@ public class AiResourceSearchChunkBuilder {
                 JacksonUtils.toJson(selected));
         }
     }
-
+    
     private void addChunk(List<AiResourceSearchChunk> chunks, AiResourceSearchDocument entry,
         String chunkType, String text,
         String metadata) {
@@ -171,12 +192,12 @@ public class AiResourceSearchChunkBuilder {
             + chunk.getCanonicalText()));
         chunks.add(chunk);
     }
-
+    
     private String resourceKey(AiResourceSearchDocument entry) {
         return entry.getNamespaceId() + ":" + entry.getResourceType() + ":"
             + entry.getResourceName() + ":" + entry.getResourceVersion();
     }
-
+    
     private String canonicalText(AiResourceSearchDocument entry, String chunkType, String text) {
         List<String> parts = new ArrayList<>();
         parts.add(entry.getResourceType());
@@ -185,7 +206,7 @@ public class AiResourceSearchChunkBuilder {
         parts.add(text);
         return StringUtils.join(parts, " ").toLowerCase(Locale.ROOT);
     }
-
+    
     private List<String> parseStringList(String value) {
         if (StringUtils.isBlank(value)) {
             return Collections.emptyList();
@@ -197,7 +218,7 @@ public class AiResourceSearchChunkBuilder {
             return Collections.singletonList(value);
         }
     }
-
+    
     private Map<String, Object> parseMap(String value) {
         if (StringUtils.isBlank(value)) {
             return Collections.emptyMap();
@@ -209,11 +230,8 @@ public class AiResourceSearchChunkBuilder {
             return Collections.emptyMap();
         }
     }
-
+    
     private List<String> toStringList(Object value) {
-        if (value == null) {
-            return Collections.emptyList();
-        }
         if (value instanceof Collection) {
             List<String> result = new ArrayList<>();
             for (Object each : (Collection<?>) value) {
@@ -228,7 +246,7 @@ public class AiResourceSearchChunkBuilder {
         }
         return Collections.singletonList(String.valueOf(value));
     }
-
+    
     private List<AiResourceSearchChunk> dedupeByHash(List<AiResourceSearchChunk> chunks) {
         if (chunks.isEmpty()) {
             return chunks;
@@ -241,7 +259,7 @@ public class AiResourceSearchChunkBuilder {
         }
         return result;
     }
-
+    
     private String sourceContentChunkType(AiResourceSearchDocument entry,
         AiResourceIndexEnhancementContent content) {
         if (entry == null || content == null) {
@@ -262,7 +280,7 @@ public class AiResourceSearchChunkBuilder {
         }
         return null;
     }
-
+    
     private String sourceContentType(String chunkType) {
         if (AiResourceSearchConstants.CHUNK_TYPE_SKILL_CONTENT.equals(chunkType)) {
             return "skill_md";
@@ -275,7 +293,7 @@ public class AiResourceSearchChunkBuilder {
         }
         return "content";
     }
-
+    
     private String sourceContentMetadata(String path, String source) {
         Map<String, Object> metadata = new LinkedHashMap<>();
         metadata.put("source", source);
@@ -283,7 +301,7 @@ public class AiResourceSearchChunkBuilder {
         metadata.put("extractor", "rule");
         return JacksonUtils.toJson(metadata);
     }
-
+    
     private boolean containsHash(List<AiResourceSearchChunk> chunks, String chunkHash) {
         for (AiResourceSearchChunk chunk : chunks) {
             if (chunkHash.equals(chunk.getChunkHash())) {
@@ -292,11 +310,11 @@ public class AiResourceSearchChunkBuilder {
         }
         return false;
     }
-
+    
     private String firstNotBlank(String first, String second) {
         return StringUtils.isNotBlank(first) ? first : second;
     }
-
+    
     private String md5(String value) {
         return MD5Utils.md5Hex(value, StandardCharsets.UTF_8.name());
     }

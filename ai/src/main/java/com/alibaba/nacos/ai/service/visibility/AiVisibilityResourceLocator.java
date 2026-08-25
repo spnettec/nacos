@@ -34,13 +34,13 @@ import static com.alibaba.nacos.api.common.Constants.DEFAULT_NAMESPACE_ID;
  */
 @Service
 public class AiVisibilityResourceLocator implements VisibilityResourceLocator {
-
+    
     private final AiResourcePersistService aiResourcePersistService;
-
+    
     public AiVisibilityResourceLocator(AiResourcePersistService aiResourcePersistService) {
         this.aiResourcePersistService = aiResourcePersistService;
     }
-
+    
     @Override
     public Optional<VisibilityResource> findResource(String namespaceId, String resourceType,
         String resourceName) {

@@ -40,17 +40,17 @@ import java.util.Objects;
  */
 @Component
 public class EmbeddedConfigDumpApplyHook extends EmbeddedApplyHook {
-
+    
     public EmbeddedConfigDumpApplyHook(@Lazy DumpService dumpService) {
         NotifyCenter.registerToPublisher(ConfigDumpEvent.class, NotifyCenter.ringBufferSize);
         NotifyCenter.registerSubscriber(new DumpConfigHandler(dumpService));
     }
-
+    
     @Override
     public void afterApply(WriteRequest log) {
         handleExtendInfo(log.getExtendInfoMap());
     }
-
+    
     private void handleExtendInfo(Map<String, String> extendInfo) {
         if (extendInfo.containsKey(Constants.EXTEND_INFO_CONFIG_DUMP_EVENT)) {
             String jsonVal = extendInfo.get(Constants.EXTEND_INFO_CONFIG_DUMP_EVENT);

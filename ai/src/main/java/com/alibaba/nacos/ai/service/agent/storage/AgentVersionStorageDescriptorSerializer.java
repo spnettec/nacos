@@ -38,44 +38,44 @@ import java.util.regex.Pattern;
  * @author Nacos
  */
 public final class AgentVersionStorageDescriptorSerializer {
-
+    
     public static final String NACOS_CONFIG_PROVIDER = "nacos_config";
-
+    
     public static final String NACOS_CONFIG_KEY_FORMAT =
         AgentVersionStorageDescriptor.NACOS_CONFIG_KEY_FORMAT;
-
+    
     public static final String RAD_ASCII_AGENT_NAME_CODEC =
         AgentVersionStorageDescriptor.RAD_AGENT_NAME_CODEC;
-
+    
     public static final String AGENT_VERSION_MEDIA_TYPE =
         AgentVersionStorageDescriptor.MEDIA_TYPE;
-
+    
     public static final int SCHEMA_VERSION = AgentVersionStorageDescriptor.SCHEMA_VERSION;
-
+    
     public static final int MAX_CONTENT_SIZE = AgentVersionContentSerializer.MAX_CONTENT_SIZE;
-
+    
     private static final int MAX_PROVIDER_LENGTH = 64;
-
+    
     private static final int MAX_KEY_LENGTH = 1024;
-
+    
     private static final int MAX_FORMAT_LENGTH = 64;
-
+    
     private static final Pattern PROVIDER_PATTERN =
         Pattern.compile("[A-Za-z0-9][A-Za-z0-9_-]{0,63}");
-
+    
     private static final Pattern DIGEST_PATTERN = Pattern.compile("sha256:[0-9a-f]{64}");
-
+    
     private static final JsonFactory STRICT_JSON_FACTORY = JsonFactory.builder()
         .enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION)
         .build();
-
+    
     private static final Set<String> FIELDS = Collections.unmodifiableSet(
         new HashSet<String>(Arrays.asList("provider", "key", "keyFormat", "agentNameCodec",
             "contentDigest", "mediaType", "schemaVersion", "size")));
-
+    
     private AgentVersionStorageDescriptorSerializer() {
     }
-
+    
     /**
      * Validate and serialize an Agent Version storage descriptor.
      *
@@ -93,7 +93,7 @@ public final class AgentVersionStorageDescriptorSerializer {
                 e);
         }
     }
-
+    
     /**
      * Deserialize and validate an Agent Version storage descriptor.
      *
@@ -112,7 +112,7 @@ public final class AgentVersionStorageDescriptorSerializer {
         validate(descriptor);
         return descriptor;
     }
-
+    
     private static void validateJsonShape(String json) {
         if (json == null || json.isEmpty()) {
             throw new IllegalArgumentException(
@@ -144,7 +144,7 @@ public final class AgentVersionStorageDescriptorSerializer {
         validateJsonInteger(root, "schemaVersion");
         validateJsonInteger(root, "size");
     }
-
+    
     /**
      * Validate an Agent Version storage descriptor against the internal storage schema.
      *
@@ -191,19 +191,19 @@ public final class AgentVersionStorageDescriptorSerializer {
             }
         }
     }
-
+    
     private static void validateRequiredText(String field, String value, int maxLength) {
         if (value == null || value.isEmpty() || value.length() > maxLength) {
             throw new IllegalArgumentException("Invalid Agent Version storage " + field);
         }
     }
-
+    
     private static void validateOptionalText(String field, String value, int maxLength) {
         if (value != null) {
             validateRequiredText(field, value, maxLength);
         }
     }
-
+    
     private static void validateJsonText(Map<?, ?> root, String field, boolean optional) {
         if (!root.containsKey(field)) {
             if (optional) {
@@ -216,7 +216,7 @@ public final class AgentVersionStorageDescriptorSerializer {
                 "Agent Version storage " + field + " must be a string");
         }
     }
-
+    
     private static void validateJsonInteger(Map<?, ?> root, String field) {
         Object value = root.get(field);
         if (!(value instanceof Byte || value instanceof Short || value instanceof Integer
@@ -225,7 +225,7 @@ public final class AgentVersionStorageDescriptorSerializer {
                 "Agent Version storage " + field + " must be an integer");
         }
     }
-
+    
     private static void validateSingleJsonValue(String json) {
         try (JsonParser parser = STRICT_JSON_FACTORY.createParser(json)) {
             if (parser.nextToken() == null) {

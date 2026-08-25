@@ -24,13 +24,13 @@ import io.grpc.Metadata;
  * @author xiweng.yy
  */
 final class JRaftAuthMetadata {
-
+    
     static final Metadata.Key<String> IDENTITY_KEY = Metadata.Key.of(
         "nacos-server-identity-key", Metadata.ASCII_STRING_MARSHALLER);
-
+    
     static final Metadata.Key<String> IDENTITY_VALUE = Metadata.Key.of(
         "nacos-server-identity-value", Metadata.ASCII_STRING_MARSHALLER);
-
+    
     private JRaftAuthMetadata() {
     }
 }

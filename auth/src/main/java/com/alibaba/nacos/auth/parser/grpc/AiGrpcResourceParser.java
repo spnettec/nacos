@@ -40,7 +40,7 @@ import static com.alibaba.nacos.plugin.auth.constant.Constants.Resource.AI_TYPE_
  * @author hongye.nhy xiweng.yy
  */
 public class AiGrpcResourceParser extends AbstractGrpcResourceParser {
-
+    
     @Override
     protected String getNamespaceId(Request request) {
         String namespaceId = null;
@@ -58,12 +58,12 @@ public class AiGrpcResourceParser extends AbstractGrpcResourceParser {
         }
         return namespaceId;
     }
-
+    
     @Override
     protected String getGroup(Request request) {
         return Constants.DEFAULT_GROUP;
     }
-
+    
     @Override
     protected String getResourceName(Request request) {
         if (request instanceof AbstractMcpRequest) {
@@ -78,7 +78,7 @@ public class AiGrpcResourceParser extends AbstractGrpcResourceParser {
         }
         return StringUtils.EMPTY;
     }
-
+    
     private String getMcpName(AbstractMcpRequest request) {
         String mcpName = request.getMcpName();
         if (request instanceof ReleaseMcpServerRequest) {
@@ -89,7 +89,7 @@ public class AiGrpcResourceParser extends AbstractGrpcResourceParser {
         }
         return StringUtils.isBlank(mcpName) ? StringUtils.EMPTY : mcpName;
     }
-
+    
     private String getAgentName(AbstractAgentRequest request) {
         String agentName = request.getAgentName();
         if (request instanceof ReleaseAgentCardRequest) {
@@ -100,12 +100,12 @@ public class AiGrpcResourceParser extends AbstractGrpcResourceParser {
         }
         return StringUtils.isBlank(agentName) ? StringUtils.EMPTY : agentName;
     }
-
+    
     private String getPromptName(AbstractPromptRequest request) {
         String promptKey = request.getPromptKey();
         return StringUtils.isBlank(promptKey) ? StringUtils.EMPTY : promptKey;
     }
-
+    
     @Override
     protected Properties getProperties(Request request) {
         Properties properties = super.getProperties(request);

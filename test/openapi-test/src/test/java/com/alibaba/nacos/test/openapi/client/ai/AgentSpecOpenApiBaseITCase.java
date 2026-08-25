@@ -34,11 +34,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * @author xiweng.yy
  */
 public abstract class AgentSpecOpenApiBaseITCase extends AiOpenApiBaseITCase {
-
+    
     protected static final String AGENT_SPEC_CLIENT_PATH = nacosPath(Constants.AgentSpecs.CLIENT_PATH);
-
+    
     protected static final String AGENT_SPEC_ADMIN_PATH = nacosPath(Constants.AgentSpecs.ADMIN_PATH);
-
+    
     protected void publishAgentSpec(String name, String version, String basedOnVersion, String description,
             String scenario, String soulContent) throws Exception {
         JsonNode draft = postFormOk(AGENT_SPEC_ADMIN_PATH + "/draft",
@@ -53,7 +53,7 @@ public abstract class AgentSpecOpenApiBaseITCase extends AiOpenApiBaseITCase {
         JsonNode published = postFormOk(AGENT_SPEC_ADMIN_PATH + "/force-publish", form);
         assertEquals("ok", published.get("data").asText(), published.toString());
     }
-
+    
     protected void updateAgentSpecLabels(String name, String labels) throws Exception {
         Map<String, String> form = new LinkedHashMap<>();
         form.put("agentSpecName", name);
@@ -62,18 +62,26 @@ public abstract class AgentSpecOpenApiBaseITCase extends AiOpenApiBaseITCase {
         assertEquals("ok", root.get("data").asText(), root.toString());
     }
 
+    protected void updateAgentSpecBizTags(String name, String bizTags) throws Exception {
+        Map<String, String> form = new LinkedHashMap<>();
+        form.put("agentSpecName", name);
+        form.put("bizTags", bizTags);
+        JsonNode root = putFormOk(AGENT_SPEC_ADMIN_PATH + "/biz-tags", form);
+        assertEquals("ok", root.get("data").asText(), root.toString());
+    }
+    
     protected void deleteAgentSpec(String name) throws Exception {
         deleteQuietly(AGENT_SPEC_ADMIN_PATH, Query.newInstance().addParam("agentSpecName", name));
     }
-
+    
     protected String randomAgentSpecName(String scenario) {
         return "oit-" + scenario + "-" + UUID.randomUUID().toString().substring(0, 8);
     }
-
+    
     protected String randomAgentSpecSuffix() {
         return UUID.randomUUID().toString().substring(0, 8);
     }
-
+    
     protected void assertAgentSpec(JsonNode data, String name, String version, String description,
             String scenario, String soulContent) throws Exception {
         assertNotNull(data);
@@ -90,7 +98,7 @@ public abstract class AgentSpecOpenApiBaseITCase extends AiOpenApiBaseITCase {
         assertEquals("config", resource.get("type").asText());
         assertEquals(soulContent, resource.get("content").asText());
     }
-
+    
     private Map<String, String> buildAgentSpecDraftForm(String name, String version, String basedOnVersion) {
         Map<String, String> form = new LinkedHashMap<>();
         form.put("agentSpecName", name);
@@ -100,14 +108,14 @@ public abstract class AgentSpecOpenApiBaseITCase extends AiOpenApiBaseITCase {
         }
         return form;
     }
-
+    
     private Map<String, String> buildAgentSpecUpdateForm(String name, String version, String description,
             String scenario, String soulContent) {
         Map<String, String> form = new LinkedHashMap<>();
         form.put("agentSpecCard", buildAgentSpecCard(name, version, description, scenario, soulContent));
         return form;
     }
-
+    
     private String buildAgentSpecCard(String name, String version, String description, String scenario,
             String soulContent) {
         Map<String, Object> card = new LinkedHashMap<>();
@@ -124,7 +132,7 @@ public abstract class AgentSpecOpenApiBaseITCase extends AiOpenApiBaseITCase {
         card.put("resource", resources);
         return JacksonUtils.toJson(card);
     }
-
+    
     private String buildManifestContent(String name, String version, String scenario) {
         Map<String, Object> worker = new LinkedHashMap<>();
         worker.put("suggested_name", name);

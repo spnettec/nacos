@@ -54,26 +54,26 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class BatchAgentEndpointRequestHandlerTest {
-
+    
     @Mock
     private EphemeralClientOperationServiceImpl clientOperationService;
-
+    
     @Mock
     private AgentIdCodecHolder agentIdCodecHolder;
-
+    
     @Mock
     private A2aCompatibilityModeResolver compatibilityModeResolver;
-
+    
     @Mock
     private CanonicalA2aEndpointOperationService canonicalEndpointOperationService;
-
+    
     @Mock
     private RequestMeta meta;
-
+    
     private BatchAgentEndpointRequestHandler requestHandler;
-
+    
     private List<Instance> capturedInstances;
-
+    
     @BeforeEach
     void setUp() {
         requestHandler =
@@ -81,11 +81,11 @@ class BatchAgentEndpointRequestHandlerTest {
                 compatibilityModeResolver, canonicalEndpointOperationService);
         capturedInstances = null;
     }
-
+    
     @AfterEach
     void tearDown() {
     }
-
+    
     @Test
     void handleWithInvalidAgentName() throws NacosException {
         BatchAgentEndpointRequest request = new BatchAgentEndpointRequest();
@@ -93,7 +93,7 @@ class BatchAgentEndpointRequestHandlerTest {
         assertErrorResponse(response, NacosException.INVALID_PARAM,
             "Required parameter `agentName` can't be empty or null");
     }
-
+    
     @Test
     void handleWithNullEndpoints() throws NacosException {
         BatchAgentEndpointRequest request = new BatchAgentEndpointRequest();
@@ -102,7 +102,7 @@ class BatchAgentEndpointRequestHandlerTest {
         assertErrorResponse(response, NacosException.INVALID_PARAM,
             "Required parameter `endpoints` can't be empty or null, if want to deregister, please use deregister API.");
     }
-
+    
     @Test
     void handleWithEmptyEndpoints() throws NacosException {
         BatchAgentEndpointRequest request = new BatchAgentEndpointRequest();
@@ -112,7 +112,7 @@ class BatchAgentEndpointRequestHandlerTest {
         assertErrorResponse(response, NacosException.INVALID_PARAM,
             "Required parameter `endpoints` can't be empty or null, if want to deregister, please use deregister API.");
     }
-
+    
     @Test
     void handleWithEmptyEndpointVersion() throws NacosException {
         BatchAgentEndpointRequest request = new BatchAgentEndpointRequest();
@@ -125,22 +125,22 @@ class BatchAgentEndpointRequestHandlerTest {
         assertErrorResponse(response, NacosException.INVALID_PARAM,
             "Required parameter `endpoint.version` can't be empty or null.");
     }
-
+    
     @Test
     void handleWithDifferentVersions() throws NacosException {
         BatchAgentEndpointRequest request = new BatchAgentEndpointRequest();
         request.setAgentName("test");
-
+        
         AgentEndpoint endpoint1 = new AgentEndpoint();
         endpoint1.setAddress("1.1.1.1");
         endpoint1.setPort(8080);
         endpoint1.setVersion("1.0.0");
-
+        
         AgentEndpoint endpoint2 = new AgentEndpoint();
         endpoint2.setAddress("2.2.2.2");
         endpoint2.setPort(9090);
         endpoint2.setVersion("2.0.0");
-
+        
         request.setEndpoints(Arrays.asList(endpoint1, endpoint2));
         AgentEndpointResponse response = requestHandler.handle(request, meta);
         assertEquals(ResponseCode.FAIL.getCode(), response.getResultCode());
@@ -151,13 +151,13 @@ class BatchAgentEndpointRequestHandlerTest {
         assertTrue(response.getMessage().contains("1.0.0"));
         assertTrue(response.getMessage().contains("2.0.0"));
     }
-
+    
     @Test
     void handleForBatchRegisterEndpoint() throws NacosException {
         BatchAgentEndpointRequest request = new BatchAgentEndpointRequest();
         request.setAgentName("test");
         request.setNamespaceId("public");
-
+        
         AgentEndpoint endpoint1 = new AgentEndpoint();
         endpoint1.setAddress("1.1.1.1");
         endpoint1.setPort(8080);
@@ -167,7 +167,7 @@ class BatchAgentEndpointRequestHandlerTest {
         endpoint1.setSupportTls(false);
         endpoint1.setProtocol("HTTP");
         endpoint1.setQuery("param1=value1");
-
+        
         AgentEndpoint endpoint2 = new AgentEndpoint();
         endpoint2.setAddress("2.2.2.2");
         endpoint2.setPort(9090);
@@ -177,14 +177,14 @@ class BatchAgentEndpointRequestHandlerTest {
         endpoint2.setSupportTls(true);
         endpoint2.setProtocol("HTTPS");
         endpoint2.setQuery("param2=value2");
-
+        
         Collection<AgentEndpoint> endpoints = Arrays.asList(endpoint1, endpoint2);
         request.setEndpoints(endpoints);
-
+        
         when(compatibilityModeResolver.resolve()).thenReturn(A2aCompatibilityMode.LEGACY);
         when(agentIdCodecHolder.encode("test")).thenReturn("test");
         when(meta.getConnectionId()).thenReturn("TEST_CONNECTION_ID");
-
+        
         // Mock the batchRegisterInstance method to capture the Instance list argument
         doAnswer(invocation -> {
             capturedInstances = invocation.getArgument(1);
@@ -194,25 +194,25 @@ class BatchAgentEndpointRequestHandlerTest {
             return null;
         }).when(clientOperationService)
             .batchRegisterInstance(any(Service.class), any(List.class), eq("TEST_CONNECTION_ID"));
-
+        
         AgentEndpointResponse response = requestHandler.handle(request, meta);
-
+        
         assertEquals(AiRemoteConstants.BATCH_REGISTER_ENDPOINT, response.getType());
         assertEquals(ResponseCode.SUCCESS.getCode(), response.getResultCode());
         verify(clientOperationService).batchRegisterInstance(any(Service.class), any(List.class),
             eq("TEST_CONNECTION_ID"));
-
+        
         // Verify captured instances
         assertEquals(2, capturedInstances.size());
         Instance instance1 = capturedInstances.get(0);
         assertEquals("1.1.1.1", instance1.getIp());
         assertEquals(8080, instance1.getPort());
-
+        
         Instance instance2 = capturedInstances.get(1);
         assertEquals("2.2.2.2", instance2.getIp());
         assertEquals(9090, instance2.getPort());
     }
-
+    
     @Test
     void handleCanonicalBatchRegisterEndpoint() throws NacosException {
         BatchAgentEndpointRequest request = new BatchAgentEndpointRequest();
@@ -225,21 +225,21 @@ class BatchAgentEndpointRequestHandlerTest {
         request.setEndpoints(Arrays.asList(endpoint));
         when(compatibilityModeResolver.resolve()).thenReturn(A2aCompatibilityMode.CANONICAL);
         when(meta.getConnectionId()).thenReturn("TEST_CONNECTION_ID");
-
+        
         AgentEndpointResponse response = requestHandler.handle(request, meta);
-
+        
         assertEquals(ResponseCode.SUCCESS.getCode(), response.getResultCode());
         verify(canonicalEndpointOperationService).register("TEST_CONNECTION_ID", "public", "test",
             request.getEndpoints());
         verifyNoInteractions(clientOperationService, agentIdCodecHolder);
     }
-
+    
     private void assertErrorResponse(AgentEndpointResponse response, int code, String message) {
         assertEquals(ResponseCode.FAIL.getCode(), response.getResultCode());
         assertEquals(code, response.getErrorCode());
         assertEquals(message, response.getMessage());
     }
-
+    
     private void validateInstanceMetadata(Instance instance) {
         Map<String, String> metadata = instance.getMetadata();
         assertTrue(metadata.containsKey(Constants.Agent.AGENT_ENDPOINT_PATH_KEY));

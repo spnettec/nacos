@@ -42,24 +42,24 @@ import java.util.function.Supplier;
  */
 @Service
 public class AgentVersionStorageService {
-
+    
     private static final String DEFAULT_STORAGE_PROVIDER = NacosConfigAiResourceStorage.TYPE;
-
+    
     private final AiResourceStorageRouter storageRouter;
-
+    
     private final Supplier<String> storageProviderSupplier;
-
+    
     public AgentVersionStorageService() {
         this(AiResourceStorageRouter.getInstance(), AgentVersionStorageService::configuredProvider);
     }
-
+    
     AgentVersionStorageService(AiResourceStorageRouter storageRouter,
         Supplier<String> storageProviderSupplier) {
         this.storageRouter = Objects.requireNonNull(storageRouter, "storageRouter");
         this.storageProviderSupplier = Objects.requireNonNull(storageProviderSupplier,
             "storageProviderSupplier");
     }
-
+    
     /**
      * Serialize one Agent Version content object and build its deterministic storage descriptor
      * without accessing AI Storage.
@@ -82,7 +82,7 @@ public class AgentVersionStorageService {
             buildDescriptor(storageKey, serializedContent);
         return new PreparedAgentVersionWrite(descriptor, serializedContent);
     }
-
+    
     /**
      * Serialize updated content while preserving an existing Version's persisted storage pointer.
      *
@@ -103,7 +103,7 @@ public class AgentVersionStorageService {
             buildReplacementDescriptor(currentDescriptor, serializedContent);
         return new PreparedAgentVersionWrite(descriptor, serializedContent);
     }
-
+    
     /**
      * Prepare and save one Agent Version content object at its stable logical key.
      *
@@ -120,7 +120,7 @@ public class AgentVersionStorageService {
         save(prepared);
         return prepared.getDescriptor();
     }
-
+    
     /**
      * Save content that was previously returned by {@link #prepare(String, String, String,
      * AgentVersionContent)}.
@@ -143,7 +143,7 @@ public class AgentVersionStorageService {
                 "Agent Version content cannot be saved", e);
         }
     }
-
+    
     /**
      * Read, verify, and deserialize one Agent Version content object.
      *
@@ -181,7 +181,7 @@ public class AgentVersionStorageService {
             throw corruptedContent("Agent Version content cannot be decoded", e);
         }
     }
-
+    
     /**
      * Delete one Agent Version content object through its persisted storage pointer.
      *
@@ -196,7 +196,7 @@ public class AgentVersionStorageService {
             throw corruptedContent("Invalid Agent Version storage key", e);
         }
     }
-
+    
     private AgentVersionStorageDescriptor buildDescriptor(StorageKey storageKey,
         AgentVersionContentSerializer.SerializedContent serializedContent) {
         AgentVersionStorageDescriptor result = new AgentVersionStorageDescriptor();
@@ -212,7 +212,7 @@ public class AgentVersionStorageService {
         result.setSize((long) serializedContent.getSize());
         return result;
     }
-
+    
     private AgentVersionStorageDescriptor buildReplacementDescriptor(
         AgentVersionStorageDescriptor currentDescriptor,
         AgentVersionContentSerializer.SerializedContent serializedContent) {
@@ -227,7 +227,7 @@ public class AgentVersionStorageService {
         result.setSize((long) serializedContent.getSize());
         return result;
     }
-
+    
     private StorageKey checkedStorageKey(AgentVersionStorageDescriptor descriptor)
         throws NacosException {
         try {
@@ -237,12 +237,12 @@ public class AgentVersionStorageService {
         }
         return new StorageKey(descriptor.getProvider(), descriptor.getKey());
     }
-
+    
     private String resolveStorageProvider() {
         String configured = storageProviderSupplier.get();
         return StringUtils.isBlank(configured) ? DEFAULT_STORAGE_PROVIDER : configured.trim();
     }
-
+    
     private AiResourceStorage route(StorageKey storageKey) throws NacosException {
         try {
             return storageRouter.route(storageKey);
@@ -251,12 +251,12 @@ public class AgentVersionStorageService {
                 "Agent Version storage provider is unavailable: " + storageKey.getProvider(), e);
         }
     }
-
+    
     private static String configuredProvider() {
         return AiResourceStorageUtils.resolveProvider(
             Constants.Agent.AGENT_STORAGE_PROVIDER_CONFIG_KEY, DEFAULT_STORAGE_PROVIDER);
     }
-
+    
     private static NacosException corruptedContent(String message, Throwable cause) {
         return cause == null ? new NacosException(NacosException.SERVER_ERROR, message)
             : new NacosException(NacosException.SERVER_ERROR, message, cause);

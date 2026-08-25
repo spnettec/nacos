@@ -28,39 +28,39 @@ import jakarta.servlet.http.HttpServletRequest;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class RequestUtilTest {
-
+    
     private static final String X_REAL_IP = "X-Real-IP";
-
+    
     private static final String X_FORWARDED_FOR = "X-Forwarded-For";
-
+    
     @AfterEach
     void tearDown() {
         RequestContextHolder.removeContext();
     }
-
+    
     @Test
     void testGetRemoteIpFromRequest() {
         HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
-
+        
         Mockito.when(request.getRemoteAddr()).thenReturn("127.0.0.1");
         assertEquals("127.0.0.1", RequestUtil.getRemoteIp(request));
-
+        
         Mockito.when(request.getHeader(X_REAL_IP)).thenReturn("127.0.0.2");
         assertEquals("127.0.0.2", RequestUtil.getRemoteIp(request));
-
+        
         Mockito.when(request.getHeader(X_FORWARDED_FOR)).thenReturn("127.0.0.3");
         assertEquals("127.0.0.3", RequestUtil.getRemoteIp(request));
-
+        
         Mockito.when(request.getHeader(X_FORWARDED_FOR)).thenReturn("127.0.0.3, 127.0.0.4");
         assertEquals("127.0.0.3", RequestUtil.getRemoteIp(request));
-
+        
         Mockito.when(request.getHeader(X_FORWARDED_FOR)).thenReturn("");
         assertEquals("127.0.0.2", RequestUtil.getRemoteIp(request));
-
+        
         Mockito.when(request.getHeader(X_REAL_IP)).thenReturn("");
         assertEquals("127.0.0.1", RequestUtil.getRemoteIp(request));
     }
-
+    
     @Test
     void testGetAppNameFromContext() {
         RequestContextHolder.getContext().getBasicContext().setApp("contextApp");
@@ -68,14 +68,14 @@ class RequestUtilTest {
         Mockito.when(request.getHeader(RequestUtil.CLIENT_APPNAME_HEADER)).thenReturn("test");
         assertEquals("contextApp", RequestUtil.getAppName(request));
     }
-
+    
     @Test
     void testGetAppNameFromRequest() {
         HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
         Mockito.when(request.getHeader(RequestUtil.CLIENT_APPNAME_HEADER)).thenReturn("test");
         assertEquals("test", RequestUtil.getAppName(request));
     }
-
+    
     @Test
     void testGetSrcUserNameFromContext() {
         IdentityContext identityContext = new IdentityContext();
@@ -85,7 +85,7 @@ class RequestUtilTest {
         HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
         assertEquals("test", RequestUtil.getSrcUserName(request));
     }
-
+    
     @Test
     void testGetSrcUserNameFromRequest() {
         HttpServletRequest request = Mockito.mock(HttpServletRequest.class);

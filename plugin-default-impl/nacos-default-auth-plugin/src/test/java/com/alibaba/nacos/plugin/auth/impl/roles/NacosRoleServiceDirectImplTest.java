@@ -62,25 +62,25 @@ import static org.mockito.Mockito.when;
  */
 @ExtendWith(MockitoExtension.class)
 class NacosRoleServiceDirectImplTest {
-
+    
     @Mock
     private NacosAuthPluginConfigProvider configProvider;
-
+    
     @Mock
     private NacosAuthPluginConfig config;
-
+    
     @Mock
     private RolePersistService rolePersistService;
-
+    
     @Mock
     private NacosUserService userDetailsService;
-
+    
     @Mock
     private PermissionPersistService permissionPersistService;
-
+    
     @Mock
     private NacosRoleServiceDirectImpl nacosRoleService;
-
+    
     @BeforeEach
     void setup() throws Exception {
         nacosRoleService =
@@ -89,14 +89,14 @@ class NacosRoleServiceDirectImplTest {
         lenient().when(configProvider.getConfig()).thenReturn(config);
         lenient().when(config.isCachingEnabled()).thenReturn(false);
     }
-
+    
     @Test
     void reload() throws Exception {
         Method reload = AbstractCachedRoleService.class.getDeclaredMethod("reload");
         reload.setAccessible(true);
         reload.invoke(nacosRoleService);
     }
-
+    
     @Test
     void hasPermission() {
         Permission permission = new Permission();
@@ -106,7 +106,7 @@ class NacosRoleServiceDirectImplTest {
         nacosUser.setUserName("nacos");
         boolean res = nacosRoleService.hasPermission(nacosUser, permission);
         assertFalse(res);
-
+        
         Permission permission2 = new Permission();
         permission2.setAction("rw");
         Resource resource =
@@ -121,47 +121,47 @@ class NacosRoleServiceDirectImplTest {
         boolean res3 = nacosRoleService.hasPermission(nacosUser, permission2);
         assertTrue(res3);
     }
-
+    
     @Test
     void getRoles() {
         List<RoleInfo> nacos = nacosRoleService.getRoles("role-admin");
         assertEquals(nacos, Collections.emptyList());
     }
-
+    
     @Test
     void getRolesPage() {
         Page<RoleInfo> roleInfoPage =
             nacosRoleService.getRoles("nacos", "ROLE_ADMIN", 1, Integer.MAX_VALUE);
         assertEquals(0, roleInfoPage.getTotalCount());
     }
-
+    
     @Test
     void getRolesLoadsAndCachesRoleItems() {
         RoleInfo roleInfo = roleInfo("role-admin", "nacos");
         when(config.isCachingEnabled()).thenReturn(true);
         when(rolePersistService.getRolesByUserNameAndRoleName("nacos", "", 1,
             Integer.MAX_VALUE)).thenReturn(rolePage(Collections.singletonList(roleInfo)));
-
+        
         List<RoleInfo> firstResult = nacosRoleService.getRoles("nacos");
         List<RoleInfo> cachedResult = nacosRoleService.getRoles("nacos");
-
+        
         assertEquals(Collections.singletonList(roleInfo), firstResult);
         assertSame(firstResult, cachedResult);
         verify(rolePersistService, times(1)).getRolesByUserNameAndRoleName("nacos", "", 1,
             Integer.MAX_VALUE);
     }
-
+    
     @Test
     void getAllRolesReturnsPageItemsAndNullPage() {
         RoleInfo roleInfo = roleInfo("role-admin", "nacos");
         when(rolePersistService.getRolesByUserNameAndRoleName("", "", 1,
             Integer.MAX_VALUE)).thenReturn(rolePage(Collections.singletonList(roleInfo)))
             .thenReturn(null);
-
+        
         assertEquals(Collections.singletonList(roleInfo), nacosRoleService.getAllRoles());
         assertNull(nacosRoleService.getAllRoles());
     }
-
+    
     @Test
     void getPermissions() {
         boolean cachingEnabled = config.isCachingEnabled();
@@ -169,7 +169,7 @@ class NacosRoleServiceDirectImplTest {
         List<PermissionInfo> permissions = nacosRoleService.getPermissions("role-admin");
         assertEquals(permissions, Collections.emptyList());
     }
-
+    
     @Test
     void addRole() {
         String username = "nacos";
@@ -181,13 +181,13 @@ class NacosRoleServiceDirectImplTest {
             assertTrue(e.getMessage().contains("user 'nacos' not found!"));
         }
     }
-
+    
     @Test
     void deleteRole() {
         assertDoesNotThrow(() -> nacosRoleService.deleteRole("role-admin"));
         assertDoesNotThrow(() -> nacosRoleService.deleteRole("mockRole", "mockUser"));
     }
-
+    
     @Test
     void deleteAdminRole() {
         assertThrows(IllegalArgumentException.class,
@@ -197,7 +197,7 @@ class NacosRoleServiceDirectImplTest {
             () -> nacosRoleService.deleteRole(AuthConstants.GLOBAL_ADMIN_ROLE, "mockUser"),
             "role 'ROLE_ADMIN' is not permitted to delete!");
     }
-
+    
     @Test
     void addAnonymousRoleRejected() {
         when(userDetailsService.getUser("testUser")).thenReturn(new User());
@@ -205,7 +205,7 @@ class NacosRoleServiceDirectImplTest {
             () -> nacosRoleService.addRole(AuthConstants.ANONYMOUS_ROLE, "testUser"));
         assertTrue(exception.getMessage().contains("reserved by the system"));
     }
-
+    
     @Test
     void deleteAnonymousRoleRejected() {
         assertThrows(IllegalArgumentException.class,
@@ -213,7 +213,7 @@ class NacosRoleServiceDirectImplTest {
         assertThrows(IllegalArgumentException.class,
             () -> nacosRoleService.deleteRole(AuthConstants.ANONYMOUS_ROLE, "mockUser"));
     }
-
+    
     @Test
     void getPermissionsPage() {
         Page<PermissionInfo> permissionsFromDatabase =
@@ -221,7 +221,7 @@ class NacosRoleServiceDirectImplTest {
                 Integer.MAX_VALUE);
         assertEquals(0, permissionsFromDatabase.getTotalCount());
     }
-
+    
     @Test
     void getPermissionsLoadsAndCachesPermissionItems() {
         PermissionInfo permissionInfo = permissionInfo("role-admin", "resource", "rw");
@@ -230,16 +230,16 @@ class NacosRoleServiceDirectImplTest {
             Integer.MAX_VALUE)).thenReturn(permissionPage(
                 Collections.singletonList(
                     permissionInfo)));
-
+        
         List<PermissionInfo> firstResult = nacosRoleService.getPermissions("role-admin");
         List<PermissionInfo> cachedResult = nacosRoleService.getPermissions("role-admin");
-
+        
         assertEquals(Collections.singletonList(permissionInfo), firstResult);
         assertSame(firstResult, cachedResult);
         verify(permissionPersistService, times(1)).getPermissions("role-admin", 1,
             Integer.MAX_VALUE);
     }
-
+    
     @Test
     void addPermission() {
         try {
@@ -248,82 +248,82 @@ class NacosRoleServiceDirectImplTest {
             assertTrue(e.getMessage().contains("role role-admin not found!"));
         }
     }
-
+    
     @Test
     void addRoleBindsExistingUserAndUpdatesCache() {
         when(userDetailsService.getUser("nacos")).thenReturn(new User());
         when(rolePersistService.getRolesByUserNameAndRoleName("nacos", "role-admin", 1,
             1)).thenReturn(new Page<>());
-
+        
         nacosRoleService.addRole("role-admin", "nacos");
-
+        
         verify(rolePersistService).addRole("role-admin", "nacos");
         assertTrue(nacosRoleService.getCachedRoleSet().contains("role-admin"));
     }
-
+    
     @Test
     void addRoleRejectsReservedAdminRole() {
         when(userDetailsService.getUser("nacos")).thenReturn(new User());
-
+        
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
             () -> nacosRoleService.addRole(AuthConstants.GLOBAL_ADMIN_ROLE, "nacos"));
-
+        
         assertTrue(exception.getMessage().contains("is not permitted to create"));
     }
-
+    
     @Test
     void addRoleRejectsAlreadyBoundRole() {
         RoleInfo roleInfo = roleInfo("role-admin", "nacos");
         when(userDetailsService.getUser("nacos")).thenReturn(new User());
         when(rolePersistService.getRolesByUserNameAndRoleName("nacos", "role-admin", 1,
             1)).thenReturn(rolePage(Collections.singletonList(roleInfo)));
-
+        
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
             () -> nacosRoleService.addRole("role-admin", "nacos"));
-
+        
         assertTrue(exception.getMessage().contains("already bound"));
     }
-
+    
     @Test
     void addAdminRoleBindsFirstAdminAndMarksConfig() {
         when(userDetailsService.getUser("nacos")).thenReturn(new User());
         when(rolePersistService.getRolesByUserNameAndRoleName("", "", 1,
             Integer.MAX_VALUE)).thenReturn(rolePage(Collections.emptyList()));
-
+        
         nacosRoleService.addAdminRole("nacos");
-
+        
         verify(rolePersistService).addRole(AuthConstants.GLOBAL_ADMIN_ROLE, "nacos");
         assertTrue(nacosRoleService.hasGlobalAdminRole());
         assertTrue(nacosRoleService.getCachedRoleSet().contains(AuthConstants.GLOBAL_ADMIN_ROLE));
     }
-
+    
     @Test
     void addAdminRoleRejectsMissingUserAndExistingAdminRole() {
         assertThrows(IllegalArgumentException.class, () -> nacosRoleService.addAdminRole("nacos"));
-
+        
         when(userDetailsService.getUser("nacos")).thenReturn(new User());
         ReflectionTestUtils.setField(nacosRoleService, "hasGlobalAdminRole", true);
-
+        
         assertThrows(IllegalArgumentException.class, () -> nacosRoleService.addAdminRole("nacos"));
     }
-
+    
     @Test
     void addPermissionAndDeletePermissionDelegateToPersistService() {
         nacosRoleService.getCachedRoleSet().add("role-admin");
-
+        
         nacosRoleService.addPermission("role-admin", "resource", "rw");
         nacosRoleService.deletePermission("role-admin", "resource", "rw");
-
+        
         verify(permissionPersistService).addPermission("role-admin", "resource", "rw");
         verify(permissionPersistService).deletePermission("role-admin", "resource", "rw");
     }
-
+    
     @Test
     void findRolesLikeRoleName() {
         List<String> rolesLikeRoleName = rolePersistService.findRolesLikeRoleName("role-admin");
         assertEquals(rolesLikeRoleName, Collections.emptyList());
     }
-
+    
     @Test
     void findDelegatesToPersistServices() {
         Page<RoleInfo> rolePage = rolePage(Collections.singletonList(roleInfo("role-admin",
@@ -336,31 +336,31 @@ class NacosRoleServiceDirectImplTest {
             .thenReturn(Collections.singletonList("role-admin"));
         when(permissionPersistService.findPermissionsLike4Page("role", 1, 10))
             .thenReturn(permissionPage);
-
+        
         assertSame(rolePage, nacosRoleService.findRoles("nacos", "role", 1, 10));
         assertEquals(Collections.singletonList("role-admin"),
             nacosRoleService.findRoleNames("role"));
         assertSame(permissionPage, nacosRoleService.findPermissions("role", 1, 10));
     }
-
+    
     @Test
     void addAndDeletePermissionInvalidatePermissionCache() {
         nacosRoleService.getCachedRoleSet().add("role-admin");
         nacosRoleService.getCachedPermissionInfoMap().put("role-admin",
             Collections.singletonList(permissionInfo("role-admin", "resource", "r")));
-
+        
         nacosRoleService.addPermission("role-admin", "resource", "rw");
-
+        
         assertFalse(nacosRoleService.getCachedPermissionInfoMap().containsKey("role-admin"));
-
+        
         nacosRoleService.getCachedPermissionInfoMap().put("role-admin",
             Collections.singletonList(permissionInfo("role-admin", "resource", "rw")));
-
+        
         nacosRoleService.deletePermission("role-admin", "resource", "rw");
-
+        
         assertFalse(nacosRoleService.getCachedPermissionInfoMap().containsKey("role-admin"));
     }
-
+    
     @Test
     void joinResource() throws Exception {
         Method method =
@@ -371,22 +371,22 @@ class NacosRoleServiceDirectImplTest {
         Object invoke = method.invoke(nacosRoleService, new Resource[] {resource});
         assertNotNull(invoke);
     }
-
+    
     @Test
     void joinResourceHandlesSpecifiedAndBlankFields() throws Exception {
         Method method =
             AbstractCheckedRoleService.class.getDeclaredMethod("joinResource", Resource.class);
         method.setAccessible(true);
-
+        
         Object specified = method.invoke(nacosRoleService,
             new Resource[] {new Resource("public", "", "raw-resource", "specified", null)});
         Object defaulted = method.invoke(nacosRoleService,
             new Resource[] {new Resource("", "", "", "naming", null)});
-
+        
         assertEquals("raw-resource", specified);
         assertEquals("public:*:naming/*", defaulted);
     }
-
+    
     @Test
     void duplicatePermission() {
         List<PermissionInfo> permissionInfos = new ArrayList<>();
@@ -398,7 +398,7 @@ class NacosRoleServiceDirectImplTest {
         when(spy.getPermissions("admin")).thenReturn(permissionInfos);
         spy.isDuplicatePermission("admin", "test", "r");
     }
-
+    
     @Test
     void duplicatePermissionReturnsExpectedResult() {
         PermissionInfo readWritePermission = permissionInfo("admin", "test", "rw");
@@ -407,13 +407,13 @@ class NacosRoleServiceDirectImplTest {
         doReturn(Collections.emptyList()).when(spy).getPermissions("empty");
         doReturn(java.util.Arrays.asList(readWritePermission, readPermission)).when(spy)
             .getPermissions("admin");
-
+        
         assertFalse(spy.isDuplicatePermission("empty", "test", "r").getData());
         assertTrue(spy.isDuplicatePermission("admin", "test", "r").getData());
         assertTrue(spy.isDuplicatePermission("admin", "data", "r").getData());
         assertFalse(spy.isDuplicatePermission("admin", "data", "w").getData());
     }
-
+    
     @Test
     void hasPermissionReturnsTrueForGlobalAdminRole() {
         RoleInfo roleInfo = roleInfo(AuthConstants.GLOBAL_ADMIN_ROLE, "nacos");
@@ -425,11 +425,11 @@ class NacosRoleServiceDirectImplTest {
         permission.setAction("r");
         permission.setResource(new Resource("public", "group", "service", "naming",
             new Properties()));
-
+        
         assertTrue(nacosRoleService.hasPermission(nacosUser, permission));
         assertTrue(nacosUser.isGlobalAdmin());
     }
-
+    
     @Test
     void hasPermissionReturnsTrueForMatchedPermissionPattern() {
         RoleInfo roleInfo = roleInfo("reader", "nacos");
@@ -445,10 +445,10 @@ class NacosRoleServiceDirectImplTest {
         permission.setAction("r");
         permission.setResource(new Resource("public", "group", "service", "naming",
             new Properties()));
-
+        
         assertTrue(nacosRoleService.hasPermission(new NacosUser("nacos"), permission));
     }
-
+    
     @Test
     void hasPermissionReturnsFalseForConsoleResourceWithoutGlobalAdmin() {
         RoleInfo roleInfo = roleInfo("reader", "nacos");
@@ -459,10 +459,10 @@ class NacosRoleServiceDirectImplTest {
         permission.setAction("r");
         permission.setResource(new Resource("public", "group", "console/users", "console",
             new Properties()));
-
+        
         assertFalse(nacosRoleService.hasPermission(new NacosUser("nacos"), permission));
     }
-
+    
     @Test
     void hasPermissionSkipsEmptyPermissionsThenMatchesDefaultNamespacePattern() {
         RoleInfo emptyRole = roleInfo("empty", "nacos");
@@ -480,23 +480,23 @@ class NacosRoleServiceDirectImplTest {
         Permission permission = new Permission();
         permission.setAction("r");
         permission.setResource(new Resource("", "group", "service", "naming", new Properties()));
-
+        
         assertTrue(nacosRoleService.hasPermission(new NacosUser("nacos"), permission));
     }
-
+    
     @Test
     void hasGlobalAdminRoleChecksUserAndCachedAllRoles() {
         RoleInfo adminRole = roleInfo(AuthConstants.GLOBAL_ADMIN_ROLE, "nacos");
         when(config.isCachingEnabled()).thenReturn(false);
         when(rolePersistService.getRolesByUserNameAndRoleName("nacos", "", 1,
             Integer.MAX_VALUE)).thenReturn(rolePage(Collections.singletonList(adminRole)));
-
+        
         assertTrue(nacosRoleService.hasGlobalAdminRole("nacos"));
-
+        
         ReflectionTestUtils.setField(nacosRoleService, "hasGlobalAdminRole", true);
         assertTrue(nacosRoleService.hasGlobalAdminRole());
     }
-
+    
     @Test
     void isUserBoundToRole() {
         String role = "TEST";
@@ -507,14 +507,14 @@ class NacosRoleServiceDirectImplTest {
         assertFalse(nacosRoleService.isUserBoundToRole(null, ""));
         assertFalse(nacosRoleService.isUserBoundToRole(role, userName));
     }
-
+    
     private RoleInfo roleInfo(String role, String username) {
         RoleInfo roleInfo = new RoleInfo();
         roleInfo.setRole(role);
         roleInfo.setUsername(username);
         return roleInfo;
     }
-
+    
     private PermissionInfo permissionInfo(String role, String resource, String action) {
         PermissionInfo permissionInfo = new PermissionInfo();
         permissionInfo.setRole(role);
@@ -522,14 +522,14 @@ class NacosRoleServiceDirectImplTest {
         permissionInfo.setAction(action);
         return permissionInfo;
     }
-
+    
     private Page<RoleInfo> rolePage(List<RoleInfo> roleInfos) {
         Page<RoleInfo> page = new Page<>();
         page.setPageItems(roleInfos);
         page.setTotalCount(roleInfos.size());
         return page;
     }
-
+    
     private Page<PermissionInfo> permissionPage(List<PermissionInfo> permissionInfos) {
         Page<PermissionInfo> page = new Page<>();
         page.setPageItems(permissionInfos);

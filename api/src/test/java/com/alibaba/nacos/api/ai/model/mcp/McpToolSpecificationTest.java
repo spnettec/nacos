@@ -69,7 +69,7 @@ class McpToolSpecificationTest extends BasicRequestTest {
         aSchema.put("type", "string");
         aSchema.put("description", "aaa");
         mcpTool.setInputSchema(inputSchema);
-
+        
         Map<String, Object> outputSchema = new HashMap<>();
         outputSchema.put("type", "object");
         Map<String, Object> outProperties = new HashMap<>();

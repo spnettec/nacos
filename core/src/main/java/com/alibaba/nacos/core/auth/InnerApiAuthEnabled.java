@@ -46,19 +46,19 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Component
 @Deprecated(since = "3.0.0", forRemoval = true)
 public class InnerApiAuthEnabled {
-
+    
     private final ServerMemberManager serverMemberManager;
-
+    
     private final AtomicBoolean enabled = new AtomicBoolean(false);
-
+    
     public InnerApiAuthEnabled(ServerMemberManager serverMemberManager) {
         this.serverMemberManager = serverMemberManager;
     }
-
+    
     public boolean isEnabled() {
         return enabled.get();
     }
-
+    
     /**
      * Check whether all servers are all upgraded to new version. If so enabled inner api auth check.
      * After enabled, checking will directly return.

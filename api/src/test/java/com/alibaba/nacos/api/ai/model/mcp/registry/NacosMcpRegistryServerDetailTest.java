@@ -40,13 +40,13 @@ class NacosMcpRegistryServerDetailTest extends BasicRequestTest {
         mcpRegistryServerDetail.setRepository(new Repository());
         mcpRegistryServerDetail.setVersion("1.0.0");
         mcpRegistryServerDetail.setSchema("http://example.com/schema");
-
+        
         // Create test packages
         Package pkg = new Package();
         pkg.setIdentifier("test-package");
         pkg.setVersion("1.0.0");
         mcpRegistryServerDetail.setPackages(Arrays.asList(pkg));
-
+        
         McpRegistryServerDetail.Meta meta = new McpRegistryServerDetail.Meta();
         mcpRegistryServerDetail.setMeta(meta);
         mcpRegistryServerDetail.setRemotes(Collections.singletonList(new Remote()));

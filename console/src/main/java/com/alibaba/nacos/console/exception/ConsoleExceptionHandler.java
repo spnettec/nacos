@@ -57,7 +57,8 @@ public class ConsoleExceptionHandler {
     @ExceptionHandler(NacosRuntimeException.class)
     private ResponseEntity<String> handleNacosRuntimeException(NacosRuntimeException e) {
         LOGGER.error("got exception. {}", e.getMessage(), e);
-        return ResponseEntity.status(resolveHttpStatus(e.getErrCode())).body(ExceptionUtil.getAllExceptionMsg(e));
+        return ResponseEntity.status(resolveHttpStatus(e.getErrCode()))
+            .body(ExceptionUtil.getAllExceptionMsg(e));
     }
     
     @ExceptionHandler(Exception.class)
@@ -72,7 +73,7 @@ public class ConsoleExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
             .body(HtmlUtils.htmlEscape(ExceptionUtil.getAllExceptionMsg(e), "utf-8"));
     }
-
+    
     private HttpStatus resolveHttpStatus(int errCode) {
         if (errCode >= HttpStatus.BAD_REQUEST.value()
             && errCode <= HttpStatus.NETWORK_AUTHENTICATION_REQUIRED.value()) {

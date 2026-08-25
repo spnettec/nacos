@@ -22,33 +22,33 @@ package com.alibaba.nacos.airegistry.model.ard;
  * @author nacos
  */
 public class ArdExploreRequest {
-
+    
     private ArdSearchQuery query;
-
+    
     private ArdExploreResultType resultType;
-
+    
     private String namespaceId;
-
+    
     public ArdSearchQuery getQuery() {
         return query;
     }
-
+    
     public void setQuery(ArdSearchQuery query) {
         this.query = query;
     }
-
+    
     public ArdExploreResultType getResultType() {
         return resultType;
     }
-
+    
     public void setResultType(ArdExploreResultType resultType) {
         this.resultType = resultType;
     }
-
+    
     public String getNamespaceId() {
         return namespaceId;
     }
-
+    
     public void setNamespaceId(String namespaceId) {
         this.namespaceId = namespaceId;
     }

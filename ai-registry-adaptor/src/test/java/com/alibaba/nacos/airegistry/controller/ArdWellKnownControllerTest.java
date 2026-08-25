@@ -44,30 +44,30 @@ import static org.mockito.Mockito.when;
  */
 @ExtendWith(MockitoExtension.class)
 class ArdWellKnownControllerTest {
-
+    
     @Mock
     private ArdSearchService ardSearchService;
-
+    
     @Test
     void catalogShouldReturnHostCatalog() throws NacosException {
         ArdCatalog catalog = new ArdCatalog();
         when(ardSearchService.hostCatalog()).thenReturn(catalog);
-
+        
         assertSame(catalog, controller().catalog());
     }
-
+    
     @Test
     void catalogShouldUseAiReadAuthentication() throws NoSuchMethodException {
         Method method = ArdWellKnownController.class.getMethod("catalog");
         Secured secured = method.getAnnotation(Secured.class);
-
+        
         assertNotNull(secured);
         assertEquals(ActionTypes.READ, secured.action());
         assertEquals(SignType.AI, secured.signType());
         assertEquals(ApiType.OPEN_API, secured.apiType());
         assertArrayEquals(new String[] {ALLOW_ANONYMOUS}, secured.tags());
     }
-
+    
     private ArdWellKnownController controller() {
         return new ArdWellKnownController(ardSearchService);
     }

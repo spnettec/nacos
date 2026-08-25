@@ -37,34 +37,34 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class StaticPluginConfigSourceResolverTest {
-
+    
     private final StaticPluginConfigSourceResolver resolver =
         new StaticPluginConfigSourceResolver();
-
+    
     private ConfigurableEnvironment cachedEnvironment;
-
+    
     private MockEnvironment environment;
-
+    
     @BeforeEach
     void setUp() {
         cachedEnvironment = EnvUtil.getEnvironment();
         environment = new MockEnvironment();
         EnvUtil.setEnvironment(environment);
     }
-
+    
     @AfterEach
     void tearDown() {
         EnvUtil.setEnvironment(cachedEnvironment);
     }
-
+    
     @Test
     void testGetConfigWithoutEnvironment() {
         EnvUtil.setEnvironment(null);
-
+        
         assertTrue(resolver.getConfig(createPluginInfo(Collections.emptyList())).isEmpty());
         assertEquals(PluginConfigSourceType.STATIC, resolver.getSourceType());
     }
-
+    
     @Test
     void testGetConfigSkipsBlankDefinitionAndUsesFirstConfiguredAlias() {
         ConfigItemDefinition blankDefinition = new ConfigItemDefinition();
@@ -75,13 +75,13 @@ class StaticPluginConfigSourceResolverTest {
             "nacos.legacy.second"));
         environment.setProperty("nacos.legacy.first", "first-value");
         environment.setProperty("nacos.legacy.second", "second-value");
-
+        
         Map<String, String> config =
             resolver.getConfig(createPluginInfo(Arrays.asList(blankDefinition, definition)));
-
+        
         assertEquals(Collections.singletonMap("token", "first-value"), config);
     }
-
+    
     @Test
     void testGetConfigUsesEmptyStandardValueInsteadOfAlias() {
         ConfigItemDefinition definition = new ConfigItemDefinition();
@@ -89,25 +89,25 @@ class StaticPluginConfigSourceResolverTest {
         definition.setAliases(Collections.singletonList("nacos.legacy.token"));
         environment.setProperty("nacos.plugin.trace.demo.token", "");
         environment.setProperty("nacos.legacy.token", "legacy-value");
-
+        
         Map<String, String> config =
             resolver.getConfig(createPluginInfo(Collections.singletonList(definition)));
-
+        
         assertEquals(Collections.singletonMap("token", ""), config);
     }
-
+    
     @Test
     void testGetConfigKeepsEmptyStandardValueWithoutAlias() {
         ConfigItemDefinition definition = new ConfigItemDefinition();
         definition.setKey("token");
         environment.setProperty("nacos.plugin.trace.demo.token", "");
-
+        
         Map<String, String> config =
             resolver.getConfig(createPluginInfo(Collections.singletonList(definition)));
-
+        
         assertEquals(Collections.singletonMap("token", ""), config);
     }
-
+    
     @Test
     void testRefreshAcceptsRuntimeFieldAndKeepsRestartField() {
         ConfigItemDefinition blankDefinition = definition(" ", ConfigItemEffectMode.RUNTIME);
@@ -120,18 +120,18 @@ class StaticPluginConfigSourceResolverTest {
         environment.setProperty("nacos.plugin.trace.demo.runtime", "runtime-old");
         environment.setProperty("nacos.plugin.trace.demo.restart", "restart-old");
         resolver.initializeConfig(pluginInfo);
-
+        
         MockEnvironment refreshedEnvironment = new MockEnvironment();
         refreshedEnvironment.setProperty("nacos.plugin.trace.demo.runtime", "runtime-new");
         refreshedEnvironment.setProperty("nacos.plugin.trace.demo.restart", "restart-new");
         EnvUtil.setEnvironment(refreshedEnvironment);
         resolver.refreshConfig(pluginInfo);
-
+        
         Map<String, String> config = resolver.getConfig(pluginInfo);
         assertEquals("runtime-new", config.get("runtime"));
         assertEquals("restart-old", config.get("restart"));
     }
-
+    
     @Test
     void testRefreshRemovesRuntimeFieldAndKeepsRemovedRestartField() {
         ConfigItemDefinition runtimeDefinition =
@@ -143,44 +143,44 @@ class StaticPluginConfigSourceResolverTest {
         environment.setProperty("nacos.plugin.trace.demo.runtime", "runtime-old");
         environment.setProperty("nacos.plugin.trace.demo.restart", "restart-old");
         resolver.initializeConfig(pluginInfo);
-
+        
         EnvUtil.setEnvironment(new MockEnvironment());
         resolver.refreshConfig(pluginInfo);
-
+        
         assertEquals(Collections.singletonMap("restart", "restart-old"),
             resolver.getConfig(pluginInfo));
     }
-
+    
     @Test
     void testRefreshBeforeInitializationAcceptsCurrentEnvironment() {
         ConfigItemDefinition restartDefinition =
             definition("restart", ConfigItemEffectMode.RESTART);
         PluginInfo pluginInfo = createPluginInfo(Collections.singletonList(restartDefinition));
         environment.setProperty("nacos.plugin.trace.demo.restart", "restart-current");
-
+        
         resolver.refreshConfig(pluginInfo);
-
+        
         assertEquals(Collections.singletonMap("restart", "restart-current"),
             resolver.getConfig(pluginInfo));
     }
-
+    
     @Test
     void testRefreshWithNullDefinitionsKeepsSnapshot() {
         PluginInfo pluginInfo = createPluginInfo(null);
         resolver.initializeConfig(pluginInfo);
-
+        
         resolver.refreshConfig(pluginInfo);
-
+        
         assertTrue(resolver.getConfig(pluginInfo).isEmpty());
     }
-
+    
     private ConfigItemDefinition definition(String key, ConfigItemEffectMode effectMode) {
         ConfigItemDefinition result = new ConfigItemDefinition();
         result.setKey(key);
         result.setEffectMode(effectMode);
         return result;
     }
-
+    
     private PluginInfo createPluginInfo(List<ConfigItemDefinition> definitions) {
         PluginInfo pluginInfo = new PluginInfo();
         pluginInfo.setPluginId("trace:demo");

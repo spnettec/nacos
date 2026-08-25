@@ -42,12 +42,15 @@ public final class JacksonUtils {
     
     private JacksonUtils() {
     }
-
+    
     static ObjectMapper mapper = JsonMapper.builder()
-            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-            .changeDefaultPropertyInclusion(incl -> incl.withValueInclusion(JsonInclude.Include.NON_NULL))
-            .changeDefaultPropertyInclusion(incl -> incl.withContentInclusion(JsonInclude.Include.NON_NULL)).build();
-
+        .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+        .changeDefaultPropertyInclusion(
+            incl -> incl.withValueInclusion(JsonInclude.Include.NON_NULL))
+        .changeDefaultPropertyInclusion(
+            incl -> incl.withContentInclusion(JsonInclude.Include.NON_NULL))
+        .build();
+    
     /**
      * Object to json string.
      *
@@ -62,7 +65,7 @@ public final class JacksonUtils {
             throw new NacosSerializationException(obj.getClass(), e);
         }
     }
-
+    
     /**
      * Object to json string byte array.
      *
@@ -77,7 +80,7 @@ public final class JacksonUtils {
             throw new NacosSerializationException(obj.getClass(), e);
         }
     }
-
+    
     /**
      * Json string deserialize to Object.
      *
@@ -94,7 +97,7 @@ public final class JacksonUtils {
             throw new NacosDeserializationException(cls, e);
         }
     }
-
+    
     /**
      * Json string deserialize to Object.
      *
@@ -111,7 +114,7 @@ public final class JacksonUtils {
             throw new NacosDeserializationException(e);
         }
     }
-
+    
     /**
      * Json string deserialize to Object.
      *
@@ -128,7 +131,7 @@ public final class JacksonUtils {
             throw new NacosDeserializationException(e);
         }
     }
-
+    
     /**
      * Json string deserialize to Object.
      *
@@ -145,7 +148,7 @@ public final class JacksonUtils {
             throw new NacosDeserializationException(e);
         }
     }
-
+    
     /**
      * Json string deserialize to Object.
      *
@@ -162,7 +165,7 @@ public final class JacksonUtils {
             throw new NacosDeserializationException(cls, e);
         }
     }
-
+    
     /**
      * Json string deserialize to Object.
      *
@@ -179,7 +182,7 @@ public final class JacksonUtils {
             throw new NacosDeserializationException(e);
         }
     }
-
+    
     /**
      * Json string deserialize to Object.
      *
@@ -196,7 +199,7 @@ public final class JacksonUtils {
             throw new NacosDeserializationException(typeReference.getClass(), e);
         }
     }
-
+    
     /**
      * Json string deserialize to Object.
      *
@@ -213,7 +216,7 @@ public final class JacksonUtils {
             throw new NacosDeserializationException(type, e);
         }
     }
-
+    
     /**
      * Json string deserialize to Jackson {@link JsonNode}.
      *
@@ -228,7 +231,7 @@ public final class JacksonUtils {
             throw new NacosDeserializationException(e);
         }
     }
-
+    
     /**
      * Register sub type for child class.
      *
@@ -238,7 +241,7 @@ public final class JacksonUtils {
     public static void registerSubtype(Class<?> clz, String type) {
         mapper = mapper.rebuild().registerSubtypes(new NamedType(clz, type)).build();
     }
-
+    
     /**
      * Create a new empty Jackson {@link ObjectNode}.
      *
@@ -247,7 +250,7 @@ public final class JacksonUtils {
     public static ObjectNode createEmptyJsonNode() {
         return new ObjectNode(mapper.getNodeFactory());
     }
-
+    
     /**
      * Create a new empty Jackson {@link ArrayNode}.
      *
@@ -256,7 +259,7 @@ public final class JacksonUtils {
     public static ArrayNode createEmptyArrayNode() {
         return new ArrayNode(mapper.getNodeFactory());
     }
-
+    
     /**
      * Parse object to Jackson {@link JsonNode}.
      *
@@ -266,7 +269,7 @@ public final class JacksonUtils {
     public static JsonNode transferToJsonNode(Object obj) {
         return mapper.valueToTree(obj);
     }
-
+    
     /**
      * construct java type -> Jackson Java Type.
      *

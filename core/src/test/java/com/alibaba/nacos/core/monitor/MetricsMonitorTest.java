@@ -47,10 +47,10 @@ import static org.mockito.Mockito.when;
 @MockitoSettings(strictness = Strictness.LENIENT)
 @ExtendWith(MockitoExtension.class)
 class MetricsMonitorTest {
-
+    
     @Mock
     private ConfigurableApplicationContext context;
-
+    
     @BeforeEach
     void initMeterRegistry() {
         ApplicationUtils.injectContext(context);
@@ -59,7 +59,7 @@ class MetricsMonitorTest {
         NacosMeterRegistryCenter.getMeterRegistry(NacosMeterRegistryCenter.CORE_STABLE_REGISTRY)
             .add(new SimpleMeterRegistry());
     }
-
+    
     @Test
     void testSdkServerExecutorMetric() {
         MetricsMonitor.getSdkServerExecutorMetric().getPoolSize().set(1);
@@ -78,7 +78,7 @@ class MetricsMonitorTest {
         assertEquals(1, MetricsMonitor.getSdkServerExecutorMetric().getTaskCount().get());
         assertEquals(1, MetricsMonitor.getSdkServerExecutorMetric().getCompletedTaskCount().get());
     }
-
+    
     @Test
     void testClusterServerExecutorMetric() {
         MetricsMonitor.getClusterServerExecutorMetric().getPoolSize().set(1);
@@ -100,46 +100,46 @@ class MetricsMonitorTest {
         assertEquals(1,
             MetricsMonitor.getClusterServerExecutorMetric().getCompletedTaskCount().get());
     }
-
+    
     @Test
     void testGetLongConnectionMonitor() {
         AtomicInteger atomicInteger = MetricsMonitor.getLongConnectionMonitor();
         assertEquals(0, atomicInteger.get());
     }
-
+    
     @Test
     void testRaftReadIndexFailed() {
         MetricsMonitor.raftReadIndexFailed();
         MetricsMonitor.raftReadIndexFailed();
         assertEquals(2D, MetricsMonitor.getRaftReadIndexFailed().totalAmount(), 0.01);
     }
-
+    
     @Test
     void testRaftReadFromLeader() {
         MetricsMonitor.raftReadFromLeader();
         assertEquals(1D, MetricsMonitor.getRaftFromLeader().totalAmount(), 0.01);
     }
-
+    
     @Test
     void testRaftApplyLogTimer() {
         Timer raftApplyTimerLog = MetricsMonitor.getRaftApplyLogTimer();
         raftApplyTimerLog.record(10, TimeUnit.SECONDS);
         raftApplyTimerLog.record(20, TimeUnit.SECONDS);
         assertEquals(0.5D, raftApplyTimerLog.totalTime(TimeUnit.MINUTES), 0.01);
-
+        
         assertEquals(30D, raftApplyTimerLog.totalTime(TimeUnit.SECONDS), 0.01);
     }
-
+    
     @Test
     void testRaftApplyReadTimer() {
         Timer raftApplyReadTimer = MetricsMonitor.getRaftApplyReadTimer();
         raftApplyReadTimer.record(10, TimeUnit.SECONDS);
         raftApplyReadTimer.record(20, TimeUnit.SECONDS);
         assertEquals(0.5D, raftApplyReadTimer.totalTime(TimeUnit.MINUTES), 0.01);
-
+        
         assertEquals(30D, raftApplyReadTimer.totalTime(TimeUnit.SECONDS), 0.01);
     }
-
+    
     @Test
     void testRefreshRaftGroupMetrics() {
         String selfMember = "127.0.0.1:7848";
@@ -202,7 +202,7 @@ class MetricsMonitorTest {
         MetricsMonitor.refreshModuleConnectionCount(map);
         assertEquals(1, MetricsMonitor.getModuleConnectionCnt().size());
         assertEquals(10, MetricsMonitor.getModuleConnectionCnt().get("naming").get());
-
+        
         // refresh again
         map = new HashMap<>();
         map.put("naming", 11);
@@ -211,7 +211,7 @@ class MetricsMonitorTest {
         assertEquals(2, MetricsMonitor.getModuleConnectionCnt().size());
         assertEquals(11, MetricsMonitor.getModuleConnectionCnt().get("naming").get());
         assertEquals(1, MetricsMonitor.getModuleConnectionCnt().get("config").get());
-
+        
         // refresh again
         map = new HashMap<>();
         map.put("naming", 1);

@@ -35,12 +35,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class NamingUtilsTest {
-
+    
     @Test
     void testGetGroupedName() {
         assertEquals("group@@serviceName", NamingUtils.getGroupedName("serviceName", "group"));
     }
-
+    
     @Test
     void testGetGroupedNameWithoutGroup() {
         assertThrows(IllegalArgumentException.class, () -> {
@@ -77,7 +77,7 @@ class NamingUtilsTest {
         // When input is "group@@", the serviceName after "@@" is empty; should return "" not crash
         assertEquals(StringUtils.EMPTY, NamingUtils.getServiceName("group@@"));
     }
-
+    
     @Test
     void testGetGroupName() {
         String validServiceName = "group@@serviceName";

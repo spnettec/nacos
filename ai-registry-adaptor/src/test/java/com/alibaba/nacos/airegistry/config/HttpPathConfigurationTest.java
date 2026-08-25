@@ -31,24 +31,24 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 class HttpPathConfigurationTest {
-
+    
     @Test
     void testConnectorCustomizerAllowsEncodedSolidus() {
         HttpPathConfiguration configuration = new HttpPathConfiguration();
         TomcatConnectorCustomizer customizer = configuration.connectorCustomizer();
         Connector connector = new Connector();
-
+        
         customizer.customize(connector);
-
+        
         assertEquals(EncodedSolidusHandling.PASS_THROUGH.getValue(),
             connector.getEncodedSolidusHandling());
     }
-
+    
     @Test
     void testWebSecurityCustomizerCreated() {
         HttpPathConfiguration configuration = new HttpPathConfiguration();
         WebSecurityCustomizer customizer = configuration.webSecurityCustomizer();
-
+        
         assertNotNull(customizer);
         WebSecurity webSecurity = mock(WebSecurity.class);
         customizer.customize(webSecurity);

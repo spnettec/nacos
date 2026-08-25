@@ -41,17 +41,17 @@ import java.util.regex.Pattern;
  * @author special.fy
  */
 public class IstioCrdUtil {
-
+    
     public static final String VALID_DEFAULT_GROUP_NAME = "DEFAULT-GROUP";
-
+    
     public static final String ISTIO_HOSTNAME = "istio.hostname";
-
+    
     public static final String VALID_LABEL_KEY_FORMAT =
         "^([a-zA-Z0-9](?:[-a-zA-Z0-9]*[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[-a-zA-Z0-9]*[a-zA-Z0-9])?)*/)?((?:[A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$";
-
+    
     public static final String VALID_LABEL_VALUE_FORMAT =
         "^((?:[A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$";
-
+    
     public static String buildClusterName(TrafficDirection direction, String subset,
         String hostName, int port) {
         return direction.toString().toLowerCase() + "|" + port + "|" + subset + "|" + hostName;
@@ -60,7 +60,7 @@ public class IstioCrdUtil {
     public static String buildServiceName(Service service) {
         String group = !Constants.DEFAULT_GROUP.equals(service.getGroup()) ? service.getGroup()
             : VALID_DEFAULT_GROUP_NAME;
-
+        
         // DEFAULT_GROUP is invalid for istio,because the istio host only supports: [0-9],[A-Z],[a-z],-,*
         return service.getName() + "." + group + "." + service.getNamespace();
     }
@@ -80,13 +80,13 @@ public class IstioCrdUtil {
         if (istioService.getHosts().isEmpty()) {
             return null;
         }
-
+        
         ServiceEntryOuterClass.ServiceEntry.Builder serviceEntryBuilder =
             ServiceEntryOuterClass.ServiceEntry
                 .newBuilder()
                 .setResolution(ServiceEntryOuterClass.ServiceEntry.Resolution.STATIC)
                 .setLocation(ServiceEntryOuterClass.ServiceEntry.Location.MESH_INTERNAL);
-
+        
         int port = 0;
         String protocol = "http";
         List<WorkloadEntry> endpoints = buildWorkloadEntry(istioService.getHosts());
@@ -117,12 +117,12 @@ public class IstioCrdUtil {
             if (!istioEndpoint.isHealthy() || !istioEndpoint.isEnabled()) {
                 continue;
             }
-
+            
             Map<String, String> metadata = new HashMap<>(1 << 3);
             if (StringUtils.isNotEmpty(istioEndpoint.getClusterName())) {
                 metadata.put("cluster", istioEndpoint.getClusterName());
             }
-
+            
             for (Map.Entry<String, String> entry : istioEndpoint.getLabels().entrySet()) {
                 if (!Pattern.matches(VALID_LABEL_KEY_FORMAT, entry.getKey())) {
                     continue;

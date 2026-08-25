@@ -30,7 +30,7 @@ import java.util.Optional;
  * @author Zhengcy05
  */
 public interface VisibilityResourceLocator {
-
+    
     /**
      * Locate one visibility-aware resource.
      *

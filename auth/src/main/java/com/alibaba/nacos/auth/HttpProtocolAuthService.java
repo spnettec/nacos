@@ -41,17 +41,17 @@ import java.util.Map;
  * @author xiweng.yy
  */
 public class HttpProtocolAuthService extends AbstractProtocolAuthService<HttpServletRequest> {
-
+    
     private final Map<String, AbstractHttpResourceParser> resourceParserMap;
-
+    
     private final HttpIdentityContextBuilder identityContextBuilder;
-
+    
     public HttpProtocolAuthService(NacosAuthConfig authConfig) {
         super(authConfig);
         resourceParserMap = new HashMap<>(2);
         identityContextBuilder = new HttpIdentityContextBuilder(authConfig);
     }
-
+    
     @Override
     public void initialize() {
         super.initialize();
@@ -59,7 +59,7 @@ public class HttpProtocolAuthService extends AbstractProtocolAuthService<HttpSer
         resourceParserMap.put(SignType.CONFIG, new ConfigHttpResourceParser());
         resourceParserMap.put(SignType.AI, new AiHttpResourceParser());
     }
-
+    
     @Override
     public Resource parseResource(HttpServletRequest request, Secured secured) {
         if (StringUtils.isNotBlank(secured.resource())) {
@@ -76,12 +76,12 @@ public class HttpProtocolAuthService extends AbstractProtocolAuthService<HttpSer
         }
         return parser.parse(request, secured);
     }
-
+    
     @Override
     public IdentityContext parseIdentity(HttpServletRequest request) {
         return identityContextBuilder.build(request);
     }
-
+    
     @Override
     protected ServerIdentity parseServerIdentity(HttpServletRequest request) {
         String serverIdentityKey = authConfig.getServerIdentityKey();

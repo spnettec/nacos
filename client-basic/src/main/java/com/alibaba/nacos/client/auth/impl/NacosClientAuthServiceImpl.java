@@ -104,7 +104,7 @@ public class NacosClientAuthServiceImpl extends AbstractClientAuthService {
                             identityContext.getParameter(NacosAuthLoginConstant.TOKENTTL));
                         tokenRefreshWindow = generateTokenRefreshWindow(tokenTtl);
                         lastRefreshTime = System.currentTimeMillis();
-
+                        
                         LoginIdentityContext newCtx = new LoginIdentityContext();
                         newCtx.setParameter(NacosAuthLoginConstant.ACCESSTOKEN,
                             identityContext.getParameter(NacosAuthLoginConstant.ACCESSTOKEN));
@@ -127,7 +127,7 @@ public class NacosClientAuthServiceImpl extends AbstractClientAuthService {
     
     @Override
     public void shutdown() throws NacosException {
-
+        
     }
     
     /**

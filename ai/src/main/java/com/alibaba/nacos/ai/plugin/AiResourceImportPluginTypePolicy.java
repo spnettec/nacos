@@ -35,16 +35,16 @@ import java.util.Map;
  * @author Nacos
  */
 public class AiResourceImportPluginTypePolicy implements PluginTypePolicy {
-
+    
     private static final Logger LOGGER =
         LoggerFactory.getLogger(AiResourceImportPluginTypePolicy.class);
-
+    
     private static final String FUNCTION_MODE_PROPERTY = "nacos.functionMode";
-
+    
     private static final String FUNCTION_MODE_AI = "ai";
-
+    
     private static final String STANDARD_STATE_PREFIX = "nacos.plugin.ai-resource-import.";
-
+    
     /**
      * Legacy AI resource import implementation state properties.
      *
@@ -54,14 +54,14 @@ public class AiResourceImportPluginTypePolicy implements PluginTypePolicy {
     @Deprecated
     private static final Map<String, String> LEGACY_STATE_PROPERTIES =
         buildLegacyStateProperties();
-
+    
     private static final Map<String, Boolean> DEFAULT_STATES = buildDefaultStates();
-
+    
     @Override
     public PluginType getPluginType() {
         return PluginType.AI_RESOURCE_IMPORT;
     }
-
+    
     @Override
     public boolean isLoadingEnabled(PluginTypeConfiguration configuration) {
         String functionMode = configuration.getProperty(FUNCTION_MODE_PROPERTY);
@@ -71,7 +71,7 @@ public class AiResourceImportPluginTypePolicy implements PluginTypePolicy {
             && configuration.getBooleanProperty(AiEnabledFilter.AI_ENABLED_KEY, true)
             && isImportEnabled(configuration);
     }
-
+    
     @Override
     public boolean isPluginEnabledByDefault(String pluginName,
         PluginTypeConfiguration configuration) {
@@ -89,7 +89,7 @@ public class AiResourceImportPluginTypePolicy implements PluginTypePolicy {
         }
         return defaultState(pluginName);
     }
-
+    
     private boolean isImportEnabled(PluginTypeConfiguration configuration) {
         boolean hasStandard =
             configuration.containsProperty(AiResourceImportProperties.ENABLED_PROPERTY);
@@ -113,11 +113,11 @@ public class AiResourceImportPluginTypePolicy implements PluginTypePolicy {
         }
         return true;
     }
-
+    
     private static boolean isExplicitlyFalse(String value) {
         return value != null && Boolean.FALSE.toString().equalsIgnoreCase(value.trim());
     }
-
+    
     private void warnIgnoredLegacyState(String pluginName,
         PluginTypeConfiguration configuration) {
         String legacyProperty = LEGACY_STATE_PROPERTIES.get(pluginName);
@@ -126,20 +126,22 @@ public class AiResourceImportPluginTypePolicy implements PluginTypePolicy {
                 + "the standard key wins.", STANDARD_STATE_PREFIX, pluginName, legacyProperty);
         }
     }
-
+    
     private boolean defaultState(String pluginName) {
         return DEFAULT_STATES.getOrDefault(pluginName, false);
     }
-
+    
     private static Map<String, String> buildLegacyStateProperties() {
         Map<String, String> result = new LinkedHashMap<>();
         result.put("mcp-official", "nacos.plugin.ai.importer.mcp.official.enabled");
         result.put("skills-well-known",
             "nacos.plugin.ai.importer.skills.well-known.enabled");
         result.put("skills-sh", "nacos.plugin.ai.importer.skills.skills-sh.enabled");
+        result.put("skills-sh-authenticated",
+            "nacos.plugin.ai.importer.skills.skills-sh.enabled");
         return Collections.unmodifiableMap(result);
     }
-
+    
     private static Map<String, Boolean> buildDefaultStates() {
         Map<String, Boolean> result = new LinkedHashMap<>();
         result.put("mcp-official", true);

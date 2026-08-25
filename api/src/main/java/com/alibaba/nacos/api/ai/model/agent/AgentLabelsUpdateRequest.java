@@ -29,13 +29,13 @@ import java.util.Map;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AgentLabelsUpdateRequest implements Serializable {
-
+    
     private static final long serialVersionUID = 1L;
-
+    
     private String agentName;
-
+    
     private Map<String, String> labels;
-
+    
     /**
      * Validate custom labels and their exact Version targets.
      */
@@ -49,19 +49,19 @@ public class AgentLabelsUpdateRequest implements Serializable {
             AgentAdminRequestUtils.validateVersion(entry.getValue());
         }
     }
-
+    
     public String getAgentName() {
         return agentName;
     }
-
+    
     public void setAgentName(String agentName) {
         this.agentName = agentName;
     }
-
+    
     public Map<String, String> getLabels() {
         return labels;
     }
-
+    
     public void setLabels(Map<String, String> labels) {
         this.labels = labels;
     }

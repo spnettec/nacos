@@ -98,10 +98,12 @@ public final class RaftExecutor {
         raftCommonExecutor.schedule(r, delayMs, TimeUnit.MILLISECONDS);
     }
     
-    public static void scheduleAtFixedRateByCommon(Runnable command, long initialDelayMs, long periodMs) {
-        raftCommonExecutor.scheduleAtFixedRate(command, initialDelayMs, periodMs, TimeUnit.MILLISECONDS);
+    public static void scheduleAtFixedRateByCommon(Runnable command, long initialDelayMs,
+        long periodMs) {
+        raftCommonExecutor.scheduleAtFixedRate(command, initialDelayMs, periodMs,
+            TimeUnit.MILLISECONDS);
     }
-
+    
     public static ScheduledExecutorService getRaftCommonExecutor() {
         return raftCommonExecutor;
     }

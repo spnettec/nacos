@@ -29,30 +29,30 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ImportHttpResponseTest {
-
+    
     @Test
     void testSuccessResponseGetter() {
         byte[] body = "ok".getBytes(StandardCharsets.UTF_8);
         ImportHttpResponse response =
             new ImportHttpResponse("https://example.com", 200, headers("application/json"), body);
-
+        
         assertTrue(response.isSuccess());
         assertEquals("https://example.com", response.getUrl());
         assertEquals(200, response.getStatusCode());
         assertEquals("ok", new String(response.getBody(), StandardCharsets.UTF_8));
         assertEquals("application/json", response.getContentType());
     }
-
+    
     @Test
     void testNonSuccessAndNullBody() {
         ImportHttpResponse response =
             new ImportHttpResponse("https://example.com", 500, headers(null), null);
-
+        
         assertFalse(response.isSuccess());
         assertEquals(0, response.getBody().length);
         assertEquals("", response.getContentType());
     }
-
+    
     private HttpHeaders headers(String contentType) {
         if (contentType == null) {
             return HttpHeaders.of(Collections.emptyMap(), (key, value) -> true);

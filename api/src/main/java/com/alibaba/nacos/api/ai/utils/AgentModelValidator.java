@@ -54,38 +54,38 @@ import java.util.Set;
  * @author Nacos
  */
 public final class AgentModelValidator {
-
+    
     private static final int MAX_DISPLAY_NAME_LENGTH = 128;
-
+    
     private static final int MAX_DESCRIPTION_LENGTH = 2048;
-
+    
     private static final int MAX_URI_LENGTH = 2048;
-
+    
     private static final int MAX_PROVIDER_NAME_LENGTH = 128;
-
+    
     private static final int MAX_OWNER_LENGTH = 128;
-
+    
     private static final int MAX_AUTHOR_LENGTH = 128;
-
+    
     private static final int MAX_TAGS = 32;
-
+    
     private static final int MAX_TAG_LENGTH = 64;
-
+    
     private static final int MAX_EXTENSIONS = 32;
-
+    
     private static final int MAX_EXTENSION_KEY_LENGTH = 128;
-
+    
     private static final int MAX_CALL_INTERFACES = 16;
-
+    
     private static final int MAX_DECLARED_ENDPOINTS = 64;
-
+    
     private static final int MAX_RUNTIME_ENDPOINTS = 1000;
-
+    
     private static final int MAX_VERSION_PAGE_ITEMS = 100;
-
+    
     private AgentModelValidator() {
     }
-
+    
     /**
      * Validate a complete Agent resource.
      *
@@ -101,7 +101,7 @@ public final class AgentModelValidator {
             agent.getUpdateTime());
         validateExtensions(agent.getExtensions());
     }
-
+    
     /**
      * Validate a bounded Agent summary.
      *
@@ -116,7 +116,7 @@ public final class AgentModelValidator {
             summary.getScope(), summary.getVersionInfo(), summary.getVersionCatalog(),
             summary.getMetaVersion(), summary.getCreateTime(), summary.getUpdateTime());
     }
-
+    
     /**
      * Validate an Agent overview and its bounded Version page.
      *
@@ -128,7 +128,7 @@ public final class AgentModelValidator {
         validateAgent(overview.getAgent());
         validateVersionSummaryPage(overview.getVersionPage());
     }
-
+    
     /**
      * Validate an Agent Version summary page.
      *
@@ -151,7 +151,7 @@ public final class AgentModelValidator {
             validateVersionSummary(summary);
         }
     }
-
+    
     /**
      * Validate one Agent Version summary.
      *
@@ -169,7 +169,7 @@ public final class AgentModelValidator {
         validateEpochMillis(summary.getCreateTime(), "createTime");
         validateEpochMillis(summary.getUpdateTime(), "updateTime");
     }
-
+    
     /**
      * Validate one exact Agent Version definition.
      *
@@ -191,7 +191,7 @@ public final class AgentModelValidator {
         validateEpochMillis(detail.getCreateTime(), "createTime");
         validateEpochMillis(detail.getUpdateTime(), "updateTime");
     }
-
+    
     /**
      * Validate one CallInterface in an Agent protocol group.
      *
@@ -216,7 +216,7 @@ public final class AgentModelValidator {
         validateDeclaredEndpoints(namespaceId, agentName, callInterface.getProtocol(),
             callInterface.getDeclaredEndpoints());
     }
-
+    
     /**
      * Validate a standalone CallInterface entrypoint.
      *
@@ -229,7 +229,7 @@ public final class AgentModelValidator {
     public static void validateCallInterface(AgentCallInterface callInterface) {
         validateCallInterface("validation", "validation", callInterface);
     }
-
+    
     /**
      * Validate the compact catalog of online Agent Versions.
      *
@@ -247,7 +247,7 @@ public final class AgentModelValidator {
             }
             return;
         }
-
+        
         AgentValidationUtils.validateVersion(catalog.getLatestVersion());
         Set<String> versionValues = new HashSet<String>();
         Set<String> labelValues = new HashSet<String>();
@@ -268,7 +268,7 @@ public final class AgentModelValidator {
                 "latestVersion must identify an onlineVersions entry");
         }
     }
-
+    
     /**
      * Validate a raw runtime Endpoint management snapshot.
      *
@@ -284,7 +284,7 @@ public final class AgentModelValidator {
         if (snapshot.getVersion() != null) {
             selectedVersion = AgentVersion.parse(snapshot.getVersion());
         }
-
+        
         List<RuntimeEndpointSnapshotItem> items = snapshot.getItems();
         requireNonNull(items, "runtimeEndpointSnapshot.items");
         if (items.size() > MAX_RUNTIME_ENDPOINTS) {
@@ -296,7 +296,7 @@ public final class AgentModelValidator {
             validateRuntimeEndpointSnapshotItem(snapshot, selectedVersion, item, endpointKeys);
         }
     }
-
+    
     private static void validateAgentFields(String namespaceId, String agentName,
         String displayName, String description, String iconUrl, AgentProvider provider,
         List<String> tags, String status, String owner, String scope,
@@ -321,7 +321,7 @@ public final class AgentModelValidator {
         validateEpochMillis(createTime, "createTime");
         validateEpochMillis(updateTime, "updateTime");
     }
-
+    
     private static void validateProvider(AgentProvider provider) {
         if (provider == null) {
             return;
@@ -331,20 +331,20 @@ public final class AgentModelValidator {
             validateAbsoluteUri(provider.getUrl(), "provider.url");
         }
     }
-
+    
     private static void validateScope(String scope) {
         if (!"PUBLIC".equals(scope) && !"PRIVATE".equals(scope)) {
             throw new IllegalArgumentException("scope must be PUBLIC or PRIVATE");
         }
     }
-
+    
     private static void validateResourceStatus(String status) {
         if (!AiConstants.Agent.RESOURCE_STATUS_ENABLE.equals(status)
             && !AiConstants.Agent.RESOURCE_STATUS_DISABLE.equals(status)) {
             throw new IllegalArgumentException("Invalid Agent resource status: " + status);
         }
     }
-
+    
     private static void validateVersionStatus(String status) {
         if (!AiConstants.Agent.VERSION_STATUS_DRAFT.equals(status)
             && !AiConstants.Agent.VERSION_STATUS_REVIEWING.equals(status)
@@ -354,7 +354,7 @@ public final class AgentModelValidator {
             throw new IllegalArgumentException("Invalid Agent Version status: " + status);
         }
     }
-
+    
     private static void validateTags(List<String> tags) {
         if (tags == null) {
             return;
@@ -370,7 +370,7 @@ public final class AgentModelValidator {
             }
         }
     }
-
+    
     private static void validateExtensions(Map<String, Object> extensions) {
         if (extensions == null) {
             return;
@@ -383,7 +383,7 @@ public final class AgentModelValidator {
             validateRequiredLength(key, MAX_EXTENSION_KEY_LENGTH, "extension key");
         }
     }
-
+    
     private static void validateVersionInfo(AgentVersionInfo versionInfo) {
         requireNonNull(versionInfo, "versionInfo");
         if (versionInfo.getEditingVersion() != null) {
@@ -403,7 +403,7 @@ public final class AgentModelValidator {
             AgentValidationUtils.validateVersion(entry.getValue());
         }
     }
-
+    
     private static void validateVersionInfoCatalogConsistency(AgentVersionInfo versionInfo,
         AgentVersionCatalog catalog) {
         List<AgentVersionCatalogEntry> onlineVersions = catalog.getOnlineVersions();
@@ -470,7 +470,7 @@ public final class AgentModelValidator {
             }
         }
     }
-
+    
     private static void validateCatalogLabels(List<String> labels, Set<String> allLabels) {
         requireNonNull(labels, "versionCatalog.labels");
         Set<String> entryLabels = new HashSet<String>();
@@ -481,7 +481,7 @@ public final class AgentModelValidator {
             }
         }
     }
-
+    
     private static void validateProtocols(List<String> protocols, String fieldName) {
         requireNonNull(protocols, fieldName);
         if (protocols.isEmpty() || protocols.size() > MAX_CALL_INTERFACES) {
@@ -496,7 +496,7 @@ public final class AgentModelValidator {
             }
         }
     }
-
+    
     private static void validateCallInterfaces(String namespaceId, String agentName,
         List<AgentCallInterface> callInterfaces) {
         requireNonNull(callInterfaces, "callInterfaces");
@@ -513,7 +513,7 @@ public final class AgentModelValidator {
             }
         }
     }
-
+    
     private static void validateEndpointSourceOrder(List<EndpointSource> sourceOrder) {
         requireNonNull(sourceOrder, "endpointSourceOrder");
         if (sourceOrder.isEmpty() || sourceOrder.size() > EndpointSource.values().length) {
@@ -527,7 +527,7 @@ public final class AgentModelValidator {
             }
         }
     }
-
+    
     private static void validateDeclaredEndpoints(String namespaceId, String agentName,
         String protocol, List<Endpoint> endpoints) {
         if (endpoints == null) {
@@ -547,7 +547,7 @@ public final class AgentModelValidator {
             }
         }
     }
-
+    
     private static void validateRuntimeEndpointSnapshotItem(RuntimeEndpointSnapshot snapshot,
         AgentVersion selectedVersion, RuntimeEndpointSnapshotItem item,
         Set<EndpointNaturalKey> endpointKeys) {
@@ -558,7 +558,7 @@ public final class AgentModelValidator {
         if (!endpointKeys.add(endpointKey)) {
             throw new IllegalArgumentException("Duplicate runtime Endpoint: " + endpointKey);
         }
-
+        
         List<RuntimeVersionBinding> bindings = item.getBindings();
         requireNonNull(bindings, "runtimeEndpointSnapshot.bindings");
         if (bindings.isEmpty()) {
@@ -574,7 +574,7 @@ public final class AgentModelValidator {
         validateRuntimeEndpointState(item);
         validateEpochMillis(item.getLastUpdatedTime(), "lastUpdatedTime");
     }
-
+    
     private static void validateRuntimeVersionBinding(RuntimeVersionBinding binding,
         AgentVersion selectedVersion, Set<String> bindingKeys) {
         requireNonNull(binding, "runtime Version binding");
@@ -596,7 +596,7 @@ public final class AgentModelValidator {
             throw new IllegalArgumentException("Duplicate Runtime Version binding");
         }
     }
-
+    
     private static void validateRuntimeEndpointState(RuntimeEndpointSnapshotItem item) {
         RuntimeEndpointState expected;
         if (!item.getEnabled()) {
@@ -611,7 +611,7 @@ public final class AgentModelValidator {
                 "Runtime Endpoint state must be " + expected.name());
         }
     }
-
+    
     private static void validateEndpoint(Endpoint endpoint) {
         requireNonNull(endpoint, "Endpoint");
         EndpointCanonicalizer.canonicalize(endpoint);
@@ -619,7 +619,7 @@ public final class AgentModelValidator {
             throw new IllegalArgumentException("Management or declared Endpoint forbids healthy");
         }
     }
-
+    
     private static void validateAbsoluteUri(String value, String fieldName) {
         if (value.isEmpty() || codePointLength(value) > MAX_URI_LENGTH) {
             throw new IllegalArgumentException("Invalid " + fieldName + ": " + value);
@@ -633,29 +633,29 @@ public final class AgentModelValidator {
             throw new IllegalArgumentException("Invalid " + fieldName + ": " + value, e);
         }
     }
-
+    
     private static void validateRequiredLength(String value, int maximum, String fieldName) {
         if (value == null || value.isEmpty() || codePointLength(value) > maximum) {
             throw new IllegalArgumentException("Invalid " + fieldName + ": " + value);
         }
     }
-
+    
     private static void validateOptionalLength(String value, int maximum, String fieldName) {
         if (value != null && codePointLength(value) > maximum) {
             throw new IllegalArgumentException("Invalid " + fieldName + ": exceeds " + maximum);
         }
     }
-
+    
     private static void validateEpochMillis(Long value, String fieldName) {
         if (value == null || value < 0) {
             throw new IllegalArgumentException(fieldName + " must be a non-negative integer");
         }
     }
-
+    
     private static int codePointLength(String value) {
         return value.codePointCount(0, value.length());
     }
-
+    
     private static <T> T requireNonNull(T value, String fieldName) {
         if (value == null) {
             throw new IllegalArgumentException(fieldName + " must not be null");

@@ -40,9 +40,9 @@ class ConnectionInfoTest {
     @BeforeEach
     void setUp() {
         mapper = JsonMapper.builder()
-                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-                .enable(DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS)
-                .build();
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .enable(DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS)
+            .build();
         ConnectionMetaInfo metaInfo = new ConnectionMetaInfo();
         metaInfo.setConnectType("grpc");
         metaInfo.setClientIp("127.0.0.1");

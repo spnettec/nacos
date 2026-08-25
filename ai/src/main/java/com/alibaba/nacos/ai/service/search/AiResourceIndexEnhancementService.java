@@ -28,50 +28,50 @@ import java.util.List;
  * @author nacos
  */
 public interface AiResourceIndexEnhancementService {
-
+    
     /**
      * No-op provider used by tests and disabled deployments.
      */
     AiResourceIndexEnhancementService NOOP = new AiResourceIndexEnhancementService() {
-
+        
         @Override
         public boolean ready() {
             return false;
         }
-
+        
         @Override
         public List<AiResourceIndexEnhancementChunk> enhance(AiResourceSearchDocument entry,
             List<AiResourceSearchChunk> existingChunks) {
             return Collections.emptyList();
         }
     };
-
+    
     /**
      * Whether enhancement is requested and the provider configuration is complete.
      */
     boolean ready();
-
+    
     /**
      * Whether enhancement is requested by the operator, including temporarily invalid settings.
      */
     default boolean requested() {
         return ready();
     }
-
+    
     /**
      * Stable audit fingerprint of the effective enhancement configuration.
      */
     default String fingerprint() {
         return getClass().getName();
     }
-
+    
     /**
      * Generate extra search chunks for one search document.
      */
     List<AiResourceIndexEnhancementChunk> enhance(AiResourceSearchDocument entry,
         List<AiResourceSearchChunk> existingChunks)
         throws Exception;
-
+    
     /**
      * Generate extra search chunks with optional source content snippets.
      */
@@ -81,7 +81,7 @@ public interface AiResourceIndexEnhancementService {
         throws Exception {
         return enhance(entry, existingChunks);
     }
-
+    
     /**
      * Generate chunks and return the exact configuration fingerprint used by this invocation.
      */

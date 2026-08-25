@@ -31,27 +31,27 @@ import java.util.List;
  * @author Nacos
  */
 public class AgentSearchForm implements NacosForm {
-
+    
     @Serial
     private static final long serialVersionUID = 1L;
-
+    
     private String namespaceId;
-
+    
     private String agentNameContains;
-
+    
     private List<String> tagsAll;
-
+    
     private List<String> protocolsAny;
-
+    
     private Integer pageNo;
-
+    
     private Integer pageSize;
-
+    
     @Override
     public void validate() throws NacosApiException {
         toRequest();
     }
-
+    
     /**
      * Normalize the namespace, validate this form, and build the RAD request.
      *
@@ -72,51 +72,51 @@ public class AgentSearchForm implements NacosForm {
         RadModelValidator.validate(result);
         return result;
     }
-
+    
     public String getNamespaceId() {
         return namespaceId;
     }
-
+    
     public void setNamespaceId(String namespaceId) {
         this.namespaceId = namespaceId;
     }
-
+    
     public String getAgentNameContains() {
         return agentNameContains;
     }
-
+    
     public void setAgentNameContains(String agentNameContains) {
         this.agentNameContains = agentNameContains;
     }
-
+    
     public List<String> getTagsAll() {
         return tagsAll;
     }
-
+    
     public void setTagsAll(List<String> tagsAll) {
         this.tagsAll = tagsAll;
     }
-
+    
     public List<String> getProtocolsAny() {
         return protocolsAny;
     }
-
+    
     public void setProtocolsAny(List<String> protocolsAny) {
         this.protocolsAny = protocolsAny;
     }
-
+    
     public Integer getPageNo() {
         return pageNo;
     }
-
+    
     public void setPageNo(Integer pageNo) {
         this.pageNo = pageNo;
     }
-
+    
     public Integer getPageSize() {
         return pageSize;
     }
-
+    
     public void setPageSize(Integer pageSize) {
         this.pageSize = pageSize;
     }

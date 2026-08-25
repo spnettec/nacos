@@ -29,11 +29,11 @@ import com.alibaba.nacos.common.utils.StringUtils;
  * @author Nacos
  */
 public class AiPipelinePluginTypePolicy implements PluginTypePolicy {
-
+    
     private static final String FUNCTION_MODE_PROPERTY = "nacos.functionMode";
-
+    
     private static final String FUNCTION_MODE_AI = "ai";
-
+    
     /**
      * Legacy AI pipeline startup chain property.
      *
@@ -42,12 +42,12 @@ public class AiPipelinePluginTypePolicy implements PluginTypePolicy {
      */
     @Deprecated
     private static final String AI_PIPELINE_TYPE_PROPERTY = "nacos.plugin.ai-pipeline.type";
-
+    
     @Override
     public PluginType getPluginType() {
         return PluginType.AI_PIPELINE;
     }
-
+    
     @Override
     public boolean isLoadingEnabled(PluginTypeConfiguration configuration) {
         String functionMode = configuration.getProperty(FUNCTION_MODE_PROPERTY);
@@ -57,7 +57,7 @@ public class AiPipelinePluginTypePolicy implements PluginTypePolicy {
             && configuration.getBooleanProperty(AiEnabledFilter.AI_ENABLED_KEY, true)
             && configuration.getBooleanProperty(AiPipelineModuleConfig.ENABLED_PROPERTY, true);
     }
-
+    
     @Override
     public boolean isPluginEnabledByDefault(String pluginName,
         PluginTypeConfiguration configuration) {

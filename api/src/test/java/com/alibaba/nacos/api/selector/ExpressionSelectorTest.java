@@ -35,11 +35,13 @@ class ExpressionSelectorTest {
     @BeforeEach
     void setUp() throws Exception {
         mapper = JsonMapper.builder()
-                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-                .changeDefaultPropertyInclusion(incl -> incl.withValueInclusion(JsonInclude.Include.NON_NULL))
-                .changeDefaultPropertyInclusion(incl -> incl.withContentInclusion(JsonInclude.Include.NON_NULL))
-                .registerSubtypes(new NamedType(ExpressionSelector.class, SelectorType.label.name()))
-                .build();
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .changeDefaultPropertyInclusion(
+                incl -> incl.withValueInclusion(JsonInclude.Include.NON_NULL))
+            .changeDefaultPropertyInclusion(
+                incl -> incl.withContentInclusion(JsonInclude.Include.NON_NULL))
+            .registerSubtypes(new NamedType(ExpressionSelector.class, SelectorType.label.name()))
+            .build();
     }
     
     @Test

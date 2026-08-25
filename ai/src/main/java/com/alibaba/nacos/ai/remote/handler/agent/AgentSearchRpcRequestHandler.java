@@ -41,13 +41,13 @@ import org.springframework.stereotype.Component;
 @Component
 public class AgentSearchRpcRequestHandler
     extends RequestHandler<AgentSearchRpcRequest, AgentSearchResponse> {
-
+    
     private final AgentDiscoveryApplicationService discoveryService;
-
+    
     public AgentSearchRpcRequestHandler(AgentDiscoveryApplicationService discoveryService) {
         this.discoveryService = discoveryService;
     }
-
+    
     @Override
     @NamespaceValidation
     @ExtractorManager.Extractor(rpcExtractor = AgentClientRpcParamExtractor.class)
@@ -65,7 +65,7 @@ public class AgentSearchRpcRequestHandler
         }
         return response;
     }
-
+    
     private <T> T requireRequest(T value, String fieldName) {
         if (value == null) {
             throw new IllegalArgumentException(fieldName + " must not be null");

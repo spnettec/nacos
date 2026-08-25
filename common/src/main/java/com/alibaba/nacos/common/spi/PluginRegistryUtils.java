@@ -27,10 +27,10 @@ import java.util.Map;
  * @author Nacos
  */
 public final class PluginRegistryUtils {
-
+    
     private PluginRegistryUtils() {
     }
-
+    
     /**
      * Register one plugin if its identity has not been claimed.
      *

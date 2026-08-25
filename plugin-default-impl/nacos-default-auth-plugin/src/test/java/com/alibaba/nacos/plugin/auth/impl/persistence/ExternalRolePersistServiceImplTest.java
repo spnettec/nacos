@@ -130,6 +130,14 @@ class ExternalRolePersistServiceImplTest {
     }
     
     @Test
+    void testFindRolesLikeRoleNameEscapesTheUnderscoreWildcard() {
+        externalRolePersistService.findRolesLikeRoleName("ro_le");
+        
+        Mockito.verify(jdbcTemplate)
+            .queryForList(any(String.class), eq(String.class), eq("%ro\\_le%"));
+    }
+    
+    @Test
     void testFindRolesLikeAndGenerateLikeArgument() {
         assertEquals("ro\\_le%", externalRolePersistService.generateLikeArgument("ro_le*"));
         assertEquals("plain", externalRolePersistService.generateLikeArgument("plain"));

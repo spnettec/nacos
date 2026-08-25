@@ -30,61 +30,61 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class VisibilityPluginTypePolicyTest {
-
+    
     private final VisibilityPluginTypePolicy policy = new VisibilityPluginTypePolicy();
-
+    
     @Test
     void testTypeAndDefaultSelection() {
         MapConfiguration configuration = new MapConfiguration();
-
+        
         assertEquals(PluginType.VISIBILITY, policy.getPluginType());
         assertTrue(policy.isLoadingEnabled(configuration));
         assertTrue(policy.isPluginEnabledByDefault("nacos", configuration));
         assertFalse(policy.isPluginEnabledByDefault("custom", configuration));
-
+        
         configuration.setProperty("nacos.plugin.visibility.enabled", "false");
         assertFalse(policy.isLoadingEnabled(configuration));
     }
-
+    
     @Test
     void testCompatibilitySelection() {
         MapConfiguration configuration = new MapConfiguration();
         configuration.setProperty("nacos.plugin.visibility.type", " custom ");
-
+        
         assertTrue(policy.isPluginEnabledByDefault("custom", configuration));
         assertFalse(policy.isPluginEnabledByDefault("nacos", configuration));
     }
-
+    
     @Test
     void testImplementationStateTakesPrecedence() {
         MapConfiguration configuration = new MapConfiguration();
         configuration.setProperty("nacos.plugin.visibility.type", "custom");
         configuration.setProperty("nacos.plugin.visibility.custom.enabled", "false");
-
+        
         assertFalse(policy.isPluginEnabledByDefault("custom", configuration));
         configuration.setProperty("nacos.plugin.visibility.custom.enabled", "true");
         assertTrue(policy.isPluginEnabledByDefault("custom", configuration));
     }
-
+    
     @Test
     void testPolicyIsRegisteredInCore() {
         assertTrue(NacosServiceLoader.load(PluginTypePolicy.class).stream()
             .anyMatch(each -> each instanceof VisibilityPluginTypePolicy));
     }
-
+    
     private static class MapConfiguration implements PluginTypeConfiguration {
-
+        
         private final Map<String, String> properties = new HashMap<>();
-
+        
         void setProperty(String key, String value) {
             properties.put(key, value);
         }
-
+        
         @Override
         public String getProperty(String key) {
             return properties.get(key);
         }
-
+        
         @Override
         public boolean containsProperty(String key) {
             return properties.containsKey(key);

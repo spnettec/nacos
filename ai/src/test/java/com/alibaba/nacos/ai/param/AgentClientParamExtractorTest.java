@@ -40,25 +40,25 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class AgentClientParamExtractorTest {
-
+    
     @Test
     void testHttpExtractor() throws Exception {
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getParameter("namespaceId")).thenReturn("team");
         when(request.getParameter("agentName")).thenReturn("demo");
-
+        
         List<ParamInfo> actual = new AgentClientHttpParamExtractor().extractParam(request);
-
+        
         assertEquals(1, actual.size());
         assertEquals("team", actual.get(0).getNamespaceId());
         assertEquals("demo", actual.get(0).getAgentName());
     }
-
+    
     @Test
     void testRpcSearchExtraction() throws Exception {
         AgentSearchRpcRequest request = new AgentSearchRpcRequest();
         assertEmpty(extract(request));
-
+        
         AgentSearchRequest search = new AgentSearchRequest();
         search.setNamespaceId("search-ns");
         request.setSearchRequest(search);
@@ -66,30 +66,30 @@ class AgentClientParamExtractorTest {
         assertEquals("search-ns", actual.getNamespaceId());
         assertNull(actual.getAgentName());
     }
-
+    
     @Test
     void testRpcDiscoveryExtraction() throws Exception {
         AgentDiscoveryRpcRequest request = new AgentDiscoveryRpcRequest();
         assertEmpty(extract(request));
-
+        
         AgentDiscoveryRequest discovery = new AgentDiscoveryRequest();
         discovery.setNamespaceId("discovery-ns");
         request.setDiscoveryRequest(discovery);
         ParamInfo withoutReference = extract(request);
         assertEquals("discovery-ns", withoutReference.getNamespaceId());
         assertNull(withoutReference.getAgentName());
-
+        
         AgentReference reference = new AgentReference();
         reference.setAgentName("demo");
         discovery.setReference(reference);
         assertEquals("demo", extract(request).getAgentName());
     }
-
+    
     @Test
     void testRpcRegistrationExtraction() throws Exception {
         AgentEndpointRegisterRpcRequest request = new AgentEndpointRegisterRpcRequest();
         assertEmpty(extract(request));
-
+        
         AgentEndpointRegistrationBatch batch = new AgentEndpointRegistrationBatch();
         batch.setNamespaceId("register-ns");
         batch.setAgentName("demo");
@@ -98,13 +98,13 @@ class AgentClientParamExtractorTest {
         assertEquals("register-ns", actual.getNamespaceId());
         assertEquals("demo", actual.getAgentName());
     }
-
+    
     @Test
     void testRpcPublishExtraction() throws Exception {
         AgentPublishRpcRequest request = new AgentPublishRpcRequest();
         request.setNamespaceId("publish-ns");
         assertEquals("publish-ns", extract(request).getNamespaceId());
-
+        
         AgentPublishRequest publication = new AgentPublishRequest();
         publication.setAgentName("demo");
         request.setPublishRequest(publication);
@@ -112,27 +112,27 @@ class AgentClientParamExtractorTest {
         assertEquals("publish-ns", actual.getNamespaceId());
         assertEquals("demo", actual.getAgentName());
     }
-
+    
     @Test
     void testRpcDeregistrationAndOtherExtraction() throws Exception {
         AgentEndpointDeregisterRpcRequest request = new AgentEndpointDeregisterRpcRequest();
         assertEmpty(extract(request));
-
+        
         request.setNamespaceId("deregister-ns");
         request.setAgentName("demo");
         ParamInfo actual = extract(request);
         assertEquals("deregister-ns", actual.getNamespaceId());
         assertEquals("demo", actual.getAgentName());
-
+        
         assertEmpty(extract(new NotifySubscriberRequest()));
     }
-
+    
     private ParamInfo extract(Request request) throws Exception {
         List<ParamInfo> result = new AgentClientRpcParamExtractor().extractParam(request);
         assertEquals(1, result.size());
         return result.get(0);
     }
-
+    
     private void assertEmpty(ParamInfo actual) {
         assertNull(actual.getNamespaceId());
         assertNull(actual.getAgentName());

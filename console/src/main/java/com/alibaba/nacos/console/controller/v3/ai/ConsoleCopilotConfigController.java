@@ -55,33 +55,33 @@ import static com.alibaba.nacos.plugin.auth.constant.Constants.Resource.CONSOLE_
 @RestController
 @RequestMapping(CopilotConstants.COPILOT_CONSOLE_PATH + "/config")
 public class ConsoleCopilotConfigController {
-
+    
     private static final String CONFIG_DATA_ID = "copilot-config.json";
-
+    
     private static final String CONFIG_GROUP = "nacos-copilot";
-
+    
     private static final String CONFIG_APP_NAME = "nacos-copilot";
-
+    
     private static final String CONFIG_SRC_USER = "system";
-
+    
     private static final String CONFIG_DESC = "Copilot configuration";
-
+    
     private static final String CONFIG_TYPE = "json";
-
+    
     private final CopilotAgentManager agentManager;
-
+    
     private final ConfigProxy configProxy;
-
+    
     @Value("${nacos.copilot.config.namespace:public}")
     private String configNamespace;
-
+    
     @Autowired
     public ConsoleCopilotConfigController(CopilotAgentManager agentManager,
         ConfigProxy configProxy) {
         this.agentManager = agentManager;
         this.configProxy = configProxy;
     }
-
+    
     /**
      * Get current Copilot configuration. Only returns apiKey, model, studioUrl and studioProject fields.
      *
@@ -97,17 +97,17 @@ public class ConsoleCopilotConfigController {
             // Return default empty config if not configured
             config = new CopilotProperties();
         }
-
+        
         // Create simplified config with only apiKey, model, studioUrl and studioProject
         CopilotProperties simplifiedConfig = new CopilotProperties();
         simplifiedConfig.setApiKey(config.getApiKey());
         simplifiedConfig.setModel(config.getModel());
         simplifiedConfig.setStudioUrl(config.getStudioUrl());
         simplifiedConfig.setStudioProject(config.getStudioProject());
-
+        
         return Result.success(simplifiedConfig);
     }
-
+    
     /**
      * Create or update Copilot configuration. Only accepts apiKey, model, studioUrl and studioProject fields, other
      * fields use defaults.
@@ -126,11 +126,11 @@ public class ConsoleCopilotConfigController {
         if (config == null) {
             throw new NacosException(NacosException.INVALID_PARAM, "Configuration cannot be null");
         }
-
+        
         // Get existing config to preserve other fields, or create new one with defaults
         CopilotProperties existingConfig = getStoredConfig();
         CopilotProperties fullConfig;
-
+        
         if (existingConfig != null) {
             // Use existing config and only update apiKey, model, studioUrl and studioProject
             fullConfig = existingConfig;
@@ -138,7 +138,7 @@ public class ConsoleCopilotConfigController {
             // Create new config with default values
             fullConfig = new CopilotProperties();
         }
-
+        
         // Update only apiKey, model, studioUrl and studioProject
         if (config.getApiKey() != null) {
             fullConfig.setApiKey(config.getApiKey());
@@ -152,17 +152,17 @@ public class ConsoleCopilotConfigController {
         if (config.getStudioProject() != null) {
             fullConfig.setStudioProject(config.getStudioProject());
         }
-
+        
         boolean success = publishStoredConfig(request, fullConfig);
-
+        
         if (success) {
             // Refresh configuration after config update
             agentManager.refreshConfig();
         }
-
+        
         return Result.success(success);
     }
-
+    
     private CopilotProperties getStoredConfig() {
         try {
             ConfigDetailInfo configInfo =
@@ -175,7 +175,7 @@ public class ConsoleCopilotConfigController {
             return null;
         }
     }
-
+    
     private boolean publishStoredConfig(HttpServletRequest request, CopilotProperties config)
         throws NacosException {
         ConfigForm configForm = new ConfigForm();
@@ -187,14 +187,14 @@ public class ConsoleCopilotConfigController {
         configForm.setSrcUser(CONFIG_SRC_USER);
         configForm.setDesc(CONFIG_DESC);
         configForm.setType(CONFIG_TYPE);
-
+        
         ConfigRequestInfo configRequestInfo = new ConfigRequestInfo();
         configRequestInfo.setSrcIp(RequestUtil.getRemoteIp(request));
         configRequestInfo.setSrcType(Constants.HTTP);
         configRequestInfo.setRequestIpApp(RequestUtil.getAppName(request));
         return Boolean.TRUE.equals(configProxy.publishConfig(configForm, configRequestInfo));
     }
-
+    
     private String getConfigNamespace() {
         return NamespaceUtil.processNamespaceParameter(configNamespace);
     }

@@ -47,31 +47,31 @@ import java.util.regex.Pattern;
  * @author Nacos
  */
 public final class RadModelValidator {
-
+    
     private static final int MAX_PAGE_SIZE = 100;
-
+    
     private static final int MAX_TAGS = 32;
-
+    
     private static final int MAX_PROTOCOLS = 16;
-
+    
     private static final int MAX_TRANSPORTS = 16;
-
+    
     private static final int MAX_ENDPOINT_SOURCES = 2;
-
+    
     private static final int MAX_CALL_INTERFACES = 16;
-
+    
     private static final int MAX_DECLARED_ENDPOINTS = 64;
-
+    
     private static final int MAX_RUNTIME_ENDPOINTS = 1000;
-
+    
     private static final int MAX_BATCH_ENDPOINTS = 1000;
-
+    
     private static final Pattern RUNTIME_REVISION_PATTERN =
         Pattern.compile("murmur3-x64-128-v1:[0-9a-f]{32}");
-
+    
     private RadModelValidator() {
     }
-
+    
     /**
      * Validate an Agent catalog page returned by Search.
      *
@@ -99,7 +99,7 @@ public final class RadModelValidator {
             previousAgentName = item.getAgentName();
         }
     }
-
+    
     /**
      * Validate an Agent search request.
      *
@@ -123,7 +123,7 @@ public final class RadModelValidator {
             throw invalid("pageSize must be between 1 and " + MAX_PAGE_SIZE);
         }
     }
-
+    
     /**
      * Validate one Agent catalog entry, including its complete online-version catalog.
      *
@@ -170,7 +170,7 @@ public final class RadModelValidator {
             throw invalid("latestVersion must be present in versions");
         }
     }
-
+    
     /**
      * Validate one online-version catalog item.
      *
@@ -189,7 +189,7 @@ public final class RadModelValidator {
         }
         validateProtocols(catalog.getProtocols(), "protocols", true);
     }
-
+    
     /**
      * Validate an Agent reference.
      *
@@ -209,7 +209,7 @@ public final class RadModelValidator {
             AgentValidationUtils.validateLabel(reference.getLabel());
         }
     }
-
+    
     /**
      * Validate an optional Agent discovery filter.
      *
@@ -233,7 +233,7 @@ public final class RadModelValidator {
         }
         AgentValidationUtils.validateEndpointMetadata(filter.getMetadataSelector());
     }
-
+    
     /**
      * Validate an Agent discovery or watch request.
      *
@@ -248,7 +248,7 @@ public final class RadModelValidator {
             validate(request.getFilter());
         }
     }
-
+    
     /**
      * Validate one discovered Endpoint set.
      *
@@ -258,7 +258,7 @@ public final class RadModelValidator {
     public static void validate(EndpointSet endpointSet) {
         validateEndpointSet(endpointSet, "public", "validation", "rad", null);
     }
-
+    
     /**
      * Validate one discovered call interface and its Endpoint sets.
      *
@@ -268,7 +268,7 @@ public final class RadModelValidator {
     public static void validate(AgentDiscoveryCallInterface callInterface) {
         validateCallInterface(callInterface, "public", "validation", null);
     }
-
+    
     /**
      * Validate a complete Agent discovery result.
      *
@@ -292,7 +292,7 @@ public final class RadModelValidator {
             }
         }
     }
-
+    
     /**
      * Validate a runtime Endpoint registration batch.
      *
@@ -315,7 +315,7 @@ public final class RadModelValidator {
         validateEndpointBatch(batch.getEndpoints(), batch.getNamespaceId(), batch.getAgentName(),
             batch.getProtocol(), EndpointHealthRule.FORBIDDEN, false, false);
     }
-
+    
     /**
      * Validate a runtime Endpoint deregistration batch.
      *
@@ -331,7 +331,7 @@ public final class RadModelValidator {
         validateEndpointBatch(batch.getEndpoints(), batch.getNamespaceId(), batch.getAgentName(),
             batch.getProtocol(), EndpointHealthRule.FORBIDDEN, true, false);
     }
-
+    
     private static void validateCallInterface(AgentDiscoveryCallInterface callInterface,
         String namespaceId, String agentName, String contentDigest) {
         requireNonNull(callInterface, "AgentDiscoveryCallInterface");
@@ -352,7 +352,7 @@ public final class RadModelValidator {
             }
         }
     }
-
+    
     private static void validateEndpointSet(EndpointSet endpointSet, String namespaceId,
         String agentName, String protocol, String contentDigest) {
         requireNonNull(endpointSet, "EndpointSet");
@@ -370,7 +370,7 @@ public final class RadModelValidator {
         }
         validateEndpointOrder(endpointSet.getEndpoints(), namespaceId, agentName, protocol);
     }
-
+    
     private static void validateEndpointBatch(List<? extends Endpoint> endpoints,
         String namespaceId,
         String agentName, String protocol, EndpointHealthRule healthRule,
@@ -386,7 +386,7 @@ public final class RadModelValidator {
             }
         }
     }
-
+    
     private static void validateDiscoveryBindings(AgentDiscoveryEndpoint endpoint,
         EndpointSource source) {
         List<RuntimeVersionBinding> bindings = endpoint.getBindings();
@@ -420,7 +420,7 @@ public final class RadModelValidator {
             previousRange = binding.getVersionRange();
         }
     }
-
+    
     private static void validateEndpoint(Endpoint endpoint, EndpointHealthRule healthRule,
         boolean deregistration, boolean requireCanonicalOutput) {
         if (deregistration && (endpoint.getPriority() != null || endpoint.getWeight() != null
@@ -441,7 +441,7 @@ public final class RadModelValidator {
             throw invalid("Discovery Endpoint must contain canonical effective values");
         }
     }
-
+    
     private static void validateEndpointOrder(List<? extends Endpoint> endpoints,
         String namespaceId,
         String agentName, String protocol) {
@@ -463,7 +463,7 @@ public final class RadModelValidator {
             previousKey = currentKey;
         }
     }
-
+    
     private static void validateSourceRevision(String revision, EndpointSource source,
         String contentDigest) {
         validatePrintableAscii(revision, 1, 128, "sourceRevision", false);
@@ -476,7 +476,7 @@ public final class RadModelValidator {
             throw invalid("Invalid RUNTIME sourceRevision: " + revision);
         }
     }
-
+    
     private static void validateTags(List<String> tags, String fieldName) {
         if (tags == null) {
             return;
@@ -487,7 +487,7 @@ public final class RadModelValidator {
             validateLength(tag, 1, 64, fieldName + " item");
         }
     }
-
+    
     private static void validateProtocols(List<String> protocols, String fieldName,
         boolean required) {
         if (protocols == null) {
@@ -502,7 +502,7 @@ public final class RadModelValidator {
             AgentValidationUtils.validateProtocol(protocol);
         }
     }
-
+    
     private static void validateTransports(List<String> transports) {
         if (transports == null) {
             return;
@@ -513,7 +513,7 @@ public final class RadModelValidator {
             AgentValidationUtils.validateTransport(transport);
         }
     }
-
+    
     private static void validateProvider(AgentProvider provider) {
         if (provider == null) {
             return;
@@ -523,7 +523,7 @@ public final class RadModelValidator {
             validateAbsoluteUri(provider.getUrl(), "provider.url");
         }
     }
-
+    
     private static void validateAbsoluteUri(String value, String fieldName) {
         validateLength(value, 1, 2048, fieldName);
         try {
@@ -534,13 +534,13 @@ public final class RadModelValidator {
             throw new IllegalArgumentException("Invalid " + fieldName + ": " + value, e);
         }
     }
-
+    
     private static void validateOptionalLength(String value, int maxLength, String fieldName) {
         if (value != null && codePointLength(value) > maxLength) {
             throw invalid(fieldName + " exceeds " + maxLength + " characters");
         }
     }
-
+    
     private static void validateLength(String value, int minLength, int maxLength,
         String fieldName) {
         if (value == null) {
@@ -552,7 +552,7 @@ public final class RadModelValidator {
                 + maxLength);
         }
     }
-
+    
     private static void validatePrintableAscii(String value, int minLength, int maxLength,
         String fieldName, boolean allowSpace) {
         validateLength(value, minLength, maxLength, fieldName);
@@ -564,12 +564,12 @@ public final class RadModelValidator {
             }
         }
     }
-
+    
     private static <T> void validateOptionalArray(List<T> values, int maxSize,
         String fieldName) {
         requireNonEmptyArray(values, maxSize, fieldName);
     }
-
+    
     private static <T> void requireArray(List<T> values, int maxSize, String fieldName) {
         if (values == null) {
             throw invalid(fieldName + " is required");
@@ -578,7 +578,7 @@ public final class RadModelValidator {
             throw invalid(fieldName + " exceeds " + maxSize + " items");
         }
     }
-
+    
     private static <T> void requireNonEmptyArray(List<T> values, int maxSize,
         String fieldName) {
         requireNonEmpty(values, fieldName);
@@ -586,13 +586,13 @@ public final class RadModelValidator {
             throw invalid(fieldName + " exceeds " + maxSize + " items");
         }
     }
-
+    
     private static <T> void requireNonEmpty(List<T> values, String fieldName) {
         if (values == null || values.isEmpty()) {
             throw invalid(fieldName + " must contain at least one item");
         }
     }
-
+    
     private static <T> void ensureUnique(List<T> values, String fieldName) {
         Set<T> unique = new HashSet<T>();
         for (T value : values) {
@@ -601,22 +601,22 @@ public final class RadModelValidator {
             }
         }
     }
-
+    
     private static int codePointLength(String value) {
         return value.codePointCount(0, value.length());
     }
-
+    
     private static <T> T requireNonNull(T value, String fieldName) {
         if (value == null) {
             throw invalid(fieldName + " is required");
         }
         return value;
     }
-
+    
     private static IllegalArgumentException invalid(String message) {
         return new IllegalArgumentException(message);
     }
-
+    
     private enum EndpointHealthRule {
         REQUIRED,
         FORBIDDEN

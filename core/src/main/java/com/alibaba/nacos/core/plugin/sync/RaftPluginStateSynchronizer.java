@@ -41,31 +41,31 @@ import java.util.Map;
  * @since 3.2.0
  */
 public class RaftPluginStateSynchronizer implements PluginStateSynchronizer {
-
+    
     private static final Logger LOGGER = LoggerFactory.getLogger(RaftPluginStateSynchronizer.class);
-
+    
     private static final String PLUGIN_STATE_GROUP = "plugin_state";
-
+    
     private final PluginStateConsensusService consensusService;
-
+    
     private final Serializer serializer;
-
+    
     public RaftPluginStateSynchronizer(PluginStateConsensusService consensusService) {
         this.consensusService = consensusService;
         this.serializer = SerializeFactory.getDefault();
         LOGGER.info("[RaftPluginStateSynchronizer] Initialized with isolated consensus lifecycle");
     }
-
+    
     @Override
     public void initialize() {
         consensusService.initialize();
     }
-
+    
     @Override
     public boolean isAvailable() {
         return consensusService.isAvailable();
     }
-
+    
     @Override
     public void syncStateChange(String pluginId, boolean enabled) throws NacosApiException {
         PluginStateOperation operation = PluginStateOperation.builder()
@@ -75,7 +75,7 @@ public class RaftPluginStateSynchronizer implements PluginStateSynchronizer {
             .build();
         submitToRaft(operation);
     }
-
+    
     @Override
     public void syncConfigChange(String pluginId, Map<String, String> config)
         throws NacosApiException {
@@ -86,18 +86,18 @@ public class RaftPluginStateSynchronizer implements PluginStateSynchronizer {
             .build();
         submitToRaft(operation);
     }
-
+    
     private void submitToRaft(PluginStateOperation operation) throws NacosApiException {
         try {
             CPProtocol cpProtocol = consensusService.getProtocol();
             byte[] data = serializer.serialize(operation);
-
+            
             WriteRequest request = WriteRequest.newBuilder()
                 .setGroup(PLUGIN_STATE_GROUP)
                 .setData(ByteString.copyFrom(data))
                 .setOperation(DataOperation.CHANGE.name())
                 .build();
-
+            
             Response response = cpProtocol.write(request);
             if (!response.getSuccess()) {
                 if (response.getErrMsg().startsWith(

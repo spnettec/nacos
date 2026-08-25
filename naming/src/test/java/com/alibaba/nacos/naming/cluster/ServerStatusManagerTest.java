@@ -50,18 +50,18 @@ class ServerStatusManagerTest {
     
     @Mock
     ProtocolManager protocolManager;
-
+    
     @Mock
     GlobalConfig globalConfig;
-
+    
     @Mock
     DistroProtocol distroProtocol;
-
+    
     @Mock
     CPProtocol cpProtocol;
-
+    
     ServerStatusManager serverStatusManager;
-
+    
     @BeforeEach
     void setUp() {
         EnvUtil.setEnvironment(new MockEnvironment());
@@ -94,7 +94,7 @@ class ServerStatusManagerTest {
         assertTrue(errorMsg.isPresent());
         assertTrue(errorMsg.get().contains("distro"));
     }
-
+    
     @Test
     void testGetErrorMsgForRaft() {
         when(protocolManager.isCpInit()).thenReturn(true);
@@ -128,7 +128,7 @@ class ServerStatusManagerTest {
         assertEquals(ServerStatus.UP, serverStatusManager.getServerStatus());
         assertFalse(serverStatusManager.getErrorMsg().isPresent());
     }
-
+    
     @Test
     void testUpdaterStatusBySwitch() {
         when(switchDomain.getOverriddenServerStatus()).thenReturn("UP");
@@ -165,7 +165,7 @@ class ServerStatusManagerTest {
         updater.run();
         assertEquals(ServerStatus.DOWN, serverStatusManager.getServerStatus());
     }
-
+    
     @Test
     void testUpdaterStatus() {
         when(protocolManager.isCpInit()).thenReturn(true);

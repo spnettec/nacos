@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RuntimeVersionRangeSupportTest {
-
+    
     @Test
     void testExactAndCanonicalForms() {
         assertEquals("[1.0.0-RC1]", RuntimeVersionRangeSupport.exact("1.0.0-RC1"));
@@ -39,7 +39,7 @@ class RuntimeVersionRangeSupportTest {
         assertEquals("[1.0.0,)",
             RuntimeVersionRangeSupport.canonicalize("[1.0.0,)"));
     }
-
+    
     @Test
     void testContainsClosedOpenAndUnboundedRanges() {
         assertTrue(RuntimeVersionRangeSupport.contains("[1.0.0]", "1.0.0"));
@@ -51,7 +51,7 @@ class RuntimeVersionRangeSupportTest {
         assertTrue(RuntimeVersionRangeSupport.contains("[1.0.0,)", "100.0.0"));
         assertFalse(RuntimeVersionRangeSupport.contains("(1.0.0,)", "1.0.0"));
     }
-
+    
     @Test
     void testCaseSensitivePrereleasePrecedence() {
         assertTrue(RuntimeVersionRangeSupport.contains("[1.0.0-RC1,1.0.0)",
@@ -59,7 +59,7 @@ class RuntimeVersionRangeSupportTest {
         assertFalse(RuntimeVersionRangeSupport.contains("[1.0.0-rc1,1.0.0)",
             "1.0.0-RC1"));
     }
-
+    
     @Test
     void testRejectInvalidInputs() {
         assertThrows(IllegalArgumentException.class,

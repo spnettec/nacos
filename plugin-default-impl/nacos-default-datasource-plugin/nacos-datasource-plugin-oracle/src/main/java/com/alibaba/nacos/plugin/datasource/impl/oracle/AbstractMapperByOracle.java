@@ -25,12 +25,12 @@ import com.alibaba.nacos.plugin.datasource.mapper.AbstractMapper;
  * @author liam.fu
  **/
 public abstract class AbstractMapperByOracle extends AbstractMapper {
-
+    
     @Override
     public String getFunction(String functionName) {
         return TrustedOracleFunctionEnum.getFunctionByName(functionName);
     }
-
+    
     @Override
     public String getLikeEscapeClause() {
         return LIKE_ESCAPE_CLAUSE;

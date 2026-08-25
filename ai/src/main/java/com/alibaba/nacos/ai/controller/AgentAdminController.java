@@ -70,17 +70,17 @@ import java.util.Locale;
 @RequestMapping(Constants.Agent.ADMIN_PATH)
 @ExtractorManager.Extractor(httpExtractor = AgentAdminHttpParamExtractor.class)
 public class AgentAdminController {
-
+    
     private final AgentOperationService agentOperationService;
-
+    
     private final AgentRuntimeRegistryService runtimeRegistryService;
-
+    
     public AgentAdminController(AgentOperationService agentOperationService,
         AgentRuntimeRegistryService runtimeRegistryService) {
         this.agentOperationService = agentOperationService;
         this.runtimeRegistryService = runtimeRegistryService;
     }
-
+    
     /**
      * Read one Agent and the first bounded Version-summary page.
      */
@@ -92,7 +92,7 @@ public class AgentAdminController {
         return Result.success(
             agentOperationService.getOverview(form.getNamespaceId(), form.getAgentName()));
     }
-
+    
     /**
      * Replace Agent-level presentation, catalog, and resource-status metadata.
      *
@@ -107,7 +107,7 @@ public class AgentAdminController {
         return Result.success(
             agentOperationService.updateAgent(toAgent(form.getNamespaceId(), request)));
     }
-
+    
     /**
      * Delete one Agent definition and all of its Version content.
      */
@@ -119,7 +119,7 @@ public class AgentAdminController {
         agentOperationService.deleteAgent(form.getNamespaceId(), form.getAgentName());
         return Result.success();
     }
-
+    
     /**
      * Filter and page Agent summaries.
      */
@@ -137,7 +137,7 @@ public class AgentAdminController {
             form.getAgentName(), filterableForm.getBizTag(), scope, filterableForm.getOwner(),
             form.getOrderBy(), pageForm.getPageNo(), pageForm.getPageSize()));
     }
-
+    
     /**
      * Page Version summaries for one Agent.
      */
@@ -152,7 +152,7 @@ public class AgentAdminController {
             form.getAgentName(), form.getStatus(), pageForm.getPageNo(),
             pageForm.getPageSize()));
     }
-
+    
     /**
      * Read one exact Agent Version definition.
      */
@@ -164,7 +164,7 @@ public class AgentAdminController {
         return Result.success(agentOperationService.getVersion(form.getNamespaceId(),
             form.getAgentName(), form.getVersion()));
     }
-
+    
     /**
      * Read one protocol's complete Runtime Endpoint snapshot.
      */
@@ -178,7 +178,7 @@ public class AgentAdminController {
             form.getNamespaceId(),
             form.getAgentName(), form.getProtocol(), form.getVersion()));
     }
-
+    
     /**
      * Create a new Agent draft Version.
      *
@@ -194,7 +194,7 @@ public class AgentAdminController {
         return Result.success(
             agentOperationService.createDraft(form.getNamespaceId(), request));
     }
-
+    
     /**
      * Replace the content of one exact current Agent draft.
      *
@@ -211,7 +211,7 @@ public class AgentAdminController {
             request.getAgentName(), request.getVersion(), request.getCallInterfaces(),
             request.getChangeDescription()));
     }
-
+    
     /**
      * Delete one exact current Agent draft.
      */
@@ -224,7 +224,7 @@ public class AgentAdminController {
             form.getVersion());
         return Result.success();
     }
-
+    
     /**
      * Submit one exact Agent draft.
      */
@@ -236,7 +236,7 @@ public class AgentAdminController {
         return Result.success(agentOperationService.submit(form.getNamespaceId(),
             form.getAgentName(), form.getVersion()));
     }
-
+    
     /**
      * Publish one exact reviewed Agent Version.
      */
@@ -248,7 +248,7 @@ public class AgentAdminController {
         return Result.success(agentOperationService.publish(form.getNamespaceId(),
             form.getAgentName(), form.getVersion()));
     }
-
+    
     /**
      * Force-publish one exact working Agent Version.
      */
@@ -262,7 +262,7 @@ public class AgentAdminController {
         return Result.success(agentOperationService.forcePublish(form.getNamespaceId(),
             form.getAgentName(), form.getVersion()));
     }
-
+    
     /**
      * Move one exact reviewed Agent Version back to draft.
      */
@@ -274,7 +274,7 @@ public class AgentAdminController {
         return Result.success(agentOperationService.redraft(form.getNamespaceId(),
             form.getAgentName(), form.getVersion()));
     }
-
+    
     /**
      * Bring one exact offline Agent Version online.
      */
@@ -286,7 +286,7 @@ public class AgentAdminController {
         return Result.success(agentOperationService.online(form.getNamespaceId(),
             form.getAgentName(), form.getVersion()));
     }
-
+    
     /**
      * Take one exact online Agent Version offline.
      */
@@ -298,7 +298,7 @@ public class AgentAdminController {
         return Result.success(agentOperationService.offline(form.getNamespaceId(),
             form.getAgentName(), form.getVersion()));
     }
-
+    
     /**
      * Replace custom labels while preserving the service-managed latest label.
      */
@@ -310,7 +310,7 @@ public class AgentAdminController {
         return Result.success(agentOperationService.updateLabels(form.getNamespaceId(),
             request.getAgentName(), request.getLabels()));
     }
-
+    
     private Agent toAgent(String namespaceId, AgentUpdateRequest request) {
         Agent result = new Agent();
         result.setNamespaceId(namespaceId);

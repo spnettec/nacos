@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
 class NacosAuthPluginControllerConfigTest {
-
+    
     @Test
     void testV3ControllerBeans() {
         NacosAuthPluginControllerConfig config = new NacosAuthPluginControllerConfig();
@@ -44,7 +44,7 @@ class NacosAuthPluginControllerConfigTest {
         NacosRoleService roleService = mock(NacosRoleService.class);
         IAuthenticationManager authenticationManager = mock(IAuthenticationManager.class);
         TokenManagerDelegate tokenManagerDelegate = mock(TokenManagerDelegate.class);
-
+        
         assertTrue(config.userControllerV3(userService, roleService, authenticationManager,
             tokenManagerDelegate) instanceof UserControllerV3);
         assertTrue(config.roleControllerV3(roleService) instanceof RoleControllerV3);
@@ -55,18 +55,18 @@ class NacosAuthPluginControllerConfigTest {
         assertTrue(config
             .visibilityGrantControllerV3(grantService) instanceof VisibilityGrantControllerV3);
     }
-
+    
     @Test
     void testRemoteVisibilityGrantServiceBean() {
         NacosAuthPluginRemoteServiceConfig config = new NacosAuthPluginRemoteServiceConfig();
-
+        
         assertTrue(config.visibilityGrantService() instanceof RemoteVisibilityGrantService);
     }
-
+    
     @Test
     void testOldControllerBean() {
         NacosAuthPluginOldControllerConfig config = new NacosAuthPluginOldControllerConfig();
-
+        
         assertTrue(config.userController(mock(IAuthenticationManager.class),
             mock(TokenManagerDelegate.class),
             mock(AuthenticationManager.class)) instanceof UserController);

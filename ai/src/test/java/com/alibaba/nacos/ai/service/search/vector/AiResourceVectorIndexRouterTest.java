@@ -39,32 +39,32 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author nacos
  */
 class AiResourceVectorIndexRouterTest {
-
+    
     @AfterEach
     void tearDown() {
         PluginStateCheckerHolder.setInstance(null);
     }
-
+    
     @Test
     void shouldUseConfiguredProvider() {
         FakeVectorIndex index = new FakeVectorIndex(true);
         AiResourceVectorIndexRouter router = new AiResourceVectorIndexRouter(
             Map.of("custom", index), "custom");
-
+        
         assertTrue(router.available());
         assertSame(index, router.delegate());
     }
-
+    
     @Test
     void shouldFallbackToNoopWhenProviderMissing() {
         AiResourceVectorIndexRouter router =
             new AiResourceVectorIndexRouter(Collections.emptyMap(), "missing");
-
+        
         assertFalse(router.available());
         assertTrue(router.search("public", "model", new double[] {1.0D}, List.of("skill"), 10)
             .isEmpty());
     }
-
+    
     @Test
     void shouldFallbackToNoopWhenConfiguredProviderIsDisabled() {
         FakeVectorIndex index = new FakeVectorIndex(true);
@@ -73,65 +73,65 @@ class AiResourceVectorIndexRouterTest {
         PluginStateCheckerHolder.setInstance(
             (pluginType, pluginName) -> !PluginType.AI_VECTOR.getType().equals(pluginType)
                 || !"custom".equals(pluginName));
-
+        
         assertFalse(router.available());
     }
-
+    
     @Test
     void shouldCloseAllProvidersOnDestroy() throws Exception {
         FakeVectorIndex selected = new FakeVectorIndex(true);
         FakeVectorIndex other = new FakeVectorIndex(true);
         AiResourceVectorIndexRouter router = new AiResourceVectorIndexRouter(
             Map.of("selected", selected, "other", other), "selected");
-
+        
         router.available();
         router.destroy();
-
+        
         assertTrue(selected.closed);
         assertTrue(other.closed);
     }
-
+    
     private static class FakeVectorIndex implements AiResourceVectorIndex {
-
+        
         private final boolean available;
-
+        
         private boolean closed;
-
+        
         private FakeVectorIndex(boolean available) {
             this.available = available;
         }
-
+        
         @Override
         public boolean available() {
             return available;
         }
-
+        
         @Override
         public void replaceResourceVersion(String namespaceId, String resourceType,
             String resourceName, String resourceVersion,
             Collection<AiResourceVectorDocument> documents) {
         }
-
+        
         @Override
         public void addDocuments(Collection<AiResourceVectorDocument> documents) {
         }
-
+        
         @Override
         public void deleteByResource(String namespaceId, String resourceType,
             String resourceName) {
         }
-
+        
         @Override
         public void deleteByResourceVersion(String namespaceId, String resourceType,
             String resourceName, String resourceVersion) {
         }
-
+        
         @Override
         public List<AiResourceVectorHit> search(String namespaceId, String embeddingModel,
             double[] queryVector, List<String> resourceTypes, int limit) {
             return Collections.emptyList();
         }
-
+        
         @Override
         public void close() {
             closed = true;

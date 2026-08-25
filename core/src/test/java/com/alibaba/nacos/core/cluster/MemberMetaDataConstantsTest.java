@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class MemberMetaDataConstantsTest {
-
+    
     @Test
     void testConstants() {
         assertEquals("raftPort", MemberMetaDataConstants.RAFT_PORT);
@@ -36,7 +36,7 @@ class MemberMetaDataConstantsTest {
         assertEquals("supportGrayModel", MemberMetaDataConstants.SUPPORT_GRAY_MODEL);
         assertEquals("supportJraftAuth", MemberMetaDataConstants.SUPPORT_JRAFT_AUTH);
     }
-
+    
     @Test
     void testAllConstantsReferenced() {
         String[] keys = MemberMetaDataConstants.BASIC_META_KEYS;
@@ -48,7 +48,7 @@ class MemberMetaDataConstantsTest {
         assertNotNull(MemberMetaDataConstants.SUPPORT_GRAY_MODEL);
         assertNotNull(MemberMetaDataConstants.SUPPORT_JRAFT_AUTH);
     }
-
+    
     @Test
     void testBasicMetaKeys() {
         String[] keys = MemberMetaDataConstants.BASIC_META_KEYS;

@@ -38,18 +38,18 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author lixiaoshuang
  */
 public class EncryptionPluginManager {
-
+    
     private static final Logger LOGGER = LoggerFactory.getLogger(EncryptionPluginManager.class);
-
+    
     private static final Map<String, EncryptionPluginService> ENCRYPTION_SPI_MAP =
         new ConcurrentHashMap<>();
-
+    
     private static final EncryptionPluginManager INSTANCE = new EncryptionPluginManager();
-
+    
     private EncryptionPluginManager() {
         loadInitial();
     }
-
+    
     /**
      * Load initial.
      */
@@ -67,7 +67,7 @@ public class EncryptionPluginManager {
             }
         }
     }
-
+    
     /**
      * Get EncryptionPluginManager instance.
      *
@@ -76,7 +76,7 @@ public class EncryptionPluginManager {
     public static EncryptionPluginManager instance() {
         return INSTANCE;
     }
-
+    
     /**
      * get EncryptionPluginService instance.
      *
@@ -93,7 +93,7 @@ public class EncryptionPluginManager {
         }
         return Optional.ofNullable(ENCRYPTION_SPI_MAP.get(algorithmName));
     }
-
+    
     /**
      * Register one encryption implementation with first-wins semantics.
      *
@@ -109,7 +109,7 @@ public class EncryptionPluginManager {
             LOGGER.info("[EncryptionPluginManager] join successfully.");
         }
     }
-
+    
     /**
      * Get all encryption plugin services.
      *
@@ -118,5 +118,5 @@ public class EncryptionPluginManager {
     public Map<String, EncryptionPluginService> getAllPlugins() {
         return Collections.unmodifiableMap(ENCRYPTION_SPI_MAP);
     }
-
+    
 }

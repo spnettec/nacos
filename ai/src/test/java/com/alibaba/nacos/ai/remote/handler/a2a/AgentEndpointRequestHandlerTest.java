@@ -52,26 +52,26 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class AgentEndpointRequestHandlerTest {
-
+    
     @Mock
     private EphemeralClientOperationServiceImpl clientOperationService;
-
+    
     @Mock
     private AgentIdCodecHolder agentIdCodecHolder;
-
+    
     @Mock
     private A2aCompatibilityModeResolver compatibilityModeResolver;
-
+    
     @Mock
     private CanonicalA2aEndpointOperationService canonicalEndpointOperationService;
-
+    
     @Mock
     private RequestMeta meta;
-
+    
     private AgentEndpointRequestHandler requestHandler;
-
+    
     private Instance capturedInstance;
-
+    
     @BeforeEach
     void setUp() {
         requestHandler =
@@ -79,11 +79,11 @@ class AgentEndpointRequestHandlerTest {
                 compatibilityModeResolver, canonicalEndpointOperationService);
         capturedInstance = null;
     }
-
+    
     @AfterEach
     void tearDown() {
     }
-
+    
     @Test
     void handleWithInvalidAgentName() throws NacosException {
         AgentEndpointRequest request = new AgentEndpointRequest();
@@ -91,7 +91,7 @@ class AgentEndpointRequestHandlerTest {
         assertErrorResponse(response, NacosException.INVALID_PARAM,
             "Required parameter `agentName` can't be empty or null");
     }
-
+    
     @Test
     void handleWithNullEndpoint() throws NacosException {
         AgentEndpointRequest request = new AgentEndpointRequest();
@@ -100,7 +100,7 @@ class AgentEndpointRequestHandlerTest {
         assertErrorResponse(response, NacosException.INVALID_PARAM,
             "Required parameter `endpoint` can't be null");
     }
-
+    
     @Test
     void handleWithEmptyEndpointVersion() throws NacosException {
         AgentEndpointRequest request = new AgentEndpointRequest();
@@ -113,7 +113,7 @@ class AgentEndpointRequestHandlerTest {
         assertErrorResponse(response, NacosException.INVALID_PARAM,
             "Required parameter `endpoint.version` can't be empty or null");
     }
-
+    
     @Test
     void handleWithInvalidType() throws NacosException {
         AgentEndpointRequest request = new AgentEndpointRequest();
@@ -130,7 +130,7 @@ class AgentEndpointRequestHandlerTest {
         assertErrorResponse(response, NacosException.INVALID_PARAM,
             "parameter `type` should be registerEndpoint or deregisterEndpoint, but was INVALID_TYPE");
     }
-
+    
     @Test
     void handleForRegisterEndpoint() throws NacosException {
         AgentEndpointRequest request = new AgentEndpointRequest();
@@ -157,13 +157,13 @@ class AgentEndpointRequestHandlerTest {
             return null;
         }).when(clientOperationService).registerInstance(any(Service.class), any(Instance.class),
             eq("TEST_CONNECTION_ID"));
-
+        
         AgentEndpointResponse response = requestHandler.handle(request, meta);
         assertEquals(AiRemoteConstants.REGISTER_ENDPOINT, response.getType());
         verify(clientOperationService).registerInstance(any(Service.class), any(Instance.class),
             eq("TEST_CONNECTION_ID"));
     }
-
+    
     @Test
     void handleForDeregisterEndpoint() throws NacosException {
         AgentEndpointRequest request = new AgentEndpointRequest();
@@ -190,45 +190,45 @@ class AgentEndpointRequestHandlerTest {
             return null;
         }).when(clientOperationService).deregisterInstance(any(Service.class), any(Instance.class),
             eq("TEST_CONNECTION_ID"));
-
+        
         AgentEndpointResponse response = requestHandler.handle(request, meta);
         assertEquals(AiRemoteConstants.DE_REGISTER_ENDPOINT, response.getType());
         verify(clientOperationService).deregisterInstance(any(Service.class), any(Instance.class),
             eq("TEST_CONNECTION_ID"));
     }
-
+    
     @Test
     void handleCanonicalRegisterAndDeregister() throws NacosException {
         AgentEndpointRequest request = request(AiRemoteConstants.REGISTER_ENDPOINT);
         when(compatibilityModeResolver.resolve()).thenReturn(A2aCompatibilityMode.CANONICAL);
         when(meta.getConnectionId()).thenReturn("TEST_CONNECTION_ID");
-
+        
         AgentEndpointResponse registerResponse = requestHandler.handle(request, meta);
-
+        
         assertEquals(ResponseCode.SUCCESS.getCode(), registerResponse.getResultCode());
         verify(canonicalEndpointOperationService).register("TEST_CONNECTION_ID", "public", "test",
             Collections.singletonList(request.getEndpoint()));
         verifyNoInteractions(clientOperationService, agentIdCodecHolder);
-
+        
         request.setType(AiRemoteConstants.DE_REGISTER_ENDPOINT);
         AgentEndpointResponse deregisterResponse = requestHandler.handle(request, meta);
-
+        
         assertEquals(ResponseCode.SUCCESS.getCode(), deregisterResponse.getResultCode());
         verify(canonicalEndpointOperationService).deregister("TEST_CONNECTION_ID", "public",
             "test", "1.0.0");
     }
-
+    
     @Test
     void handleCanonicalInvalidType() throws NacosException {
         AgentEndpointRequest request = request("INVALID_TYPE");
         when(compatibilityModeResolver.resolve()).thenReturn(A2aCompatibilityMode.CANONICAL);
-
+        
         AgentEndpointResponse response = requestHandler.handle(request, meta);
-
+        
         assertErrorResponse(response, NacosException.INVALID_PARAM,
             "parameter `type` should be registerEndpoint or deregisterEndpoint, but was INVALID_TYPE");
     }
-
+    
     private AgentEndpointRequest request(String type) {
         AgentEndpointRequest result = new AgentEndpointRequest();
         result.setNamespaceId("public");
@@ -241,13 +241,13 @@ class AgentEndpointRequestHandlerTest {
         result.setType(type);
         return result;
     }
-
+    
     private void assertErrorResponse(AgentEndpointResponse response, int code, String message) {
         assertEquals(ResponseCode.FAIL.getCode(), response.getResultCode());
         assertEquals(code, response.getErrorCode());
         assertEquals(message, response.getMessage());
     }
-
+    
     private void validateInstanceMetadata(Instance instance) {
         Map<String, String> metadata = instance.getMetadata();
         assertTrue(metadata.containsKey(Constants.Agent.AGENT_ENDPOINT_PATH_KEY));

@@ -31,7 +31,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @NacosWebBean
 public class CheckConfiguration {
-
+    
     @Bean
     public FilterRegistrationBean<ParamCheckerFilter> checkerFilterRegistration(
         ParamCheckerFilter checkerFilter) {
@@ -42,7 +42,7 @@ public class CheckConfiguration {
         registration.setOrder(8);
         return registration;
     }
-
+    
     @Bean
     public ParamCheckerFilter checkerFilter(ControllerMethodsCache methodsCache) {
         return new ParamCheckerFilter(methodsCache);

@@ -41,12 +41,12 @@ import static org.mockito.Mockito.when;
  * @author Nacos
  */
 class AiPipelinePluginProviderTest {
-
+    
     @Test
     void shouldExposeAiPipelinePluginType() {
         assertEquals(PluginType.AI_PIPELINE, new AiPipelinePluginProvider().getPluginType());
     }
-
+    
     @Test
     void shouldReturnManagerServiceInstances() {
         ApplicationContext applicationContext = mock(ApplicationContext.class);
@@ -64,15 +64,15 @@ class AiPipelinePluginProviderTest {
                 .thenReturn(applicationContext);
             applicationUtils.when(() -> ApplicationUtils.getBean(PublishPipelineManager.class))
                 .thenReturn(manager);
-
+            
             Map<String, PublishPipelineService> plugins =
                 new AiPipelinePluginProvider().getAllPlugins();
-
+            
             verify(manager).init();
             assertSame(service, plugins.get("scanner"));
         }
     }
-
+    
     @Test
     void shouldReturnEmptyWhenApplicationContextIsUnavailable() {
         try (MockedStatic<ApplicationUtils> applicationUtils =
@@ -80,7 +80,7 @@ class AiPipelinePluginProviderTest {
             assertTrue(new AiPipelinePluginProvider().getAllPlugins().isEmpty());
         }
     }
-
+    
     @Test
     void shouldReturnEmptyWhenManagerLookupFails() {
         try (MockedStatic<ApplicationUtils> applicationUtils =
@@ -89,7 +89,7 @@ class AiPipelinePluginProviderTest {
                 .thenReturn(mock(ApplicationContext.class));
             applicationUtils.when(() -> ApplicationUtils.getBean(PublishPipelineManager.class))
                 .thenThrow(new IllegalStateException("not ready"));
-
+            
             assertTrue(new AiPipelinePluginProvider().getAllPlugins().isEmpty());
         }
     }

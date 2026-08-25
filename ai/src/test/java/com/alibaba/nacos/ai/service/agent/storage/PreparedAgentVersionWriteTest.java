@@ -32,13 +32,13 @@ import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class PreparedAgentVersionWriteTest {
-
+    
     private static final String STORAGE_KEY =
         "public:agent-version:agent__enc-Nacos-032Agent__1.0.0-RC1.json";
-
+    
     private static final String DIFFERENT_DIGEST =
         "sha256:0000000000000000000000000000000000000000000000000000000000000000";
-
+    
     @Test
     void testReturnsDefensiveDescriptorAndByteCopies() {
         AgentVersionContentSerializer.SerializedContent encoded = encodedContent();
@@ -47,14 +47,14 @@ class PreparedAgentVersionWriteTest {
             new PreparedAgentVersionWrite(inputDescriptor, encoded);
         inputDescriptor.setProvider("tampered-input");
         inputDescriptor.setKey("tampered-input");
-
+        
         AgentVersionStorageDescriptor firstDescriptor = prepared.getDescriptor();
         byte[] firstBytes = prepared.getBytes();
         firstDescriptor.setProvider("tampered");
         firstDescriptor.setKey("tampered");
         firstDescriptor.setContentDigest(DIFFERENT_DIGEST);
         firstBytes[0] = (byte) (firstBytes[0] + 1);
-
+        
         AgentVersionStorageDescriptor secondDescriptor = prepared.getDescriptor();
         byte[] secondBytes = prepared.getBytes();
         assertNotSame(firstDescriptor, secondDescriptor);
@@ -66,45 +66,45 @@ class PreparedAgentVersionWriteTest {
         assertEquals(NacosConfigAiResourceStorage.TYPE, prepared.getStorageKey().getProvider());
         assertEquals(STORAGE_KEY, prepared.getStorageKey().getKey());
     }
-
+    
     @Test
     void testRejectsInvalidDescriptor() {
         AgentVersionContentSerializer.SerializedContent encoded = encodedContent();
         AgentVersionStorageDescriptor descriptor = descriptor(encoded);
         descriptor.setKey(null);
-
+        
         assertThrows(IllegalArgumentException.class,
             () -> new PreparedAgentVersionWrite(descriptor, encoded));
         assertThrows(IllegalArgumentException.class,
             () -> new PreparedAgentVersionWrite(null, encoded));
     }
-
+    
     @Test
     void testRejectsMismatchedSize() {
         AgentVersionContentSerializer.SerializedContent encoded = encodedContent();
         AgentVersionStorageDescriptor descriptor = descriptor(encoded);
         descriptor.setSize(descriptor.getSize() + 1);
-
+        
         assertThrows(IllegalArgumentException.class,
             () -> new PreparedAgentVersionWrite(descriptor, encoded));
     }
-
+    
     @Test
     void testRejectsMismatchedDigest() {
         AgentVersionContentSerializer.SerializedContent encoded = encodedContent();
         AgentVersionStorageDescriptor descriptor = descriptor(encoded);
         descriptor.setContentDigest(DIFFERENT_DIGEST);
-
+        
         assertThrows(IllegalArgumentException.class,
             () -> new PreparedAgentVersionWrite(descriptor, encoded));
     }
-
+    
     @Test
     void testRejectsNullSerializedContent() {
         assertThrows(IllegalArgumentException.class,
             () -> new PreparedAgentVersionWrite(descriptor(encodedContent()), null));
     }
-
+    
     private AgentVersionContentSerializer.SerializedContent encodedContent() {
         AgentCallInterface callInterface = new AgentCallInterface();
         callInterface.setProtocol("a2a");
@@ -115,7 +115,7 @@ class PreparedAgentVersionWriteTest {
             new AgentVersionContent(Collections.singletonList(callInterface));
         return AgentVersionContentSerializer.serialize(content);
     }
-
+    
     private AgentVersionStorageDescriptor descriptor(
         AgentVersionContentSerializer.SerializedContent encoded) {
         AgentVersionStorageDescriptor result = new AgentVersionStorageDescriptor();

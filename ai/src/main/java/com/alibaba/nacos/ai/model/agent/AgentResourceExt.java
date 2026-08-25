@@ -27,65 +27,65 @@ import java.util.Map;
  * @author Nacos
  */
 public class AgentResourceExt {
-
+    
     public static final int SCHEMA_VERSION = 1;
-
+    
     private Integer schemaVersion;
-
+    
     private String displayName;
-
+    
     private String iconUrl;
-
+    
     private AgentProvider provider;
-
+    
     private Map<String, Object> extensions;
-
+    
     private AgentVersionCatalog versionCatalog;
-
+    
     public Integer getSchemaVersion() {
         return schemaVersion;
     }
-
+    
     public void setSchemaVersion(Integer schemaVersion) {
         this.schemaVersion = schemaVersion;
     }
-
+    
     public String getDisplayName() {
         return displayName;
     }
-
+    
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
     }
-
+    
     public String getIconUrl() {
         return iconUrl;
     }
-
+    
     public void setIconUrl(String iconUrl) {
         this.iconUrl = iconUrl;
     }
-
+    
     public AgentProvider getProvider() {
         return provider;
     }
-
+    
     public void setProvider(AgentProvider provider) {
         this.provider = provider;
     }
-
+    
     public Map<String, Object> getExtensions() {
         return extensions;
     }
-
+    
     public void setExtensions(Map<String, Object> extensions) {
         this.extensions = extensions;
     }
-
+    
     public AgentVersionCatalog getVersionCatalog() {
         return versionCatalog;
     }
-
+    
     public void setVersionCatalog(AgentVersionCatalog versionCatalog) {
         this.versionCatalog = versionCatalog;
     }

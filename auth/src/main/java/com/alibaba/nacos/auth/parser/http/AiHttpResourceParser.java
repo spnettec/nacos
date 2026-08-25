@@ -31,6 +31,7 @@ import static com.alibaba.nacos.plugin.auth.constant.Constants.Resource.AI_TYPE_
 import static com.alibaba.nacos.plugin.auth.constant.Constants.Resource.AI_TYPE_ARD;
 import static com.alibaba.nacos.plugin.auth.constant.Constants.Resource.AI_TYPE_MCP;
 import static com.alibaba.nacos.plugin.auth.constant.Constants.Resource.AI_TYPE_PROMPT;
+import static com.alibaba.nacos.plugin.auth.constant.Constants.Resource.AI_TYPE_RESOURCE;
 import static com.alibaba.nacos.plugin.auth.constant.Constants.Resource.AI_TYPE_SKILL;
 
 /**
@@ -39,25 +40,27 @@ import static com.alibaba.nacos.plugin.auth.constant.Constants.Resource.AI_TYPE_
  * @author xiweng.yy
  */
 public class AiHttpResourceParser extends AbstractHttpResourceParser {
-
+    
     public static final String MCP_PATH = "/ai/mcp";
-
+    
     public static final String A2A_PATH = "/ai/a2a";
-
+    
     public static final String AGENT_PATH = "/ai/agents";
-
+    
     public static final String SKILL_PATH = "/ai/skills";
-
+    
     public static final String PROMPT_PATH = "/ai/prompt";
-
+    
     public static final String AGENT_SPEC_PATH = "/ai/agentspecs";
-
+    
+    public static final String AI_RESOURCE_PATH = "/ai/resources";
+    
     private static final String AGENT_SPEC_LIST_PATH = AGENT_SPEC_PATH + "/list";
-
+    
     public static final String ARD_PATH = "/ai/ard";
-
+    
     private static final String AGENT_CARD_PARAM = "agentCard";
-
+    
     @Override
     protected String getNamespaceId(HttpServletRequest request) {
         String namespaceId = request.getParameter(Constants.NAMESPACE_ID);
@@ -66,12 +69,12 @@ public class AiHttpResourceParser extends AbstractHttpResourceParser {
         }
         return namespaceId;
     }
-
+    
     @Override
     protected String getGroup(HttpServletRequest request) {
         return Constants.DEFAULT_GROUP;
     }
-
+    
     @Override
     protected String getResourceName(HttpServletRequest request) {
         String url = request.getRequestURI();
@@ -87,17 +90,19 @@ public class AiHttpResourceParser extends AbstractHttpResourceParser {
             return getPromptName(request);
         } else if (isAgentSpecPath(url)) {
             return getAgentSpecName(request);
+        } else if (isAiResourcePath(url)) {
+            return StringUtils.EMPTY;
         } else if (url.contains(ARD_PATH)) {
             return getArdResourceName(request);
         }
         return StringUtils.EMPTY;
     }
-
+    
     private String getMcpName(HttpServletRequest request) {
         String mcpName = request.getParameter("mcpName");
         return StringUtils.isBlank(mcpName) ? StringUtils.EMPTY : mcpName;
     }
-
+    
     private String getA2aAgentName(HttpServletRequest request) {
         String agentName = request.getParameter("agentName");
         if (request.getParameterMap().containsKey(AGENT_CARD_PARAM)) {
@@ -105,12 +110,12 @@ public class AiHttpResourceParser extends AbstractHttpResourceParser {
         }
         return StringUtils.isBlank(agentName) ? StringUtils.EMPTY : agentName;
     }
-
+    
     private String getAgentName(HttpServletRequest request) {
         String agentName = request.getParameter("agentName");
         return StringUtils.isBlank(agentName) ? StringUtils.EMPTY : agentName;
     }
-
+    
     private String deserializeAndGetAgentName(String agentCardJson) {
         try {
             AgentCard agentCard = JacksonUtils.toObj(agentCardJson, AgentCard.class);
@@ -119,17 +124,17 @@ public class AiHttpResourceParser extends AbstractHttpResourceParser {
             return StringUtils.EMPTY;
         }
     }
-
+    
     private String getSkillName(HttpServletRequest request) {
         String skillName = request.getParameter("skillName");
         return StringUtils.isBlank(skillName) ? StringUtils.EMPTY : skillName;
     }
-
+    
     private String getPromptName(HttpServletRequest request) {
         String promptKey = request.getParameter("promptKey");
         return StringUtils.isBlank(promptKey) ? StringUtils.EMPTY : promptKey;
     }
-
+    
     private String getAgentSpecName(HttpServletRequest request) {
         if (containsCompletePath(request.getRequestURI(), AGENT_SPEC_LIST_PATH)) {
             return StringUtils.EMPTY;
@@ -137,12 +142,12 @@ public class AiHttpResourceParser extends AbstractHttpResourceParser {
         String agentSpecName = request.getParameter("agentSpecName");
         return StringUtils.isBlank(agentSpecName) ? StringUtils.EMPTY : agentSpecName;
     }
-
+    
     private String getArdResourceName(HttpServletRequest request) {
         String resourceName = request.getParameter("resourceName");
         return StringUtils.isBlank(resourceName) ? StringUtils.EMPTY : resourceName;
     }
-
+    
     @Override
     protected Properties getProperties(HttpServletRequest request) {
         Properties properties = new Properties();
@@ -157,20 +162,26 @@ public class AiHttpResourceParser extends AbstractHttpResourceParser {
             properties.setProperty(AI_TYPE, AI_TYPE_PROMPT);
         } else if (isAgentSpecPath(url)) {
             properties.setProperty(AI_TYPE, AI_TYPE_AGENT_SPEC);
+        } else if (isAiResourcePath(url)) {
+            properties.setProperty(AI_TYPE, AI_TYPE_RESOURCE);
         } else if (url.contains(ARD_PATH)) {
             properties.setProperty(AI_TYPE, AI_TYPE_ARD);
         }
         return properties;
     }
-
+    
     private boolean isAgentPath(String url) {
         return containsCompletePath(url, AGENT_PATH);
     }
-
+    
     private boolean isAgentSpecPath(String url) {
         return containsCompletePath(url, AGENT_SPEC_PATH);
     }
-
+    
+    private boolean isAiResourcePath(String url) {
+        return containsCompletePath(url, AI_RESOURCE_PATH);
+    }
+    
     private boolean containsCompletePath(String url, String path) {
         int index = url.indexOf(path);
         if (index < 0) {

@@ -38,81 +38,81 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AgentCardUtilTest {
-
+    
     @Test
     void testBuildAgentCardDetailInfo() {
         // Given
         AgentCard agentCard = createTestAgentCard();
         String registrationType = AiConstants.A2a.A2A_ENDPOINT_TYPE_SERVICE;
-
+        
         // When
         AgentCardDetailInfo result =
             AgentCardUtil.buildAgentCardDetailInfo(agentCard, registrationType);
-
+        
         // Then
         assertNotNull(result);
         assertEquals(registrationType, result.getRegistrationType());
         assertAgentCardEquals(agentCard, result);
     }
-
+    
     @Test
     void testBuildAgentCardVersionInfoWithLatest() {
         // Given
         AgentCard agentCard = createTestAgentCard();
         String registrationType = AiConstants.A2a.A2A_ENDPOINT_TYPE_SERVICE;
         boolean isLatest = true;
-
+        
         // When
         AgentCardVersionInfo result =
             AgentCardUtil.buildAgentCardVersionInfo(agentCard, registrationType, isLatest);
-
+        
         // Then
         assertNotNull(result);
         assertEquals(registrationType, result.getRegistrationType());
         assertEquals(agentCard.getVersion(), result.getLatestPublishedVersion());
         assertNotNull(result.getVersionDetails());
         assertEquals(1, result.getVersionDetails().size());
-
+        
         AgentVersionDetail versionDetail = result.getVersionDetails().get(0);
         assertEquals(agentCard.getVersion(), versionDetail.getVersion());
         assertTrue(versionDetail.isLatest());
         assertNotNull(versionDetail.getCreatedAt());
         assertNotNull(versionDetail.getUpdatedAt());
     }
-
+    
     @Test
     void testBuildAgentCardVersionInfoWithoutLatest() {
         // Given
         AgentCard agentCard = createTestAgentCard();
         String registrationType = AiConstants.A2a.A2A_ENDPOINT_TYPE_SERVICE;
         boolean isLatest = false;
-
+        
         // When
         AgentCardVersionInfo result =
             AgentCardUtil.buildAgentCardVersionInfo(agentCard, registrationType, isLatest);
-
+        
         // Then
         assertNotNull(result);
         assertEquals(registrationType, result.getRegistrationType());
         assertNotNull(result.getVersionDetails());
         assertEquals(1, result.getVersionDetails().size());
-
+        
         AgentVersionDetail versionDetail = result.getVersionDetails().get(0);
         assertEquals(agentCard.getVersion(), versionDetail.getVersion());
         assertEquals(isLatest, versionDetail.isLatest());
         assertNotNull(versionDetail.getCreatedAt());
         assertNotNull(versionDetail.getUpdatedAt());
     }
-
+    
     @Test
     void testBuildAgentVersionDetail() {
         // Given
         AgentCard agentCard = createTestAgentCard();
         boolean isLatest = true;
-
+        
         // When
         AgentVersionDetail result = AgentCardUtil.buildAgentVersionDetail(agentCard, isLatest);
-
+        
         // Then
         assertNotNull(result);
         assertEquals(agentCard.getVersion(), result.getVersion());
@@ -120,167 +120,167 @@ class AgentCardUtilTest {
         assertNotNull(result.getCreatedAt());
         assertNotNull(result.getUpdatedAt());
     }
-
+    
     @Test
     void testUpdateUpdateTime() {
         // Given
         AgentVersionDetail versionDetail = new AgentVersionDetail();
         versionDetail.setUpdatedAt("2023-01-01T00:00:00Z");
-
+        
         // When
         AgentCardUtil.updateUpdateTime(versionDetail);
-
+        
         // Then
         assertNotNull(versionDetail.getUpdatedAt());
         // We can't assert exact value since it's based on current time, but we can ensure it's not null
     }
-
+    
     @Test
     void testBuildAgentInterfaceWithTlsSupport() {
         // Given
         Instance instance = new Instance();
         instance.setIp("127.0.0.1");
         instance.setPort(8080);
-
+        
         Map<String, String> metadata = new HashMap<>();
         metadata.put(Constants.Agent.AGENT_ENDPOINT_SUPPORT_TLS_KEY, "true");
         metadata.put(Constants.Agent.AGENT_ENDPOINT_TRANSPORT_KEY, "JSONRPC");
         metadata.put(Constants.Agent.AGENT_ENDPOINT_PATH_KEY, "/agent");
         instance.setMetadata(metadata);
-
+        
         // When
         AgentInterface result = AgentCardUtil.buildAgentInterface(instance);
-
+        
         // Then
         assertNotNull(result);
         assertEquals("https://127.0.0.1:8080/agent", result.getUrl());
         assertEquals("JSONRPC", result.getTransport());
         assertEquals("JSONRPC", result.getProtocolBinding());
     }
-
+    
     @Test
     void testBuildAgentInterfaceWithoutTlsSupport() {
         // Given
         Instance instance = new Instance();
         instance.setIp("127.0.0.1");
         instance.setPort(8080);
-
+        
         Map<String, String> metadata = new HashMap<>();
         metadata.put(Constants.Agent.AGENT_ENDPOINT_SUPPORT_TLS_KEY, "false");
         metadata.put(Constants.Agent.AGENT_ENDPOINT_TRANSPORT_KEY, "JSONRPC");
         metadata.put(Constants.Agent.AGENT_ENDPOINT_PATH_KEY, "/agent");
         instance.setMetadata(metadata);
-
+        
         // When
         AgentInterface result = AgentCardUtil.buildAgentInterface(instance);
-
+        
         // Then
         assertNotNull(result);
         assertEquals("http://127.0.0.1:8080/agent", result.getUrl());
         assertEquals("JSONRPC", result.getTransport());
         assertEquals("JSONRPC", result.getProtocolBinding());
     }
-
+    
     @Test
     void testBuildAgentInterfaceWithoutPath() {
         // Given
         Instance instance = new Instance();
         instance.setIp("127.0.0.1");
         instance.setPort(8080);
-
+        
         Map<String, String> metadata = new HashMap<>();
         metadata.put(Constants.Agent.AGENT_ENDPOINT_SUPPORT_TLS_KEY, "false");
         metadata.put(Constants.Agent.AGENT_ENDPOINT_TRANSPORT_KEY, "JSONRPC");
         instance.setMetadata(metadata);
-
+        
         // When
         AgentInterface result = AgentCardUtil.buildAgentInterface(instance);
-
+        
         // Then
         assertNotNull(result);
         assertEquals("http://127.0.0.1:8080", result.getUrl());
         assertEquals("JSONRPC", result.getTransport());
         assertEquals("JSONRPC", result.getProtocolBinding());
     }
-
+    
     @Test
     void testBuildAgentInterfaceWithPathWithoutLeadingSlash() {
         // Given
         Instance instance = new Instance();
         instance.setIp("127.0.0.1");
         instance.setPort(8080);
-
+        
         Map<String, String> metadata = new HashMap<>();
         metadata.put(Constants.Agent.AGENT_ENDPOINT_SUPPORT_TLS_KEY, "false");
         metadata.put(Constants.Agent.AGENT_ENDPOINT_TRANSPORT_KEY, "JSONRPC");
         metadata.put(Constants.Agent.AGENT_ENDPOINT_PATH_KEY, "agent");
         instance.setMetadata(metadata);
-
+        
         // When
         AgentInterface result = AgentCardUtil.buildAgentInterface(instance);
-
+        
         // Then
         assertNotNull(result);
         assertEquals("http://127.0.0.1:8080/agent", result.getUrl());
         assertEquals("JSONRPC", result.getTransport());
         assertEquals("JSONRPC", result.getProtocolBinding());
     }
-
+    
     @Test
     void testBuildAgentInterfaceWithProtocolField() {
         // Given
         Instance instance = new Instance();
         instance.setIp("127.0.0.1");
         instance.setPort(8080);
-
+        
         Map<String, String> metadata = new HashMap<>();
         metadata.put(Constants.Agent.AGENT_ENDPOINT_SUPPORT_TLS_KEY, "false");
         metadata.put(Constants.Agent.AGENT_ENDPOINT_TRANSPORT_KEY, "GRPC");
         metadata.put(Constants.Agent.AGENT_ENDPOINT_PATH_KEY, "/agent");
         metadata.put(Constants.Agent.AGENT_ENDPOINT_PROTOCOL_KEY, "grpc");
         instance.setMetadata(metadata);
-
+        
         // When
         AgentInterface result = AgentCardUtil.buildAgentInterface(instance);
-
+        
         // Then
         assertNotNull(result);
         assertEquals("grpc://127.0.0.1:8080/agent", result.getUrl());
         assertEquals("GRPC", result.getTransport());
         assertEquals("GRPC", result.getProtocolBinding());
     }
-
+    
     @Test
     void testBuildAgentInterfaceWithQueryField() {
         // Given
         Instance instance = new Instance();
         instance.setIp("127.0.0.1");
         instance.setPort(8080);
-
+        
         Map<String, String> metadata = new HashMap<>();
         metadata.put(Constants.Agent.AGENT_ENDPOINT_SUPPORT_TLS_KEY, "false");
         metadata.put(Constants.Agent.AGENT_ENDPOINT_TRANSPORT_KEY, "JSONRPC");
         metadata.put(Constants.Agent.AGENT_ENDPOINT_PATH_KEY, "/agent");
         metadata.put(Constants.Agent.AGENT_ENDPOINT_QUERY_KEY, "param1=value1&param2=value2");
         instance.setMetadata(metadata);
-
+        
         // When
         AgentInterface result = AgentCardUtil.buildAgentInterface(instance);
-
+        
         // Then
         assertNotNull(result);
         assertEquals("http://127.0.0.1:8080/agent?param1=value1&param2=value2", result.getUrl());
         assertEquals("JSONRPC", result.getTransport());
         assertEquals("JSONRPC", result.getProtocolBinding());
     }
-
+    
     @Test
     void testBuildAgentInterfaceWithProtocolAndQueryFields() {
         // Given
         Instance instance = new Instance();
         instance.setIp("127.0.0.1");
         instance.setPort(8080);
-
+        
         Map<String, String> metadata = new HashMap<>();
         metadata.put(Constants.Agent.AGENT_ENDPOINT_SUPPORT_TLS_KEY, "true");
         metadata.put(Constants.Agent.AGENT_ENDPOINT_TRANSPORT_KEY, "JSONRPC");
@@ -288,17 +288,17 @@ class AgentCardUtilTest {
         metadata.put(Constants.Agent.AGENT_ENDPOINT_PROTOCOL_KEY, "https");
         metadata.put(Constants.Agent.AGENT_ENDPOINT_QUERY_KEY, "token=abc123");
         instance.setMetadata(metadata);
-
+        
         // When
         AgentInterface result = AgentCardUtil.buildAgentInterface(instance);
-
+        
         // Then
         assertNotNull(result);
         assertEquals("https://127.0.0.1:8080/agent?token=abc123", result.getUrl());
         assertEquals("JSONRPC", result.getTransport());
         assertEquals("JSONRPC", result.getProtocolBinding());
     }
-
+    
     @Test
     void testBuildAgentInterfaceWithEmptyMetadata() {
         // Given
@@ -306,16 +306,16 @@ class AgentCardUtilTest {
         instance.setIp("127.0.0.1");
         instance.setPort(8080);
         instance.setMetadata(Collections.emptyMap());
-
+        
         // When
         AgentInterface result = AgentCardUtil.buildAgentInterface(instance);
-
+        
         // Then
         assertNotNull(result);
         assertEquals("http://127.0.0.1:8080", result.getUrl());
         assertEquals(null, result.getTransport());
     }
-
+    
     @Test
     void testBuildAgentInterfaceWithProtocolVersionAndTenant() {
         Instance instance = new Instance();
@@ -331,7 +331,7 @@ class AgentCardUtilTest {
         assertEquals("1.0", result.getProtocolVersion());
         assertEquals("public", result.getTenant());
     }
-
+    
     @Test
     void testGetCurrentTimeDoesNotThrow() {
         // This test ensures the private method getCurrentTime works without exceptions
@@ -342,7 +342,7 @@ class AgentCardUtilTest {
             assertNotNull(versionDetail.getUpdatedAt());
         });
     }
-
+    
     private AgentCard createTestAgentCard() {
         AgentCard agentCard = new AgentCard();
         agentCard.setProtocolVersion("1.0");
@@ -368,7 +368,7 @@ class AgentCardUtilTest {
         agentCard.setSupportsAuthenticatedExtendedCard(false);
         return agentCard;
     }
-
+    
     private void assertAgentCardEquals(AgentCard expected, AgentCard actual) {
         assertEquals(expected.getProtocolVersion(), actual.getProtocolVersion());
         assertEquals(expected.getName(), actual.getName());

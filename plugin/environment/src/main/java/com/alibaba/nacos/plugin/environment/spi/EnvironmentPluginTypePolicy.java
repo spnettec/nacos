@@ -26,15 +26,15 @@ import com.alibaba.nacos.api.plugin.PluginTypePolicy;
  * @author Nacos
  */
 public class EnvironmentPluginTypePolicy implements PluginTypePolicy {
-
+    
     public static final String ENVIRONMENT_ENABLED_PROPERTY =
         "nacos.custom.environment.enabled";
-
+    
     @Override
     public PluginType getPluginType() {
         return PluginType.ENVIRONMENT;
     }
-
+    
     @Override
     public boolean isLoadingEnabled(PluginTypeConfiguration configuration) {
         return configuration.getBooleanProperty(ENVIRONMENT_ENABLED_PROPERTY, false);

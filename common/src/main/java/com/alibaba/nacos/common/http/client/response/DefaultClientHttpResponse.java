@@ -29,22 +29,22 @@ import java.io.InputStream;
  * @author mai.jh
  */
 public class DefaultClientHttpResponse implements HttpClientResponse {
-
+    
     private SimpleHttpResponse response;
-
+    
     private InputStream responseStream;
-
+    
     private Header responseHeader;
-
+    
     public DefaultClientHttpResponse(SimpleHttpResponse response) {
         this.response = response;
     }
-
+    
     @Override
     public int getStatusCode() {
         return this.response.getCode();
     }
-
+    
     public Header getHeaders() {
         if (this.responseHeader == null) {
             this.responseHeader = Header.newInstance();
@@ -55,7 +55,7 @@ public class DefaultClientHttpResponse implements HttpClientResponse {
         }
         return this.responseHeader;
     }
-
+    
     @Override
     public InputStream getBody() {
         byte[] bodyBytes = response.getBody().getBodyBytes();
@@ -66,7 +66,7 @@ public class DefaultClientHttpResponse implements HttpClientResponse {
         }
         return this.responseStream;
     }
-
+    
     @Override
     public void close() {
         IoUtils.closeQuietly(this.responseStream);

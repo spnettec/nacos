@@ -32,27 +32,27 @@ import org.springframework.stereotype.Component;
 @Component
 public class StandardPluginInitializer
     implements PluginInitializer, ApplicationListener<ApplicationReadyEvent> {
-
+    
     private final PluginManager pluginManager;
-
+    
     private final ObjectProvider<PluginStateSynchronizer> synchronizerProvider;
-
+    
     public StandardPluginInitializer(PluginManager pluginManager) {
         this(pluginManager, null);
     }
-
+    
     @Autowired
     public StandardPluginInitializer(PluginManager pluginManager,
         ObjectProvider<PluginStateSynchronizer> synchronizerProvider) {
         this.pluginManager = pluginManager;
         this.synchronizerProvider = synchronizerProvider;
     }
-
+    
     @Override
     public PluginInitializationPhase getInitializationPhase() {
         return PluginInitializationPhase.STANDARD;
     }
-
+    
     @Override
     public void initialize() {
         pluginManager.initialize();
@@ -64,7 +64,7 @@ public class StandardPluginInitializer
             synchronizer.initialize();
         }
     }
-
+    
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
         initialize();

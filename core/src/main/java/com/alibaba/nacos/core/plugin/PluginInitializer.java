@@ -24,14 +24,14 @@ import com.alibaba.nacos.api.plugin.PluginInitializationPhase;
  * @author Nacos
  */
 public interface PluginInitializer {
-
+    
     /**
      * Get the phase handled by this initializer.
      *
      * @return initialization phase
      */
     PluginInitializationPhase getInitializationPhase();
-
+    
     /**
      * Initialize plugins for the handled phase.
      */

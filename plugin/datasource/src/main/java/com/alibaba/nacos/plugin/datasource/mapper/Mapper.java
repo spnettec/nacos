@@ -25,12 +25,12 @@ import java.util.List;
  **/
 
 public interface Mapper {
-
+    
     /**
      * The LIKE escape clause for the dialects which have no default escape character.
      */
     String LIKE_ESCAPE_CLAUSE = "ESCAPE '\\' ";
-
+    
     /**
      * The select method contains columns and where params.
      * @param columns The columns
@@ -38,14 +38,14 @@ public interface Mapper {
      * @return The sql of select
      */
     String select(List<String> columns, List<String> where);
-
+    
     /**
      * The insert method contains columns.
      * @param columns The columns
      * @return The sql of insert
      */
     String insert(List<String> columns);
-
+    
     /**
      * The update method contains columns and where params.
      * @param columns The columns
@@ -53,14 +53,14 @@ public interface Mapper {
      * @return The sql of update
      */
     String update(List<String> columns, List<String> where);
-
+    
     /**
      * The delete method contains.
      * @param params The params
      * @return The sql of delete
      */
     String delete(List<String> params);
-
+    
     /**
      * The count method contains where params.
      *
@@ -68,19 +68,19 @@ public interface Mapper {
      * @return The sql of count
      */
     String count(List<String> where);
-
+    
     /**
      * Get the name of table.
      * @return The name of table.
      */
     String getTableName();
-
+    
     /**
      * Get the datasource name.
      * @return The name of datasource.
      */
     String getDataSource();
-
+    
     /**
      * Get config_info table primary keys name.
      * The old default value: Statement.RETURN_GENERATED_KEYS
@@ -88,7 +88,7 @@ public interface Mapper {
      * @return an array of column names indicating the columns
      */
     String[] getPrimaryKeyGeneratedKeys();
-
+    
     /**
      * Get function by functionName.
      *
@@ -96,7 +96,7 @@ public interface Mapper {
      * @return function
      */
     String getFunction(String functionName);
-
+    
     /**
      * Get the LIKE escape clause required by the datasource of this mapper.
      *

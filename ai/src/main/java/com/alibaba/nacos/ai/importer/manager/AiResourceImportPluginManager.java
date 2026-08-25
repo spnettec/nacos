@@ -48,29 +48,29 @@ import java.util.function.Supplier;
  */
 @Service
 public class AiResourceImportPluginManager {
-
+    
     private static final Logger LOGGER =
         LoggerFactory.getLogger(AiResourceImportPluginManager.class);
-
+    
     private static final List<String> DEFAULT_CAPABILITIES =
         List.of("search", "validate", "execute");
-
+    
     private final Supplier<Collection<AiResourceImportServiceBuilder>> buildersSupplier;
-
+    
     private Supplier<AiResourceImportProperties> propertiesSupplier;
-
+    
     private volatile Map<String, AiResourceImportServiceBuilder> builders;
-
+    
     public AiResourceImportPluginManager() {
         this(() -> NacosServiceLoader.load(AiResourceImportServiceBuilder.class));
     }
-
+    
     AiResourceImportPluginManager(
         Supplier<Collection<AiResourceImportServiceBuilder>> buildersSupplier) {
         this.buildersSupplier = buildersSupplier;
         this.propertiesSupplier = AiResourceImportProperties::loadFromEnvironment;
     }
-
+    
     /**
      * Load stable builder instances when the unified plugin provider is activated.
      *
@@ -92,7 +92,7 @@ public class AiResourceImportPluginManager {
         builders = Collections.unmodifiableMap(result);
         return builders;
     }
-
+    
     /**
      * List enabled import sources from managed builder metadata.
      *
@@ -113,7 +113,7 @@ public class AiResourceImportPluginManager {
         }
         return result;
     }
-
+    
     /**
      * Resolve an enabled managed builder.
      *
@@ -143,30 +143,30 @@ public class AiResourceImportPluginManager {
         }
         return result;
     }
-
+    
     private Map<String, AiResourceImportServiceBuilder> getLoadedPlugins() {
         Map<String, AiResourceImportServiceBuilder> result = builders;
         return result == null ? Collections.emptyMap() : result;
     }
-
+    
     private void requireModuleEnabled() throws NacosException {
         if (!propertiesSupplier.get().isEnabled()) {
             throw new NacosApiException(NacosException.SERVER_NOT_IMPLEMENTED,
                 ErrorCode.API_FUNCTION_DISABLED, "AI resource import is disabled.");
         }
     }
-
+    
     private boolean isPluginEnabled(String pluginName) {
         return PluginStateCheckerHolder.isPluginEnabled(
             PluginType.AI_RESOURCE_IMPORT.getType(), pluginName);
     }
-
+    
     private boolean supportsResourceType(AiResourceImportServiceBuilder builder,
         String resourceType) {
         return StringUtils.isBlank(resourceType)
             || builder.supportedResourceTypes().contains(resourceType);
     }
-
+    
     private AiResourceImportSourceInfo toSourceInfo(AiResourceImportServiceBuilder builder) {
         AiResourceImportSourceInfo result = new AiResourceImportSourceInfo();
         result.setSourceId(builder.pluginName());

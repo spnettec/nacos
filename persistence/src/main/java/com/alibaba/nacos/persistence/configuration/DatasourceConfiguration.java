@@ -58,7 +58,8 @@ public class DatasourceConfiguration
     
     private void loadDatasourceConfiguration(ConfigurableApplicationContext applicationContext) {
         // External data sources are used by default in cluster mode
-        String platform = DatasourcePlatformUtil.getDatasourcePlatform(applicationContext.getEnvironment(), "");
+        String platform =
+            DatasourcePlatformUtil.getDatasourcePlatform(applicationContext.getEnvironment(), "");
         boolean useExternalStorage =
             !PersistenceConstant.EMPTY_DATASOURCE_PLATFORM.equalsIgnoreCase(platform)
                 && !PersistenceConstant.DERBY

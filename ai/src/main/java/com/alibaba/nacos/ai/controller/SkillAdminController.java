@@ -78,13 +78,13 @@ import static com.alibaba.nacos.plugin.auth.constant.Constants.Tag.ALLOW_ANONYMO
 @RequestMapping(Constants.Skills.ADMIN_PATH)
 @ExtractorManager.Extractor(httpExtractor = SkillHttpParamExtractor.class)
 public class SkillAdminController {
-
+    
     private final SkillOperationService skillOperationService;
-
+    
     public SkillAdminController(SkillOperationService skillOperationService) {
         this.skillOperationService = skillOperationService;
     }
-
+    
     /**
      * Get skill detail for admin (includes version governance info and all version summaries).
      *
@@ -100,7 +100,7 @@ public class SkillAdminController {
         return Result.success(
             skillOperationService.getSkillDetail(form.getNamespaceId(), form.getSkillName()));
     }
-
+    
     /**
      * Get specific version detail of a skill for viewing or editing.
      *
@@ -117,7 +117,7 @@ public class SkillAdminController {
             skillOperationService.getSkillVersionDetail(form.getNamespaceId(), form.getSkillName(),
                 form.getVersion()));
     }
-
+    
     /**
      * Download a specific version of a skill as ZIP file.
      *
@@ -135,7 +135,7 @@ public class SkillAdminController {
                 form.getVersion());
         return SkillRequestUtil.buildSkillZipResponse(skill);
     }
-
+    
     /**
      * Delete skill.
      *
@@ -151,7 +151,7 @@ public class SkillAdminController {
         skillOperationService.deleteSkill(form.getNamespaceId(), form.getSkillName());
         return Result.success("ok");
     }
-
+    
     /**
      * List skills for admin (includes governance metadata: status, tags, labels, etc.).
      *
@@ -177,13 +177,14 @@ public class SkillAdminController {
                 filterableForm.getOwner(), filterableForm.getScope(), filterableForm.getBizTag(),
                 pageForm.getPageNo(), pageForm.getPageSize()));
     }
-
+    
     /**
      * Upload skill from zip file.
      *
      * @param request     HTTP servlet request
      * @param namespaceId namespace ID
      * @param commitMsg   version-level commit message
+     * @param autoPublishIfNew whether to publish the first uploaded version automatically
      * @param file        zip file containing skill
      * @return result of the upload operation
      * @throws NacosException if the upload fails
@@ -199,6 +200,8 @@ public class SkillAdminController {
         @RequestParam(value = "targetVersion", required = false) String targetVersion,
         @RequestParam(value = "commitMsg", required = false) String commitMsg,
         @RequestParam(value = "uploadAction", required = false) String uploadAction,
+        @RequestParam(value = "autoPublishIfNew", required = false,
+            defaultValue = "false") boolean autoPublishIfNew,
         @RequestParam("file") MultipartFile file) throws NacosException {
         namespaceId = NamespaceUtil.processNamespaceParameter(namespaceId);
         byte[] zipBytes = SkillRequestUtil.validateAndExtractZipBytes(file);
@@ -209,11 +212,12 @@ public class SkillAdminController {
             .targetVersion(targetVersion)
             .commitMsg(commitMsg)
             .uploadAction(uploadAction)
+            .autoPublishIfNew(autoPublishIfNew)
             .build();
         String skillName = skillOperationService.uploadSkillFromZip(uploadRequest);
         return Result.success(skillName);
     }
-
+    
     /**
      * Precheck one or more skill uploads from a zip file.
      *
@@ -236,7 +240,7 @@ public class SkillAdminController {
         return Result.success(
             skillOperationService.precheckUploadSkillFromZip(namespaceId, zipBytes));
     }
-
+    
     /**
      * Batch upload multiple skills from a single zip file. The zip must contain one-level subdirectories,
      * each with its own SKILL.md. Uses best-effort strategy.
@@ -263,7 +267,7 @@ public class SkillAdminController {
             skillOperationService.batchUploadSkillsFromZip(namespaceId, zipBytes, overwrite);
         return Result.success(result);
     }
-
+    
     /**
      * Create draft: {@code skillCard} required unless {@code basedOnVersion} is set (fork from existing version).
      */
@@ -277,7 +281,7 @@ public class SkillAdminController {
             form.getCommitMsg());
         return Result.success(v);
     }
-
+    
     /**
      * Update current draft content.
      */
@@ -290,7 +294,7 @@ public class SkillAdminController {
         skillOperationService.updateDraft(form.getNamespaceId(), skill, form.getCommitMsg());
         return Result.success("ok");
     }
-
+    
     /**
      * Delete current draft version.
      */
@@ -302,7 +306,7 @@ public class SkillAdminController {
         skillOperationService.deleteDraft(form.getNamespaceId(), form.getSkillName());
         return Result.success("ok");
     }
-
+    
     /**
      * Submit a version for pipeline review.
      */
@@ -315,7 +319,7 @@ public class SkillAdminController {
             form.getVersion());
         return Result.success(result);
     }
-
+    
     /**
      * Publish an approved reviewing version.
      */
@@ -328,7 +332,7 @@ public class SkillAdminController {
             true);
         return Result.success("ok");
     }
-
+    
     /**
      * Force-publish a skill version, bypassing pipeline validation. Accepts draft, reviewing, and reviewed versions.
      * Only admin users can call this endpoint.
@@ -344,7 +348,7 @@ public class SkillAdminController {
             form.getVersion(), true);
         return Result.success("ok");
     }
-
+    
     /**
      * Re-edit a reviewed version, transitioning it back to draft for modification.
      */
@@ -357,7 +361,7 @@ public class SkillAdminController {
             form.getVersion());
         return Result.success("ok");
     }
-
+    
     /**
      * Update runtime route labels without changing version status.
      */
@@ -370,7 +374,7 @@ public class SkillAdminController {
         skillOperationService.updateLabels(form.getNamespaceId(), form.getSkillName(), labels);
         return Result.success("ok");
     }
-
+    
     /**
      * Update skill biz tags without changing version status.
      */
@@ -383,7 +387,7 @@ public class SkillAdminController {
             form.getBizTags());
         return Result.success("ok");
     }
-
+    
     /**
      * Online operation (version-level or skill-level by scope).
      */
@@ -397,7 +401,7 @@ public class SkillAdminController {
             form.getVersion(), true);
         return Result.success("ok");
     }
-
+    
     /**
      * Update skill visibility scope (PUBLIC or PRIVATE).
      *
@@ -414,7 +418,7 @@ public class SkillAdminController {
             form.getScope());
         return Result.success("ok");
     }
-
+    
     /**
      * Offline operation (version-level or skill-level by scope).
      */

@@ -92,26 +92,26 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @SuppressWarnings("all")
 public class JRaftProtocol extends AbstractConsistencyProtocol<RaftConfig, RequestProcessor4CP>
     implements CPProtocol<RaftConfig, RequestProcessor4CP> {
-
+    
     private final AtomicBoolean initialized = new AtomicBoolean(false);
-
+    
     private final AtomicBoolean shutdowned = new AtomicBoolean(false);
-
+    
     private RaftConfig raftConfig;
-
+    
     private JRaftServer raftServer;
-
+    
     private JRaftMaintainService jRaftMaintainService;
-
+    
     private ServerMemberManager memberManager;
-
+    
     public JRaftProtocol(ServerMemberManager memberManager,
         JRaftAuthUpgradeCoordinator jRaftAuthUpgradeCoordinator) throws Exception {
         this.memberManager = memberManager;
         this.raftServer = new JRaftServer(jRaftAuthUpgradeCoordinator);
         this.jRaftMaintainService = new JRaftMaintainService(raftServer);
     }
-
+    
     @Override
     public void init(RaftConfig config) {
         if (initialized.compareAndSet(false, true)) {
@@ -119,11 +119,11 @@ public class JRaftProtocol extends AbstractConsistencyProtocol<RaftConfig, Reque
             NotifyCenter.registerToSharePublisher(RaftEvent.class);
             this.raftServer.init(this.raftConfig);
             this.raftServer.start();
-
+            
             // There is only one consumer to ensure that the internal consumption
             // is sequential and there is no concurrent competition
             NotifyCenter.registerSubscriber(new Subscriber<RaftEvent>() {
-
+                
                 @Override
                 public void onEvent(RaftEvent event) {
                     Loggers.RAFT.info("This Raft event changes : {}", event);
@@ -134,7 +134,7 @@ public class JRaftProtocol extends AbstractConsistencyProtocol<RaftConfig, Reque
                     final Long term = event.getTerm();
                     final List<String> raftClusterInfo = event.getRaftClusterInfo();
                     final String errMsg = event.getErrMsg();
-
+                    
                     // Leader information needs to be selectively updated. If it is valid data,
                     // the information in the protocol metadata is updated.
                     MapUtil.putIfValNoEmpty(properties, MetadataKey.LEADER_META_DATA, leader);
@@ -144,23 +144,23 @@ public class JRaftProtocol extends AbstractConsistencyProtocol<RaftConfig, Reque
                     MapUtil.putIfValNoEmpty(properties, MetadataKey.ERR_MSG, errMsg);
                     MetricsMonitor.refreshRaftGroupMetrics(groupId, leader, term,
                         raftConfig.getSelfMember());
-
+                    
                     value.put(groupId, properties);
                     metaData.load(value);
-
+                    
                     // The metadata information is injected into the metadata information of the node
                     injectProtocolMetaData(metaData);
                 }
-
+                
                 @Override
                 public Class<? extends Event> subscribeType() {
                     return RaftEvent.class;
                 }
-
+                
             });
         }
     }
-
+    
     @Override
     public void addRequestProcessors(Collection<RequestProcessor4CP> processors) {
         List<RequestProcessor4CP> missingProcessors = processors.stream()
@@ -169,30 +169,30 @@ public class JRaftProtocol extends AbstractConsistencyProtocol<RaftConfig, Reque
             raftServer.createMultiRaftGroup(missingProcessors);
         }
     }
-
+    
     @Override
     public Response getData(ReadRequest request) throws Exception {
         CompletableFuture<Response> future = aGetData(request);
         return future.get(5_000L, TimeUnit.MILLISECONDS);
     }
-
+    
     @Override
     public CompletableFuture<Response> aGetData(ReadRequest request) {
         return raftServer.get(request);
     }
-
+    
     @Override
     public Response write(WriteRequest request) throws Exception {
         CompletableFuture<Response> future = writeAsync(request);
         // Here you wait for 10 seconds, as long as possible, for the request to complete
         return future.get(10_000L, TimeUnit.MILLISECONDS);
     }
-
+    
     @Override
     public CompletableFuture<Response> writeAsync(WriteRequest request) {
         return raftServer.commit(request.getGroup(), request, new CompletableFuture<>());
     }
-
+    
     @Override
     public void memberChange(Set<String> addresses) {
         for (int i = 0; i < 5; i++) {
@@ -203,7 +203,7 @@ public class JRaftProtocol extends AbstractConsistencyProtocol<RaftConfig, Reque
         }
         Loggers.RAFT.warn("peer removal failed");
     }
-
+    
     @Override
     public void shutdown() {
         if (initialized.get() && shutdowned.compareAndSet(false, true)) {
@@ -211,18 +211,18 @@ public class JRaftProtocol extends AbstractConsistencyProtocol<RaftConfig, Reque
             raftServer.shutdown();
         }
     }
-
+    
     @Override
     public RestResult<String> execute(Map<String, String> args) {
         return jRaftMaintainService.execute(args);
     }
-
+    
     private void injectProtocolMetaData(ProtocolMetaData metaData) {
         Member member = memberManager.getSelf();
         member.setExtendVal("raftMetaData", metaData);
         memberManager.update(member);
     }
-
+    
     @Override
     public boolean isLeader(String group) {
         Node node = raftServer.findNodeByGroup(group);
@@ -231,7 +231,7 @@ public class JRaftProtocol extends AbstractConsistencyProtocol<RaftConfig, Reque
         }
         return node.isLeader();
     }
-
+    
     @Override
     public boolean isReady() {
         return raftServer.isReady();

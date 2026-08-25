@@ -25,25 +25,25 @@ import com.alibaba.nacos.api.ai.model.rad.AgentReference;
  * @author Nacos
  */
 public class AgentDiscoveryRpcRequest extends AbstractAgentClientRpcRequest {
-
+    
     private AgentDiscoveryRequest discoveryRequest;
-
+    
     @Override
     public String extractNamespaceId() {
         return discoveryRequest == null ? null : discoveryRequest.getNamespaceId();
     }
-
+    
     @Override
     public String extractAgentName() {
         AgentReference reference =
             discoveryRequest == null ? null : discoveryRequest.getReference();
         return reference == null ? null : reference.getAgentName();
     }
-
+    
     public AgentDiscoveryRequest getDiscoveryRequest() {
         return discoveryRequest;
     }
-
+    
     public void setDiscoveryRequest(AgentDiscoveryRequest discoveryRequest) {
         this.discoveryRequest = discoveryRequest;
     }

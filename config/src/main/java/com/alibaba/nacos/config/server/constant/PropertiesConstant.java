@@ -50,11 +50,11 @@ public class PropertiesConstant {
     public static final String DEFAULT_MAX_AGGR_SIZE = "defaultMaxAggrSize";
     
     public static final String CORRECT_USAGE_DELAY = "correctUsageDelay";
-
+    
     public static final String ORACLE = "oracle";
-
+    
     public static final String INITIAL_EXPANSION_PERCENT = "initialExpansionPercent";
-
+    
     public static final String SEARCH_MAX_CAPACITY = "nacos.config.search.max_capacity";
     
     public static final String SEARCH_MAX_THREAD = "nacos.config.search.max_thread";

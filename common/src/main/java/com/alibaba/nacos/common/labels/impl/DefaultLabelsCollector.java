@@ -43,9 +43,9 @@ public class DefaultLabelsCollector implements LabelsCollector {
     private final String customName = "defaultNacosLabelsCollector";
     
     private static final String UNDERSCORE = "_";
-
+    
     private static final String ESCAPE = "\\";
-
+    
     /**
      * init labels.
      *

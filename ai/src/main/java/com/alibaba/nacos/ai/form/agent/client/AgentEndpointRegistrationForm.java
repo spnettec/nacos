@@ -33,27 +33,27 @@ import java.util.List;
  * @author Nacos
  */
 public class AgentEndpointRegistrationForm implements NacosForm {
-
+    
     @Serial
     private static final long serialVersionUID = 1L;
-
+    
     private String namespaceId;
-
+    
     private String agentName;
-
+    
     private String runtimeVersion;
-
+    
     private String versionRange;
-
+    
     private String protocol;
-
+    
     private String endpoints;
-
+    
     @Override
     public void validate() throws NacosApiException {
         toRequest();
     }
-
+    
     /**
      * Normalize the namespace, parse the Endpoint JSON field, validate this form, and build the
      * RAD registration batch.
@@ -77,51 +77,51 @@ public class AgentEndpointRegistrationForm implements NacosForm {
         RadModelValidator.validate(result);
         return result;
     }
-
+    
     public String getNamespaceId() {
         return namespaceId;
     }
-
+    
     public void setNamespaceId(String namespaceId) {
         this.namespaceId = namespaceId;
     }
-
+    
     public String getAgentName() {
         return agentName;
     }
-
+    
     public void setAgentName(String agentName) {
         this.agentName = agentName;
     }
-
+    
     public String getRuntimeVersion() {
         return runtimeVersion;
     }
-
+    
     public void setRuntimeVersion(String runtimeVersion) {
         this.runtimeVersion = runtimeVersion;
     }
-
+    
     public String getVersionRange() {
         return versionRange;
     }
-
+    
     public void setVersionRange(String versionRange) {
         this.versionRange = versionRange;
     }
-
+    
     public String getProtocol() {
         return protocol;
     }
-
+    
     public void setProtocol(String protocol) {
         this.protocol = protocol;
     }
-
+    
     public String getEndpoints() {
         return endpoints;
     }
-
+    
     public void setEndpoints(String endpoints) {
         this.endpoints = endpoints;
     }

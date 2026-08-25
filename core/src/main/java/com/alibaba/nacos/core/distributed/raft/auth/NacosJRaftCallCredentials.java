@@ -33,18 +33,18 @@ import java.util.function.Supplier;
  * @author xiweng.yy
  */
 public class NacosJRaftCallCredentials extends CallCredentials {
-
+    
     private final Supplier<NacosAuthConfig> authConfigSupplier;
-
+    
     public NacosJRaftCallCredentials() {
         this(() -> NacosAuthConfigHolder.getInstance()
             .getNacosAuthConfigByScope(NacosServerAuthConfig.NACOS_SERVER_AUTH_SCOPE));
     }
-
+    
     NacosJRaftCallCredentials(Supplier<NacosAuthConfig> authConfigSupplier) {
         this.authConfigSupplier = authConfigSupplier;
     }
-
+    
     @Override
     public void applyRequestMetadata(RequestInfo requestInfo, Executor appExecutor,
         MetadataApplier applier) {
@@ -64,7 +64,7 @@ public class NacosJRaftCallCredentials extends CallCredentials {
             }
         });
     }
-
+    
     @Override
     public void thisUsesUnstableApi() {
         // Required by the gRPC CallCredentials contract.

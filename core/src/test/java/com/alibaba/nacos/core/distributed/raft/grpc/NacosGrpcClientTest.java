@@ -42,7 +42,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class NacosGrpcClientTest {
-
+    
     @Test
     @SuppressWarnings("unchecked")
     void testInvokeAsyncAttachesCallCredentials() {
@@ -65,9 +65,9 @@ class NacosGrpcClientTest {
         channelPool.put(endpoint, channel);
         InvokeCallback callback = mock(InvokeCallback.class);
         ArgumentCaptor<CallOptions> callOptionsCaptor = ArgumentCaptor.forClass(CallOptions.class);
-
+        
         client.invokeAsync(endpoint, ReadRequest.getDefaultInstance(), null, callback, 1000L);
-
+        
         verify(channel).newCall(any(MethodDescriptor.class), callOptionsCaptor.capture());
         assertSame(credentials, callOptionsCaptor.getValue().getCredentials());
     }

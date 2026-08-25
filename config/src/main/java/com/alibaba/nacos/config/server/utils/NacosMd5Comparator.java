@@ -32,12 +32,12 @@ import static com.alibaba.nacos.api.common.Constants.VIPSERVER_TAG;
  * @author Sunrisea
  */
 public class NacosMd5Comparator implements Md5Comparator {
-
+    
     @Override
     public String getName() {
         return "nacos";
     }
-
+    
     @Override
     public Map<String, ConfigListenState> compareMd5(HttpServletRequest request,
         HttpServletResponse response,

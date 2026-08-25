@@ -24,18 +24,18 @@ import com.alibaba.nacos.api.ai.model.rad.AgentSearchRequest;
  * @author Nacos
  */
 public class AgentSearchRpcRequest extends AbstractAgentClientRpcRequest {
-
+    
     private AgentSearchRequest searchRequest;
-
+    
     @Override
     public String extractNamespaceId() {
         return searchRequest == null ? null : searchRequest.getNamespaceId();
     }
-
+    
     public AgentSearchRequest getSearchRequest() {
         return searchRequest;
     }
-
+    
     public void setSearchRequest(AgentSearchRequest searchRequest) {
         this.searchRequest = searchRequest;
     }

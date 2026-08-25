@@ -59,12 +59,12 @@ class AbilityTest {
             public int retryTimes() {
                 return 1;
             }
-
+            
             @Override
             public long retryWaitMills() {
                 return 1000L;
             }
-
+            
             @Override
             public long timeOutMills() {
                 return 3000L;

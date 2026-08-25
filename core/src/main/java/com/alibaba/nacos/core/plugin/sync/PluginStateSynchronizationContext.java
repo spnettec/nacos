@@ -27,7 +27,7 @@ import java.util.Map;
  * @author Nacos
  */
 public interface PluginStateSynchronizationContext {
-
+    
     /**
      * Persist and apply one plugin state change locally.
      *
@@ -35,7 +35,7 @@ public interface PluginStateSynchronizationContext {
      * @param enabled whether enabled
      */
     void applyStateChange(String pluginId, boolean enabled);
-
+    
     /**
      * Persist and apply one complete runtime configuration map locally.
      *

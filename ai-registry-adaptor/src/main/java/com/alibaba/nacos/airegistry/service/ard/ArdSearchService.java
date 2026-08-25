@@ -30,7 +30,7 @@ import com.alibaba.nacos.api.exception.NacosException;
  * @author nacos
  */
 public interface ArdSearchService {
-
+    
     /**
      * Search local AI resources with ARD-compatible request and response models.
      *
@@ -39,7 +39,7 @@ public interface ArdSearchService {
      * @throws NacosException when request validation or search fails
      */
     ArdSearchResponse search(ArdSearchRequest request) throws NacosException;
-
+    
     /**
      * Explore local AI resources with ARD facets.
      *
@@ -48,7 +48,7 @@ public interface ArdSearchService {
      * @throws NacosException when request validation or explore fails
      */
     ArdExploreResponse explore(ArdExploreRequest request) throws NacosException;
-
+    
     /**
      * List local AI resources with ARD deterministic browsing parameters.
      *
@@ -62,14 +62,14 @@ public interface ArdSearchService {
      */
     ArdListResponse list(String namespaceId, String filter, String orderBy, Integer pageSize,
         String pageToken) throws NacosException;
-
+    
     /**
      * Build host-level ARD catalog manifest for standard well-known discovery.
      *
      * @return host-level ARD catalog manifest
      */
     ArdCatalog hostCatalog();
-
+    
     /**
      * Build local ARD catalog manifest.
      *

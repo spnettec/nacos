@@ -77,7 +77,7 @@ class ConnectionTest {
         assertTrue(root.get("abilityTable").isEmpty());
         assertEquals("public", metaInfo.get("namespaceId").asText());
     }
-
+    
     private long parseDateMillis(JsonNode node) {
         return node.isNumber() ? node.asLong() : Instant.parse(node.asText()).toEpochMilli();
     }

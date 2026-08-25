@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
 class AgentCardChangedEventTest {
-
+    
     @Test
     void testGettersWithLatestVersion() {
         AgentCardDetailInfo info = new AgentCardDetailInfo();
@@ -36,7 +36,7 @@ class AgentCardChangedEventTest {
         assertEquals(CacheKeyUtils.LATEST_VERSION, event.getVersion());
         assertSame(info, event.getAgentCard());
     }
-
+    
     @Test
     void testGettersWithSpecifiedVersion() {
         AgentCardDetailInfo info = new AgentCardDetailInfo();
@@ -48,7 +48,7 @@ class AgentCardChangedEventTest {
         assertEquals("v2", event.getVersion());
         assertSame(info, event.getAgentCard());
     }
-
+    
     @Test
     void testGettersWithNullLatestVersion() {
         AgentCardDetailInfo info = new AgentCardDetailInfo();
@@ -59,7 +59,7 @@ class AgentCardChangedEventTest {
         assertEquals("agentX", event.getAgentName());
         assertEquals(CacheKeyUtils.LATEST_VERSION, event.getVersion());
     }
-
+    
     @Test
     void testExplicitRouteOverridesLatestFlag() {
         AgentCardDetailInfo info = new AgentCardDetailInfo();

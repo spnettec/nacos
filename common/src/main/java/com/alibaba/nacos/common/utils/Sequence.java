@@ -27,14 +27,14 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Pattern;
 
 public class Sequence {
-
+    
     private static final Logger LOG = LoggerFactory.getLogger(Sequence.class);
-
+    
     /**
      * 时间起始标记点，作为基准，一般取系统的最近时间（一旦确定不能变动）
      */
     private final long twepoch = 1519740777809L;
-
+    
     /**
      * 5位的机房id
      */
@@ -47,19 +47,19 @@ public class Sequence {
      * 每毫秒内产生的id数: 2的12次方个
      */
     private final long sequenceBits = 12L;
-
+    
     protected final long maxDatacenterId = -1L ^ (-1L << datacenterIdBits);
     protected final long maxWorkerId = -1L ^ (-1L << workerIdBits);
-
+    
     private final long workerIdShift = sequenceBits;
     private final long datacenterIdShift = sequenceBits + workerIdBits;
-
+    
     /**
      * 时间戳左移动位
      */
     private final long timestampLeftShift = sequenceBits + workerIdBits + datacenterIdBits;
     private final long sequenceMask = -1L ^ (-1L << sequenceBits);
-
+    
     /**
      * 所属机房id
      */
@@ -72,20 +72,20 @@ public class Sequence {
      * 并发控制序列
      */
     private long sequence = 0L;
-
+    
     /**
      * 上次生产 ID 时间戳
      */
     private long lastTimestamp = -1L;
-
+    
     private static volatile InetAddress localAddress = null;
     private static final Pattern IP_PATTERN = Pattern.compile("\\d{1,3}(\\.\\d{1,3}){3,5}$");
-
+    
     public Sequence() {
         this.datacenterId = getDatacenterId();
         this.workerId = getMaxWorkerId(datacenterId);
     }
-
+    
     /**
      * 有参构造器
      *
@@ -97,17 +97,18 @@ public class Sequence {
     public Sequence(long workerId, long datacenterId) {
         if (workerId > maxWorkerId || workerId < 0) {
             throw new IllegalArgumentException(
-                    String.format("Worker Id can't be greater than %d or less than 0", maxWorkerId));
+                String.format("Worker Id can't be greater than %d or less than 0", maxWorkerId));
         }
         if (datacenterId > maxDatacenterId || datacenterId < 0) {
             throw new IllegalArgumentException(
-                    String.format("Datacenter Id can't be greater than %d or less than 0", maxDatacenterId));
+                String.format("Datacenter Id can't be greater than %d or less than 0",
+                    maxDatacenterId));
         }
-
+        
         this.workerId = workerId;
         this.datacenterId = datacenterId;
     }
-
+    
     /**
      * 基于网卡MAC地址计算余数作为数据中心
      * <p>
@@ -122,18 +123,18 @@ public class Sequence {
             } else {
                 byte[] mac = network.getHardwareAddress();
                 if (null != mac) {
-                    id = ((0x000000FF & (long) mac[mac.length - 2]) | (0x0000FF00 & (((long) mac[mac.length - 1])
-                            << 8))) >> 6;
+                    id = ((0x000000FF & (long) mac[mac.length - 2])
+                        | (0x0000FF00 & (((long) mac[mac.length - 1]) << 8))) >> 6;
                     id = id % (maxDatacenterId + 1);
                 }
             }
         } catch (Exception e) {
             LOG.warn(" getDatacenterId: " + e.getMessage());
         }
-
+        
         return id;
     }
-
+    
     /**
      * 基于 MAC + PID 的 hashcode 获取16个低位
      * <p>
@@ -147,11 +148,11 @@ public class Sequence {
             // GET jvmPid
             mpId.append(name.split("@")[0]);
         }
-
+        
         // MAC + PID 的 hashcode 获取16个低位
         return (mpId.toString().hashCode() & 0xffff) % (maxWorkerId + 1);
     }
-
+    
     /**
      * 获取下一个 ID
      *
@@ -169,18 +170,21 @@ public class Sequence {
                     timestamp = timeGen();
                     if (timestamp < lastTimestamp) {
                         throw new RuntimeException(
-                                String.format("Clock moved backwards.  Refusing to generate id for %d milliseconds",
-                                        offset));
+                            String.format(
+                                "Clock moved backwards.  Refusing to generate id for %d milliseconds",
+                                offset));
                     }
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
             } else {
                 throw new RuntimeException(
-                        String.format("Clock moved backwards.  Refusing to generate id for %d milliseconds", offset));
+                    String.format(
+                        "Clock moved backwards.  Refusing to generate id for %d milliseconds",
+                        offset));
             }
         }
-
+        
         if (lastTimestamp == timestamp) {
             // 相同毫秒内，序列号自增
             sequence = (sequence + 1) & sequenceMask;
@@ -192,27 +196,27 @@ public class Sequence {
             // 不同毫秒内，序列号置为 1 - 3 随机数
             sequence = ThreadLocalRandom.current().nextLong(1, 3);
         }
-
+        
         lastTimestamp = timestamp;
-
+        
         // 时间戳部分 | 数据中心部分 | 机器标识部分 | 序列号部分
-        return ((timestamp - twepoch) << timestampLeftShift) | (datacenterId << datacenterIdShift) | (workerId
-                << workerIdShift) | sequence;
+        return ((timestamp - twepoch) << timestampLeftShift) | (datacenterId << datacenterIdShift)
+            | (workerId << workerIdShift) | sequence;
     }
-
+    
     protected long tilNextMillis(long lastTimestamp) {
         long timestamp = timeGen();
         while (timestamp <= lastTimestamp) {
             timestamp = timeGen();
         }
-
+        
         return timestamp;
     }
-
+    
     protected long timeGen() {
         return SystemClock.INSTANCE.currentTimeMillis();
     }
-
+    
     /**
      * Find first valid IP from local network card
      *
@@ -222,11 +226,11 @@ public class Sequence {
         if (localAddress != null) {
             return localAddress;
         }
-
+        
         localAddress = getLocalAddress0();
         return localAddress;
     }
-
+    
     private static InetAddress getLocalAddress0() {
         InetAddress localAddress = null;
         try {
@@ -237,7 +241,7 @@ public class Sequence {
         } catch (Throwable e) {
             LOG.warn("Failed to retrieving ip address, " + e.getMessage(), e);
         }
-
+        
         try {
             Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
             while (interfaces.hasMoreElements()) {
@@ -261,20 +265,20 @@ public class Sequence {
         } catch (Throwable e) {
             LOG.warn("Failed to retrieving ip address, " + e.getMessage(), e);
         }
-
+        
         LOG.error("Could not get local host ip address, will use 127.0.0.1 instead.");
         return localAddress;
     }
-
+    
     private static boolean isValidAddress(InetAddress address) {
         if (address == null || address.isLoopbackAddress()) {
             return false;
         }
-
+        
         String name = address.getHostAddress();
-        return (name != null && !"0.0.0.0".equals(name) && !"127.0.0.1".equals(name) && IP_PATTERN.matcher(name)
+        return (name != null && !"0.0.0.0".equals(name) && !"127.0.0.1".equals(name)
+            && IP_PATTERN.matcher(name)
                 .matches());
     }
-
+    
 }
-

@@ -40,23 +40,23 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(MockitoExtension.class)
 class AiGrpcRedoServiceTest {
-
+    
     @Mock
     private AiGrpcClient aiGrpcClient;
-
+    
     AiGrpcRedoService redoService;
-
+    
     @BeforeEach
     void setUp() {
         NacosClientProperties properties = NacosClientProperties.PROTOTYPE.derive();
         redoService = new AiGrpcRedoService(properties, aiGrpcClient);
     }
-
+    
     @AfterEach
     void tearDown() {
         redoService.shutdown();
     }
-
+    
     @Test
     void cachedMcpServerEndpointForRedo() {
         redoService.cachedMcpServerEndpointForRedo("test", "127.0.0.1", 8080, "1.0.0");
@@ -65,21 +65,21 @@ class AiGrpcRedoServiceTest {
         assertEquals(8080, redoData.getPort());
         assertEquals("1.0.0", redoData.getVersion());
         assertFalse(redoService.isMcpServerEndpointRegistered("test"));
-
+        
         redoService.mcpServerEndpointRegistered("test");
         assertTrue(redoService.isMcpServerEndpointRegistered("test"));
-
+        
         redoService.mcpServerEndpointDeregister("test");
         assertTrue(redoService.isMcpServerEndpointRegistered("test"));
-
+        
         redoService.mcpServerEndpointDeregistered("test");
         assertFalse(redoService.isMcpServerEndpointRegistered("test"));
-
+        
         redoService.removeMcpServerEndpointForRedo("test");
         redoData = redoService.getMcpServerEndpoint("test");
         assertNull(redoData);
     }
-
+    
     @Test
     void findMcpServerEndpointRedoData() {
         redoService.cachedMcpServerEndpointForRedo("test", "127.0.0.1", 8080, "1.0.0");
@@ -91,7 +91,7 @@ class AiGrpcRedoServiceTest {
         assertInstanceOf(McpServerEndpointRedoData.class, redoData);
         assertEquals("test2", ((McpServerEndpointRedoData) redoData).getMcpName());
     }
-
+    
     @Test
     void cachedAgentEndpointForRedoWithSingleEndpoint() {
         AgentEndpoint endpoint = new AgentEndpoint();
@@ -99,24 +99,24 @@ class AiGrpcRedoServiceTest {
         endpoint.setPort(8080);
         endpoint.setVersion("1.0.0");
         AgentEndpointWrapper wrapper = AgentEndpointWrapper.wrap(endpoint);
-
+        
         redoService.cachedAgentEndpointForRedo("testAgent", wrapper);
         assertFalse(redoService.isAgentEndpointRegistered("testAgent", "1.0.0"));
-
+        
         redoService.agentEndpointRegistered("testAgent", "1.0.0");
         assertTrue(redoService.isAgentEndpointRegistered("testAgent", "1.0.0"));
-
+        
         redoService.agentEndpointDeregister("testAgent", "1.0.0");
         assertTrue(redoService.isAgentEndpointRegistered("testAgent", "1.0.0"));
-
+        
         redoService.agentEndpointDeregistered("testAgent", "1.0.0");
         assertFalse(redoService.isAgentEndpointRegistered("testAgent", "1.0.0"));
-
+        
         redoService.removeAgentEndpointForRedo("testAgent@@1.0.0");
         Set<RedoData<AgentEndpointWrapper>> redoDatas = redoService.findAgentEndpointRedoData();
         assertTrue(redoDatas.isEmpty());
     }
-
+    
     @Test
     void getAgentEndpointReturnsCachedWrapper() {
         AgentEndpoint endpoint = new AgentEndpoint();
@@ -130,58 +130,58 @@ class AiGrpcRedoServiceTest {
         assertFalse(actual.isBatch());
         assertEquals("127.0.0.1", actual.getData().getAddress());
     }
-
+    
     @Test
     void getAgentEndpointReturnsNullWhenNotCached() {
         assertNull(redoService.getAgentEndpoint("missing", "1.0.0"));
     }
-
+    
     @Test
     void cachedAgentEndpointForRedoWithBatchEndpoint() {
         AgentEndpoint endpoint1 = new AgentEndpoint();
         endpoint1.setAddress("127.0.0.1");
         endpoint1.setPort(8080);
         endpoint1.setVersion("1.0.0");
-
+        
         AgentEndpoint endpoint2 = new AgentEndpoint();
         endpoint2.setAddress("127.0.0.2");
         endpoint2.setPort(8081);
         endpoint2.setVersion("2.0.0");
-
+        
         AgentEndpointWrapper wrapper =
             AgentEndpointWrapper.wrap(Collections.singletonList(endpoint1));
-
+        
         redoService.cachedAgentEndpointForRedo("testAgent", wrapper);
         redoService.cachedAgentEndpointForRedo("testAgent",
             AgentEndpointWrapper.wrap(endpoint2));
         assertFalse(redoService.isAgentEndpointRegistered("testAgent", "1.0.0"));
         assertFalse(redoService.isAgentEndpointRegistered("testAgent", "2.0.0"));
-
+        
         Set<RedoData<AgentEndpointWrapper>> redoDatas = redoService.findAgentEndpointRedoData();
         assertEquals(2, redoDatas.size());
         RedoData<AgentEndpointWrapper> redoData = redoDatas.iterator().next();
         assertInstanceOf(AgentEndpointRedoData.class, redoData);
         assertEquals("testAgent", ((AgentEndpointRedoData) redoData).getAgentName());
-
+        
         redoService.agentEndpointRegistered("testAgent", "1.0.0");
         assertTrue(redoService.isAgentEndpointRegistered("testAgent", "1.0.0"));
         assertFalse(redoService.isAgentEndpointRegistered("testAgent", "2.0.0"));
-
+        
         redoDatas = redoService.findAgentEndpointRedoData();
         assertEquals(1, redoDatas.size());
     }
-
+    
     @Test
     void completeAgentEndpointPublicationFollowsEveryRedoState() {
         AgentEndpointRegistrationBatch batch = new AgentEndpointRegistrationBatch();
         batch.setNamespaceId("public");
         batch.setAgentName("agent-a");
         batch.setProtocol("a2a");
-
+        
         assertNull(redoService.getAgentEndpointPublication("missing"));
         redoService.cacheAgentEndpointPublication(batch);
         String key = AgentEndpointPublicationRedoData.keyOf("public", "agent-a", "a2a");
-
+        
         assertEquals(batch, redoService.getAgentEndpointPublication(key));
         assertFalse(redoService.isAgentEndpointPublicationRegistered(key));
         Set<RedoData<AgentEndpointRegistrationBatch>> redoData =
@@ -190,24 +190,24 @@ class AiGrpcRedoServiceTest {
         assertInstanceOf(AgentEndpointPublicationRedoData.class, redoData.iterator().next());
         assertEquals("public@@agent-a@@a2a",
             ((AgentEndpointPublicationRedoData) redoData.iterator().next()).getKey());
-
+        
         redoService.agentEndpointPublicationRegistered(key);
         assertTrue(redoService.isAgentEndpointPublicationRegistered(key));
         assertTrue(redoService.findAgentEndpointPublicationRedoData().isEmpty());
-
+        
         redoService.agentEndpointPublicationDeregistering(key);
         assertEquals(RedoData.RedoType.UNREGISTER,
             redoService.findAgentEndpointPublicationRedoData().iterator().next().getRedoType());
-
+        
         redoService.agentEndpointPublicationDeregistered(key);
         assertFalse(redoService.isAgentEndpointPublicationRegistered(key));
         assertEquals(RedoData.RedoType.REMOVE,
             redoService.findAgentEndpointPublicationRedoData().iterator().next().getRedoType());
-
+        
         redoService.removeAgentEndpointPublication(key);
         assertNull(redoService.getAgentEndpointPublication(key));
     }
-
+    
     @Test
     void discardCompleteAgentEndpointPublicationRemovesAnyIntent() {
         AgentEndpointRegistrationBatch batch = new AgentEndpointRegistrationBatch();
@@ -217,9 +217,9 @@ class AiGrpcRedoServiceTest {
         String key = AgentEndpointPublicationRedoData.keyOf("public", "agent-a", "a2a");
         redoService.cacheAgentEndpointPublication(batch);
         redoService.agentEndpointPublicationRegistered(key);
-
+        
         redoService.discardAgentEndpointPublication(key);
-
+        
         assertNull(redoService.getAgentEndpointPublication(key));
         assertFalse(redoService.isAgentEndpointPublicationRegistered(key));
     }

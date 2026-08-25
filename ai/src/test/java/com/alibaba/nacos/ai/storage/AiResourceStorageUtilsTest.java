@@ -27,40 +27,40 @@ import org.springframework.core.env.StandardEnvironment;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class AiResourceStorageUtilsTest {
-
+    
     private static final ConfigurableEnvironment CACHED_ENVIRONMENT = EnvUtil.getEnvironment();
-
+    
     @BeforeEach
     void setUp() {
         EnvUtil.setEnvironment(new StandardEnvironment());
     }
-
+    
     @AfterEach
     void tearDown() {
         System.clearProperty(Constants.AI_STORAGE_PROVIDER_CONFIG_KEY);
         System.clearProperty(Constants.Skills.SKILL_STORAGE_PROVIDER_CONFIG_KEY);
         EnvUtil.setEnvironment(CACHED_ENVIRONMENT);
     }
-
+    
     @Test
     void testResolveProviderUsesGlobalConfiguration() {
         System.setProperty(Constants.AI_STORAGE_PROVIDER_CONFIG_KEY, " external ");
-
+        
         assertEquals("external", AiResourceStorageUtils.resolveProvider(
             Constants.Skills.SKILL_STORAGE_PROVIDER_CONFIG_KEY,
             NacosConfigAiResourceStorage.TYPE));
     }
-
+    
     @Test
     void testResolveProviderPrefersResourceCompatibilityConfiguration() {
         System.setProperty(Constants.AI_STORAGE_PROVIDER_CONFIG_KEY, "global-store");
         System.setProperty(Constants.Skills.SKILL_STORAGE_PROVIDER_CONFIG_KEY, "skill-store");
-
+        
         assertEquals("skill-store", AiResourceStorageUtils.resolveProvider(
             Constants.Skills.SKILL_STORAGE_PROVIDER_CONFIG_KEY,
             NacosConfigAiResourceStorage.TYPE));
     }
-
+    
     @Test
     void testResolveProviderUsesDefault() {
         assertEquals(NacosConfigAiResourceStorage.TYPE,

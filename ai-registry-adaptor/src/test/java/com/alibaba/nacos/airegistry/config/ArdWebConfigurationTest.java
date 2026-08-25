@@ -35,24 +35,24 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author nacos
  */
 class ArdWebConfigurationTest {
-
+    
     @Test
     void shouldRegisterArdControllerMethodsForAuthentication() {
         ControllerMethodsCache methodsCache = new ControllerMethodsCache();
         new ArdWebConfiguration(methodsCache).init();
-
+        
         assertSecuredMethod(methodsCache, "POST", "/nacos/v3/ai/ard/search",
             ArdSearchController.class, "search");
         assertSecuredMethod(methodsCache, "GET", "/nacos/.well-known/ai-catalog.json",
             ArdWellKnownController.class, "catalog");
     }
-
+    
     private void assertSecuredMethod(ControllerMethodsCache methodsCache, String httpMethod,
         String requestUri, Class<?> controllerType, String methodName) {
         MockHttpServletRequest request = new MockHttpServletRequest(httpMethod, requestUri);
         request.setContextPath("/nacos");
         request.setRequestURI(requestUri);
-
+        
         Method method = methodsCache.getMethod(request);
         assertNotNull(method);
         assertEquals(controllerType, method.getDeclaringClass());

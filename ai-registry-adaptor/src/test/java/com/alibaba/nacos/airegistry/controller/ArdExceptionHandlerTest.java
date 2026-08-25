@@ -39,16 +39,16 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * @author nacos
  */
 class ArdExceptionHandlerTest {
-
+    
     @Test
     void shouldReturnArdErrorWithoutNacosEnvelope() {
         ArdExceptionHandler handler = new ArdExceptionHandler();
         NacosApiException exception = new NacosApiException(NacosException.INVALID_PARAM,
             ErrorCode.PARAMETER_VALIDATE_ERROR, "invalid filter");
-
+        
         ResponseEntity<ArdErrorResponse> response =
             handler.handleNacosApiException(exception);
-
+        
         assertEquals(400, response.getStatusCode().value());
         JsonNode body = JacksonUtils
             .toObj(JacksonUtils.toJson(response.getBody()), JsonNode.class);
@@ -58,38 +58,38 @@ class ArdExceptionHandlerTest {
         assertFalse(body.has("code"));
         assertFalse(body.has("data"));
     }
-
+    
     @Test
     void shouldUsePinnedArdErrorCodeAndNonNullMessage() {
         ArdExceptionHandler handler = new ArdExceptionHandler();
-
+        
         ResponseEntity<ArdErrorResponse> response =
             handler.handleNacosException(new NacosException(
                 HttpStatus.TOO_MANY_REQUESTS.value(), (String) null));
-
+        
         assertEquals(HttpStatus.TOO_MANY_REQUESTS, response.getStatusCode());
         assertEquals("RATE_LIMIT_EXCEEDED", response.getBody().getErrorCode());
         assertEquals(HttpStatus.TOO_MANY_REQUESTS.getReasonPhrase(),
             response.getBody().getMessage());
     }
-
+    
     @Test
     void shouldMapAccessFailureToPinnedUnauthorizedResponse() {
         ArdExceptionHandler handler = new ArdExceptionHandler();
-
+        
         ResponseEntity<ArdErrorResponse> response =
             handler.handleAccessException(new AccessException("invalid token"));
-
+        
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
         assertEquals("UNAUTHENTICATED", response.getBody().getErrorCode());
         assertEquals("invalid token", response.getBody().getMessage());
     }
-
+    
     @Test
     void ardControllerShouldExposeProtocolAuthErrorMetadata() {
         ProtocolAuthError error = AnnotatedElementUtils.findMergedAnnotation(
             ArdSearchController.class, ProtocolAuthError.class);
-
+        
         assertNotNull(error);
         assertEquals(HttpStatus.UNAUTHORIZED.value(), error.status());
         assertEquals("UNAUTHENTICATED", error.errorCode());

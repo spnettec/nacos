@@ -24,6 +24,7 @@ import java.util.UUID;
  * @author nkorange
  */
 public class UuidUtils {
+    
     private static final Sequence SEQUENCE = new Sequence();
     private UuidUtils() {
     }
@@ -31,7 +32,7 @@ public class UuidUtils {
     public static String generateUuid() {
         return UUID.randomUUID().toString();
     }
-
+    
     public static long nextId() {
         return SEQUENCE.nextId();
     }

@@ -26,10 +26,10 @@ import com.alibaba.nacos.sys.env.EnvUtil;
  * @author nacos
  */
 public final class AiResourceStorageUtils {
-
+    
     private AiResourceStorageUtils() {
     }
-
+    
     /**
      * Resolve the storage provider for new writes. A resource-specific property takes precedence
      * for compatibility, followed by the global AI storage property.

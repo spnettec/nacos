@@ -28,21 +28,21 @@ import java.util.Map;
  * @author xiweng.yy
  */
 public interface ControlManagerBuilder extends PluginConfigDefinitionSpec {
-
+    
     /**
      * Get plugin name.
      *
      * @return name of plugin
      */
     String getName();
-
+    
     /**
      * Build {@link ConnectionControlManager} implementation for current plugin.
      *
      * @return ConnectionControlManager implementation
      */
     ConnectionControlManager buildConnectionControlManager();
-
+    
     /**
      * Build {@link ConnectionControlManager} with effective plugin configuration.
      *
@@ -52,14 +52,14 @@ public interface ControlManagerBuilder extends PluginConfigDefinitionSpec {
     default ConnectionControlManager buildConnectionControlManager(Map<String, String> config) {
         return buildConnectionControlManager();
     }
-
+    
     /**
      * Build {@link TpsControlManager} implementation for current plugin.
      *
      * @return TpsControlManager implementation
      */
     TpsControlManager buildTpsControlManager();
-
+    
     /**
      * Build {@link TpsControlManager} with effective plugin configuration.
      *

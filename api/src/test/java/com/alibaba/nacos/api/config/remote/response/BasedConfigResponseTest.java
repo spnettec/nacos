@@ -28,12 +28,12 @@ public abstract class BasedConfigResponseTest extends BasedConfigRequestTest {
     
     @Override
     public void testSerialize() throws JacksonException {
-
+        
     }
     
     @Override
     public void testDeserialize() throws JacksonException {
-
+        
     }
     
     public abstract void testSerializeSuccessResponse() throws JacksonException;

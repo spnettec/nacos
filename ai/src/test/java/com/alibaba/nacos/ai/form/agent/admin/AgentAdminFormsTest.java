@@ -33,11 +33,11 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class AgentAdminFormsTest {
-
+    
     private static final String AGENT_NAME = "Demo Agent";
-
+    
     private static final String VERSION = "1.0.0";
-
+    
     @Test
     void testDraftCreateFormBuildsCompleteRequest() throws NacosApiException {
         AgentDraftCreateForm form = new AgentDraftCreateForm();
@@ -53,7 +53,7 @@ class AgentAdminFormsTest {
         form.setAuthor("alice");
         form.setChangeDescription("initial draft");
         form.setBasedOnVersion(null);
-
+        
         assertEquals("Demo", form.getDisplayName());
         assertEquals("description", form.getDescription());
         assertEquals("https://example.com/icon.png", form.getIconUrl());
@@ -64,7 +64,7 @@ class AgentAdminFormsTest {
         assertEquals("alice", form.getAuthor());
         assertEquals("initial draft", form.getChangeDescription());
         assertNull(form.getBasedOnVersion());
-
+        
         AgentDraftCreateRequest request = form.toRequest();
         assertEquals(AGENT_NAME, request.getAgentName());
         assertEquals(VERSION, request.getVersion());
@@ -72,18 +72,18 @@ class AgentAdminFormsTest {
         assertEquals("assistant", request.getTags().get(0));
         assertEquals("east", request.getExtensions().get("region"));
     }
-
+    
     @Test
     void testDraftCreateFormSupportsBasedOnVersion() throws NacosApiException {
         AgentDraftCreateForm form = new AgentDraftCreateForm();
         form.setAgentName(AGENT_NAME);
         form.setVersion("2.0.0");
         form.setBasedOnVersion(VERSION);
-
+        
         assertEquals(VERSION, form.getBasedOnVersion());
         assertEquals(VERSION, form.toRequest().getBasedOnVersion());
     }
-
+    
     @Test
     void testDraftUpdateFormBuildsRequest() throws NacosApiException {
         AgentDraftUpdateForm form = new AgentDraftUpdateForm();
@@ -91,29 +91,29 @@ class AgentAdminFormsTest {
         form.setVersion(VERSION);
         form.setCallInterfaces("[]");
         form.setChangeDescription("updated");
-
+        
         assertEquals("[]", form.getCallInterfaces());
         assertEquals("updated", form.getChangeDescription());
-
+        
         AgentDraftUpdateRequest request = form.toRequest();
         assertEquals(AGENT_NAME, request.getAgentName());
         assertEquals(VERSION, request.getVersion());
         assertEquals(0, request.getCallInterfaces().size());
         assertEquals("updated", request.getChangeDescription());
     }
-
+    
     @Test
     void testLabelsUpdateFormBuildsRequest() throws NacosApiException {
         AgentLabelsUpdateForm form = new AgentLabelsUpdateForm();
         form.setAgentName(AGENT_NAME);
         form.setLabels("{\"stable\":\"1.0.0\"}");
-
+        
         assertEquals("{\"stable\":\"1.0.0\"}", form.getLabels());
-
+        
         AgentLabelsUpdateRequest request = form.toRequest();
         assertEquals(VERSION, request.getLabels().get("stable"));
     }
-
+    
     @Test
     void testAgentUpdateFormBuildsCompleteRequest() throws NacosApiException {
         AgentUpdateForm form = new AgentUpdateForm();
@@ -125,7 +125,7 @@ class AgentAdminFormsTest {
         form.setTags("[\"assistant\"]");
         form.setExtensions("{\"region\":\"east\"}");
         form.setStatus(AiConstants.Agent.RESOURCE_STATUS_ENABLE);
-
+        
         assertEquals("Demo", form.getDisplayName());
         assertEquals("description", form.getDescription());
         assertEquals("https://example.com/icon.png", form.getIconUrl());
@@ -133,14 +133,14 @@ class AgentAdminFormsTest {
         assertEquals("[\"assistant\"]", form.getTags());
         assertEquals("{\"region\":\"east\"}", form.getExtensions());
         assertEquals(AiConstants.Agent.RESOURCE_STATUS_ENABLE, form.getStatus());
-
+        
         AgentUpdateRequest request = form.toRequest();
         assertEquals("Demo", request.getDisplayName());
         assertEquals("Nacos", request.getProvider().getName());
         assertEquals("assistant", request.getTags().get(0));
         assertEquals("east", request.getExtensions().get("region"));
     }
-
+    
     @Test
     void testListFormDefaultsNamespaceAndValidatesOrder() throws NacosApiException {
         AgentListForm form = new AgentListForm();
@@ -148,37 +148,37 @@ class AgentAdminFormsTest {
         form.setAgentName("Demo");
         form.setOrderBy(null);
         form.validate();
-
+        
         assertEquals("public", form.getNamespaceId());
         assertEquals("Demo", form.getAgentName());
         assertNull(form.getOrderBy());
-
+        
         form.setOrderBy("download_count");
         form.validate();
         assertEquals("download_count", form.getOrderBy());
-
+        
         form.setOrderBy("unsupported");
         assertThrows(IllegalArgumentException.class, form::validate);
     }
-
+    
     @Test
     void testRuntimeEndpointFormSupportsOptionalVersion() throws NacosApiException {
         AgentRuntimeEndpointForm form = new AgentRuntimeEndpointForm();
         form.setAgentName(AGENT_NAME);
         form.setProtocol("a2a");
         form.validate();
-
+        
         assertEquals("a2a", form.getProtocol());
         assertNull(form.getVersion());
-
+        
         form.setVersion(VERSION);
         form.validate();
         assertEquals(VERSION, form.getVersion());
-
+        
         form.setVersion("invalid");
         assertThrows(IllegalArgumentException.class, form::validate);
     }
-
+    
     @Test
     void testVersionListFormAcceptsEveryLifecycleStatus() throws NacosApiException {
         AgentVersionListForm form = new AgentVersionListForm();
@@ -193,11 +193,11 @@ class AgentAdminFormsTest {
             form.validate();
             assertEquals(status, form.getStatus());
         }
-
+        
         form.setStatus("invalid");
         assertThrows(IllegalArgumentException.class, form::validate);
     }
-
+    
     @Test
     void testJsonParserClassOverload() throws NacosApiException {
         assertNull(AgentAdminFormJsonParser.parseOptional("provider", " ",
@@ -205,13 +205,13 @@ class AgentAdminFormsTest {
         AgentProvider provider = AgentAdminFormJsonParser.parseOptional("provider",
             "{\"name\":\"Nacos\"}", AgentProvider.class);
         assertEquals("Nacos", provider.getName());
-
+        
         NacosApiException exception = assertThrows(NacosApiException.class,
             () -> AgentAdminFormJsonParser.parseOptional("provider", "{", AgentProvider.class));
         assertEquals("Request parameter `provider` is not valid JSON.",
             exception.getMessage());
     }
-
+    
     @Test
     void testJsonParserTypeReferenceOverload() throws NacosApiException {
         TypeReference<List<String>> type = new TypeReference<List<String>>() {
@@ -219,7 +219,7 @@ class AgentAdminFormsTest {
         assertNull(AgentAdminFormJsonParser.parseOptional("tags", null, type));
         assertEquals("assistant",
             AgentAdminFormJsonParser.parseOptional("tags", "[\"assistant\"]", type).get(0));
-
+        
         NacosApiException exception = assertThrows(NacosApiException.class,
             () -> AgentAdminFormJsonParser.parseOptional("tags", "[", type));
         assertEquals("Request parameter `tags` is not valid JSON.",

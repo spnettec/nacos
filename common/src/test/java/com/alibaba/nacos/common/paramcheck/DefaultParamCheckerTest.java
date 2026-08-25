@@ -31,23 +31,23 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class DefaultParamCheckerTest {
-
+    
     DefaultParamChecker paramChecker;
-
+    
     int maxMetadataLength = RandomUtils.nextInt(1024, 10240);
-
+    
     @BeforeEach
     void setUp() throws Exception {
         System.setProperty("nacos.naming.service.metadata.length",
             String.valueOf(maxMetadataLength));
         paramChecker = new DefaultParamChecker();
     }
-
+    
     @Test
     void testCheckerType() {
         assertEquals("default", paramChecker.getCheckerType());
     }
-
+    
     @Test
     void testCheckEmptyParamInfoList() {
         ParamCheckResponse actual = paramChecker.checkParamInfoList(null);
@@ -55,7 +55,7 @@ class DefaultParamCheckerTest {
         actual = paramChecker.checkParamInfoList(Collections.emptyList());
         assertTrue(actual.isSuccess());
     }
-
+    
     @Test
     void testCheckEmptyParamInfo() {
         ParamInfo paramInfo = new ParamInfo();
@@ -65,7 +65,7 @@ class DefaultParamCheckerTest {
         ParamCheckResponse actual = paramChecker.checkParamInfoList(paramInfos);
         assertTrue(actual.isSuccess());
     }
-
+    
     @Test
     void testCheckParamInfoForNamespaceShowName() {
         ParamInfo paramInfo = new ParamInfo();
@@ -91,7 +91,7 @@ class DefaultParamCheckerTest {
         actual = paramChecker.checkParamInfoList(paramInfos);
         assertTrue(actual.isSuccess());
     }
-
+    
     @Test
     void testCheckParamInfoForNamespaceId() {
         ParamInfo paramInfo = new ParamInfo();
@@ -117,7 +117,7 @@ class DefaultParamCheckerTest {
         actual = paramChecker.checkParamInfoList(paramInfos);
         assertTrue(actual.isSuccess());
     }
-
+    
     @Test
     void testCheckParamInfoForDataId() {
         ParamInfo paramInfo = new ParamInfo();
@@ -142,7 +142,7 @@ class DefaultParamCheckerTest {
         actual = paramChecker.checkParamInfoList(paramInfos);
         assertTrue(actual.isSuccess());
     }
-
+    
     @Test
     void testCheckParamInfoForServiceName() {
         ParamInfo paramInfo = new ParamInfo();
@@ -167,7 +167,7 @@ class DefaultParamCheckerTest {
         actual = paramChecker.checkParamInfoList(paramInfos);
         assertTrue(actual.isSuccess());
     }
-
+    
     @Test
     void testCheckParamInfoForGroup() {
         ParamInfo paramInfo = new ParamInfo();
@@ -191,7 +191,7 @@ class DefaultParamCheckerTest {
         actual = paramChecker.checkParamInfoList(paramInfos);
         assertTrue(actual.isSuccess());
     }
-
+    
     @Test
     void testCheckParamInfoForClusters() {
         ParamInfo paramInfo = new ParamInfo();
@@ -216,7 +216,7 @@ class DefaultParamCheckerTest {
         actual = paramChecker.checkParamInfoList(paramInfos);
         assertTrue(actual.isSuccess());
     }
-
+    
     @Test
     void testCheckParamInfoForCluster() {
         ParamInfo paramInfo = new ParamInfo();
@@ -241,7 +241,7 @@ class DefaultParamCheckerTest {
         actual = paramChecker.checkParamInfoList(paramInfos);
         assertTrue(actual.isSuccess());
     }
-
+    
     @Test
     void testCheckParamInfoForIp() {
         ParamInfo paramInfo = new ParamInfo();
@@ -265,7 +265,7 @@ class DefaultParamCheckerTest {
         actual = paramChecker.checkParamInfoList(paramInfos);
         assertTrue(actual.isSuccess());
     }
-
+    
     @Test
     void testCheckParamInfoForPort() {
         ParamInfo paramInfo = new ParamInfo();
@@ -294,7 +294,7 @@ class DefaultParamCheckerTest {
         actual = paramChecker.checkParamInfoList(paramInfos);
         assertTrue(actual.isSuccess());
     }
-
+    
     @Test
     void testCheckParamInfoForMetadata() {
         ParamInfo paramInfo = new ParamInfo();
@@ -317,7 +317,7 @@ class DefaultParamCheckerTest {
         actual = paramChecker.checkParamInfoList(paramInfos);
         assertTrue(actual.isSuccess());
     }
-
+    
     @Test
     void testCheckParamInfoForSkillName() {
         ParamInfo paramInfo = new ParamInfo();
@@ -352,7 +352,7 @@ class DefaultParamCheckerTest {
         actual = paramChecker.checkParamInfoList(paramInfos);
         assertTrue(actual.isSuccess());
     }
-
+    
     @Test
     void testCheckParamInfoForSkillSearchName() {
         ParamInfo paramInfo = new ParamInfo();
@@ -380,7 +380,7 @@ class DefaultParamCheckerTest {
         assertEquals("Skill search name must not contain consecutive hyphens (--)",
             actual.getMessage());
     }
-
+    
     @Test
     @DisplayName("checkMcpNameFormat with too long name should fail")
     void testCheckMcpNameFormatTooLong() {
@@ -388,7 +388,7 @@ class DefaultParamCheckerTest {
         ParamCheckResponse actual = paramChecker.checkMcpNameFormat(longMcpName);
         assertFalse(actual.isSuccess());
     }
-
+    
     @Test
     @DisplayName("checkMcpNameFormat with illegal characters should fail")
     void testCheckMcpNameFormatIllegalCharacters() {
@@ -398,14 +398,14 @@ class DefaultParamCheckerTest {
             "Param 'mcpName' is illegal, illegal characters should not appear in the param.",
             actual.getMessage());
     }
-
+    
     @Test
     @DisplayName("checkMcpNameFormat with valid name should succeed")
     void testCheckMcpNameFormatValid() {
         ParamCheckResponse actual = paramChecker.checkMcpNameFormat("valid-mcp-name");
         assertTrue(actual.isSuccess());
     }
-
+    
     @Test
     @DisplayName("checkMcpNameFormat with blank name should succeed")
     void testCheckMcpNameFormatBlank() {
@@ -414,7 +414,7 @@ class DefaultParamCheckerTest {
         actual = paramChecker.checkMcpNameFormat(null);
         assertTrue(actual.isSuccess());
     }
-
+    
     @Test
     @DisplayName("checkAgentNameFormat with too long name should fail")
     void testCheckAgentNameFormatTooLong() {
@@ -422,7 +422,7 @@ class DefaultParamCheckerTest {
         ParamCheckResponse actual = paramChecker.checkAgentNameFormat(longAgentName);
         assertFalse(actual.isSuccess());
     }
-
+    
     @Test
     @DisplayName("checkAgentNameFormat with illegal characters should fail")
     void testCheckAgentNameFormatIllegalCharacters() {
@@ -434,14 +434,14 @@ class DefaultParamCheckerTest {
             "Param 'agentName' is illegal, illegal characters should not appear in the param.",
             actual.getMessage());
     }
-
+    
     @Test
     @DisplayName("checkAgentNameFormat with valid name should succeed")
     void testCheckAgentNameFormatValid() {
         ParamCheckResponse actual = paramChecker.checkAgentNameFormat("valid-agent-name");
         assertTrue(actual.isSuccess());
     }
-
+    
     @Test
     @DisplayName("checkAgentNameFormat with blank name should succeed")
     void testCheckAgentNameFormatBlank() {
@@ -450,7 +450,7 @@ class DefaultParamCheckerTest {
         actual = paramChecker.checkAgentNameFormat(null);
         assertTrue(actual.isSuccess());
     }
-
+    
     private String buildStringLength(int length) {
         StringBuilder builder = new StringBuilder();
         for (int i = 0; i < length; i++) {

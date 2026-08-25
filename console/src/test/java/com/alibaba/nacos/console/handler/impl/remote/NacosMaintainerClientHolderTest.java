@@ -43,19 +43,19 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class NacosMaintainerClientHolderTest {
-
+    
     private static final String REMOTE_SERVER_CONTEXT_PATH_KEY =
         "nacos.console.remote.server.context-path";
-
+    
     private static final String REMOTE_AI_SERVER_PORT_KEY = "nacos.console.remote.ai.port";
-
+    
     @Mock
     RemoteServerMemberManager memberManager;
-
+    
     ConfigurableEnvironment cachedEnvironment;
-
+    
     NacosMaintainerClientHolder maintainerClientHolder;
-
+    
     @BeforeEach
     void setUp() throws NacosException {
         cachedEnvironment = EnvUtil.getEnvironment();
@@ -68,12 +68,12 @@ class NacosMaintainerClientHolderTest {
         when(memberManager.allMembers()).thenReturn(Collections.singletonList(member));
         maintainerClientHolder = new NacosMaintainerClientHolder(memberManager);
     }
-
+    
     @AfterEach
     void tearDown() {
         EnvUtil.setEnvironment(cachedEnvironment);
     }
-
+    
     @Test
     void onEvent() {
         NamingMaintainerService namingMaintainerService =
@@ -94,7 +94,7 @@ class NacosMaintainerClientHolderTest {
             maintainerClientHolder.getConfigMaintainerService());
         assertNotEquals(aiMaintainerService, maintainerClientHolder.getAiMaintainerService());
     }
-
+    
     @Test
     void onEventWithException() {
         NamingMaintainerService namingMaintainerService =
@@ -114,12 +114,12 @@ class NacosMaintainerClientHolderTest {
         assertEquals(configMaintainerService, maintainerClientHolder.getConfigMaintainerService());
         assertEquals(aiMaintainerService, maintainerClientHolder.getAiMaintainerService());
     }
-
+    
     @Test
     void resolveRemoteContextPathWithDefaultValue() {
         assertEquals("/nacos", NacosMaintainerClientHolder.resolveRemoteContextPath());
     }
-
+    
     @Test
     void resolveRemoteContextPathShouldNormalizeAndTrim() {
         MockEnvironment environment = new MockEnvironment();
@@ -128,7 +128,7 @@ class NacosMaintainerClientHolderTest {
         EnvUtil.setEnvironment(environment);
         assertEquals("/nacos/custom", NacosMaintainerClientHolder.resolveRemoteContextPath());
     }
-
+    
     @Test
     void resolveRemoteContextPathShouldKeepRootPath() {
         MockEnvironment environment = new MockEnvironment();
@@ -137,19 +137,19 @@ class NacosMaintainerClientHolderTest {
         EnvUtil.setEnvironment(environment);
         assertEquals("/", NacosMaintainerClientHolder.resolveRemoteContextPath());
     }
-
+    
     @Test
     void resolveAiServerAddrShouldAppendDefaultPort() {
         assertEquals("pig-register-ai:9080",
             NacosMaintainerClientHolder.resolveAiServerAddr("pig-register-ai"));
     }
-
+    
     @Test
     void resolveAiServerAddrShouldKeepConfiguredPort() {
         assertEquals("pig-register-ai:19080",
             NacosMaintainerClientHolder.resolveAiServerAddr("pig-register-ai:19080"));
     }
-
+    
     @Test
     void resolveAiServerAddrShouldAppendCustomPort() {
         MockEnvironment environment = new MockEnvironment();
@@ -159,7 +159,7 @@ class NacosMaintainerClientHolderTest {
         assertEquals("pig-register-ai:19080",
             NacosMaintainerClientHolder.resolveAiServerAddr("pig-register-ai"));
     }
-
+    
     @Test
     void resolveAiServerAddrShouldAppendPortBeforePath() {
         assertEquals("http://pig-register-ai:9080",

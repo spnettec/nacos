@@ -49,7 +49,7 @@ import static org.mockito.Mockito.mockConstruction;
  */
 @ExtendWith(MockitoExtension.class)
 class StartingApplicationListenerTest {
-
+    
     @Test
     void startingDelegatesToCurrentStartUp() {
         StartingApplicationListener listener = new StartingApplicationListener();
@@ -61,7 +61,7 @@ class StartingApplicationListenerTest {
             verify(mockStartUp).starting();
         }
     }
-
+    
     @Test
     void environmentPreparedDelegatesToCurrentStartUp() {
         StartingApplicationListener listener = new StartingApplicationListener();
@@ -77,7 +77,7 @@ class StartingApplicationListenerTest {
             verify(mockStartUp).initSystemProperty();
         }
     }
-
+    
     @Test
     void contextPreparedDelegatesLogStartingInfo() {
         StartingApplicationListener listener = new StartingApplicationListener();
@@ -90,7 +90,7 @@ class StartingApplicationListenerTest {
             verify(mockStartUp).logStartingInfo(any());
         }
     }
-
+    
     @Test
     void contextLoadedDelegatesCustomEnvironment() {
         StartingApplicationListener listener = new StartingApplicationListener();
@@ -112,7 +112,7 @@ class StartingApplicationListenerTest {
             validatorMock.verify(PluginCriticalBootstrapValidator::validate);
         }
     }
-
+    
     @Test
     void contextLoadedSkipsValidationOutsideNacosDeployment() {
         StartingApplicationListener listener = new StartingApplicationListener();
@@ -134,7 +134,7 @@ class StartingApplicationListenerTest {
             assertTrue(initializerMock.constructed().isEmpty());
         }
     }
-
+    
     @Test
     void contextLoadedSkipsValidationOutsideCorePhase() {
         StartingApplicationListener listener = new StartingApplicationListener();
@@ -156,7 +156,7 @@ class StartingApplicationListenerTest {
             assertTrue(initializerMock.constructed().isEmpty());
         }
     }
-
+    
     @Test
     void startedDelegatesToCurrentStartUp() {
         StartingApplicationListener listener = new StartingApplicationListener();
@@ -179,7 +179,7 @@ class StartingApplicationListenerTest {
             verify(mockStartUp).logStarted(any());
         }
     }
-
+    
     @Test
     void startedSupportsContextWithoutPluginManager() {
         StartingApplicationListener listener = new StartingApplicationListener();
@@ -193,14 +193,14 @@ class StartingApplicationListenerTest {
         try (
             MockedStatic<NacosStartUpManager> managerMock = mockStatic(NacosStartUpManager.class)) {
             managerMock.when(NacosStartUpManager::getCurrentStartUp).thenReturn(mockStartUp);
-
+            
             listener.started(context);
-
+            
             verify(mockStartUp).started();
             verify(mockStartUp).logStarted(any());
         }
     }
-
+    
     @Test
     void failedCallsReverseStartedListAndLogs() {
         StartingApplicationListener listener = new StartingApplicationListener();

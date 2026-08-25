@@ -29,27 +29,27 @@ import java.util.Map;
  * @version $Id: Connection.java, v 0.1 2020年08月09日 1:32 PM liuzunfei Exp $
  */
 public abstract class Connection implements Requester {
-
+    
     private String connectionId;
-
+    
     private volatile boolean abandon = false;
-
+    
     protected RpcClient.ServerInfo serverInfo;
-
+    
     protected Map<String, Boolean> abilityTable;
-
+    
     public Connection(RpcClient.ServerInfo serverInfo) {
         this.serverInfo = serverInfo;
     }
-
+    
     public String getConnectionId() {
         return connectionId;
     }
-
+    
     public void setConnectionId(String connectionId) {
         this.connectionId = connectionId;
     }
-
+    
     public AbilityStatus getConnectionAbility(AbilityKey abilityKey) {
         if (abilityTable == null || !abilityTable.containsKey(abilityKey.getName())) {
             return AbilityStatus.UNKNOWN;
@@ -57,15 +57,15 @@ public abstract class Connection implements Requester {
         return abilityTable.get(abilityKey.getName()) ? AbilityStatus.SUPPORTED
             : AbilityStatus.NOT_SUPPORTED;
     }
-
+    
     public boolean isAbilitiesSet() {
         return abilityTable != null;
     }
-
+    
     public void setAbilityTable(Map<String, Boolean> abilityTable) {
         this.abilityTable = abilityTable;
     }
-
+    
     /**
      * Getter method for property <tt>abandon</tt>.
      *
@@ -74,7 +74,7 @@ public abstract class Connection implements Requester {
     public boolean isAbandon() {
         return abandon;
     }
-
+    
     /**
      * Setter method for property <tt>abandon</tt>. connection event will be ignored if connection is abandoned.
      *
@@ -83,5 +83,5 @@ public abstract class Connection implements Requester {
     public void setAbandon(boolean abandon) {
         this.abandon = abandon;
     }
-
+    
 }

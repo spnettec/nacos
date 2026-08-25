@@ -204,7 +204,7 @@ public abstract class BaseGrpcServer extends BaseRpcServer {
                             grpcRequest.getMetadata().getType(),
                             this.getSource())));
                 responseObserver.onNext(payloadResponse);
-
+                
                 responseObserver.onCompleted();
                 MetricsMonitor.recordGrpcRequestEvent(grpcRequest.getMetadata().getType(), false,
                     NacosException.BAD_GATEWAY, null, null, 0);

@@ -56,16 +56,16 @@ import static com.alibaba.nacos.config.server.utils.LogUtil.FATAL_LOG;
  */
 @Service
 public class TenantCapacityPersistService {
-
+    
     private static final TenantCapacityRowMapper TENANT_CAPACITY_ROW_MAPPER =
         new TenantCapacityRowMapper();
-
+    
     private JdbcTemplate jdbcTemplate;
-
+    
     private DataSourceService dataSourceService;
-
+    
     private MapperManager mapperManager;
-
+    
     /**
      * init method.
      */
@@ -78,9 +78,9 @@ public class TenantCapacityPersistService {
                 false);
         this.mapperManager = MapperManager.instance(isDataSourceLogEnable);
     }
-
+    
     static final class TenantCapacityRowMapper implements RowMapper<NamespaceCapacity> {
-
+        
         @Override
         public NamespaceCapacity mapRow(ResultSet rs, int rowNum) throws SQLException {
             NamespaceCapacity tenantCapacity = new NamespaceCapacity();
@@ -94,14 +94,14 @@ public class TenantCapacityPersistService {
             return tenantCapacity;
         }
     }
-
+    
     public NamespaceCapacity getTenantCapacity(String tenantId) {
         TenantCapacityMapper tenantCapacityMapper =
             mapperManager.findMapper(dataSourceService.getDataSourceType(),
                 TableConstant.TENANT_CAPACITY);
         MapperContext context = new MapperContext();
         context.putWhereParameter(FieldConstant.TENANT_ID, tenantId);
-
+        
         MapperResult mapperResult = tenantCapacityMapper.select(context);
         List<NamespaceCapacity> capacityList =
             jdbcTemplate.query(mapperResult.getSql(), TENANT_CAPACITY_ROW_MAPPER,
@@ -111,7 +111,7 @@ public class TenantCapacityPersistService {
         }
         return capacityList.get(0);
     }
-
+    
     /**
      * Insert TenantCapacity.
      *
@@ -134,7 +134,7 @@ public class TenantCapacityPersistService {
             context.putUpdateParameter(FieldConstant.ID, UuidUtils.nextId());
         }
         context.putWhereParameter(FieldConstant.TENANT_ID, tenantCapacity.getNamespaceId());
-
+        
         final MapperResult mapperResult = tenantCapacityMapper.insertTenantCapacity(context);
         try {
             return jdbcTemplate.update(mapperResult.getSql(),
@@ -143,9 +143,9 @@ public class TenantCapacityPersistService {
             FATAL_LOG.error("[db-error]", e);
             throw e;
         }
-
+        
     }
-
+    
     /**
      * Increment UsageWithDefaultQuotaLimit.
      *
@@ -162,7 +162,7 @@ public class TenantCapacityPersistService {
         context.putWhereParameter(FieldConstant.USAGE, tenantCapacity.getQuota());
         MapperResult mapperResult =
             tenantCapacityMapper.incrementUsageWithDefaultQuotaLimit(context);
-
+        
         try {
             int affectRow =
                 jdbcTemplate.update(mapperResult.getSql(), mapperResult.getParamList().toArray());
@@ -172,11 +172,11 @@ public class TenantCapacityPersistService {
             throw e;
         }
     }
-
+    
     private boolean isOracle() {
         return DataSourceConstant.ORACLE.equals(dataSourceService.getDataSourceType());
     }
-
+    
     /**
      * Increment UsageWithQuotaLimit.
      *
@@ -187,7 +187,7 @@ public class TenantCapacityPersistService {
         TenantCapacityMapper tenantCapacityMapper =
             mapperManager.findMapper(dataSourceService.getDataSourceType(),
                 TableConstant.TENANT_CAPACITY);
-
+        
         MapperContext context = new MapperContext();
         context.putUpdateParameter(FieldConstant.GMT_MODIFIED, tenantCapacity.getGmtModified());
         context.putWhereParameter(FieldConstant.TENANT_ID, tenantCapacity.getNamespaceId());
@@ -198,10 +198,10 @@ public class TenantCapacityPersistService {
         } catch (CannotGetJdbcConnectionException e) {
             FATAL_LOG.error("[db-error]", e);
             throw e;
-
+            
         }
     }
-
+    
     /**
      * Increment Usage.
      *
@@ -212,7 +212,7 @@ public class TenantCapacityPersistService {
         TenantCapacityMapper tenantCapacityMapper =
             mapperManager.findMapper(dataSourceService.getDataSourceType(),
                 TableConstant.TENANT_CAPACITY);
-
+        
         MapperContext context = new MapperContext();
         context.putUpdateParameter(FieldConstant.GMT_MODIFIED, tenantCapacity.getGmtModified());
         context.putWhereParameter(FieldConstant.TENANT_ID, tenantCapacity.getNamespaceId());
@@ -226,7 +226,7 @@ public class TenantCapacityPersistService {
             throw e;
         }
     }
-
+    
     /**
      * DecrementUsage.
      *
@@ -249,7 +249,7 @@ public class TenantCapacityPersistService {
             throw e;
         }
     }
-
+    
     /**
      * Update TenantCapacity.
      *
@@ -264,7 +264,7 @@ public class TenantCapacityPersistService {
         Integer maxAggrCount,
         Integer maxAggrSize) {
         List<Object> argList = CollectionUtils.list();
-
+        
         List<String> columns = new ArrayList<>();
         if (quota != null) {
             columns.add("quota");
@@ -284,12 +284,12 @@ public class TenantCapacityPersistService {
         }
         columns.add("gmt_modified");
         argList.add(TimeUtils.getCurrentTime());
-
+        
         List<String> where = new ArrayList<>();
         where.add("tenant_id");
-
+        
         argList.add(tenant);
-
+        
         TenantCapacityMapper tenantCapacityMapper =
             mapperManager.findMapper(dataSourceService.getDataSourceType(),
                 TableConstant.TENANT_CAPACITY);
@@ -301,11 +301,11 @@ public class TenantCapacityPersistService {
             throw e;
         }
     }
-
+    
     public boolean updateQuota(String tenant, Integer quota) {
         return updateTenantCapacity(tenant, quota, null, null, null);
     }
-
+    
     /**
      * Correct Usage.
      *
@@ -317,7 +317,7 @@ public class TenantCapacityPersistService {
         TenantCapacityMapper tenantCapacityMapper =
             mapperManager.findMapper(dataSourceService.getDataSourceType(),
                 TableConstant.TENANT_CAPACITY);
-
+        
         MapperContext context = new MapperContext();
         context.putUpdateParameter(FieldConstant.GMT_MODIFIED, gmtModified);
         context.putWhereParameter(FieldConstant.TENANT_ID, tenant);
@@ -330,7 +330,7 @@ public class TenantCapacityPersistService {
             throw e;
         }
     }
-
+    
     /**
      * Get TenantCapacity List, only including id and tenantId value.
      *
@@ -346,7 +346,7 @@ public class TenantCapacityPersistService {
         context.putWhereParameter(FieldConstant.ID, lastId);
         context.putWhereParameter(FieldConstant.LIMIT_SIZE, pageSize);
         MapperResult mapperResult = tenantCapacityMapper.getCapacityList4CorrectUsage(context);
-
+        
         try {
             return jdbcTemplate.query(mapperResult.getSql(), mapperResult.getParamList().toArray(),
                 (rs, rowNum) -> {
@@ -360,7 +360,7 @@ public class TenantCapacityPersistService {
             throw e;
         }
     }
-
+    
     /**
      * Delete TenantCapacity.
      *

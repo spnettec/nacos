@@ -52,19 +52,19 @@ import static org.mockito.Mockito.verify;
  */
 @ExtendWith(MockitoExtension.class)
 class PluginClusterSyncIntegrationTest {
-
+    
     @Mock
     private PluginStatePersistenceService persistence;
-
+    
     @Mock
     private PluginStateSynchronizer synchronizer;
-
+    
     private PluginManager pluginManager;
-
+    
     private PluginStateProcessor stateProcessor;
-
+    
     private ConfigurableEnvironment previousEnvironment;
-
+    
     @BeforeEach
     void setUp() {
         previousEnvironment = EnvUtil.getEnvironment();
@@ -73,115 +73,115 @@ class PluginClusterSyncIntegrationTest {
         org.mockito.Mockito.lenient().when(persistence.loadAllStates()).thenReturn(new HashMap<>());
         org.mockito.Mockito.lenient().when(persistence.loadAllConfigs())
             .thenReturn(new HashMap<>());
-
+        
         pluginManager = new PluginManager(persistence, synchronizer);
-
+        
         stateProcessor = new PluginStateProcessor(pluginManager, persistence);
-
+        
         registerTestPlugin("trace", "otel");
     }
-
+    
     @AfterEach
     void tearDown() {
         EnvUtil.setIsStandalone(null);
         EnvUtil.setEnvironment(previousEnvironment);
     }
-
+    
     @Test
     void stateChangePropagationTest() throws Exception {
         pluginManager.setPluginEnabled("trace:otel", false);
-
+        
         verify(synchronizer, times(1)).syncStateChange("trace:otel", false);
     }
-
+    
     @Test
     void configUpdatePropagationTest() throws Exception {
         registerConfigurablePlugin("trace", "otel");
-
+        
         Map<String, String> config = new HashMap<>();
         config.put("endpoint", "http://localhost:4317");
         config.put("timeout", "5000");
-
+        
         pluginManager.updatePluginConfig("trace:otel", config);
-
+        
         verify(synchronizer, times(1)).syncConfigChange(eq("trace:otel"), eq(config));
     }
-
+    
     @Test
     void raftApplyStateChangeTest() throws Exception {
         assertTrue(pluginManager.isPluginEnabled("trace", "otel"));
-
+        
         PluginStateOperation operation = PluginStateOperation.builder()
             .type(PluginStateOperation.OperationType.CHANGE_STATE)
             .pluginId("trace:otel")
             .enabled(false)
             .build();
-
+        
         byte[] data = SerializeFactory.getDefault().serialize(operation);
         WriteRequest request = WriteRequest.newBuilder()
             .setData(ByteString.copyFrom(data))
             .build();
-
+        
         Response response = stateProcessor.onApply(request);
-
+        
         assertTrue(response.getSuccess());
         assertFalse(pluginManager.isPluginEnabled("trace", "otel"));
     }
-
+    
     @Test
     void raftApplyConfigUpdateTest() throws Exception {
         Map<String, String> config = new HashMap<>();
         config.put("key1", "value1");
         config.put("key2", "value2");
-
+        
         PluginStateOperation operation = PluginStateOperation.builder()
             .type(PluginStateOperation.OperationType.UPDATE_CONFIG)
             .pluginId("trace:otel")
             .config(config)
             .build();
-
+        
         byte[] data = SerializeFactory.getDefault().serialize(operation);
         WriteRequest request = WriteRequest.newBuilder()
             .setData(ByteString.copyFrom(data))
             .build();
-
+        
         Response response = stateProcessor.onApply(request);
-
+        
         assertTrue(response.getSuccess());
     }
-
+    
     @Test
     void endToEndStateSyncTest() throws Exception {
         assertTrue(pluginManager.isPluginEnabled("trace", "otel"));
-
+        
         // Simulate state change through PluginManager
         pluginManager.setPluginEnabled("trace:otel", false);
-
+        
         // Verify synchronizer was called
         verify(synchronizer, times(1)).syncStateChange("trace:otel", false);
-
+        
         // Simulate Raft apply (what happens after Raft consensus)
         PluginStateOperation operation = PluginStateOperation.builder()
             .type(PluginStateOperation.OperationType.CHANGE_STATE)
             .pluginId("trace:otel")
             .enabled(false)
             .build();
-
+        
         byte[] data = SerializeFactory.getDefault().serialize(operation);
         WriteRequest raftRequest = WriteRequest.newBuilder()
             .setData(ByteString.copyFrom(data))
             .build();
-
+        
         Response raftResponse = stateProcessor.onApply(raftRequest);
-
+        
         assertTrue(raftResponse.getSuccess());
         assertFalse(pluginManager.isPluginEnabled("trace", "otel"));
     }
-
+    
     private void registerTestPlugin(String type, String name) {
         String pluginId = type + ":" + name;
         Map<String, com.alibaba.nacos.core.plugin.model.PluginInfo> registry = getPluginRegistry();
-
+        
         com.alibaba.nacos.core.plugin.model.PluginInfo info =
             new com.alibaba.nacos.core.plugin.model.PluginInfo();
         info.setPluginId(pluginId);
@@ -191,17 +191,17 @@ class PluginClusterSyncIntegrationTest {
         info.setCritical(false);
         info.setEnabled(true);
         info.setConfigurable(false);
-
+        
         registry.put(pluginId, info);
-
+        
         Map<String, Boolean> states = getPluginStates();
         states.put(pluginId, true);
     }
-
+    
     private void registerConfigurablePlugin(String type, String name) {
         String pluginId = type + ":" + name;
         Map<String, com.alibaba.nacos.core.plugin.model.PluginInfo> registry = getPluginRegistry();
-
+        
         com.alibaba.nacos.core.plugin.model.PluginInfo info =
             new com.alibaba.nacos.core.plugin.model.PluginInfo();
         info.setPluginId(pluginId);
@@ -211,13 +211,13 @@ class PluginClusterSyncIntegrationTest {
         info.setCritical(false);
         info.setEnabled(true);
         info.setConfigurable(true);
-
+        
         registry.put(pluginId, info);
-
+        
         Map<String, Boolean> states = getPluginStates();
         states.put(pluginId, true);
     }
-
+    
     private PluginType pluginTypeOf(String type) {
         for (PluginType pluginType : PluginType.values()) {
             if (pluginType.getType().equals(type)) {
@@ -226,13 +226,13 @@ class PluginClusterSyncIntegrationTest {
         }
         return null;
     }
-
+    
     @SuppressWarnings("unchecked")
     private Map<String, com.alibaba.nacos.core.plugin.model.PluginInfo> getPluginRegistry() {
         return (Map<String, com.alibaba.nacos.core.plugin.model.PluginInfo>) ReflectionTestUtils
             .getField(pluginManager, "pluginRegistry");
     }
-
+    
     @SuppressWarnings("unchecked")
     private Map<String, Boolean> getPluginStates() {
         return (Map<String, Boolean>) ReflectionTestUtils.getField(pluginManager, "pluginStates");

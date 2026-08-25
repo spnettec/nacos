@@ -28,18 +28,18 @@ import org.springframework.aot.hint.RuntimeHintsRegistrar;
  * @author heyoulin
  */
 public class NacosCoreRuntimeHints implements RuntimeHintsRegistrar {
-
+    
     @Override
     public void registerHints(RuntimeHints hints, ClassLoader classLoader) {
         registerJacksonType(hints, LocalFileMeta.class);
         registerJacksonType(hints, PluginStateSnapshot.class);
         hints.serialization().registerType(PluginStateSnapshot.class);
     }
-
+    
     private void registerJacksonType(RuntimeHints hints, Class<?> type) {
         hints.reflection().registerType(type, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
-                MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS,
-                MemberCategory.INTROSPECT_PUBLIC_METHODS, MemberCategory.INVOKE_PUBLIC_METHODS,
-                MemberCategory.DECLARED_FIELDS);
+            MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS,
+            MemberCategory.INTROSPECT_PUBLIC_METHODS, MemberCategory.INVOKE_PUBLIC_METHODS,
+            MemberCategory.DECLARED_FIELDS);
     }
 }

@@ -66,7 +66,7 @@ public class DefaultAsyncHttpClientRequest implements AsyncHttpClientRequest {
         // IllegalStateException has been removed from ver.5.0, should catch it in DefaultConnectingIOReactor callback
         FutureCallback<SimpleHttpResponse> futureCallback =
             new FutureCallback<SimpleHttpResponse>() {
-
+                
                 @Override
                 public void completed(SimpleHttpResponse result) {
                     // SimpleHttpResponse doesn't need to close
@@ -78,12 +78,12 @@ public class DefaultAsyncHttpClientRequest implements AsyncHttpClientRequest {
                         callback.onError(e);
                     }
                 }
-
+                
                 @Override
                 public void failed(Exception ex) {
                     callback.onError(ex);
                 }
-
+                
                 @Override
                 public void cancelled() {
                     callback.onCancel();

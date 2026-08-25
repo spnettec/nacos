@@ -75,15 +75,15 @@ import java.util.Map;
 @RequestMapping(Constants.Prompt.CONSOLE_PATH)
 @ExtractorManager.Extractor(httpExtractor = PromptHttpParamExtractor.class)
 public class ConsolePromptController {
-
+    
     private final PromptProxy promptProxy;
-
+    
     public ConsolePromptController(PromptProxy promptProxy) {
         this.promptProxy = promptProxy;
     }
-
+    
     // ========== Common endpoints ==========
-
+    
     /**
      * Delete prompt.
      */
@@ -98,7 +98,7 @@ public class ConsolePromptController {
         boolean success = promptProxy.deletePrompt(form, srcUser, srcIp);
         return Result.success(success);
     }
-
+    
     /**
      * List prompts with pagination.
      */
@@ -110,7 +110,7 @@ public class ConsolePromptController {
         Page<PromptMetaSummary> result = promptProxy.listPrompts(form);
         return Result.success(result);
     }
-
+    
     /**
      * List prompt versions with pagination.
      */
@@ -123,9 +123,9 @@ public class ConsolePromptController {
         Page<PromptVersionSummary> result = promptProxy.listPromptVersions(form);
         return Result.success(result);
     }
-
+    
     // ========== Lifecycle endpoints ==========
-
+    
     /**
      * Get prompt governance detail.
      */
@@ -137,7 +137,7 @@ public class ConsolePromptController {
         return Result.success(
             promptProxy.getPromptGovernanceDetail(form.getNamespaceId(), form.getPromptKey()));
     }
-
+    
     /**
      * Get specific version detail.
      */
@@ -150,7 +150,7 @@ public class ConsolePromptController {
             promptProxy.getVersionDetail(form.getNamespaceId(), form.getPromptKey(),
                 form.getVersion()));
     }
-
+    
     /**
      * Download a specific prompt version as a Markdown document.
      *
@@ -169,7 +169,7 @@ public class ConsolePromptController {
                 form.getVersion());
         return PromptMarkdownBuilder.buildMarkdownResponse(info);
     }
-
+    
     /**
      * Create draft version.
      */
@@ -185,7 +185,7 @@ public class ConsolePromptController {
             form.getDescription(), form.getBizTags());
         return Result.success(version);
     }
-
+    
     /**
      * Update draft content.
      */
@@ -198,7 +198,7 @@ public class ConsolePromptController {
             parseVariables(form.getVariables()), form.getCommitMsg());
         return Result.success("ok");
     }
-
+    
     /**
      * Delete draft version.
      */
@@ -210,7 +210,7 @@ public class ConsolePromptController {
         promptProxy.deleteDraft(form.getNamespaceId(), form.getPromptKey());
         return Result.success("ok");
     }
-
+    
     /**
      * Submit for pipeline review.
      */
@@ -223,7 +223,7 @@ public class ConsolePromptController {
             promptProxy.submit(form.getNamespaceId(), form.getPromptKey(), form.getVersion());
         return Result.success(result);
     }
-
+    
     /**
      * Publish an approved reviewing version.
      */
@@ -236,7 +236,7 @@ public class ConsolePromptController {
             true);
         return Result.success("ok");
     }
-
+    
     /**
      * Force-publish bypassing pipeline validation.
      */
@@ -251,7 +251,7 @@ public class ConsolePromptController {
             true);
         return Result.success("ok");
     }
-
+    
     /**
      * Re-edit a reviewed prompt version, transitioning it back to draft status.
      */
@@ -263,7 +263,7 @@ public class ConsolePromptController {
         promptProxy.redraft(form.getNamespaceId(), form.getPromptKey(), form.getVersion());
         return Result.success("ok");
     }
-
+    
     /**
      * Online a prompt version.
      */
@@ -276,7 +276,7 @@ public class ConsolePromptController {
             form.getVersion(), true);
         return Result.success("ok");
     }
-
+    
     /**
      * Offline a prompt version.
      */
@@ -289,7 +289,7 @@ public class ConsolePromptController {
             form.getVersion(), false);
         return Result.success("ok");
     }
-
+    
     /**
      * Update runtime route labels.
      */
@@ -302,7 +302,7 @@ public class ConsolePromptController {
         promptProxy.updateLabels(form.getNamespaceId(), form.getPromptKey(), labels);
         return Result.success("ok");
     }
-
+    
     /**
      * Update prompt description.
      */
@@ -316,7 +316,7 @@ public class ConsolePromptController {
             form.getDescription());
         return Result.success("ok");
     }
-
+    
     /**
      * Update prompt biz tags.
      */
@@ -328,7 +328,7 @@ public class ConsolePromptController {
         promptProxy.updateBizTags(form.getNamespaceId(), form.getPromptKey(), form.getBizTags());
         return Result.success("ok");
     }
-
+    
     private List<PromptVariable> parseVariables(String variables) {
         if (StringUtils.isBlank(variables)) {
             return null;

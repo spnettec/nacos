@@ -45,19 +45,19 @@ import java.util.Map;
  * @author nacos
  */
 public class AiResourceSearchDocumentBuilder {
-
+    
     private static final String RESOURCE_TYPE_SKILL = AiResourceConstants.RESOURCE_TYPE_SKILL;
-
+    
     private static final String RESOURCE_TYPE_PROMPT = AiResourceConstants.RESOURCE_TYPE_PROMPT;
-
+    
     private static final TypeReference<Map<String, Object>> MAP_TYPE =
         new TypeReference<Map<String, Object>>() {
         };
-
+    
     private static final TypeReference<List<String>> STRING_LIST_TYPE =
         new TypeReference<List<String>>() {
         };
-
+    
     /**
      * Build an search document from a skill or prompt meta/version pair.
      */
@@ -83,7 +83,7 @@ public class AiResourceSearchDocumentBuilder {
         entry.setGmtModified(resolveModified(meta.getGmtModified(), version.getGmtModified()));
         return entry;
     }
-
+    
     /**
      * Build an search document from an MCP server specification.
      */
@@ -115,7 +115,7 @@ public class AiResourceSearchDocumentBuilder {
         entry.setSourceDigest(sourceDigest(mcpServer, metadata));
         return entry;
     }
-
+    
     private AiResourceSearchDocument baseEntry(String namespaceId, String resourceType,
         String resourceName,
         String resourceVersion, String displayName) {
@@ -129,7 +129,7 @@ public class AiResourceSearchDocumentBuilder {
         entry.setGenerateMode(AiResourceSearchConstants.GENERATE_MODE_AUTO);
         return entry;
     }
-
+    
     private Map<String, Object> baseMetadata(String namespaceId, String resourceType,
         String resourceName, String resourceVersion, String scope) {
         Map<String, Object> metadata = new LinkedHashMap<>();
@@ -142,7 +142,7 @@ public class AiResourceSearchDocumentBuilder {
         }
         return metadata;
     }
-
+    
     private Map<String, Object> extractMetadata(Map<String, Object> ext) {
         Map<String, Object> metadata = new LinkedHashMap<>();
         putIfPresent(metadata, "inputTypes", ext.get("inputTypes"));
@@ -152,7 +152,7 @@ public class AiResourceSearchDocumentBuilder {
         putIfPresent(metadata, "notFor", ext.get("notFor"));
         return metadata;
     }
-
+    
     private void putIfPresent(Map<String, Object> metadata, String key, Object value) {
         if (value == null) {
             return;
@@ -162,7 +162,7 @@ public class AiResourceSearchDocumentBuilder {
         }
         metadata.put(key, value);
     }
-
+    
     private List<String> capabilities(String resourceType, List<String> tags,
         Map<String, Object> ext) {
         List<String> capabilities = new ArrayList<>();
@@ -171,7 +171,7 @@ public class AiResourceSearchDocumentBuilder {
         addAll(capabilities, toStringList(ext.get("capabilities")));
         return dedupe(capabilities);
     }
-
+    
     private List<String> capabilities(List<McpCapability> capabilities) {
         if (capabilities == null || capabilities.isEmpty()) {
             return Collections.emptyList();
@@ -184,7 +184,7 @@ public class AiResourceSearchDocumentBuilder {
         }
         return dedupe(result);
     }
-
+    
     private List<String> representativeQueries(AiResource meta, AiResourceVersion version) {
         List<String> queries = new ArrayList<>();
         addIfNotBlank(queries, meta.getName());
@@ -192,14 +192,14 @@ public class AiResourceSearchDocumentBuilder {
         addIfNotBlank(queries, version.getDesc());
         return dedupe(queries);
     }
-
+    
     private List<String> representativeQueries(McpServerBasicInfo mcpServer) {
         List<String> queries = new ArrayList<>();
         addIfNotBlank(queries, mcpServer.getName());
         addIfNotBlank(queries, mcpServer.getDescription());
         return dedupe(queries);
     }
-
+    
     private String sourceDigest(AiResource meta, AiResourceVersion version,
         Map<String, Object> metadata) {
         Map<String, Object> digest = new LinkedHashMap<>();
@@ -212,7 +212,7 @@ public class AiResourceSearchDocumentBuilder {
         digest.put("metadata", metadata);
         return md5(digest);
     }
-
+    
     private String sourceDigest(McpServerBasicInfo mcpServer, Map<String, Object> metadata) {
         Map<String, Object> digest = new LinkedHashMap<>();
         digest.put("name", mcpServer.getName());
@@ -224,7 +224,7 @@ public class AiResourceSearchDocumentBuilder {
         digest.put("metadata", metadata);
         return md5(digest);
     }
-
+    
     private String resolveMcpVersion(McpServerBasicInfo mcpServer) {
         ServerVersionDetail versionDetail = mcpServer.getVersionDetail();
         if (versionDetail != null && StringUtils.isNotBlank(versionDetail.getVersion())) {
@@ -232,11 +232,11 @@ public class AiResourceSearchDocumentBuilder {
         }
         return mcpServer.getVersion();
     }
-
+    
     private Timestamp resolveModified(Timestamp metaModified, Timestamp versionModified) {
         return versionModified == null ? metaModified : versionModified;
     }
-
+    
     private Map<String, Object> parseMap(String value) {
         if (StringUtils.isBlank(value)) {
             return Collections.emptyMap();
@@ -248,7 +248,7 @@ public class AiResourceSearchDocumentBuilder {
             return Collections.emptyMap();
         }
     }
-
+    
     private List<String> parseStringList(String value) {
         if (StringUtils.isBlank(value)) {
             return Collections.emptyList();
@@ -267,7 +267,7 @@ public class AiResourceSearchDocumentBuilder {
         }
         return dedupe(result);
     }
-
+    
     private List<String> toStringList(Object value) {
         if (value == null) {
             return Collections.emptyList();
@@ -286,7 +286,7 @@ public class AiResourceSearchDocumentBuilder {
         }
         return Collections.singletonList(String.valueOf(value));
     }
-
+    
     private void addAll(List<String> result, List<String> values) {
         if (values == null) {
             return;
@@ -295,13 +295,13 @@ public class AiResourceSearchDocumentBuilder {
             addIfNotBlank(result, value);
         }
     }
-
+    
     private void addIfNotBlank(List<String> result, String value) {
         if (StringUtils.isNotBlank(value)) {
             result.add(value.trim());
         }
     }
-
+    
     private List<String> dedupe(List<String> values) {
         if (values == null || values.isEmpty()) {
             return Collections.emptyList();
@@ -315,7 +315,7 @@ public class AiResourceSearchDocumentBuilder {
         }
         return result;
     }
-
+    
     private boolean containsIgnoreCase(List<String> values, String expected) {
         String normalized = expected.trim().toLowerCase(Locale.ROOT);
         for (String value : values) {
@@ -325,11 +325,11 @@ public class AiResourceSearchDocumentBuilder {
         }
         return false;
     }
-
+    
     private String firstNotBlank(String first, String second) {
         return StringUtils.isNotBlank(first) ? first : second;
     }
-
+    
     private String md5(Map<String, Object> digest) {
         return MD5Utils.md5Hex(JacksonUtils.toJson(digest), StandardCharsets.UTF_8.name());
     }

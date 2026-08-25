@@ -49,32 +49,32 @@ import java.util.Set;
  * @author Nacos
  */
 public final class AgentVersionContentSerializer {
-
+    
     public static final String DIGEST_PREFIX = "sha256:";
-
+    
     public static final int MAX_CONTENT_SIZE = 1024 * 1024;
-
+    
     private static final int MAX_CALL_INTERFACES = 16;
-
+    
     private static final char[] HEX = "0123456789abcdef".toCharArray();
-
+    
     private static final JsonFactory STRICT_JSON_FACTORY = JsonFactory.builder()
         .enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION)
         .build();
-
+    
     private static final Set<String> CONTENT_FIELDS = new HashSet<String>(Arrays.asList(
         "kind", "schemaVersion", "callInterfaces"));
-
+    
     private static final Set<String> CALL_INTERFACE_FIELDS = new HashSet<String>(Arrays.asList(
         "protocol", "protocolVersion", "descriptorMediaType", "nativeDescriptor",
         "endpointSourceOrder", "declaredEndpoints"));
-
+    
     private static final Set<String> ENDPOINT_FIELDS = new HashSet<String>(Arrays.asList(
         "uri", "transport", "priority", "weight", "metadata"));
-
+    
     private AgentVersionContentSerializer() {
     }
-
+    
     /**
      * Validate and serialize one Agent Version content object.
      *
@@ -96,7 +96,7 @@ public final class AgentVersionContentSerializer {
         }
         return new SerializedContent(bytes, digest(bytes));
     }
-
+    
     /**
      * Compute the digest of the exact bytes read from or written to AI Storage.
      *
@@ -114,7 +114,7 @@ public final class AgentVersionContentSerializer {
         }
         return DIGEST_PREFIX + sha256Hex(bytes);
     }
-
+    
     /**
      * Deserialize Agent Version bytes and verify the storage model.
      *
@@ -140,7 +140,7 @@ public final class AgentVersionContentSerializer {
         validate(content);
         return content;
     }
-
+    
     private static void validate(AgentVersionContent content) {
         if (content == null) {
             throw new IllegalArgumentException("AgentVersionContent must not be null");
@@ -170,7 +170,7 @@ public final class AgentVersionContentSerializer {
             }
         }
     }
-
+    
     private static Map<String, Object> toStorageProjection(AgentVersionContent content) {
         Map<String, Object> result = new LinkedHashMap<String, Object>();
         result.put("kind", AgentVersionContent.KIND);
@@ -182,7 +182,7 @@ public final class AgentVersionContentSerializer {
         result.put("callInterfaces", callInterfaces);
         return result;
     }
-
+    
     private static Map<String, Object> toStorageProjection(AgentCallInterface callInterface) {
         Map<String, Object> result = new LinkedHashMap<String, Object>();
         result.put("protocol", callInterface.getProtocol());
@@ -206,7 +206,7 @@ public final class AgentVersionContentSerializer {
         }
         return result;
     }
-
+    
     private static Map<String, Object> toStorageProjection(Endpoint endpoint) {
         Map<String, Object> result = new LinkedHashMap<String, Object>();
         result.put("uri", endpoint.getUri());
@@ -218,7 +218,7 @@ public final class AgentVersionContentSerializer {
         }
         return result;
     }
-
+    
     private static String sha256Hex(byte[] bytes) {
         final byte[] digest;
         try {
@@ -234,7 +234,7 @@ public final class AgentVersionContentSerializer {
         }
         return new String(encoded);
     }
-
+    
     private static void validateStorageJsonShape(byte[] bytes) {
         validateSingleJsonValue(bytes);
         final Map<?, ?> root;
@@ -269,7 +269,7 @@ public final class AgentVersionContentSerializer {
             }
         }
     }
-
+    
     private static void validateSingleJsonValue(byte[] bytes) {
         try (JsonParser parser = STRICT_JSON_FACTORY.createParser(bytes)) {
             if (parser.nextToken() == null) {
@@ -284,7 +284,7 @@ public final class AgentVersionContentSerializer {
             throw new IllegalArgumentException("Invalid AgentVersionContent", e);
         }
     }
-
+    
     private static void rejectUnknownFields(Map<?, ?> value, Set<String> fields,
         String objectName) {
         for (Object field : value.keySet()) {
@@ -293,21 +293,21 @@ public final class AgentVersionContentSerializer {
             }
         }
     }
-
+    
     /**
      * Immutable persisted bytes, digest and byte count for one Agent Version content object.
      */
     public static final class SerializedContent {
-
+        
         private final byte[] bytes;
-
+        
         private final String contentDigest;
-
+        
         private SerializedContent(byte[] bytes, String contentDigest) {
             this.bytes = bytes;
             this.contentDigest = contentDigest;
         }
-
+        
         /**
          * Return a defensive copy of the persisted storage bytes.
          *
@@ -316,7 +316,7 @@ public final class AgentVersionContentSerializer {
         public byte[] getBytes() {
             return Arrays.copyOf(bytes, bytes.length);
         }
-
+        
         /**
          * Return the SHA-256 digest of the persisted bytes.
          *
@@ -325,7 +325,7 @@ public final class AgentVersionContentSerializer {
         public String getContentDigest() {
             return contentDigest;
         }
-
+        
         /**
          * Return the persisted UTF-8 byte count.
          *

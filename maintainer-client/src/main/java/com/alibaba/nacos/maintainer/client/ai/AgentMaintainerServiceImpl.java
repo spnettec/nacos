@@ -42,13 +42,13 @@ import java.util.Map;
 
 final class AgentMaintainerServiceImpl extends AbstractAiDelegateMaintainerService
     implements AgentMaintainerService {
-
+    
     private static final String ROOT_PATH = Constants.AdminApiPath.AI_AGENTS_ADMIN_PATH;
-
+    
     AgentMaintainerServiceImpl(AiMaintainerHttpContext context) {
         super(context);
     }
-
+    
     @Override
     public AgentOverview getAgent(String namespaceId, String agentName) throws NacosException {
         namespaceId = resolveNamespace(namespaceId);
@@ -60,7 +60,7 @@ final class AgentMaintainerServiceImpl extends AbstractAiDelegateMaintainerServi
             });
         return result.getData();
     }
-
+    
     @Override
     public Agent updateAgent(String namespaceId, AgentUpdateRequest request)
         throws NacosException {
@@ -76,14 +76,14 @@ final class AgentMaintainerServiceImpl extends AbstractAiDelegateMaintainerServi
             });
         return result.getData();
     }
-
+    
     @Override
     public void deleteAgent(String namespaceId, String agentName) throws NacosException {
         namespaceId = resolveNamespace(namespaceId);
         executeQuery(HttpMethod.DELETE, ROOT_PATH, namespaceId, agentName,
             identityParams(namespaceId, agentName));
     }
-
+    
     @Override
     public Page<AgentSummary> listAgents(String namespaceId, String agentName, String bizTag,
         String scope, String owner, String orderBy, int pageNo, int pageSize)
@@ -108,7 +108,7 @@ final class AgentMaintainerServiceImpl extends AbstractAiDelegateMaintainerServi
             });
         return result.getData();
     }
-
+    
     @Override
     public Page<AgentVersionSummary> listAgentVersions(String namespaceId, String agentName,
         String status, int pageNo, int pageSize) throws NacosException {
@@ -124,7 +124,7 @@ final class AgentMaintainerServiceImpl extends AbstractAiDelegateMaintainerServi
             });
         return result.getData();
     }
-
+    
     @Override
     public AgentVersionDetail getAgentVersion(String namespaceId, String agentName, String version)
         throws NacosException {
@@ -137,7 +137,7 @@ final class AgentMaintainerServiceImpl extends AbstractAiDelegateMaintainerServi
             });
         return result.getData();
     }
-
+    
     @Override
     public RuntimeEndpointSnapshot getRuntimeEndpoints(String namespaceId, String agentName,
         String protocol, String version) throws NacosException {
@@ -153,7 +153,7 @@ final class AgentMaintainerServiceImpl extends AbstractAiDelegateMaintainerServi
             });
         return result.getData();
     }
-
+    
     @Override
     public AgentVersionDetail createDraft(String namespaceId, AgentDraftCreateRequest request)
         throws NacosException {
@@ -178,7 +178,7 @@ final class AgentMaintainerServiceImpl extends AbstractAiDelegateMaintainerServi
             });
         return result.getData();
     }
-
+    
     @Override
     public AgentVersionDetail updateDraft(String namespaceId, AgentDraftUpdateRequest request)
         throws NacosException {
@@ -195,7 +195,7 @@ final class AgentMaintainerServiceImpl extends AbstractAiDelegateMaintainerServi
             });
         return result.getData();
     }
-
+    
     @Override
     public void deleteDraft(String namespaceId, String agentName, String version)
         throws NacosException {
@@ -203,43 +203,43 @@ final class AgentMaintainerServiceImpl extends AbstractAiDelegateMaintainerServi
         executeQuery(HttpMethod.DELETE, ROOT_PATH + "/draft", namespaceId, agentName,
             versionParams(namespaceId, agentName, version));
     }
-
+    
     @Override
     public AgentVersionSummary submit(String namespaceId, AgentVersionCommand command)
         throws NacosException {
         return executeVersionCommand(namespaceId, command, "/submit");
     }
-
+    
     @Override
     public AgentVersionSummary publish(String namespaceId, AgentVersionCommand command)
         throws NacosException {
         return executeVersionCommand(namespaceId, command, "/publish");
     }
-
+    
     @Override
     public AgentVersionSummary forcePublish(String namespaceId, AgentVersionCommand command)
         throws NacosException {
         return executeVersionCommand(namespaceId, command, "/force-publish");
     }
-
+    
     @Override
     public AgentVersionSummary redraft(String namespaceId, AgentVersionCommand command)
         throws NacosException {
         return executeVersionCommand(namespaceId, command, "/redraft");
     }
-
+    
     @Override
     public AgentVersionSummary online(String namespaceId, AgentVersionCommand command)
         throws NacosException {
         return executeVersionCommand(namespaceId, command, "/online");
     }
-
+    
     @Override
     public AgentVersionSummary offline(String namespaceId, AgentVersionCommand command)
         throws NacosException {
         return executeVersionCommand(namespaceId, command, "/offline");
     }
-
+    
     @Override
     public Agent updateLabels(String namespaceId, AgentLabelsUpdateRequest request)
         throws NacosException {
@@ -254,7 +254,7 @@ final class AgentMaintainerServiceImpl extends AbstractAiDelegateMaintainerServi
             });
         return result.getData();
     }
-
+    
     private AgentVersionSummary executeVersionCommand(String namespaceId,
         AgentVersionCommand command, String path) throws NacosException {
         command = requireRequest(command);
@@ -268,7 +268,7 @@ final class AgentMaintainerServiceImpl extends AbstractAiDelegateMaintainerServi
             });
         return result.getData();
     }
-
+    
     private HttpRestResult<String> executeFormRequest(String method, String path,
         String namespaceId, String agentName, Map<String, String> params) throws NacosException {
         HttpRequest httpRequest =
@@ -276,7 +276,7 @@ final class AgentMaintainerServiceImpl extends AbstractAiDelegateMaintainerServi
                 .setHttpMethod(method).setPath(path).setParamValue(params).build();
         return executeSyncHttpRequest(httpRequest);
     }
-
+    
     private HttpRestResult<String> executeQuery(String method, String path, String namespaceId,
         String agentName, Map<String, String> params) throws NacosException {
         HttpRequest httpRequest =
@@ -284,21 +284,21 @@ final class AgentMaintainerServiceImpl extends AbstractAiDelegateMaintainerServi
                 .setHttpMethod(method).setPath(path).setParamValue(params).build();
         return executeSyncHttpRequest(httpRequest);
     }
-
+    
     private Map<String, String> identityParams(String namespaceId, String agentName) {
         Map<String, String> result = new HashMap<>(4);
         result.put("namespaceId", namespaceId);
         result.put("agentName", agentName);
         return result;
     }
-
+    
     private Map<String, String> versionParams(String namespaceId, String agentName,
         String version) {
         Map<String, String> result = identityParams(namespaceId, agentName);
         result.put("version", version);
         return result;
     }
-
+    
     private Map<String, String> agentParams(String namespaceId, String agentName,
         String displayName, String description, String iconUrl, Object provider, Object tags,
         Object extensions, String status) {
@@ -312,19 +312,19 @@ final class AgentMaintainerServiceImpl extends AbstractAiDelegateMaintainerServi
         putIfNotNull(result, "status", status);
         return result;
     }
-
+    
     private void putJsonIfNotNull(Map<String, String> params, String key, Object value) {
         if (value != null) {
             params.put(key, JsonUtils.toJson(value));
         }
     }
-
+    
     private void putIfNotNull(Map<String, String> params, String key, String value) {
         if (value != null) {
             params.put(key, value);
         }
     }
-
+    
     private <T> T requireRequest(T request) {
         if (request == null) {
             throw new IllegalArgumentException("Agent request must not be null");

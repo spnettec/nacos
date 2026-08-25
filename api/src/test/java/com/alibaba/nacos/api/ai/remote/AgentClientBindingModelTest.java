@@ -45,7 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AgentClientBindingModelTest {
-
+    
     @Test
     void testBindingModels() {
         ClientLivenessInfo liveness = new ClientLivenessInfo();
@@ -57,7 +57,7 @@ class AgentClientBindingModelTest {
         assertEquals(30L, liveness.getExpireTimeoutMillis());
         assertEquals(50404, ErrorCode.HTTP_CLIENT_NOT_FOUND.getCode());
     }
-
+    
     @Test
     void testGrpcRequests() throws Exception {
         AgentSearchRequest search = new AgentSearchRequest();
@@ -68,7 +68,7 @@ class AgentClientBindingModelTest {
         assertEquals(Constants.AI.AI_MODULE, searchRequest.getModule());
         assertEquals("search-ns", searchRequest.extractNamespaceId());
         assertNull(searchRequest.extractAgentName());
-
+        
         AgentDiscoveryRequest discovery = new AgentDiscoveryRequest();
         discovery.setNamespaceId("discovery-ns");
         AgentReference reference = new AgentReference();
@@ -80,7 +80,7 @@ class AgentClientBindingModelTest {
         assertEquals(Constants.AI.AI_MODULE, discoveryRequest.getModule());
         assertEquals("discovery-ns", discoveryRequest.extractNamespaceId());
         assertEquals("discovery-agent", discoveryRequest.extractAgentName());
-
+        
         AgentEndpointRegistrationBatch batch = new AgentEndpointRegistrationBatch();
         batch.setNamespaceId("register-ns");
         batch.setAgentName("register-agent");
@@ -91,7 +91,7 @@ class AgentClientBindingModelTest {
         assertEquals(Constants.AI.AI_MODULE, registerRequest.getModule());
         assertEquals("register-ns", registerRequest.extractNamespaceId());
         assertEquals("register-agent", registerRequest.extractAgentName());
-
+        
         AgentEndpointDeregisterRpcRequest deregisterRequest =
             new AgentEndpointDeregisterRpcRequest();
         deregisterRequest.setNamespaceId("deregister-ns");
@@ -103,26 +103,26 @@ class AgentClientBindingModelTest {
         assertEquals("deregister-ns", deregisterRequest.getNamespaceId());
         assertEquals("deregister-agent", deregisterRequest.getAgentName());
         assertEquals("a2a", deregisterRequest.getProtocol());
-
+        
         assertTrue(searchRequest instanceof AbstractAgentClientRpcRequest);
         String serialized = new ObjectMapper().writeValueAsString(searchRequest);
         assertTrue(serialized.contains("\"searchRequest\""));
         assertFalse(serialized.contains("extractNamespaceId"));
         assertFalse(serialized.contains("extractAgentName"));
     }
-
+    
     @Test
     void testGrpcResponses() {
         Page<AgentCatalogEntry> page = new Page<AgentCatalogEntry>();
         AgentSearchResponse searchResponse = new AgentSearchResponse();
         searchResponse.setPage(page);
         assertSame(page, searchResponse.getPage());
-
+        
         AgentDiscoveryResult result = new AgentDiscoveryResult();
         AgentDiscoveryResponse discoveryResponse = new AgentDiscoveryResponse();
         discoveryResponse.setDiscoveryResult(result);
         assertSame(result, discoveryResponse.getDiscoveryResult());
-
+        
         assertNotNull(new AgentEndpointOperationResponse());
     }
 }

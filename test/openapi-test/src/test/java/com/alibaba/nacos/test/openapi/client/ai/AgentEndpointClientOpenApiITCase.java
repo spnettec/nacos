@@ -22,6 +22,7 @@ import com.alibaba.nacos.common.utils.JacksonUtils;
 import tools.jackson.databind.JsonNode;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -47,15 +48,23 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *     complete Form and JSON-valued {@code endpoints} field.</li>
  *     <li>Exception/error handling: heartbeat before registration and after deregistration
  *     returns HTTP 404 with application code {@code HTTP_CLIENT_NOT_FOUND (50404)}, and malformed
- *     Endpoint JSON is rejected by Form validation.</li>
+ *     Endpoint JSON is rejected by Form validation. The configured Endpoint soft watermark
+ *     admits a whole batch from below even when it crosses the watermark; once at or above it,
+ *     replacement remains available without growth, new publication is rejected atomically,
+ *     and deregistration immediately releases capacity.</li>
  * </ul>
  *
  * @author xiweng.yy
  */
 public class AgentEndpointClientOpenApiITCase extends AgentClientOpenApiBaseITCase {
-
+    
     private static final String REQUEST_MODULE = "AI";
 
+    private static final String SERVER_PUBLICATION_CAPACITY_PROPERTY =
+            "nacos.agent.it.server.publication.capacity";
+
+    private static final int DEFAULT_SERVER_PUBLICATION_CAPACITY = 100;
+    
     @Test
     public void testCompletePublisherLifecycleAndQueryIsolation() throws Exception {
         String clientId = randomHttpClientId();
@@ -64,7 +73,7 @@ public class AgentEndpointClientOpenApiITCase extends AgentClientOpenApiBaseITCa
         assertEquals(200, query.code(), query.body());
         assertError(heartbeat(clientId, REQUEST_MODULE), 404,
                 ErrorCode.HTTP_CLIENT_NOT_FOUND, "HTTP Client");
-
+        
         String agentName = randomAiName("agent-endpoint");
         publishAgent(agentName, "1.0.0");
         assertAgentVisibleThroughManagementSurfaces(agentName);
@@ -87,7 +96,7 @@ public class AgentEndpointClientOpenApiITCase extends AgentClientOpenApiBaseITCa
                 runtimeSet.toString());
         assertRuntimeEndpointVisibleThroughManagementSurfaces(agentName, 1);
         assertLiveness(heartbeat(clientId, REQUEST_MODULE));
-
+        
         Query identity = identityForm(agentName);
         assertSuccessResponse(deleteEndpointForm(clientId, REQUEST_MODULE, identity));
         assertSuccessResponse(deleteEndpointForm(clientId, REQUEST_MODULE, identity));
@@ -99,7 +108,7 @@ public class AgentEndpointClientOpenApiITCase extends AgentClientOpenApiBaseITCa
         assertError(heartbeat(clientId, REQUEST_MODULE), 404,
                 ErrorCode.HTTP_CLIENT_NOT_FOUND, "HTTP Client");
     }
-
+    
     @Test
     public void testEndpointHeadersBodyAndClientIdValidation() throws Exception {
         String agentName = randomAiName("agent-endpoint-invalid");
@@ -110,13 +119,13 @@ public class AgentEndpointClientOpenApiITCase extends AgentClientOpenApiBaseITCa
                 ErrorCode.PARAMETER_VALIDATE_ERROR, "Request-Module");
         assertError(postEndpointForm("invalid client id", REQUEST_MODULE, registration), 400,
                 ErrorCode.PARAMETER_VALIDATE_ERROR, "X-Nacos-Client-Id");
-
+        
         Map<String, String> missingEndpoints = registrationForm(agentName);
         missingEndpoints.remove("endpoints");
         assertError(postEndpointForm(randomHttpClientId(), REQUEST_MODULE,
                 missingEndpoints), 400,
                 ErrorCode.PARAMETER_VALIDATE_ERROR, "endpoints");
-
+        
         Map<String, String> malformedEndpoints = registrationForm(agentName);
         malformedEndpoints.put("endpoints", "{");
         HttpResponse malformed =
@@ -127,11 +136,54 @@ public class AgentEndpointClientOpenApiITCase extends AgentClientOpenApiBaseITCa
                 malformedBody.get("code").asInt(), malformed.body());
         assertTrue(malformedBody.get("data").asText().contains("not valid JSON"),
                 malformed.body());
-
+        
         assertError(heartbeat(randomHttpClientId(), null), 400,
                 ErrorCode.PARAMETER_VALIDATE_ERROR, "Request-Module");
     }
 
+    @Test
+    public void testConfiguredPublicationCapacityAndSlotReuse() throws Exception {
+        int serverCapacity = Integer.getInteger(SERVER_PUBLICATION_CAPACITY_PROPERTY,
+                DEFAULT_SERVER_PUBLICATION_CAPACITY);
+        String clientId = randomHttpClientId();
+        String agentPrefix = randomAiName("agent-endpoint-capacity");
+        List<String> admittedAgents = new ArrayList<>();
+        addCleanup(() -> {
+            for (String agentName : admittedAgents) {
+                deleteEndpointForm(clientId, REQUEST_MODULE, identityForm(agentName));
+            }
+        });
+
+        for (int i = 0; i < serverCapacity - 1; i++) {
+            String agentName = agentPrefix + '-' + i;
+            assertLiveness(postEndpointForm(clientId, REQUEST_MODULE,
+                    registrationForm(agentName)));
+            admittedAgents.add(agentName);
+            if (i > 0 && i % 20 == 0) {
+                assertLiveness(heartbeat(clientId, REQUEST_MODULE));
+            }
+        }
+
+        String burstAgent = agentPrefix + "-burst";
+        assertLiveness(postEndpointForm(clientId, REQUEST_MODULE,
+                registrationForm(burstAgent, 3)));
+        admittedAgents.add(burstAgent);
+        assertLiveness(postEndpointForm(clientId, REQUEST_MODULE,
+                registrationForm(burstAgent, 3)));
+        String overflowAgent = agentPrefix + "-overflow";
+        assertError(postEndpointForm(clientId, REQUEST_MODULE,
+                registrationForm(overflowAgent)), 503,
+                ErrorCode.AGENT_ENDPOINT_PUBLICATION_OVER_LIMIT,
+                "limit of " + serverCapacity);
+
+        assertSuccessResponse(deleteEndpointForm(clientId, REQUEST_MODULE,
+                identityForm(burstAgent)));
+        admittedAgents.remove(burstAgent);
+        assertLiveness(postEndpointForm(clientId, REQUEST_MODULE,
+                registrationForm(overflowAgent)));
+        admittedAgents.add(overflowAgent);
+    }
+    
     private void assertLiveness(HttpResponse response) throws Exception {
         assertEquals(200, response.code(), response.body());
         JsonNode root = JacksonUtils.toObj(response.body());
@@ -143,7 +195,7 @@ public class AgentEndpointClientOpenApiITCase extends AgentClientOpenApiBaseITCa
         assertTrue(heartbeatInterval < unhealthyTimeout, response.body());
         assertTrue(unhealthyTimeout < expireTimeout, response.body());
     }
-
+    
     private void assertSuccessResponse(HttpResponse response) throws Exception {
         assertEquals(200, response.code(), response.body());
         assertSuccess(JacksonUtils.toObj(response.body()));
@@ -204,7 +256,7 @@ public class AgentEndpointClientOpenApiITCase extends AgentClientOpenApiBaseITCa
         assertEquals("[1.0.0]", item.get("bindings").get(0).get("versionRange").asText(),
                 item.toString());
     }
-
+    
     private JsonNode discover(String clientId, String agentName) throws Exception {
         HttpResponse response = getWithClientId(AGENT_CLIENT_PATH,
                 Query.newInstance().addParam("agentName", agentName), clientId);
@@ -213,7 +265,7 @@ public class AgentEndpointClientOpenApiITCase extends AgentClientOpenApiBaseITCa
         assertSuccess(root);
         return root.get("data");
     }
-
+    
     private JsonNode waitForRuntimeEndpointCount(String clientId, String agentName,
             int expectedCount) throws Exception {
         JsonNode actual = null;
@@ -230,24 +282,32 @@ public class AgentEndpointClientOpenApiITCase extends AgentClientOpenApiBaseITCa
         throw new AssertionError("Expected " + expectedCount
                 + " Runtime Endpoints, last discovery=" + actual);
     }
-
+    
     private Map<String, String> registrationForm(String agentName) {
-        Map<String, Object> endpoint = new LinkedHashMap<>();
-        endpoint.put("uri", "http://127.0.0.1:18080/agent");
-        endpoint.put("transport", "HTTP+JSON");
-        endpoint.put("priority", 0);
-        endpoint.put("weight", 1.0D);
-        endpoint.put("metadata", Collections.singletonMap("zone", "openapi-it"));
+        return registrationForm(agentName, 1);
+    }
+
+    private Map<String, String> registrationForm(String agentName, int endpointCount) {
+        List<Map<String, Object>> endpoints = new ArrayList<>();
+        for (int i = 0; i < endpointCount; i++) {
+            Map<String, Object> endpoint = new LinkedHashMap<>();
+            endpoint.put("uri", "http://127.0.0.1:" + (18080 + i) + "/agent");
+            endpoint.put("transport", "HTTP+JSON");
+            endpoint.put("priority", 0);
+            endpoint.put("weight", 1.0D);
+            endpoint.put("metadata", Collections.singletonMap("zone", "openapi-it"));
+            endpoints.add(endpoint);
+        }
 
         Map<String, String> result = new LinkedHashMap<>();
         result.put("agentName", agentName);
         result.put("runtimeVersion", "1.0.0");
         result.put("versionRange", "[1.0.0]");
         result.put("protocol", "a2a");
-        result.put("endpoints", JacksonUtils.toJson(List.of(endpoint)));
+        result.put("endpoints", JacksonUtils.toJson(endpoints));
         return result;
     }
-
+    
     private Query identityForm(String agentName) {
         return Query.newInstance().addParam("agentName", agentName)
                 .addParam("protocol", "a2a");

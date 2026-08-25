@@ -38,27 +38,27 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class NacosJRaftServerInterceptorTest {
-
+    
     @Mock
     private JRaftAuthUpgradeCoordinator upgradeCoordinator;
-
+    
     @Mock
     private NacosAuthConfig authConfig;
-
+    
     @Mock
     private ServerIdentityChecker identityChecker;
-
+    
     @Mock
     private ServerCall<Object, Object> serverCall;
-
+    
     @Mock
     private ServerCallHandler<Object, Object> next;
-
+    
     @Mock
     private ServerCall.Listener<Object> listener;
-
+    
     private NacosJRaftServerInterceptor interceptor;
-
+    
     @BeforeEach
     void setUp() {
         when(authConfig.getServerIdentityKey()).thenReturn("identity-key");
@@ -66,58 +66,58 @@ class NacosJRaftServerInterceptorTest {
         interceptor = new NacosJRaftServerInterceptor(upgradeCoordinator, authConfig,
             identityChecker);
     }
-
+    
     @Test
     void testValidCredentialContinuesRequest() {
         Metadata headers = validHeaders();
         when(identityChecker.check(any(), any())).thenReturn(ServerIdentityResult.success());
         when(next.startCall(serverCall, headers)).thenReturn(listener);
-
+        
         ServerCall.Listener<Object> result = interceptor.interceptCall(serverCall, headers, next);
-
+        
         assertSame(listener, result);
         verify(upgradeCoordinator, never()).allowInvalidCredential();
     }
-
+    
     @Test
     void testInvalidCredentialContinuesDuringCompatibilityWindow() {
         Metadata headers = new Metadata();
         when(upgradeCoordinator.allowInvalidCredential()).thenReturn(true);
         when(next.startCall(serverCall, headers)).thenReturn(listener);
-
+        
         ServerCall.Listener<Object> result = interceptor.interceptCall(serverCall, headers, next);
-
+        
         assertSame(listener, result);
         verify(next).startCall(serverCall, headers);
     }
-
+    
     @Test
     void testInvalidCredentialRejectedAfterEnforcement() {
         Metadata headers = new Metadata();
         when(upgradeCoordinator.allowInvalidCredential()).thenReturn(false);
         ArgumentCaptor<Status> statusCaptor = ArgumentCaptor.forClass(Status.class);
-
+        
         interceptor.interceptCall(serverCall, headers, next);
-
+        
         verify(serverCall).close(statusCaptor.capture(), any(Metadata.class));
         verify(next, never()).startCall(any(), any());
         org.junit.jupiter.api.Assertions.assertEquals(Status.Code.UNAUTHENTICATED,
             statusCaptor.getValue().getCode());
     }
-
+    
     @Test
     void testMismatchedIdentityKeyIsRejected() {
         Metadata headers = validHeaders();
         headers.discardAll(JRaftAuthMetadata.IDENTITY_KEY);
         headers.put(JRaftAuthMetadata.IDENTITY_KEY, "different-key");
         when(upgradeCoordinator.allowInvalidCredential()).thenReturn(false);
-
+        
         interceptor.interceptCall(serverCall, headers, next);
-
+        
         verify(identityChecker, never()).check(any(), any());
         verify(serverCall).close(any(Status.class), any(Metadata.class));
     }
-
+    
     private Metadata validHeaders() {
         Metadata result = new Metadata();
         result.put(JRaftAuthMetadata.IDENTITY_KEY, "identity-key");

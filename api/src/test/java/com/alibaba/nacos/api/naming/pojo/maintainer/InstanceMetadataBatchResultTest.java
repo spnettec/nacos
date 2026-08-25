@@ -38,8 +38,8 @@ class InstanceMetadataBatchResultTest {
     @BeforeEach
     void setUp() throws Exception {
         mapper = JsonMapper.builder()
-                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-                .build();
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .build();
         instanceMetadataBatchResult = new InstanceMetadataBatchResult();
         instanceMetadataBatchResult.setUpdated(Collections.singletonList("1.1.1.1"));
     }

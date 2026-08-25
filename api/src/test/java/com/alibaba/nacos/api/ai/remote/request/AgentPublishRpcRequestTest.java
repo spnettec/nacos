@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
 class AgentPublishRpcRequestTest extends BasicRequestTest {
-
+    
     @Test
     void testRequestAccessorsAndSerialization() throws Exception {
         AgentPublishRpcRequest request = new AgentPublishRpcRequest();
@@ -42,7 +42,7 @@ class AgentPublishRpcRequestTest extends BasicRequestTest {
         assertEquals("team", request.extractNamespaceId());
         assertSame(publication, request.getPublishRequest());
         assertEquals("demo-agent", request.extractAgentName());
-
+        
         AgentPublishRpcRequest restored = mapper.readValue(mapper.writeValueAsString(request),
             AgentPublishRpcRequest.class);
         assertEquals("team", restored.getNamespaceId());
@@ -50,7 +50,7 @@ class AgentPublishRpcRequestTest extends BasicRequestTest {
         assertEquals("1.0.0", restored.getPublishRequest().getVersion());
         assertEquals(true, restored.getPublishRequest().isAutoSubmit());
     }
-
+    
     @Test
     void testResponseAccessors() {
         AgentPublishRpcResponse response = new AgentPublishRpcResponse();

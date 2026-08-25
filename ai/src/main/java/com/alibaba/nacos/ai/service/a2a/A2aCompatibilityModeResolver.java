@@ -40,29 +40,29 @@ import java.util.function.Supplier;
  */
 @Component
 public class A2aCompatibilityModeResolver {
-
+    
     public static final String MODE_PROPERTY = "nacos.ai.a2a.compatibility.mode";
-
+    
     static final String MIN_CANONICAL_VERSION = "3.3.0";
-
+    
     private final ServerMemberManager serverMemberManager;
-
+    
     private final Supplier<String> configuredModeSupplier;
-
+    
     private final AtomicBoolean autoCanonical = new AtomicBoolean(false);
-
+    
     @Autowired
     public A2aCompatibilityModeResolver(ServerMemberManager serverMemberManager) {
         this(serverMemberManager,
             () -> EnvUtil.getProperty(MODE_PROPERTY, A2aCompatibilityMode.CANONICAL.name()));
     }
-
+    
     A2aCompatibilityModeResolver(ServerMemberManager serverMemberManager,
         Supplier<String> configuredModeSupplier) {
         this.serverMemberManager = serverMemberManager;
         this.configuredModeSupplier = configuredModeSupplier;
     }
-
+    
     /**
      * Resolve the implementation for the current request.
      *
@@ -79,13 +79,13 @@ public class A2aCompatibilityModeResolver {
         return autoCanonical.get() ? A2aCompatibilityMode.CANONICAL
             : A2aCompatibilityMode.LEGACY;
     }
-
+    
     private A2aCompatibilityMode parse(String configured) {
         String value = StringUtils.isBlank(configured) ? A2aCompatibilityMode.CANONICAL.name()
             : configured.trim().toUpperCase(Locale.ROOT);
         return A2aCompatibilityMode.valueOf(value);
     }
-
+    
     private boolean supportsCanonical(Collection<Member> members) {
         if (members == null || members.isEmpty()) {
             return false;
@@ -98,7 +98,7 @@ public class A2aCompatibilityModeResolver {
         }
         return true;
     }
-
+    
     private boolean supportsCanonical(String version) {
         if (StringUtils.isBlank(version)) {
             return false;

@@ -56,15 +56,15 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PreContextPluginInitializerTest {
-
+    
     private ConfigurableEnvironment cachedEnvironment;
-
+    
     private MockEnvironment environment;
-
+    
     private DefaultListableBeanFactory beanFactory;
-
+    
     private MapConfiguration configuration;
-
+    
     @BeforeEach
     void setUp() {
         cachedEnvironment = EnvUtil.getEnvironment();
@@ -76,13 +76,13 @@ class PreContextPluginInitializerTest {
             EnvironmentPluginTypePolicy.ENVIRONMENT_ENABLED_PROPERTY, "true");
         CustomEnvironmentPluginManager.getInstance().initialize(Collections.emptyList());
     }
-
+    
     @AfterEach
     void tearDown() {
         CustomEnvironmentPluginManager.getInstance().initialize(Collections.emptyList());
         EnvUtil.setEnvironment(cachedEnvironment);
     }
-
+    
     @Test
     void testConfigurablePluginUsesSameInitializedInstance() {
         TestEnvironmentPlugin plugin = new TestEnvironmentPlugin();
@@ -90,10 +90,10 @@ class PreContextPluginInitializerTest {
             "nacos.plugin.environment.test.prefix", "configured-prefix");
         PreContextPluginInitializer initializer =
             newInitializer(Collections.singletonList(provider("test", plugin)));
-
+        
         initializer.initialize();
         initializer.initialize();
-
+        
         assertEquals(PluginInitializationPhase.PRE_CONTEXT,
             initializer.getInitializationPhase());
         PreContextPluginInitializationResult result = getResult();
@@ -119,7 +119,7 @@ class PreContextPluginInitializerTest {
         assertTrue(info.getConfigDefinitions().get(0).isSensitive());
         assertThrows(UnsupportedOperationException.class,
             () -> info.getConfigDefinitions().add(new ConfigItemDefinition()));
-
+        
         PluginConfigResolution resolution =
             result.getConfigResolutions().get("environment:test");
         assertEquals("co******ix", resolution.getConfig().get("prefix"));
@@ -127,42 +127,42 @@ class PreContextPluginInitializerTest {
             CustomEnvironmentPluginManager.getInstance().getCustomValues(
                 Collections.singletonMap("fixture.key", "value")).get("fixture.key"));
     }
-
+    
     @Test
     void testDisabledPluginIsVisibleButDoesNotTransformOrStartLifecycle() {
         configuration.setProperty("nacos.plugin.environment.test.enabled", "false");
         TestEnvironmentPlugin plugin = new TestEnvironmentPlugin();
-
+        
         newInitializer(Collections.singletonList(provider("test", plugin))).initialize();
-
+        
         PluginInfo info = getResult().getPluginInfos().get("environment:test");
         assertFalse(info.isEnabled());
         assertEquals(1, plugin.applyCount);
         assertEquals(0, plugin.initializeCount);
         assertTrue(CustomEnvironmentPluginManager.getInstance().getPropertyKeys().isEmpty());
     }
-
+    
     @Test
     void testDisabledTypeSkipsProvider() {
         configuration.setProperty(
             EnvironmentPluginTypePolicy.ENVIRONMENT_ENABLED_PROPERTY, "false");
         CountingProvider provider = new CountingProvider(Collections.emptyMap());
-
+        
         newInitializer(Collections.singletonList(provider)).initialize();
-
+        
         assertEquals(0, provider.loadCount);
         assertTrue(getResult().getPluginInfos().isEmpty());
     }
-
+    
     @Test
     void testProviderFilteringAndInvalidPlugins() {
         PluginProvider<Object> failedTypeProvider = new PluginProvider<>() {
-
+            
             @Override
             public PluginType getPluginType() {
                 throw new IllegalStateException("type");
             }
-
+            
             @Override
             public Map<String, Object> getAllPlugins() {
                 return Collections.emptyMap();
@@ -176,120 +176,120 @@ class PreContextPluginInitializerTest {
         Map<String, Object> invalidPlugins = new LinkedHashMap<>();
         invalidPlugins.put("", new TestEnvironmentPlugin());
         invalidPlugins.put("null", null);
-
+        
         newInitializer(Arrays.asList(failedTypeProvider, nullTypeProvider, standardProvider,
             nullPluginsProvider, provider(PluginType.ENVIRONMENT, invalidPlugins))).initialize();
-
+        
         assertTrue(getResult().getPluginInfos().isEmpty());
     }
-
+    
     @Test
     void testProviderDiscoveryFailureStopsInitialization() {
         PluginProvider<Object> provider = new PluginProvider<>() {
-
+            
             @Override
             public PluginType getPluginType() {
                 return PluginType.ENVIRONMENT;
             }
-
+            
             @Override
             public Map<String, Object> getAllPlugins() {
                 throw new IllegalStateException("load");
             }
         };
-
+        
         assertThrows(IllegalStateException.class,
             () -> newInitializer(Collections.singletonList(provider)).initialize());
     }
-
+    
     @Test
     void testDuplicatePluginKeepsFirstDiscoveredInstance() {
         TestEnvironmentPlugin first = new TestEnvironmentPlugin();
         TestEnvironmentPlugin second = new TestEnvironmentPlugin();
-
+        
         newInitializer(Arrays.asList(provider("test", first),
             provider("test", second))).initialize();
-
+        
         assertSame(first, getResult().getPluginInstances().get("environment:test"));
         assertEquals(1, first.applyCount);
         assertEquals(1, first.initializeCount);
         assertEquals(0, second.applyCount);
         assertEquals(0, second.initializeCount);
     }
-
+    
     @Test
     void testDuplicatePluginUsesProviderOrderBeforeFirstWins() {
         TestEnvironmentPlugin lowerPriority = new TestEnvironmentPlugin();
         TestEnvironmentPlugin higherPriority = new TestEnvironmentPlugin();
-
+        
         newInitializer(Arrays.asList(provider("test", lowerPriority, 10),
             provider("test", higherPriority, -10))).initialize();
-
+        
         assertSame(higherPriority, getResult().getPluginInstances().get("environment:test"));
         assertEquals(0, lowerPriority.applyCount);
         assertEquals(1, higherPriority.applyCount);
     }
-
+    
     @Test
     void testConfigApplyFailureStopsInitialization() {
         TestEnvironmentPlugin plugin = new TestEnvironmentPlugin();
         plugin.failApply = true;
-
+        
         assertThrows(IllegalStateException.class,
             () -> newInitializer(Collections.singletonList(provider("test", plugin)))
                 .initialize());
     }
-
+    
     @Test
     void testLifecycleFailureStopsInitialization() {
         TestEnvironmentPlugin plugin = new TestEnvironmentPlugin();
         plugin.failInitialize = true;
-
+        
         assertThrows(IllegalStateException.class,
             () -> newInitializer(Collections.singletonList(provider("test", plugin)))
                 .initialize());
     }
-
+    
     @Test
     void testNullDefinitionsAndConfigAreAccepted() {
         NullConfigEnvironmentPlugin plugin = new NullConfigEnvironmentPlugin();
-
+        
         newInitializer(Collections.singletonList(provider("null-config", plugin))).initialize();
-
+        
         PluginInfo info = getResult().getPluginInfos().get("environment:null-config");
         assertTrue(info.isConfigurable());
         assertTrue(info.getConfigDefinitions().isEmpty());
         assertTrue(info.getConfig().isEmpty());
         assertTrue(plugin.applied);
     }
-
+    
     @Test
     void testPublicConstructorRegistersEmptyResultWhenTypeDisabled() {
         environment.setProperty(
             EnvironmentPluginTypePolicy.ENVIRONMENT_ENABLED_PROPERTY, "false");
         try (GenericApplicationContext context = new GenericApplicationContext()) {
             PreContextPluginInitializer initializer = new PreContextPluginInitializer(context);
-
+            
             initializer.initialize();
-
+            
             assertTrue(context.getBeanFactory()
                 .getBean(PreContextPluginInitializationResult.class)
                 .getPluginInfos().isEmpty());
         }
     }
-
+    
     @Test
     void testInitializationResultIsImmutableAndEmptySingletonIsUsable() {
         PreContextPluginInitializationResult result =
             PreContextPluginInitializationResult.empty();
-
+        
         assertTrue(result.getPluginInfos().isEmpty());
         assertTrue(result.getPluginInstances().isEmpty());
         assertTrue(result.getConfigResolutions().isEmpty());
         assertThrows(UnsupportedOperationException.class,
             () -> result.getPluginInfos().put("id", new PluginInfo()));
     }
-
+    
     private PreContextPluginInitializer newInitializer(
         List<PluginProvider<?>> providers) {
         PluginTypePolicyRegistry policyRegistry = new PluginTypePolicyRegistry(
@@ -298,87 +298,87 @@ class PreContextPluginInitializerTest {
             new PluginConfigResolver(), new PluginConfigBasicChecker(),
             new PluginConfigApplier());
     }
-
+    
     private PreContextPluginInitializationResult getResult() {
         return beanFactory.getBean(PreContextPluginInitializationResult.class);
     }
-
+    
     private PluginProvider<?> provider(String name, Object plugin) {
         return provider(PluginType.ENVIRONMENT, Collections.singletonMap(name, plugin));
     }
-
+    
     private PluginProvider<?> provider(String name, Object plugin, int order) {
         return new PluginProvider<>() {
-
+            
             @Override
             public PluginType getPluginType() {
                 return PluginType.ENVIRONMENT;
             }
-
+            
             @Override
             public Map<String, Object> getAllPlugins() {
                 return Collections.singletonMap(name, plugin);
             }
-
+            
             @Override
             public int getOrder() {
                 return order;
             }
         };
     }
-
+    
     private <T> PluginProvider<T> provider(PluginType type, Map<String, T> plugins) {
         return new PluginProvider<>() {
-
+            
             @Override
             public PluginType getPluginType() {
                 return type;
             }
-
+            
             @Override
             public Map<String, T> getAllPlugins() {
                 return plugins;
             }
         };
     }
-
+    
     private static class CountingProvider implements PluginProvider<Object> {
-
+        
         private final Map<String, Object> plugins;
-
+        
         private int loadCount;
-
+        
         private CountingProvider(Map<String, Object> plugins) {
             this.plugins = plugins;
         }
-
+        
         @Override
         public PluginType getPluginType() {
             return PluginType.ENVIRONMENT;
         }
-
+        
         @Override
         public Map<String, Object> getAllPlugins() {
             loadCount++;
             return plugins;
         }
     }
-
+    
     private static class TestEnvironmentPlugin
         implements CustomEnvironmentPluginService, PluginStartupLifecycle {
-
+        
         private final List<ConfigItemDefinition> definitions = createDefinitions();
-
+        
         private Map<String, String> currentConfig = Collections.emptyMap();
-
+        
         private int applyCount;
-
+        
         private int initializeCount;
-
+        
         private boolean failApply;
-
+        
         private boolean failInitialize;
-
+        
         @Override
         public Map<String, Object> customValue(Map<String, Object> property) {
             Map<String, Object> result = new HashMap<>(property);
@@ -386,27 +386,27 @@ class PreContextPluginInitializerTest {
                 (key, value) -> currentConfig.get("prefix") + "-" + value);
             return result;
         }
-
+        
         @Override
         public Set<String> propertyKey() {
             return Collections.singleton("fixture.key");
         }
-
+        
         @Override
         public Integer order() {
             return 1;
         }
-
+        
         @Override
         public String pluginName() {
             return "test";
         }
-
+        
         @Override
         public List<ConfigItemDefinition> getConfigDefinitions() {
             return definitions;
         }
-
+        
         @Override
         public void applyConfig(Map<String, String> config) {
             applyCount++;
@@ -415,12 +415,12 @@ class PreContextPluginInitializerTest {
             }
             currentConfig = new LinkedHashMap<>(config);
         }
-
+        
         @Override
         public Map<String, String> getCurrentConfig() {
             return currentConfig;
         }
-
+        
         @Override
         public void initialize() {
             initializeCount++;
@@ -428,7 +428,7 @@ class PreContextPluginInitializerTest {
                 throw new IllegalStateException("initialize");
             }
         }
-
+        
         private static List<ConfigItemDefinition> createDefinitions() {
             ConfigItemDefinition prefix =
                 new ConfigItemDefinition("prefix", "Prefix", ConfigItemType.STRING);
@@ -447,65 +447,65 @@ class PreContextPluginInitializerTest {
             return Arrays.asList(prefix, optional);
         }
     }
-
+    
     private static class NullConfigEnvironmentPlugin implements CustomEnvironmentPluginService {
-
+        
         private boolean applied;
-
+        
         @Override
         public boolean isConfigurable() {
             return true;
         }
-
+        
         @Override
         public List<ConfigItemDefinition> getConfigDefinitions() {
             return null;
         }
-
+        
         @Override
         public Map<String, String> getCurrentConfig() {
             return null;
         }
-
+        
         @Override
         public void applyConfig(Map<String, String> config) {
             applied = true;
         }
-
+        
         @Override
         public Map<String, Object> customValue(Map<String, Object> property) {
             return property;
         }
-
+        
         @Override
         public Set<String> propertyKey() {
             return Collections.emptySet();
         }
-
+        
         @Override
         public Integer order() {
             return 0;
         }
-
+        
         @Override
         public String pluginName() {
             return "null-config";
         }
     }
-
+    
     private static class MapConfiguration implements PluginTypeConfiguration {
-
+        
         private final Map<String, String> properties = new HashMap<>();
-
+        
         void setProperty(String key, String value) {
             properties.put(key, value);
         }
-
+        
         @Override
         public String getProperty(String key) {
             return properties.get(key);
         }
-
+        
         @Override
         public boolean containsProperty(String key) {
             return properties.containsKey(key);

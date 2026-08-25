@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class OracleVisibilityPermissionSchemaResourceTest {
-
+    
     @Test
     void testPermissionResourceColumnSupportsCanonicalVisibilityResource() throws IOException {
         String schema = readResource("META-INF/oracle-schema.sql");
@@ -35,7 +35,7 @@ class OracleVisibilityPermissionSchemaResourceTest {
         assertFalse(schema.contains("idx_permission_resource"));
         assertFalse(schema.contains("idx_role_user"));
     }
-
+    
     @Test
     void testPermissionResourceUpgradeScriptExpandsResourceColumn() throws IOException {
         String sql = readResource("META-INF/oracle-upgrade-visibility-permission-resource.sql");
@@ -43,7 +43,7 @@ class OracleVisibilityPermissionSchemaResourceTest {
             "ALTER TABLE permissions MODIFY (resource VARCHAR2(512 CHAR) NOT NULL)"));
         assertFalse(sql.contains("idx_permission_resource"));
     }
-
+    
     private String readResource(String resourceName) throws IOException {
         try (InputStream inputStream =
             getClass().getClassLoader().getResourceAsStream(resourceName)) {

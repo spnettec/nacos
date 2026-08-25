@@ -101,7 +101,7 @@ public class GrpcRequestAcceptor extends RequestGrpc.RequestImplBase {
                 NacosException.INVALID_SERVER_STATUS, null, null, System.nanoTime() - startTime);
             return;
         }
-
+        
         // server check.
         if (ServerCheckRequest.class.getSimpleName().equals(type)) {
             Payload serverCheckResponseP = GrpcUtils.convert(
@@ -174,7 +174,7 @@ public class GrpcRequestAcceptor extends RequestGrpc.RequestImplBase {
             traceIfNecessary(payloadResponse, false);
             responseObserver.onNext(payloadResponse);
             responseObserver.onCompleted();
-
+            
             MetricsMonitor.recordGrpcRequestEvent(type, false,
                 NacosException.BAD_GATEWAY, null, null, System.nanoTime() - startTime);
             return;
@@ -190,7 +190,7 @@ public class GrpcRequestAcceptor extends RequestGrpc.RequestImplBase {
             traceIfNecessary(payloadResponse, false);
             responseObserver.onNext(payloadResponse);
             responseObserver.onCompleted();
-
+            
             MetricsMonitor.recordGrpcRequestEvent(type, false,
                 NacosException.BAD_GATEWAY, null, null, System.nanoTime() - startTime);
             return;

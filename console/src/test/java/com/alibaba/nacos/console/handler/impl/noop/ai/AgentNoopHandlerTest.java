@@ -36,14 +36,14 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * @author Nacos
  */
 class AgentNoopHandlerTest {
-
+    
     private AgentNoopHandler handler;
-
+    
     @BeforeEach
     void setUp() {
         handler = new AgentNoopHandler();
     }
-
+    
     @Test
     void shouldRejectEveryOperationWhenAgentModuleIsDisabled() {
         assertDisabled(() -> handler.getAgent("ns", "agent"));
@@ -65,7 +65,7 @@ class AgentNoopHandlerTest {
         assertDisabled(() -> handler.offline("ns", "agent", "1.0.0"));
         assertDisabled(() -> handler.updateLabels("ns", new AgentLabelsUpdateRequest()));
     }
-
+    
     private void assertDisabled(Executable operation) {
         NacosApiException exception = assertThrows(NacosApiException.class, operation);
         assertEquals(NacosException.SERVER_NOT_IMPLEMENTED, exception.getErrCode());

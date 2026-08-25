@@ -68,12 +68,12 @@ import java.util.TreeSet;
  */
 @Component
 public class AgentRuntimeRegistryService {
-
+    
     private static final int MAX_RUNTIME_ENDPOINTS = 1000;
-
+    
     private static final Comparator<RuntimeVersionBinding> BINDING_COMPARATOR =
         new Comparator<RuntimeVersionBinding>() {
-
+            
             @Override
             public int compare(RuntimeVersionBinding left, RuntimeVersionBinding right) {
                 int result = AgentVersionComparator.compare(left.getRuntimeVersion(),
@@ -84,17 +84,21 @@ public class AgentRuntimeRegistryService {
                 return left.getVersionRange().compareTo(right.getVersionRange());
             }
         };
-
+    
     private final ServiceStorage serviceStorage;
-
+    
     private final EphemeralClientOperationServiceImpl clientOperationService;
-
+    
+    private final AgentRuntimePublicationCapacityGate publicationCapacityGate;
+    
     public AgentRuntimeRegistryService(ServiceStorage serviceStorage,
-        EphemeralClientOperationServiceImpl clientOperationService) {
+        EphemeralClientOperationServiceImpl clientOperationService,
+        AgentRuntimePublicationCapacityGate publicationCapacityGate) {
         this.serviceStorage = serviceStorage;
         this.clientOperationService = clientOperationService;
+        this.publicationCapacityGate = publicationCapacityGate;
     }
-
+    
     /**
      * Replace one publisher's complete Runtime Endpoint batch.
      *
@@ -111,10 +115,12 @@ public class AgentRuntimeRegistryService {
                 batch.getRuntimeVersion(), batch.getVersionRange()));
         }
         NamingUtils.batchCheckInstanceIsLegal(instances);
-        clientOperationService.batchRegisterInstance(composeService(batch.getNamespaceId(),
-            batch.getAgentName(), batch.getProtocol()), instances, publisherId);
+        Service service = composeService(batch.getNamespaceId(), batch.getAgentName(),
+            batch.getProtocol());
+        publicationCapacityGate.register(publisherId, service, instances.size(),
+            () -> clientOperationService.batchRegisterInstance(service, instances, publisherId));
     }
-
+    
     /**
      * Remove one publisher's complete Runtime Endpoint publication.
      *
@@ -133,7 +139,7 @@ public class AgentRuntimeRegistryService {
         clientOperationService.deregisterInstance(
             composeService(namespaceId, agentName, protocol), new Instance(), publisherId);
     }
-
+    
     /**
      * Return the management Runtime Endpoint snapshot for one Agent protocol.
      *
@@ -157,7 +163,7 @@ public class AgentRuntimeRegistryService {
         AgentModelValidator.validateRuntimeEndpointSnapshot(result);
         return result;
     }
-
+    
     /**
      * Return enabled Runtime Endpoints for RAD discovery.
      *
@@ -176,7 +182,7 @@ public class AgentRuntimeRegistryService {
         return getRuntimeEndpointSet(namespaceId, agentName, protocol,
             Collections.singletonList(version));
     }
-
+    
     /**
      * Return enabled Runtime Endpoints compatible with any supplied online Agent Version.
      *
@@ -201,7 +207,7 @@ public class AgentRuntimeRegistryService {
         RadModelValidator.validate(result);
         return result;
     }
-
+    
     private List<RuntimeEndpointSnapshotItem> loadSnapshotItems(String namespaceId,
         String agentName, String protocol,
         String version) throws NacosException {
@@ -233,7 +239,7 @@ public class AgentRuntimeRegistryService {
         validateCapacity(result.size());
         return new ArrayList<RuntimeEndpointSnapshotItem>(result.values());
     }
-
+    
     private List<AgentDiscoveryEndpoint> loadRuntimeEndpoints(String namespaceId,
         String agentName, String protocol, List<String> versions) throws NacosException {
         ServiceInfo serviceInfo = getServiceInfo(namespaceId, agentName, protocol);
@@ -273,7 +279,7 @@ public class AgentRuntimeRegistryService {
         validateCapacity(payloads.size());
         return new ArrayList<AgentDiscoveryEndpoint>(result.values());
     }
-
+    
     private ServiceInfo getServiceInfo(String namespaceId, String agentName, String protocol) {
         ServiceInfo result =
             serviceStorage.getData(composeService(namespaceId, agentName, protocol));
@@ -283,7 +289,7 @@ public class AgentRuntimeRegistryService {
         }
         return result;
     }
-
+    
     private RuntimeEndpointSnapshotItem mapInstance(Instance instance, long lastUpdatedTime) {
         try {
             return AgentRuntimeEndpointMapper.fromInstance(instance, lastUpdatedTime);
@@ -292,7 +298,7 @@ public class AgentRuntimeRegistryService {
                 "Invalid Agent Runtime Endpoint in Naming ServiceStorage", e);
         }
     }
-
+    
     private List<RuntimeVersionBinding> matchingBindings(
         List<RuntimeVersionBinding> bindings, String version) {
         List<RuntimeVersionBinding> result = new ArrayList<RuntimeVersionBinding>();
@@ -304,7 +310,7 @@ public class AgentRuntimeRegistryService {
         }
         return result;
     }
-
+    
     private List<RuntimeVersionBinding> matchingBindings(
         List<RuntimeVersionBinding> bindings, List<String> versions) {
         List<RuntimeVersionBinding> result = new ArrayList<RuntimeVersionBinding>();
@@ -319,7 +325,7 @@ public class AgentRuntimeRegistryService {
         Collections.sort(result, BINDING_COMPARATOR);
         return result;
     }
-
+    
     private List<RuntimeVersionBinding> mergeBindings(List<RuntimeVersionBinding> current,
         List<RuntimeVersionBinding> contribution) {
         Set<RuntimeVersionBinding> bindings =
@@ -328,7 +334,7 @@ public class AgentRuntimeRegistryService {
         bindings.addAll(contribution);
         return new ArrayList<RuntimeVersionBinding>(bindings);
     }
-
+    
     private void mergeSnapshotItem(RuntimeEndpointSnapshotItem current,
         RuntimeEndpointSnapshotItem contribution) {
         Set<RuntimeVersionBinding> bindings =
@@ -340,7 +346,7 @@ public class AgentRuntimeRegistryService {
         current.setHealthy(current.getHealthy() || contribution.getHealthy());
         current.setState(runtimeState(current.getEnabled(), current.getHealthy()));
     }
-
+    
     private RuntimeEndpointState runtimeState(boolean enabled, boolean healthy) {
         if (!enabled) {
             return RuntimeEndpointState.DISABLED;
@@ -350,7 +356,7 @@ public class AgentRuntimeRegistryService {
         }
         return RuntimeEndpointState.AVAILABLE;
     }
-
+    
     private void validateCapacity(int size) throws NacosException {
         if (size > MAX_RUNTIME_ENDPOINTS) {
             throw new NacosException(NacosException.OVER_THRESHOLD,
@@ -358,12 +364,12 @@ public class AgentRuntimeRegistryService {
                     + " natural keys");
         }
     }
-
+    
     private Service composeService(String namespaceId, String agentName, String protocol) {
         return Service.newService(namespaceId, Constants.Agent.AGENT_ENDPOINT_GROUP,
             RadServiceNameComposer.compose(agentName, protocol));
     }
-
+    
     private void validateReadIdentity(String namespaceId, String agentName, String protocol,
         String version) {
         AgentValidationUtils.validateNamespaceId(namespaceId);
@@ -373,7 +379,7 @@ public class AgentRuntimeRegistryService {
             AgentValidationUtils.validateVersion(version);
         }
     }
-
+    
     private void validateDiscoveryVersions(String namespaceId, String agentName, String protocol,
         List<String> versions) {
         validateReadIdentity(namespaceId, agentName, protocol, null);
@@ -385,11 +391,11 @@ public class AgentRuntimeRegistryService {
             AgentValidationUtils.validateVersion(version);
         }
     }
-
+    
     private void sortRuntimeEndpoints(String namespaceId, String agentName, String protocol,
         List<AgentDiscoveryEndpoint> endpoints) {
         Collections.sort(endpoints, new Comparator<AgentDiscoveryEndpoint>() {
-
+            
             @Override
             public int compare(AgentDiscoveryEndpoint left, AgentDiscoveryEndpoint right) {
                 int result = Integer.compare(left.getPriority(), right.getPriority());
@@ -404,12 +410,12 @@ public class AgentRuntimeRegistryService {
             }
         });
     }
-
+    
     private NacosApiException conflict(EndpointNaturalKey key) {
         return new NacosApiException(NacosException.CONFLICT, ErrorCode.RESOURCE_CONFLICT,
             "Naming contains conflicting Runtime Endpoints for natural key: " + key);
     }
-
+    
     private boolean samePayload(Endpoint left, Endpoint right) {
         Endpoint first = EndpointCanonicalizer.canonicalize(left);
         Endpoint second = EndpointCanonicalizer.canonicalize(right);
@@ -419,13 +425,13 @@ public class AgentRuntimeRegistryService {
             && sameWeight(first.getWeight(), second.getWeight())
             && Objects.equals(first.getMetadata(), second.getMetadata());
     }
-
+    
     private boolean sameWeight(Double left, Double right) {
         double first = left == 0D ? 0D : left;
         double second = right == 0D ? 0D : right;
         return Double.doubleToLongBits(first) == Double.doubleToLongBits(second);
     }
-
+    
     private static AgentDiscoveryEndpoint copyEndpoint(Endpoint source) {
         AgentDiscoveryEndpoint result = new AgentDiscoveryEndpoint();
         result.setUri(source.getUri());

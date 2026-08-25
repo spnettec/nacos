@@ -30,10 +30,10 @@ import tools.jackson.core.type.TypeReference;
  * @author Nacos
  */
 final class AgentAdminFormJsonParser {
-
+    
     private AgentAdminFormJsonParser() {
     }
-
+    
     static <T> T parseOptional(String fieldName, String value, Class<T> targetType)
         throws NacosApiException {
         if (StringUtils.isBlank(value)) {
@@ -45,7 +45,7 @@ final class AgentAdminFormJsonParser {
             throw invalidJson(fieldName);
         }
     }
-
+    
     static <T> T parseOptional(String fieldName, String value,
         TypeReference<T> targetType) throws NacosApiException {
         if (StringUtils.isBlank(value)) {
@@ -57,7 +57,7 @@ final class AgentAdminFormJsonParser {
             throw invalidJson(fieldName);
         }
     }
-
+    
     private static NacosApiException invalidJson(String fieldName) {
         return new NacosApiException(NacosException.INVALID_PARAM,
             ErrorCode.PARAMETER_VALIDATE_ERROR,

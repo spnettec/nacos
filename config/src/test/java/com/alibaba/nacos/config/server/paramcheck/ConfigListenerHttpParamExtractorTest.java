@@ -38,12 +38,12 @@ import static org.mockito.ArgumentMatchers.eq;
 
 @ExtendWith(MockitoExtension.class)
 class ConfigListenerHttpParamExtractorTest {
-
+    
     ConfigListenerHttpParamExtractor configListenerHttpParamExtractor;
-
+    
     @Mock
     HttpServletRequest httpServletRequest;
-
+    
     @Test
     void testNormal() {
         String listenerConfigsString = getListenerConfigsString();
@@ -52,28 +52,28 @@ class ConfigListenerHttpParamExtractorTest {
         configListenerHttpParamExtractor = new ConfigListenerHttpParamExtractor();
         configListenerHttpParamExtractor.extractParam(httpServletRequest);
     }
-
+    
     @Test
     void testBlankListeningConfigsReturnEmptyParams() {
         Mockito.when(httpServletRequest.getParameter(eq("Listening-Configs"))).thenReturn(" ");
         configListenerHttpParamExtractor = new ConfigListenerHttpParamExtractor();
-
+        
         List<ParamInfo> result = configListenerHttpParamExtractor.extractParam(httpServletRequest);
-
+        
         assertTrue(result.isEmpty());
     }
-
+    
     @Test
     void testDecodedBlankListeningConfigsReturnEmptyParams() {
         Mockito.when(httpServletRequest.getParameter(eq("Listening-Configs")))
             .thenReturn("%20%20");
         configListenerHttpParamExtractor = new ConfigListenerHttpParamExtractor();
-
+        
         List<ParamInfo> result = configListenerHttpParamExtractor.extractParam(httpServletRequest);
-
+        
         assertTrue(result.isEmpty());
     }
-
+    
     @Test
     void testExtractNamespaceFromFourWords() {
         String listenerConfigsString = "dataId" + WORD_SEPARATOR + "group"
@@ -81,26 +81,26 @@ class ConfigListenerHttpParamExtractorTest {
         Mockito.when(httpServletRequest.getParameter(eq("Listening-Configs")))
             .thenReturn(listenerConfigsString);
         configListenerHttpParamExtractor = new ConfigListenerHttpParamExtractor();
-
+        
         List<ParamInfo> result = configListenerHttpParamExtractor.extractParam(httpServletRequest);
-
+        
         assertEquals(1, result.size());
         assertEquals("dataId", result.get(0).getDataId());
         assertEquals("group", result.get(0).getGroup());
         assertEquals("namespace", result.get(0).getNamespaceId());
     }
-
+    
     @Test
     void testError() {
         String listenerConfigsString = getErrorListenerConfigsString();
         Mockito.when(httpServletRequest.getParameter(eq("Listening-Configs")))
             .thenReturn(listenerConfigsString);
         configListenerHttpParamExtractor = new ConfigListenerHttpParamExtractor();
-
+        
         assertThrows(IllegalArgumentException.class,
             () -> configListenerHttpParamExtractor.extractParam(httpServletRequest));
     }
-
+    
     private String getListenerConfigsString() {
         ConfigInfo configInfo1 = new ConfigInfo();
         configInfo1.setDataId("2345678901");
@@ -135,22 +135,22 @@ class ConfigListenerHttpParamExtractorTest {
                 sb.append(configInfo.getTenant()).append(LINE_SEPARATOR);
             }
         }
-
+        
         return sb.toString();
-
+        
     }
-
+    
     private String getErrorListenerConfigsString() {
         ConfigInfo configInfo1 = new ConfigInfo();
         configInfo1.setDataId("2345678901");
-
+        
         List<ConfigInfo> configInfoList = Arrays.asList(configInfo1);
         StringBuilder sb = new StringBuilder();
         for (ConfigInfo configInfo : configInfoList) {
             sb.append(configInfo.getDataId()).append(WORD_SEPARATOR);
         }
-
+        
         return sb.toString();
-
+        
     }
 }

@@ -51,27 +51,27 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @author nacos
  */
 public class NacosAgentSpecCacheHolder implements Closeable {
-
+    
     private static final Logger LOGGER = LogUtils.logger(NacosAgentSpecCacheHolder.class);
-
+    
     private final AiClientProxy aiClientProxy;
-
+    
     /**
      * agentSpecName -> last published MD5.
      */
     private final Map<String, String> md5Cache;
-
+    
     /**
      * agentSpecName -> cached AgentSpec object.
      */
     private final Map<String, AgentSpec> agentSpecCache;
-
+    
     private final ScheduledExecutorService updaterExecutor;
-
+    
     private final long updateIntervalMillis;
-
+    
     private final Map<String, AgentSpecUpdater> updateTaskMap;
-
+    
     public NacosAgentSpecCacheHolder(AiClientProxy aiClientProxy,
         NacosClientProperties properties) {
         this.aiClientProxy = aiClientProxy;
@@ -84,7 +84,7 @@ public class NacosAgentSpecCacheHolder implements Closeable {
             AiConstants.AI_AGENTSPEC_CACHE_UPDATE_INTERVAL,
             AiConstants.DEFAULT_AI_CACHE_UPDATE_INTERVAL);
     }
-
+    
     /**
      * Query agent spec synchronously (no subscription).
      *
@@ -108,7 +108,7 @@ public class NacosAgentSpecCacheHolder implements Closeable {
             throw e;
         }
     }
-
+    
     /**
      * Subscribe to agent spec changes and start polling.
      *
@@ -125,7 +125,7 @@ public class NacosAgentSpecCacheHolder implements Closeable {
                 "Required parameter `agentSpecName` not present");
         }
         String cacheKey = CacheKeyUtils.buildAgentSpecKey(agentSpecName);
-
+        
         AgentSpec agentSpec = null;
         try {
             AgentSpecQueryResponse response =
@@ -143,7 +143,7 @@ public class NacosAgentSpecCacheHolder implements Closeable {
             }
             md5Cache.remove(cacheKey);
         }
-
+        
         if (agentSpec != null) {
             agentSpecCache.put(cacheKey, agentSpec);
         }
@@ -151,7 +151,7 @@ public class NacosAgentSpecCacheHolder implements Closeable {
         LOGGER.info("Subscribed agent spec: {}", agentSpecName);
         return agentSpec;
     }
-
+    
     /**
      * Unsubscribe from agent spec changes.
      *
@@ -167,12 +167,12 @@ public class NacosAgentSpecCacheHolder implements Closeable {
         agentSpecCache.remove(cacheKey);
         LOGGER.info("Unsubscribed agent spec: {}", agentSpecName);
     }
-
+    
     @Override
     public void shutdown() throws NacosException {
         this.updaterExecutor.shutdownNow();
     }
-
+    
     private void addUpdateTask(String agentSpecName) {
         String key = CacheKeyUtils.buildAgentSpecKey(agentSpecName);
         this.updateTaskMap.computeIfAbsent(key, s -> {
@@ -181,7 +181,7 @@ public class NacosAgentSpecCacheHolder implements Closeable {
             return task;
         });
     }
-
+    
     private void removeUpdateTask(String agentSpecName) {
         String key = CacheKeyUtils.buildAgentSpecKey(agentSpecName);
         AgentSpecUpdater task = this.updateTaskMap.remove(key);
@@ -189,7 +189,7 @@ public class NacosAgentSpecCacheHolder implements Closeable {
             task.cancel();
         }
     }
-
+    
     private void processAgentSpec(String agentSpecName, String cacheKey,
         AgentSpecQueryResponse response) {
         String oldMd5 = md5Cache.get(cacheKey);
@@ -206,24 +206,24 @@ public class NacosAgentSpecCacheHolder implements Closeable {
                 new AgentSpecChangedEvent(agentSpecName, response.getAgentSpec()));
         }
     }
-
+    
     private class AgentSpecUpdater implements Runnable {
-
+        
         private final String agentSpecName;
-
+        
         private final String cacheKey;
-
+        
         private final AtomicBoolean cancel = new AtomicBoolean(false);
-
+        
         AgentSpecUpdater(String agentSpecName) {
             this.agentSpecName = agentSpecName;
             this.cacheKey = CacheKeyUtils.buildAgentSpecKey(agentSpecName);
         }
-
+        
         void cancel() {
             cancel.set(true);
         }
-
+        
         @Override
         public void run() {
             if (cancel.get()) {

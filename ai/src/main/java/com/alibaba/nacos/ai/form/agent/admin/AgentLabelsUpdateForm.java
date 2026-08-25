@@ -29,17 +29,17 @@ import java.util.Map;
  * @author Nacos
  */
 public class AgentLabelsUpdateForm extends AgentAdminForm {
-
+    
     @Serial
     private static final long serialVersionUID = 1L;
-
+    
     private String labels;
-
+    
     @Override
     public void validate() throws NacosApiException {
         toRequest();
     }
-
+    
     /**
      * Validate this form, parse the labels JSON field, and build the public request model.
      *
@@ -60,11 +60,11 @@ public class AgentLabelsUpdateForm extends AgentAdminForm {
         result.validate();
         return result;
     }
-
+    
     public String getLabels() {
         return labels;
     }
-
+    
     public void setLabels(String labels) {
         this.labels = labels;
     }

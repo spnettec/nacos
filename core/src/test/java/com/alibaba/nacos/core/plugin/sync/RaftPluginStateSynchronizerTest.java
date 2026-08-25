@@ -43,42 +43,42 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class RaftPluginStateSynchronizerTest {
-
+    
     @Mock
     private CPProtocol cpProtocol;
-
+    
     @Mock
     private PluginStateConsensusService consensusService;
-
+    
     private RaftPluginStateSynchronizer synchronizer;
-
+    
     @BeforeEach
     void setUp() {
         lenient().when(consensusService.getProtocol()).thenReturn(cpProtocol);
         synchronizer = new RaftPluginStateSynchronizer(consensusService);
     }
-
+    
     @Test
     void syncStateChangeSuccess() throws Exception {
         Response success = Response.newBuilder().setSuccess(true).build();
         when(cpProtocol.write(any(WriteRequest.class))).thenReturn(success);
-
+        
         synchronizer.syncStateChange("auth:nacos", true);
-
+        
         verify(cpProtocol).write(any(WriteRequest.class));
     }
-
+    
     @Test
     void lifecycleDelegatesToConsensusService() {
         when(consensusService.isAvailable()).thenReturn(true, false);
-
+        
         synchronizer.initialize();
-
+        
         verify(consensusService).initialize();
         assertTrue(synchronizer.isAvailable());
         assertFalse(synchronizer.isAvailable());
     }
-
+    
     @Test
     void providerCreatesRaftSynchronizerLazily() {
         java.util.concurrent.atomic.AtomicBoolean requested =
@@ -88,7 +88,7 @@ class RaftPluginStateSynchronizerTest {
                 requested.set(true);
                 return consensusService;
             });
-
+        
         assertEquals("raft", provider.getName());
         assertFalse(requested.get());
         assertTrue(provider.createSynchronizer(
@@ -96,70 +96,70 @@ class RaftPluginStateSynchronizerTest {
                 PluginStateSynchronizationContext.class)) instanceof RaftPluginStateSynchronizer);
         assertTrue(requested.get());
     }
-
+    
     @Test
     void providerRejectsMissingConsensusService() {
         RaftPluginStateSynchronizerProvider provider =
             new RaftPluginStateSynchronizerProvider(() -> null);
-
+        
         assertThrows(IllegalStateException.class, () -> provider.createSynchronizer(
             org.mockito.Mockito.mock(PluginStateSynchronizationContext.class)));
         verify(consensusService, never()).initialize();
     }
-
+    
     @Test
     void syncStateChangeFailure() throws Exception {
         Response failure = Response.newBuilder().setSuccess(false).setErrMsg("raft error").build();
         when(cpProtocol.write(any(WriteRequest.class))).thenReturn(failure);
-
+        
         assertThrows(NacosApiException.class,
             () -> synchronizer.syncStateChange("auth:nacos", false));
     }
-
+    
     @Test
     void syncStateChangeException() throws Exception {
         when(cpProtocol.write(any(WriteRequest.class)))
             .thenThrow(new RuntimeException("network error"));
-
+        
         assertThrows(NacosApiException.class,
             () -> synchronizer.syncStateChange("trace:test", true));
     }
-
+    
     @Test
     void syncConfigChangeSuccess() throws Exception {
         Response success = Response.newBuilder().setSuccess(true).build();
         when(cpProtocol.write(any(WriteRequest.class))).thenReturn(success);
         Map<String, String> config = new HashMap<>();
         config.put("key", "value");
-
+        
         synchronizer.syncConfigChange("trace:otel", config);
-
+        
         verify(cpProtocol).write(any(WriteRequest.class));
     }
-
+    
     @Test
     void syncConfigChangeFailure() throws Exception {
         Response failure =
             Response.newBuilder().setSuccess(false).setErrMsg("write failed").build();
         when(cpProtocol.write(any(WriteRequest.class))).thenReturn(failure);
-
+        
         assertThrows(NacosApiException.class,
             () -> synchronizer.syncConfigChange("trace:otel", Collections.singletonMap("k", "v")));
     }
-
+    
     @Test
     void syncConfigChangePreservesInvalidParameterError() throws Exception {
         Response failure = Response.newBuilder().setSuccess(false)
             .setErrMsg(PluginStateOperation.INVALID_PARAM_ERROR_PREFIX + "invalid config")
             .build();
         when(cpProtocol.write(any(WriteRequest.class))).thenReturn(failure);
-
+        
         NacosApiException exception = assertThrows(NacosApiException.class,
             () -> synchronizer.syncConfigChange("trace:otel", Collections.emptyMap()));
-
+        
         assertEquals(NacosException.INVALID_PARAM, exception.getErrCode());
     }
-
+    
     @Test
     void syncConfigChangeReportsAcceptedConfigApplyFailure() throws Exception {
         Response failure = Response.newBuilder().setSuccess(false)
@@ -167,30 +167,30 @@ class RaftPluginStateSynchronizerTest {
                 + "config updated but apply failed")
             .build();
         when(cpProtocol.write(any(WriteRequest.class))).thenReturn(failure);
-
+        
         NacosApiException exception = assertThrows(NacosApiException.class,
             () -> synchronizer.syncConfigChange("trace:otel", Collections.emptyMap()));
-
+        
         assertEquals(NacosException.SERVER_ERROR, exception.getErrCode());
         assertEquals("config updated but apply failed", exception.getErrMsg());
     }
-
+    
     @Test
     void syncConfigChangeException() throws Exception {
         when(cpProtocol.write(any(WriteRequest.class))).thenThrow(new RuntimeException("io error"));
-
+        
         assertThrows(NacosApiException.class,
             () -> synchronizer.syncConfigChange("auth:nacos", Collections.emptyMap()));
     }
-
+    
     @Test
     void syncConfigChangeFailsWhenConsensusGroupIsUnavailable() throws Exception {
         when(consensusService.getProtocol()).thenThrow(
             new IllegalStateException("group unavailable"));
-
+        
         NacosApiException exception = assertThrows(NacosApiException.class,
             () -> synchronizer.syncConfigChange("auth:nacos", Collections.emptyMap()));
-
+        
         assertEquals(NacosException.SERVER_ERROR, exception.getErrCode());
         org.mockito.Mockito.verify(cpProtocol, org.mockito.Mockito.never())
             .write(any(WriteRequest.class));

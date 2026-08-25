@@ -45,33 +45,33 @@ import java.util.List;
 @EnabledInnerHandler
 @EnabledAiHandler
 public class A2aInnerHandler implements A2aHandler {
-
+    
     private final A2aCompatibilityOperationService a2aServerOperationService;
-
+    
     public A2aInnerHandler(A2aCompatibilityOperationService a2aServerOperationService) {
         this.a2aServerOperationService = a2aServerOperationService;
     }
-
+    
     @Override
     public void registerAgent(AgentCard agentCard, AgentCardForm agentCardForm)
         throws NacosException {
         a2aServerOperationService.registerAgent(agentCard, agentCardForm.getNamespaceId(),
             agentCardForm.getRegistrationType());
     }
-
+    
     @Override
     public AgentCardDetailInfo getAgentCardWithVersions(AgentForm form) throws NacosException {
         return a2aServerOperationService.getAgentCard(form.getNamespaceId(), form.getAgentName(),
             form.getVersion(),
             form.getRegistrationType());
     }
-
+    
     @Override
     public void deleteAgent(AgentForm form) throws NacosException {
         a2aServerOperationService.deleteAgent(form.getNamespaceId(), form.getAgentName(),
             form.getVersion());
     }
-
+    
     @Override
     public void updateAgentCard(AgentCard agentCard, AgentCardUpdateForm form)
         throws NacosException {
@@ -79,7 +79,7 @@ public class A2aInnerHandler implements A2aHandler {
             form.getRegistrationType(),
             form.getSetAsLatest());
     }
-
+    
     @Override
     public Page<AgentCardVersionInfo> listAgents(AgentListForm agentListForm, PageForm pageForm)
         throws NacosException {
@@ -87,7 +87,7 @@ public class A2aInnerHandler implements A2aHandler {
             agentListForm.getAgentName(),
             agentListForm.getSearch(), pageForm.getPageNo(), pageForm.getPageSize());
     }
-
+    
     @Override
     public List<AgentVersionDetail> listAgentVersions(String namespaceId, String name)
         throws NacosException {

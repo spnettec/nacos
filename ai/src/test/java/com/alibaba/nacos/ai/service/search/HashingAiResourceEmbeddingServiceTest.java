@@ -28,20 +28,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author nacos
  */
 class HashingAiResourceEmbeddingServiceTest {
-
+    
     @Test
     void embedShouldBeDeterministicAndNormalized() {
         HashingAiResourceEmbeddingService service = new HashingAiResourceEmbeddingService();
-
+        
         double[] first = service.embed("api helper");
         double[] second = service.embed("api helper");
-
+        
         assertEquals(service.dimension(), first.length);
         assertArrayEquals(first, second);
         assertTrue(norm(first) > 0.99D);
         assertTrue(norm(first) < 1.01D);
     }
-
+    
     private double norm(double[] vector) {
         double value = 0D;
         for (double each : vector) {

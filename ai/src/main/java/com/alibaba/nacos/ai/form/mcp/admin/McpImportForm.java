@@ -33,41 +33,41 @@ import java.io.Serial;
  */
 @Deprecated
 public class McpImportForm extends McpForm {
-
+    
     @Serial
     private static final long serialVersionUID = 8016131725604983671L;
-
+    
     private String importType;
-
+    
     private String data;
-
+    
     private boolean overrideExisting = false;
-
+    
     private boolean validateOnly = false;
-
+    
     /**
      * Whether to skip invalid servers when executing import.
      */
     private boolean skipInvalid = false;
-
+    
     private String[] selectedServers;
-
+    
     /**
      * Optional start cursor for URL-based import pagination.
      */
     private String cursor;
-
+    
     /**
      * Optional page size for URL-based import (items per page).
      */
     private Integer limit;
-
+    
     /**
      * Optional fuzzy search keyword for registry import listing.
      * Only used when importType is 'url'.
      */
     private String search;
-
+    
     @Override
     public void validate() throws NacosApiException {
         fillDefaultValue();
@@ -85,75 +85,75 @@ public class McpImportForm extends McpForm {
                 "importType must be one of: json, url, file");
         }
     }
-
+    
     public String getImportType() {
         return importType;
     }
-
+    
     public void setImportType(String importType) {
         this.importType = importType;
     }
-
+    
     public String getData() {
         return data;
     }
-
+    
     public void setData(String data) {
         this.data = data;
     }
-
+    
     public boolean isOverrideExisting() {
         return overrideExisting;
     }
-
+    
     public void setOverrideExisting(boolean overrideExisting) {
         this.overrideExisting = overrideExisting;
     }
-
+    
     public boolean isValidateOnly() {
         return validateOnly;
     }
-
+    
     public void setValidateOnly(boolean validateOnly) {
         this.validateOnly = validateOnly;
     }
-
+    
     public boolean isSkipInvalid() {
         return skipInvalid;
     }
-
+    
     public void setSkipInvalid(boolean skipInvalid) {
         this.skipInvalid = skipInvalid;
     }
-
+    
     public String[] getSelectedServers() {
         return selectedServers;
     }
-
+    
     public void setSelectedServers(String[] selectedServers) {
         this.selectedServers = selectedServers;
     }
-
+    
     public String getCursor() {
         return cursor;
     }
-
+    
     public void setCursor(String cursor) {
         this.cursor = cursor;
     }
-
+    
     public Integer getLimit() {
         return limit;
     }
-
+    
     public void setLimit(Integer limit) {
         this.limit = limit;
     }
-
+    
     public String getSearch() {
         return search;
     }
-
+    
     public void setSearch(String search) {
         this.search = search;
     }

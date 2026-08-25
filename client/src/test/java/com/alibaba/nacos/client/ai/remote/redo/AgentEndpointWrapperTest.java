@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AgentEndpointWrapperTest {
-
+    
     private AgentEndpoint newEndpoint(String address, int port) {
         AgentEndpoint endpoint = new AgentEndpoint();
         endpoint.setAddress(address);
@@ -38,7 +38,7 @@ class AgentEndpointWrapperTest {
         endpoint.setVersion("1.0.0");
         return endpoint;
     }
-
+    
     @Test
     void testWrapSingle() {
         AgentEndpoint endpoint = newEndpoint("127.0.0.1", 8080);
@@ -50,7 +50,7 @@ class AgentEndpointWrapperTest {
         assertEquals("127.0.0.1", wrapper.getData().getAddress());
         assertThrows(UnsupportedOperationException.class, wrapper::getBatchData);
     }
-
+    
     @Test
     void testWrapBatch() {
         Collection<AgentEndpoint> list =
@@ -62,7 +62,7 @@ class AgentEndpointWrapperTest {
             () -> wrapper.getBatchData().clear());
         assertThrows(UnsupportedOperationException.class, wrapper::getData);
     }
-
+    
     @Test
     void testEquals() {
         AgentEndpoint e1 = newEndpoint("127.0.0.1", 8080);
@@ -73,10 +73,10 @@ class AgentEndpointWrapperTest {
         assertNotEquals(wrapper1, new Object());
         assertEquals(wrapper1, wrapper2);
         assertEquals(wrapper1.hashCode(), wrapper2.hashCode());
-
+        
         AgentEndpointWrapper diffData = AgentEndpointWrapper.wrap(newEndpoint("127.0.0.2", 9090));
         assertNotEquals(wrapper1, diffData);
-
+        
         AgentEndpointWrapper batch = AgentEndpointWrapper.wrap(Arrays.asList(e1));
         assertNotEquals(wrapper1, batch);
     }

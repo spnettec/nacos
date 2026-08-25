@@ -59,18 +59,18 @@ import java.util.Map;
  * @author xiweng.yy
  */
 public abstract class AbstractWebAuthFilter implements Filter {
-
+    
     private final ControllerMethodsCache methodsCache;
-
+    
     private final HttpProtocolAuthService protocolAuthService;
-
+    
     protected AbstractWebAuthFilter(NacosAuthConfig authConfig,
         ControllerMethodsCache methodsCache) {
         this.methodsCache = methodsCache;
         this.protocolAuthService = new HttpProtocolAuthService(authConfig);
         this.protocolAuthService.initialize();
     }
-
+    
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
         throws IOException, ServletException {
@@ -85,7 +85,7 @@ public abstract class AbstractWebAuthFilter implements Filter {
             chain.doFilter(request, response);
             return;
         }
-
+        
         try {
             Secured secured = method.getAnnotation(Secured.class);
             RequestContext requestContext = RequestContextHolder.getContext();
@@ -148,7 +148,7 @@ public abstract class AbstractWebAuthFilter implements Filter {
             handleFilterException(req, resp, method, e);
         }
     }
-
+    
     private void handleFilterException(HttpServletRequest req, HttpServletResponse resp,
         Method method, Exception e)
         throws IOException, ServletException {
@@ -186,7 +186,7 @@ public abstract class AbstractWebAuthFilter implements Filter {
         }
         handleUnexpectedException(e);
     }
-
+    
     private void writeAccessDeniedResponse(HttpServletResponse response, Method method,
         String message) throws IOException {
         ProtocolAuthError protocolError =
@@ -205,7 +205,7 @@ public abstract class AbstractWebAuthFilter implements Filter {
         body.put("message", message == null ? "Unauthorized" : message);
         WebUtils.response(response, JacksonUtils.toJson(body), protocolError.status());
     }
-
+    
     private void handleUnexpectedException(Exception e) throws IOException, ServletException {
         Loggers.AUTH.warn("[AUTH-FILTER] Server failed: ", e);
         if (e instanceof IOException) {
@@ -219,12 +219,12 @@ public abstract class AbstractWebAuthFilter implements Filter {
         }
         throw new ServletException(e);
     }
-
+    
     private void writeResultResponse(HttpServletResponse response, int status, Result<?> result)
         throws IOException {
         WebUtils.response(response, JacksonUtils.toJson(result), status);
     }
-
+    
     private boolean isIdentityOnlyApi(Secured secured) {
         for (String tag : secured.tags()) {
             if (Constants.Tag.ONLY_IDENTITY.equals(tag)) {
@@ -233,7 +233,7 @@ public abstract class AbstractWebAuthFilter implements Filter {
         }
         return false;
     }
-
+    
     /**
      * Check whether this filter should be applied for this {@link Secured} API.
      *
@@ -243,12 +243,12 @@ public abstract class AbstractWebAuthFilter implements Filter {
     protected boolean isMatchFilter(Secured secured) {
         return true;
     }
-
+    
     protected ServerIdentityResult checkServerIdentity(HttpServletRequest request,
         Secured secured) {
         return protocolAuthService.checkServerIdentity(request, secured);
     }
-
+    
     /**
      * Whether this auth filter is enabled.
      *

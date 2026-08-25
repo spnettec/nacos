@@ -67,17 +67,17 @@ import java.util.Map;
 @RestController
 @RequestMapping(AuthConstants.USER_PATH)
 public class UserControllerV3 {
-
+    
     private final NacosUserService userDetailsService;
-
+    
     private final NacosRoleService roleService;
-
+    
     private final IAuthenticationManager iAuthenticationManager;
-
+    
     private final TokenManagerDelegate jwtTokenManager;
-
+    
     private static final String SEARCH_TYPE_BLUR = "blur";
-
+    
     /**
      * Constructs a new UserInnerHandler with the provided dependencies.
      *
@@ -93,7 +93,7 @@ public class UserControllerV3 {
         this.iAuthenticationManager = iAuthenticationManager;
         this.jwtTokenManager = jwtTokenManager;
     }
-
+    
     /**
      * Create a new user.
      *
@@ -115,18 +115,18 @@ public class UserControllerV3 {
         userDetailsService.createUser(username, password);
         return Result.success("create user ok!");
     }
-
+    
     /**
      * Create a admin user only not exist admin user can use.
      */
     @Since("3.0.0")
     @PostMapping("/admin")
     public Result<User> createAdminUser(@RequestParam(required = false) String password) {
-
+        
         if (StringUtils.isBlank(password)) {
             password = PasswordGeneratorUtil.generateRandomPassword();
         }
-
+        
         if (AuthSystemTypes.NACOS.name()
             .equalsIgnoreCase(getServerAuthConfig().getNacosAuthSystemType())) {
             if (iAuthenticationManager.hasGlobalAdminRole()) {
@@ -145,7 +145,7 @@ public class UserControllerV3 {
                 "Current auth type not supported create admin user.", null);
         }
     }
-
+    
     /**
      * Delete an existed user.
      *
@@ -169,7 +169,7 @@ public class UserControllerV3 {
         userDetailsService.deleteUser(username);
         return Result.success("delete user ok!");
     }
-
+    
     /**
      * Update an user.
      *
@@ -203,17 +203,17 @@ public class UserControllerV3 {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "authorization failed!");
             return null;
         }
-
+        
         User user = userDetailsService.getUser(username);
         if (user == null) {
             throw new IllegalArgumentException("user " + username + " not exist!");
         }
-
+        
         userDetailsService.updateUserPassword(username, newPassword);
         return Result.success("update user ok!");
-
+        
     }
-
+    
     private boolean hasPermission(String username, HttpServletRequest request)
         throws HttpSessionRequiredException, AccessException {
         if (!NacosAuthConfigHolder.getInstance().isAnyAuthEnabled()) {
@@ -244,7 +244,7 @@ public class UserControllerV3 {
         // same user
         return user.getUserName().equals(username);
     }
-
+    
     /**
      * Get paged users with the option for accurate or fuzzy search.
      *
@@ -270,7 +270,7 @@ public class UserControllerV3 {
         }
         return Result.success(userPage);
     }
-
+    
     /**
      * Fuzzy matching username.
      *
@@ -285,7 +285,7 @@ public class UserControllerV3 {
         List<String> userList = userDetailsService.findUserNames(username);
         return Result.success(userList);
     }
-
+    
     /**
      * Login to Nacos
      *
@@ -310,10 +310,10 @@ public class UserControllerV3 {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(AuthConstants.INVALID_CREDENTIALS_MESSAGE);
             }
-
+            
             response.addHeader(AuthConstants.AUTHORIZATION_HEADER,
                 AuthConstants.TOKEN_PREFIX + user.getToken());
-
+            
             Map<String, Object> result = new HashMap<>();
             result.put(Constants.ACCESS_TOKEN, user.getToken());
             result.put(Constants.TOKEN_TTL, jwtTokenManager.getTokenTtlInSeconds(user.getToken()));
@@ -325,14 +325,14 @@ public class UserControllerV3 {
             "Current Nacos auth plugin type is not `nacos` or `nacos-ldap`, don't support login API.",
             null);
     }
-
+    
     private boolean isFromServerIdentity(HttpServletRequest request) {
         NacosAuthConfig authConfig = getServerAuthConfig();
         String serverIdentityKey = authConfig.getServerIdentityKey();
         String serverIdentityValue = request.getHeader(serverIdentityKey);
         return authConfig.getServerIdentityValue().equals(serverIdentityValue);
     }
-
+    
     private NacosAuthConfig getServerAuthConfig() {
         return NacosAuthConfigHolder.getInstance()
             .getNacosAuthConfigByScope(ApiType.OPEN_API.name());

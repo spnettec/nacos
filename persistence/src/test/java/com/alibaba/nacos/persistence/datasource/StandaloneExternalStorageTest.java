@@ -52,7 +52,7 @@ class StandaloneExternalStorageTest {
     private DynamicDataSource dataSource;
     
     private MockEnvironment environment;
-
+    
     @Mock
     ConfigurableApplicationContext context;
     

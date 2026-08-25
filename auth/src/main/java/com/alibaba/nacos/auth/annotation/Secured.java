@@ -35,28 +35,28 @@ import java.lang.annotation.RetentionPolicy;
  */
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Secured {
-
+    
     /**
      * The action type of the request.
      *
      * @return action type, default READ
      */
     ActionTypes action() default ActionTypes.READ;
-
+    
     /**
      * The name of resource related to the request.
      *
      * @return resource name
      */
     String resource() default StringUtils.EMPTY;
-
+    
     /**
      * The module of resource related to the request.
      *
      * @return module name
      */
     String signType() default SignType.NAMING;
-
+    
     /**
      * Custom resource parser. Used when {@link #resource()} is empty and takes precedence over
      * the parser selected by {@link #signType()}.
@@ -64,7 +64,7 @@ public @interface Secured {
      * @return class type of resource parser
      */
     Class<? extends ResourceParser> parser() default DefaultResourceParser.class;
-
+    
     /**
      * Specified tags for this secured, these tags will be injected into
      * {@link com.alibaba.nacos.plugin.auth.api.Resource} as the keys and values of properties.
@@ -72,12 +72,12 @@ public @interface Secured {
      * @return tags
      */
     String[] tags() default {};
-
+    
     /**
      * The type of API. Distinguishing between ADMIN_API and OPEN_API.
      *
      * @return the type of the API
      */
     ApiType apiType() default ApiType.OPEN_API;
-
+    
 }

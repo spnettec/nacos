@@ -25,19 +25,19 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AiRegistryPackageExcludeFilterTest {
-
+    
     @Test
     void testGetResponsiblePackagePrefix() {
         AiRegistryPackageExcludeFilter filter = new AiRegistryPackageExcludeFilter();
-
+        
         assertEquals(NacosAiRegistry.class.getPackage().getName(),
             filter.getResponsiblePackagePrefix());
     }
-
+    
     @Test
     void testIsExcludedAlwaysReturnsTrue() {
         AiRegistryPackageExcludeFilter filter = new AiRegistryPackageExcludeFilter();
-
+        
         assertTrue(filter.isExcluded("com.alibaba.nacos.airegistry.NacosAiRegistry",
             Collections.emptySet()));
         assertTrue(filter.isExcluded(null, null));

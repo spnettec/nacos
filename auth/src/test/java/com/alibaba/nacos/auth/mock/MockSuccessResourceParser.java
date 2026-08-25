@@ -23,7 +23,7 @@ import com.alibaba.nacos.plugin.auth.api.Resource;
 import java.util.Properties;
 
 public class MockSuccessResourceParser implements ResourceParser<Object> {
-
+    
     @Override
     public Resource parse(Object request, Secured secured) {
         return new Resource("testCustomNs", "testCustomGroup", "testCustomResource",

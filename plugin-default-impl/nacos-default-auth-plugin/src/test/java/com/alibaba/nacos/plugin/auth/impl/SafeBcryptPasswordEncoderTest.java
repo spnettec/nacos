@@ -49,7 +49,7 @@ public class SafeBcryptPasswordEncoderTest {
         String rawPassword = StringUtils.repeat("A", AuthConstants.MAX_PASSWORD_LENGTH + 1);
         String encodedPassword =
             ENCODER.encode(rawPassword.substring(0, AuthConstants.MAX_PASSWORD_LENGTH));
-
+        
         assertFalse(ENCODER.matches(rawPassword, encodedPassword),
             "73-character rawPassword should be rejected");
     }

@@ -42,7 +42,7 @@ import java.util.List;
 public class ConfigInfoMapperByDerby extends AbstractMapperByDerby implements ConfigInfoMapper {
     
     private static final String SQL_DERBY_ESCAPE_BACK_SLASH_FOR_LIKE = " ESCAPE '\\' ";
-
+    
     @Override
     public MapperResult findConfigInfoByAppFetchRows(MapperContext context) {
         final String appName = (String) context.getWhereParameter(FieldConstant.APP_NAME);
@@ -270,9 +270,9 @@ public class ConfigInfoMapperByDerby extends AbstractMapperByDerby implements Co
         final String appName = (String) context.getWhereParameter(FieldConstant.APP_NAME);
         final String tenantId = (String) context.getWhereParameter(FieldConstant.TENANT_ID);
         final String[] types = (String[]) context.getWhereParameter(FieldConstant.TYPE);
-
+        
         WhereBuilder where = new WhereBuilder("SELECT count(*) FROM config_info");
-
+        
         where.likeWithEscape("tenant_id", tenantId);
         if (StringUtils.isNotBlank(dataId)) {
             where.and().likeWithEscape("data_id", dataId);
@@ -291,7 +291,7 @@ public class ConfigInfoMapperByDerby extends AbstractMapperByDerby implements Co
         }
         return where.build();
     }
-
+    
     @Override
     public MapperResult findConfigInfoLike4PageFetchRows(MapperContext context) {
         

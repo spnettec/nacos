@@ -25,13 +25,13 @@ import java.util.List;
  * @author nacos
  */
 public class ArdExploreResultType {
-
+    
     private List<ArdFacetRequest> facets = new ArrayList<>();
-
+    
     public List<ArdFacetRequest> getFacets() {
         return facets;
     }
-
+    
     public void setFacets(List<ArdFacetRequest> facets) {
         this.facets = facets;
     }

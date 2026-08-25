@@ -34,7 +34,7 @@ import java.util.Objects;
  **/
 public class HistoryConfigInfoMapperByOracle extends AbstractMapperByOracle
     implements HistoryConfigInfoMapper {
-
+    
     @Override
     public MapperResult removeConfigHistory(MapperContext context) {
         String sql =
@@ -43,7 +43,7 @@ public class HistoryConfigInfoMapperByOracle extends AbstractMapperByOracle
             CollectionUtils.list(context.getWhereParameter(FieldConstant.START_TIME),
                 context.getWhereParameter(FieldConstant.LIMIT_SIZE)));
     }
-
+    
     @Override
     public MapperResult findDeletedConfig(MapperContext context) {
         return new MapperResult(
@@ -55,7 +55,7 @@ public class HistoryConfigInfoMapperByOracle extends AbstractMapperByOracle
                 context.getWhereParameter(FieldConstant.LAST_MAX_ID),
                 context.getWhereParameter(FieldConstant.PAGE_SIZE)));
     }
-
+    
     @Override
     public MapperResult pageFindConfigHistoryFetchRows(MapperContext context) {
         String sql =
@@ -69,7 +69,7 @@ public class HistoryConfigInfoMapperByOracle extends AbstractMapperByOracle
                 context.getWhereParameter(FieldConstant.GROUP_ID),
                 context.getWhereParameter(FieldConstant.TENANT_ID)));
     }
-
+    
     @Override
     public MapperResult getNextHistoryInfo(MapperContext context) {
         Object grayName = context.getWhereParameter(FieldConstant.GRAY_NAME);
@@ -80,7 +80,7 @@ public class HistoryConfigInfoMapperByOracle extends AbstractMapperByOracle
                 + "WHERE data_id = ? AND group_id = ? AND tenant_id = ? AND publish_type = ? "
                 + (filterByGrayName ? "AND gray_name = ? " : "")
                 + "AND nid > ? ORDER BY nid FETCH FIRST 1 ROWS ONLY";
-
+        
         List<Object> paramList = CollectionUtils.list(
             context.getWhereParameter(FieldConstant.DATA_ID),
             context.getWhereParameter(FieldConstant.GROUP_ID),
@@ -90,10 +90,10 @@ public class HistoryConfigInfoMapperByOracle extends AbstractMapperByOracle
         if (filterByGrayName) {
             paramList.add(4, grayName);
         }
-
+        
         return new MapperResult(sql, paramList);
     }
-
+    
     @Override
     public String getDataSource() {
         return DataSourceConstant.ORACLE;

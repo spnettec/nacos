@@ -22,43 +22,43 @@ package com.alibaba.nacos.api.ai.remote.request;
  * @author Nacos
  */
 public class AgentEndpointDeregisterRpcRequest extends AbstractAgentClientRpcRequest {
-
+    
     private String namespaceId;
-
+    
     private String agentName;
-
+    
     private String protocol;
-
+    
     @Override
     public String extractNamespaceId() {
         return namespaceId;
     }
-
+    
     @Override
     public String extractAgentName() {
         return agentName;
     }
-
+    
     public String getNamespaceId() {
         return namespaceId;
     }
-
+    
     public void setNamespaceId(String namespaceId) {
         this.namespaceId = namespaceId;
     }
-
+    
     public String getAgentName() {
         return agentName;
     }
-
+    
     public void setAgentName(String agentName) {
         this.agentName = agentName;
     }
-
+    
     public String getProtocol() {
         return protocol;
     }
-
+    
     public void setProtocol(String protocol) {
         this.protocol = protocol;
     }

@@ -36,17 +36,17 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AgentResourceExtSerializerTest {
-
+    
     private static final String MINIMAL_JSON =
         "{\"schemaVersion\":1,\"versionCatalog\":{\"onlineVersions\":[]}}";
-
+    
     @Test
     void testFullRoundTripUsesFixedProjection() {
         AgentResourceExt original = createFullResourceExt();
-
+        
         String json = AgentResourceExtSerializer.serialize(original);
         AgentResourceExt restored = AgentResourceExtSerializer.deserialize(json);
-
+        
         assertTrue(json.startsWith("{\"schemaVersion\":1,\"displayName\":"));
         assertTrue(json.contains("\"provider\":{\"name\":\"Nacos\",\"url\":"));
         assertTrue(json.indexOf("\"extensions\"") < json.indexOf("\"versionCatalog\""));
@@ -58,14 +58,14 @@ class AgentResourceExtSerializerTest {
         assertEquals(original.getExtensions(), restored.getExtensions());
         assertCatalogEquals(original.getVersionCatalog(), restored.getVersionCatalog());
     }
-
+    
     @Test
     void testMinimalRoundTripOmitsAbsentFields() {
         AgentResourceExt resourceExt = createMinimalResourceExt();
-
+        
         String json = AgentResourceExtSerializer.serialize(resourceExt);
         AgentResourceExt restored = AgentResourceExtSerializer.deserialize(json);
-
+        
         assertEquals(MINIMAL_JSON, json);
         assertEquals(1, restored.getSchemaVersion());
         assertNull(restored.getDisplayName());
@@ -76,7 +76,7 @@ class AgentResourceExtSerializerTest {
         assertEquals(Collections.emptyList(),
             restored.getVersionCatalog().getOnlineVersions());
     }
-
+    
     @Test
     void testAcceptSchemaCapacityBoundaries() {
         AgentResourceExt resourceExt = createMinimalResourceExt();
@@ -85,28 +85,28 @@ class AgentResourceExtSerializerTest {
         provider.setName(repeat("供", 128));
         provider.setUrl("https://example.com/" + repeat("a", 2028));
         resourceExt.setProvider(provider);
-
+        
         Map<String, Object> extensions = new LinkedHashMap<String, Object>();
         for (int i = 0; i < 31; i++) {
             extensions.put("key-" + i, i);
         }
         extensions.put(repeat("键", 128), null);
         resourceExt.setExtensions(extensions);
-
+        
         AgentResourceExtSerializer.deserialize(AgentResourceExtSerializer.serialize(resourceExt));
-
+        
         resourceExt.setExtensions(
             Collections.<String, Object>singletonMap("k", repeat("a", 16376)));
         String exactLimitJson = AgentResourceExtSerializer.serialize(resourceExt);
         assertTrue(exactLimitJson.contains(repeat("a", 16376)));
     }
-
+    
     @Test
     void testRejectValuesAboveCapacityBoundaries() {
         AgentResourceExt resourceExt = createMinimalResourceExt();
         resourceExt.setDisplayName(repeat("😀", 129));
         assertEncodeRejected(resourceExt);
-
+        
         resourceExt = createMinimalResourceExt();
         AgentProvider provider = new AgentProvider();
         provider.setName("");
@@ -117,7 +117,7 @@ class AgentResourceExtSerializerTest {
         provider.setName("Nacos");
         provider.setUrl("https://example.com/" + repeat("a", 2029));
         assertEncodeRejected(resourceExt);
-
+        
         resourceExt = createMinimalResourceExt();
         Map<String, Object> tooMany = new LinkedHashMap<String, Object>();
         for (int i = 0; i < 33; i++) {
@@ -125,7 +125,7 @@ class AgentResourceExtSerializerTest {
         }
         resourceExt.setExtensions(tooMany);
         assertEncodeRejected(resourceExt);
-
+        
         resourceExt.setExtensions(
             Collections.<String, Object>singletonMap("", true));
         assertEncodeRejected(resourceExt);
@@ -136,7 +136,7 @@ class AgentResourceExtSerializerTest {
             Collections.<String, Object>singletonMap("k", repeat("a", 16377)));
         assertEncodeRejected(resourceExt);
     }
-
+    
     @Test
     void testAcceptNestedJsonExtensionValues() {
         AgentResourceExt resourceExt = createMinimalResourceExt();
@@ -149,40 +149,40 @@ class AgentResourceExtSerializerTest {
         nested.put("null", null);
         nested.put("list", Arrays.<Object>asList("a", false, null));
         resourceExt.setExtensions(Collections.<String, Object>singletonMap("nested", nested));
-
+        
         AgentResourceExt restored =
             AgentResourceExtSerializer
                 .deserialize(AgentResourceExtSerializer.serialize(resourceExt));
-
+        
         assertTrue(restored.getExtensions().get("nested") instanceof Map);
     }
-
+    
     @Test
     void testRejectNonJsonExtensionValues() {
         AgentResourceExt resourceExt = createMinimalResourceExt();
         resourceExt.setExtensions(
             Collections.<String, Object>singletonMap("value", new Object()));
         assertEncodeRejected(resourceExt);
-
+        
         resourceExt.setExtensions(
             Collections.<String, Object>singletonMap("value", Double.NaN));
         assertEncodeRejected(resourceExt);
         resourceExt.setExtensions(
             Collections.<String, Object>singletonMap("value", Float.POSITIVE_INFINITY));
         assertEncodeRejected(resourceExt);
-
+        
         Map<Object, Object> invalidNestedMap = new LinkedHashMap<Object, Object>();
         invalidNestedMap.put(1, "value");
         resourceExt.setExtensions(
             Collections.<String, Object>singletonMap("value", invalidNestedMap));
         assertEncodeRejected(resourceExt);
-
+        
         Map<Object, Object> invalidRootMap = new LinkedHashMap<Object, Object>();
         invalidRootMap.put(1, "value");
         resourceExt.setExtensions(asStringMap(invalidRootMap));
         assertEncodeRejected(resourceExt);
     }
-
+    
     @Test
     void testRejectInvalidSchemaAndUris() {
         assertThrows(IllegalArgumentException.class,
@@ -192,7 +192,7 @@ class AgentResourceExtSerializerTest {
         assertEncodeRejected(resourceExt);
         resourceExt.setSchemaVersion(2);
         assertEncodeRejected(resourceExt);
-
+        
         resourceExt = createMinimalResourceExt();
         resourceExt.setIconUrl("");
         assertEncodeRejected(resourceExt);
@@ -200,7 +200,7 @@ class AgentResourceExtSerializerTest {
         assertEncodeRejected(resourceExt);
         resourceExt.setIconUrl("https://[");
         assertEncodeRejected(resourceExt);
-
+        
         resourceExt = createMinimalResourceExt();
         AgentProvider provider = new AgentProvider();
         provider.setName("Nacos");
@@ -208,37 +208,37 @@ class AgentResourceExtSerializerTest {
         resourceExt.setProvider(provider);
         assertEncodeRejected(resourceExt);
     }
-
+    
     @Test
     void testRejectInvalidCatalogFactsAndOrder() {
         AgentResourceExt resourceExt = createMinimalResourceExt();
         resourceExt.setVersionCatalog(null);
         assertEncodeRejected(resourceExt);
-
+        
         resourceExt = createFullResourceExt();
         Collections.reverse(resourceExt.getVersionCatalog().getOnlineVersions());
         assertEncodeRejected(resourceExt);
-
+        
         resourceExt = createFullResourceExt();
         resourceExt.getVersionCatalog().setLatestVersion("3.0.0");
         assertEncodeRejected(resourceExt);
-
+        
         resourceExt = createFullResourceExt();
         resourceExt.getVersionCatalog().getOnlineVersions().get(0)
             .setProtocols(Arrays.asList("a2a", "a2a"));
         assertEncodeRejected(resourceExt);
-
+        
         resourceExt = createFullResourceExt();
         resourceExt.getVersionCatalog().getOnlineVersions().get(0)
             .setLabels(Collections.singletonList("latest"));
         assertEncodeRejected(resourceExt);
-
+        
         resourceExt = createFullResourceExt();
         resourceExt.getVersionCatalog().getOnlineVersions().get(1)
             .setLabels(Collections.singletonList("stable"));
         assertEncodeRejected(resourceExt);
     }
-
+    
     @Test
     void testRejectInvalidRootJsonShape() {
         assertDecodeRejected(null);
@@ -261,7 +261,7 @@ class AgentResourceExtSerializerTest {
         assertDecodeRejected("{\"versionCatalog\":{\"onlineVersions\":[]}}");
         assertDecodeRejected("{\"schemaVersion\":1}");
     }
-
+    
     @Test
     void testRejectInvalidOptionalJsonFields() {
         assertDecodeRejected(addRootField("\"displayName\":null"));
@@ -277,7 +277,7 @@ class AgentResourceExtSerializerTest {
         assertDecodeRejected(addRootField(
             "\"provider\":{\"name\":\"Nacos\",\"unknown\":true}"));
     }
-
+    
     @Test
     void testRejectInvalidCatalogJsonShape() {
         assertDecodeRejected(
@@ -313,7 +313,7 @@ class AgentResourceExtSerializerTest {
             "{\"version\":\"1.0.0\",\"labels\":[],\"protocols\":[\"a2a\"],"
                 + "\"unknown\":true}"));
     }
-
+    
     @Test
     void testDecodeAlsoEnforcesSemanticLimits() {
         assertDecodeRejected(MINIMAL_JSON.replace("\"onlineVersions\":[]",
@@ -323,31 +323,31 @@ class AgentResourceExtSerializerTest {
         assertDecodeRejected(addRootField(
             "\"extensions\":{\"k\":\"" + repeat("a", 16377) + "\"}"));
     }
-
+    
     @SuppressWarnings("unchecked")
     private Map<String, Object> asStringMap(Map<?, ?> value) {
         return (Map<String, Object>) value;
     }
-
+    
     private void assertEncodeRejected(AgentResourceExt resourceExt) {
         assertThrows(IllegalArgumentException.class,
             () -> AgentResourceExtSerializer.serialize(resourceExt));
     }
-
+    
     private void assertDecodeRejected(String json) {
         assertThrows(IllegalArgumentException.class,
             () -> AgentResourceExtSerializer.deserialize(json));
     }
-
+    
     private String addRootField(String field) {
         return MINIMAL_JSON.substring(0, 1) + field + "," + MINIMAL_JSON.substring(1);
     }
-
+    
     private String catalogEntryJson(String entry) {
         return "{\"schemaVersion\":1,\"versionCatalog\":{\"latestVersion\":\"1.0.0\","
             + "\"onlineVersions\":[" + entry + "]}}";
     }
-
+    
     private AgentResourceExt createMinimalResourceExt() {
         AgentResourceExt result = new AgentResourceExt();
         result.setSchemaVersion(AgentResourceExt.SCHEMA_VERSION);
@@ -356,7 +356,7 @@ class AgentResourceExtSerializerTest {
         result.setVersionCatalog(catalog);
         return result;
     }
-
+    
     private AgentResourceExt createFullResourceExt() {
         AgentResourceExt result = createMinimalResourceExt();
         result.setDisplayName("Nacos Agent");
@@ -369,7 +369,7 @@ class AgentResourceExtSerializerTest {
         extensions.put("example.com/enabled", true);
         extensions.put("example.com/modes", Arrays.asList("chat", "task"));
         result.setExtensions(extensions);
-
+        
         AgentVersionCatalog catalog = new AgentVersionCatalog();
         catalog.setLatestVersion("2.0.0");
         catalog.setOnlineVersions(new ArrayList<AgentVersionCatalogEntry>(
@@ -380,7 +380,7 @@ class AgentResourceExtSerializerTest {
         result.setVersionCatalog(catalog);
         return result;
     }
-
+    
     private AgentVersionCatalogEntry createCatalogEntry(String version, List<String> labels,
         List<String> protocols) {
         AgentVersionCatalogEntry result = new AgentVersionCatalogEntry();
@@ -389,7 +389,7 @@ class AgentResourceExtSerializerTest {
         result.setProtocols(new ArrayList<String>(protocols));
         return result;
     }
-
+    
     private void assertCatalogEquals(AgentVersionCatalog expected,
         AgentVersionCatalog actual) {
         assertEquals(expected.getLatestVersion(), actual.getLatestVersion());
@@ -402,7 +402,7 @@ class AgentResourceExtSerializerTest {
             assertEquals(expectedEntry.getProtocols(), actualEntry.getProtocols());
         }
     }
-
+    
     private String repeat(String value, int count) {
         StringBuilder result = new StringBuilder(value.length() * count);
         for (int i = 0; i < count; i++) {

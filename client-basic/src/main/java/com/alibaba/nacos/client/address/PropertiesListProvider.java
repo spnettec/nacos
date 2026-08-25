@@ -38,11 +38,11 @@ import static com.alibaba.nacos.common.constant.RequestUrlConstants.HTTP_PREFIX;
  * @author totalo
  */
 public class PropertiesListProvider extends AbstractServerListProvider {
-
+    
     private static final String FIXED_NAME = "fixed";
-
+    
     private List<String> serverList;
-
+    
     @Override
     public void init(final NacosClientProperties properties,
         final NacosRestTemplate nacosRestTemplate) throws NacosException {
@@ -66,12 +66,12 @@ public class PropertiesListProvider extends AbstractServerListProvider {
             }
         }
     }
-
+    
     @Override
     public List<String> getServerList() {
         return serverList;
     }
-
+    
     @Override
     public String getServerName() {
         return FIXED_NAME + "-"
@@ -79,22 +79,22 @@ public class PropertiesListProvider extends AbstractServerListProvider {
                 : "")
             + ClientBasicParamUtil.getNameSuffixByServerIps(serverList.toArray(new String[0]));
     }
-
+    
     @Override
     public int getOrder() {
         return Address.ADDRESS_SERVER_LIST_PROVIDER_ORDER;
     }
-
+    
     @Override
     public boolean match(final NacosClientProperties properties) {
         return StringUtils.isNotBlank(properties.getProperty(PropertyKeyConst.SERVER_ADDR));
     }
-
+    
     @Override
     public boolean isFixed() {
         return true;
     }
-
+    
     @Override
     public void shutdown() throws NacosException {
     }

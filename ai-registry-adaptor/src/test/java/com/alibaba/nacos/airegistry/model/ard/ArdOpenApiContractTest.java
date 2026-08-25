@@ -34,12 +34,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author nacos
  */
 class ArdOpenApiContractTest {
-
+    
     private static final String OPEN_API =
         "/ard-spec/5fa2f5aef790b478319f6a3b43adf4661b0ed0e0/ard.openapi.yaml";
-
+    
     private static Map<String, Object> document;
-
+    
     @BeforeAll
     static void loadOpenApi() {
         try (InputStream input = ArdOpenApiContractTest.class.getResourceAsStream(OPEN_API)) {
@@ -49,18 +49,18 @@ class ArdOpenApiContractTest {
             throw new IllegalStateException("Failed to load pinned ARD OpenAPI", e);
         }
     }
-
+    
     @Test
     void shouldPinExpectedUpstreamVersionAndUnauthorizedContract() {
         assertEquals("0.5.0", map(document.get("info")).get("version"));
         Map<String, Object> responses = operation("/search", "post", "responses");
         assertEquals("#/components/responses/401Unauthorized",
             map(responses.get("401")).get("$ref"));
-
+        
         Map<String, Object> error = schema("Error");
         assertEquals(List.of("errorCode", "message"), error.get("required"));
     }
-
+    
     @Test
     void shouldPinSearchListAndExploreResponseShapes() {
         Map<String, Object> search = schema("SearchResponse");
@@ -70,30 +70,30 @@ class ArdOpenApiContractTest {
         Map<String, Object> searchProperties = map(searchItem.get("properties"));
         assertEquals("integer", map(searchProperties.get("score")).get("type"));
         assertEquals("uri", map(searchProperties.get("source")).get("format"));
-
+        
         Map<String, Object> list = schema("ListResponse");
         assertTrue(list(list.get("required")).contains("items"));
-
+        
         Map<String, Object> explore = schema("ExploreResponse");
         assertTrue(list(explore.get("required")).containsAll(List.of("resultType", "facets")));
     }
-
+    
     private Map<String, Object> operation(String path, String method, String field) {
         Map<String, Object> paths = map(document.get("paths"));
         Map<String, Object> operation = map(map(paths.get(path)).get(method));
         return map(operation.get(field));
     }
-
+    
     private Map<String, Object> schema(String name) {
         Map<String, Object> components = map(document.get("components"));
         return map(map(components.get("schemas")).get(name));
     }
-
+    
     @SuppressWarnings("unchecked")
     private static Map<String, Object> map(Object value) {
         return (Map<String, Object>) value;
     }
-
+    
     @SuppressWarnings("unchecked")
     private static List<String> list(Object value) {
         return (List<String>) value;

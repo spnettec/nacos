@@ -16,13 +16,10 @@
 
 package com.alibaba.nacos.ai.config;
 
-import com.alibaba.nacos.ai.constant.AiResourceConstants;
 import com.alibaba.nacos.ai.model.search.AiResourceIndexTask;
-import com.alibaba.nacos.ai.service.McpServerOperationService;
 import com.alibaba.nacos.ai.service.search.AiResourceIndexService;
 import com.alibaba.nacos.ai.service.search.AiResourceIndexTaskRepository;
 import com.alibaba.nacos.ai.utils.ExecutorUtils;
-import com.alibaba.nacos.api.ai.model.mcp.McpServerDetailInfo;
 import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.common.executor.ExecutorFactory;
 import com.alibaba.nacos.common.utils.ThreadFactoryBuilder;
@@ -52,68 +49,62 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @ConditionalOnAiResourceSearchEnabled
 public class AiResourceIndexTaskConsumer
     implements ApplicationListener<ApplicationReadyEvent>, DisposableBean {
-
+    
     static final String INTERVAL_SECONDS_KEY =
         "nacos.ai.resource.search.index.consumer.interval-seconds";
-
+    
     private static final Logger LOGGER = LoggerFactory.getLogger(AiResourceIndexTaskConsumer.class);
-
+    
     private static final int BATCH_SIZE = 100;
-
+    
     private static final long DEFAULT_INTERVAL_SECONDS = 5L;
-
+    
     private static final long LEASE_MILLIS = 60_000L;
-
+    
     private static final long LEASE_RENEW_INTERVAL_SECONDS = 20L;
-
+    
     private static final long MAX_RETRY_SECONDS = 300L;
-
+    
     private static final long MAX_ENHANCEMENT_RETRY_SECONDS = 1800L;
-
+    
     private final AtomicBoolean initialized = new AtomicBoolean(false);
-
+    
     private final AiResourceIndexTaskRepository taskRepository;
-
+    
     private final AiResourceIndexService indexBuildService;
-
-    private final McpServerOperationService mcpServerOperationService;
-
+    
     private final Executor enhancementExecutor;
-
+    
     private final Semaphore enhancementSlots;
-
+    
     private final ScheduledExecutorService pollExecutor;
-
+    
     private final ScheduledExecutorService leaseExecutor;
-
+    
     @Autowired
     public AiResourceIndexTaskConsumer(AiResourceIndexTaskRepository taskRepository,
-        AiResourceIndexService indexBuildService,
-        McpServerOperationService mcpServerOperationService) {
-        this(taskRepository, indexBuildService, mcpServerOperationService,
+        AiResourceIndexService indexBuildService) {
+        this(taskRepository, indexBuildService,
             ExecutorUtils.getAiResourceIndexEnhancementExecutor(),
             ExecutorUtils.getAiResourceIndexEnhancementConcurrency());
     }
-
+    
     AiResourceIndexTaskConsumer(AiResourceIndexTaskRepository taskRepository,
-        AiResourceIndexService indexBuildService,
-        McpServerOperationService mcpServerOperationService, Executor enhancementExecutor) {
-        this(taskRepository, indexBuildService, mcpServerOperationService, enhancementExecutor, 1);
+        AiResourceIndexService indexBuildService, Executor enhancementExecutor) {
+        this(taskRepository, indexBuildService, enhancementExecutor, 1);
     }
-
+    
     AiResourceIndexTaskConsumer(AiResourceIndexTaskRepository taskRepository,
-        AiResourceIndexService indexBuildService,
-        McpServerOperationService mcpServerOperationService, Executor enhancementExecutor,
+        AiResourceIndexService indexBuildService, Executor enhancementExecutor,
         int enhancementConcurrency) {
         this.taskRepository = taskRepository;
         this.indexBuildService = indexBuildService;
-        this.mcpServerOperationService = mcpServerOperationService;
         this.enhancementExecutor = enhancementExecutor;
         this.enhancementSlots = new Semaphore(enhancementConcurrency);
         this.pollExecutor = newScheduler("nacos-ai-resource-index-poll-%d");
         this.leaseExecutor = newScheduler("nacos-ai-resource-index-lease-%d");
     }
-
+    
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
         if (event.getApplicationContext().getParent() != null
@@ -124,7 +115,7 @@ public class AiResourceIndexTaskConsumer
         pollExecutor.scheduleWithFixedDelay(this::consumeSafely, 0L, intervalSeconds,
             TimeUnit.SECONDS);
     }
-
+    
     void consume() {
         List<AiResourceIndexTask> tasks = taskRepository.findDueTasks(BATCH_SIZE);
         for (AiResourceIndexTask task : tasks) {
@@ -151,7 +142,7 @@ public class AiResourceIndexTaskConsumer
             }
         }
     }
-
+    
     private void submitEnhancement(AiResourceIndexTask task, TaskLease lease) {
         try {
             enhancementExecutor.execute(() -> {
@@ -171,7 +162,7 @@ public class AiResourceIndexTaskConsumer
             taskRepository.releaseSuperseded(task);
         }
     }
-
+    
     private void process(AiResourceIndexTask task, TaskLease lease) {
         try {
             if (AiResourceIndexTask.STAGE_LLM_ENHANCEMENT.equals(task.getTaskStage())) {
@@ -187,7 +178,7 @@ public class AiResourceIndexTaskConsumer
             taskRepository.releaseSuperseded(task);
         }
     }
-
+    
     private void processBaseIndex(AiResourceIndexTask task, TaskLease lease)
         throws NacosException {
         if (!convergeBase(task)) {
@@ -205,7 +196,7 @@ public class AiResourceIndexTaskConsumer
         }
         taskRepository.complete(task, null);
     }
-
+    
     private void processEnhancement(AiResourceIndexTask task, TaskLease lease) throws Exception {
         if (!indexBuildService.isEnhancementRequested()) {
             taskRepository.restartFromBase(task, false);
@@ -222,7 +213,7 @@ public class AiResourceIndexTaskConsumer
             taskRepository.complete(task, fingerprint);
         }
     }
-
+    
     private void retry(AiResourceIndexTask task, Exception e) {
         long retrySeconds = retryDelaySeconds(task);
         if (taskRepository.retry(task, retrySeconds * 1000L, errorMessage(e))) {
@@ -239,7 +230,7 @@ public class AiResourceIndexTaskConsumer
                 task.getNamespaceId(), e);
         }
     }
-
+    
     private void consumeSafely() {
         try {
             consume();
@@ -247,56 +238,19 @@ public class AiResourceIndexTaskConsumer
             LOGGER.warn("Failed to poll durable AI resource index tasks", e);
         }
     }
-
+    
     private boolean convergeBase(AiResourceIndexTask task) throws NacosException {
-        if (AiResourceConstants.RESOURCE_TYPE_MCP.equals(task.getResourceType())) {
-            return convergeMcpBase(task);
-        }
         return indexBuildService.rebuildLatestAiResource(task.getNamespaceId(),
             task.getResourceType(),
             task.getResourceName());
     }
-
-    private boolean convergeMcpBase(AiResourceIndexTask task) throws NacosException {
-        try {
-            McpServerDetailInfo detail = mcpServerOperationService.getMcpServerDetail(
-                task.getNamespaceId(), task.getResourceName(), null, null);
-            if (detail == null) {
-                indexBuildService.deleteResource(task.getNamespaceId(),
-                    AiResourceConstants.RESOURCE_TYPE_MCP, task.getResourceName());
-                return false;
-            }
-            return indexBuildService.rebuildMcpServer(task.getNamespaceId(), detail);
-        } catch (NacosException e) {
-            if (e.getErrCode() != NacosException.NOT_FOUND) {
-                throw e;
-            }
-            indexBuildService.deleteResource(task.getNamespaceId(),
-                AiResourceConstants.RESOURCE_TYPE_MCP, task.getResourceName());
-            return false;
-        }
-    }
-
+    
     private String convergeEnhancement(AiResourceIndexTask task, TaskLease lease)
         throws Exception {
-        if (!AiResourceConstants.RESOURCE_TYPE_MCP.equals(task.getResourceType())) {
-            return indexBuildService.enhanceLatestAiResource(task.getNamespaceId(),
-                task.getResourceType(), task.getResourceName(), lease::isOwned);
-        }
-        try {
-            McpServerDetailInfo detail = mcpServerOperationService.getMcpServerDetail(
-                task.getNamespaceId(), task.getResourceName(), null, null);
-            return detail == null ? null
-                : indexBuildService.enhanceMcpServer(task.getNamespaceId(), detail,
-                    lease::isOwned);
-        } catch (NacosException e) {
-            if (e.getErrCode() != NacosException.NOT_FOUND) {
-                throw e;
-            }
-            return null;
-        }
+        return indexBuildService.enhanceLatestAiResource(task.getNamespaceId(),
+            task.getResourceType(), task.getResourceName(), lease::isOwned);
     }
-
+    
     private long retryDelaySeconds(AiResourceIndexTask task) {
         int exponent = Math.min(Math.max(task.getRetryCount(), 0), 6);
         if (AiResourceIndexTask.STAGE_LLM_ENHANCEMENT.equals(task.getTaskStage())) {
@@ -304,11 +258,11 @@ public class AiResourceIndexTaskConsumer
         }
         return Math.min(MAX_RETRY_SECONDS, 5L << exponent);
     }
-
+    
     private String errorMessage(Exception e) {
         return e.getMessage() == null ? e.getClass().getName() : e.getMessage();
     }
-
+    
     private long positiveLong(String key, long defaultValue) {
         try {
             long value = Long.parseLong(EnvUtil.getProperty(key, String.valueOf(defaultValue)));
@@ -317,38 +271,38 @@ public class AiResourceIndexTaskConsumer
             return defaultValue;
         }
     }
-
+    
     @Override
     public void destroy() {
         pollExecutor.shutdownNow();
         leaseExecutor.shutdownNow();
     }
-
+    
     private ScheduledExecutorService newScheduler(String nameFormat) {
         return ExecutorFactory.Managed.newSingleScheduledExecutorService(
             AiResourceIndexTaskConsumer.class.getCanonicalName() + "." + nameFormat,
             new ThreadFactoryBuilder().daemon(true).nameFormat(nameFormat).build());
     }
-
+    
     private final class TaskLease implements AutoCloseable {
-
+        
         private final AiResourceIndexTask task;
-
+        
         private final AtomicBoolean owned = new AtomicBoolean(true);
-
+        
         private final ScheduledFuture<?> renewal;
-
+        
         private TaskLease(AiResourceIndexTask task) {
             this.task = task;
             this.renewal = leaseExecutor.scheduleWithFixedDelay(this::renewSafely,
                 LEASE_RENEW_INTERVAL_SECONDS, LEASE_RENEW_INTERVAL_SECONDS, TimeUnit.SECONDS);
         }
-
+        
         private boolean renewNow() {
             renewSafely();
             return isOwned();
         }
-
+        
         private void renewSafely() {
             if (!owned.get()) {
                 return;
@@ -364,11 +318,11 @@ public class AiResourceIndexTaskConsumer
                     task.getResourceType(), task.getResourceName(), task.getNamespaceId(), e);
             }
         }
-
+        
         private boolean isOwned() {
             return owned.get();
         }
-
+        
         @Override
         public void close() {
             renewal.cancel(false);

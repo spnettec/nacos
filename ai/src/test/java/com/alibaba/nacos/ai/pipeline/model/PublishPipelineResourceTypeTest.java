@@ -36,17 +36,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @since 3.2.0
  */
 class PublishPipelineResourceTypeTest {
-
+    
     @Test
     void testAgentspecEnumValueExists() {
         assertNotNull(PublishPipelineResourceType.AGENTSPEC);
     }
-
+    
     @Test
     void testValuesContainsAllTypes() {
         PublishPipelineResourceType[] values = PublishPipelineResourceType.values();
         assertEquals(4, values.length, "PublishPipelineResourceType should have exactly 4 values");
-
+        
         Set<PublishPipelineResourceType> valueSet =
             Arrays.stream(values).collect(Collectors.toSet());
         assertTrue(valueSet.contains(PublishPipelineResourceType.SKILL),

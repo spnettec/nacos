@@ -32,45 +32,45 @@ import java.util.List;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AgentEndpointDeregistrationBatch implements Serializable {
-
+    
     private static final long serialVersionUID = 1L;
-
+    
     private String namespaceId;
-
+    
     private String agentName;
-
+    
     private String protocol;
-
+    
     private List<Endpoint> endpoints;
-
+    
     public String getNamespaceId() {
         return namespaceId;
     }
-
+    
     public void setNamespaceId(String namespaceId) {
         this.namespaceId = namespaceId;
     }
-
+    
     public String getAgentName() {
         return agentName;
     }
-
+    
     public void setAgentName(String agentName) {
         this.agentName = agentName;
     }
-
+    
     public String getProtocol() {
         return protocol;
     }
-
+    
     public void setProtocol(String protocol) {
         this.protocol = protocol;
     }
-
+    
     public List<Endpoint> getEndpoints() {
         return endpoints;
     }
-
+    
     public void setEndpoints(List<Endpoint> endpoints) {
         this.endpoints = endpoints;
     }

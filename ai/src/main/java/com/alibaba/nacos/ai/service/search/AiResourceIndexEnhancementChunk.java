@@ -22,27 +22,27 @@ package com.alibaba.nacos.ai.service.search;
  * @author nacos
  */
 public class AiResourceIndexEnhancementChunk {
-
+    
     private final String chunkType;
-
+    
     private final String text;
-
+    
     private final String metadata;
-
+    
     public AiResourceIndexEnhancementChunk(String chunkType, String text, String metadata) {
         this.chunkType = chunkType;
         this.text = text;
         this.metadata = metadata;
     }
-
+    
     public String getChunkType() {
         return chunkType;
     }
-
+    
     public String getText() {
         return text;
     }
-
+    
     public String getMetadata() {
         return metadata;
     }

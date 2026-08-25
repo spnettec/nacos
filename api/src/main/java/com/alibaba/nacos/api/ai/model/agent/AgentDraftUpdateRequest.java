@@ -28,17 +28,17 @@ import java.util.List;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AgentDraftUpdateRequest implements Serializable {
-
+    
     private static final long serialVersionUID = 1L;
-
+    
     private String agentName;
-
+    
     private String version;
-
+    
     private List<AgentCallInterface> callInterfaces;
-
+    
     private String changeDescription;
-
+    
     /**
      * Validate the draft identity and content.
      */
@@ -49,35 +49,35 @@ public class AgentDraftUpdateRequest implements Serializable {
             throw new IllegalArgumentException("callInterfaces must not be null");
         }
     }
-
+    
     public String getAgentName() {
         return agentName;
     }
-
+    
     public void setAgentName(String agentName) {
         this.agentName = agentName;
     }
-
+    
     public String getVersion() {
         return version;
     }
-
+    
     public void setVersion(String version) {
         this.version = version;
     }
-
+    
     public List<AgentCallInterface> getCallInterfaces() {
         return callInterfaces;
     }
-
+    
     public void setCallInterfaces(List<AgentCallInterface> callInterfaces) {
         this.callInterfaces = callInterfaces;
     }
-
+    
     public String getChangeDescription() {
         return changeDescription;
     }
-
+    
     public void setChangeDescription(String changeDescription) {
         this.changeDescription = changeDescription;
     }

@@ -34,22 +34,22 @@ import java.util.Set;
  * @author xiweng.yy
  */
 public class AiGrpcRedoService extends AbstractRedoService {
-
+    
     private static final Logger LOGGER = LoggerFactory.getLogger(AiGrpcRedoService.class);
-
+    
     private final AiGrpcClient aiGrpcClient;
-
+    
     public AiGrpcRedoService(NacosClientProperties properties, AiGrpcClient aiGrpcClient) {
         super(LOGGER, properties, RemoteConstants.LABEL_MODULE_AI);
         this.aiGrpcClient = aiGrpcClient;
         startRedoTask();
     }
-
+    
     @Override
     protected AbstractRedoTask buildRedoTask() {
         return new AiRedoScheduledTask(this, aiGrpcClient);
     }
-
+    
     /**
      * Cache MCP server endpoint for redo.
      *
@@ -64,36 +64,36 @@ public class AiGrpcRedoService extends AbstractRedoService {
             buildMcpServerEndpointRedoData(mcpName, address, port, version);
         super.cachedRedoData(mcpName, redoData, McpServerEndpoint.class);
     }
-
+    
     public void removeMcpServerEndpointForRedo(String mcpName) {
         super.removeRedoData(mcpName, McpServerEndpoint.class);
     }
-
+    
     public void mcpServerEndpointRegistered(String mcpName) {
         super.dataRegistered(mcpName, McpServerEndpoint.class);
     }
-
+    
     public void mcpServerEndpointDeregister(String mcpName) {
         super.dataDeregister(mcpName, McpServerEndpoint.class);
     }
-
+    
     public void mcpServerEndpointDeregistered(String mcpName) {
         super.dataDeregistered(mcpName, McpServerEndpoint.class);
     }
-
+    
     public boolean isMcpServerEndpointRegistered(String mcpName) {
         return super.isDataRegistered(mcpName, McpServerEndpoint.class);
     }
-
+    
     public Set<RedoData<McpServerEndpoint>> findMcpServerEndpointRedoData() {
         return super.findRedoData(McpServerEndpoint.class);
     }
-
+    
     public McpServerEndpoint getMcpServerEndpoint(String mcpName) {
         RedoData<McpServerEndpoint> redoData = super.getRedoData(mcpName, McpServerEndpoint.class);
         return redoData == null ? null : redoData.get();
     }
-
+    
     private RedoData<McpServerEndpoint> buildMcpServerEndpointRedoData(String mcpName,
         String address, int port,
         String version) {
@@ -102,47 +102,47 @@ public class AiGrpcRedoService extends AbstractRedoService {
         result.set(mcpServerEndpoint);
         return result;
     }
-
+    
     public void cachedAgentEndpointForRedo(String agentName, AgentEndpointWrapper wrapper) {
         AgentEndpointRedoData redoData = new AgentEndpointRedoData(agentName, wrapper);
         super.cachedRedoData(redoData.getKey(), redoData, AgentEndpointWrapper.class);
     }
-
+    
     public void removeAgentEndpointForRedo(String key) {
         super.removeRedoData(key, AgentEndpointWrapper.class);
     }
-
+    
     public void agentEndpointRegistered(String agentName, String version) {
         super.dataRegistered(AgentEndpointRedoData.keyOf(agentName, version),
             AgentEndpointWrapper.class);
     }
-
+    
     public void agentEndpointDeregister(String agentName, String version) {
         super.dataDeregister(AgentEndpointRedoData.keyOf(agentName, version),
             AgentEndpointWrapper.class);
     }
-
+    
     public void agentEndpointDeregistered(String agentName, String version) {
         super.dataDeregistered(AgentEndpointRedoData.keyOf(agentName, version),
             AgentEndpointWrapper.class);
     }
-
+    
     public boolean isAgentEndpointRegistered(String agentName, String version) {
         return super.isDataRegistered(AgentEndpointRedoData.keyOf(agentName, version),
             AgentEndpointWrapper.class);
     }
-
+    
     public Set<RedoData<AgentEndpointWrapper>> findAgentEndpointRedoData() {
         return super.findRedoData(AgentEndpointWrapper.class);
     }
-
+    
     public AgentEndpointWrapper getAgentEndpoint(String agentName, String version) {
         RedoData<AgentEndpointWrapper> redoData =
             super.getRedoData(AgentEndpointRedoData.keyOf(agentName, version),
                 AgentEndpointWrapper.class);
         return redoData == null ? null : redoData.get();
     }
-
+    
     /**
      * Cache one complete RAD Agent Endpoint batch for reconnect redo.
      *
@@ -153,7 +153,7 @@ public class AiGrpcRedoService extends AbstractRedoService {
             new AgentEndpointPublicationRedoData(batch);
         super.cachedRedoData(redoData.getKey(), redoData, AgentEndpointRegistrationBatch.class);
     }
-
+    
     /**
      * Mark a complete RAD Agent Endpoint publication registered.
      *
@@ -162,7 +162,7 @@ public class AiGrpcRedoService extends AbstractRedoService {
     public void agentEndpointPublicationRegistered(String key) {
         super.dataRegistered(key, AgentEndpointRegistrationBatch.class);
     }
-
+    
     /**
      * Mark a complete RAD Agent Endpoint publication for deregistration.
      *
@@ -171,7 +171,7 @@ public class AiGrpcRedoService extends AbstractRedoService {
     public void agentEndpointPublicationDeregistering(String key) {
         super.dataDeregister(key, AgentEndpointRegistrationBatch.class);
     }
-
+    
     /**
      * Mark a complete RAD Agent Endpoint publication deregistered.
      *
@@ -180,7 +180,7 @@ public class AiGrpcRedoService extends AbstractRedoService {
     public void agentEndpointPublicationDeregistered(String key) {
         super.dataDeregistered(key, AgentEndpointRegistrationBatch.class);
     }
-
+    
     /**
      * Remove a completed RAD Agent Endpoint publication redo record.
      *
@@ -189,7 +189,7 @@ public class AiGrpcRedoService extends AbstractRedoService {
     public void removeAgentEndpointPublication(String key) {
         super.removeRedoData(key, AgentEndpointRegistrationBatch.class);
     }
-
+    
     /**
      * Find complete RAD Agent Endpoint publications that need redo.
      *
@@ -198,7 +198,7 @@ public class AiGrpcRedoService extends AbstractRedoService {
     public Set<RedoData<AgentEndpointRegistrationBatch>> findAgentEndpointPublicationRedoData() {
         return super.findRedoData(AgentEndpointRegistrationBatch.class);
     }
-
+    
     /**
      * Return one cached complete RAD Agent Endpoint publication.
      *
@@ -210,7 +210,7 @@ public class AiGrpcRedoService extends AbstractRedoService {
             super.getRedoData(key, AgentEndpointRegistrationBatch.class);
         return redoData == null ? null : redoData.get();
     }
-
+    
     /**
      * Whether one RAD Agent Endpoint publication is registered.
      *
@@ -220,7 +220,7 @@ public class AiGrpcRedoService extends AbstractRedoService {
     public boolean isAgentEndpointPublicationRegistered(String key) {
         return super.isDataRegistered(key, AgentEndpointRegistrationBatch.class);
     }
-
+    
     /**
      * Discard a non-retryable RAD Agent Endpoint publication intent.
      *

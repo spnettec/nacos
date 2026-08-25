@@ -41,20 +41,20 @@ import java.util.List;
 @Service
 @ConditionalOnAiResourceSearchEnabled
 public class AiResourceIndexContentLoaderImpl implements AiResourceIndexContentLoader {
-
+    
     private static final String SKILL_MD_RESOURCE_NAME = "SKILL.md";
-
+    
     static final String KEY_MAX_CONTENT_CHARS =
         "nacos.ai.resource.search.index.enhancement.max-content-chars";
-
+    
     private static final int DEFAULT_MAX_CONTENT_CHARS = 12000;
-
+    
     private final AiResourceFileReader fileReader;
-
+    
     public AiResourceIndexContentLoaderImpl(AiResourceFileReader fileReader) {
         this.fileReader = fileReader;
     }
-
+    
     @Override
     public List<AiResourceIndexEnhancementContent> load(AiResourceSearchDocument entry,
         AiResourceVersion version)
@@ -70,7 +70,7 @@ public class AiResourceIndexContentLoaderImpl implements AiResourceIndexContentL
         }
         return Collections.emptyList();
     }
-
+    
     private List<AiResourceIndexEnhancementContent> loadSkillContent(AiResourceSearchDocument entry,
         AiResourceVersion version) throws Exception {
         byte[] bytes = fileReader.read(version, entry.getNamespaceId(), entry.getResourceType(),
@@ -86,7 +86,7 @@ public class AiResourceIndexContentLoaderImpl implements AiResourceIndexContentL
             .singletonList(new AiResourceIndexEnhancementContent(SKILL_MD_RESOURCE_NAME,
                 limit(text, maxContentChars())));
     }
-
+    
     private List<AiResourceIndexEnhancementContent> loadPromptContent(
         AiResourceSearchDocument entry,
         AiResourceVersion version) throws Exception {
@@ -102,11 +102,11 @@ public class AiResourceIndexContentLoaderImpl implements AiResourceIndexContentL
         return Collections.singletonList(new AiResourceIndexEnhancementContent(
             PromptUtils.PROMPT_MAIN_DATA_ID, limit(text, maxContentChars())));
     }
-
+    
     private String normalize(String text) {
         return text.replace('\u0000', ' ').trim();
     }
-
+    
     private String promptSearchText(String contentJson) {
         try {
             PromptVersionInfo prompt = JacksonUtils.toObj(contentJson, PromptVersionInfo.class);
@@ -129,7 +129,7 @@ public class AiResourceIndexContentLoaderImpl implements AiResourceIndexContentL
             return normalize(contentJson);
         }
     }
-
+    
     private String variableText(PromptVariable variable) {
         if (variable == null || StringUtils.isBlank(variable.getName())) {
             return null;
@@ -144,7 +144,7 @@ public class AiResourceIndexContentLoaderImpl implements AiResourceIndexContentL
         }
         return text.toString();
     }
-
+    
     private void appendLine(StringBuilder text, String line) {
         if (StringUtils.isBlank(line)) {
             return;
@@ -154,18 +154,18 @@ public class AiResourceIndexContentLoaderImpl implements AiResourceIndexContentL
         }
         text.append(line);
     }
-
+    
     private String limit(String text, int maxLength) {
         if (text == null || text.length() <= maxLength) {
             return text;
         }
         return text.substring(0, maxLength);
     }
-
+    
     private int maxContentChars() {
         return positiveInt(KEY_MAX_CONTENT_CHARS, DEFAULT_MAX_CONTENT_CHARS);
     }
-
+    
     private int positiveInt(String key, int defaultValue) {
         String value = property(key, String.valueOf(defaultValue));
         try {
@@ -174,7 +174,7 @@ public class AiResourceIndexContentLoaderImpl implements AiResourceIndexContentL
             return defaultValue;
         }
     }
-
+    
     private String property(String key, String defaultValue) {
         try {
             return EnvUtil.getProperty(key, defaultValue);

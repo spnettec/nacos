@@ -53,19 +53,19 @@ import static com.alibaba.nacos.common.constant.RequestUrlConstants.HTTP_PREFIX;
  * @author Nacos
  */
 public class AiDistroFilter implements Filter {
-
+    
     private static final Logger LOGGER = LoggerFactory.getLogger(AiDistroFilter.class);
-
+    
     private static final int PROXY_CONNECT_TIMEOUT = 2000;
-
+    
     private static final int PROXY_READ_TIMEOUT = 2000;
-
+    
     private final DistroMapper distroMapper;
-
+    
     public AiDistroFilter(DistroMapper distroMapper) {
         this.distroMapper = distroMapper;
     }
-
+    
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse,
         FilterChain filterChain) throws IOException, ServletException {
@@ -90,13 +90,13 @@ public class AiDistroFilter implements Filter {
         }
         proxyRequest(request, response, internalClientId);
     }
-
+    
     private boolean isPeerRequest(HttpServletRequest request) {
         String userAgent = request.getHeader(HttpHeaderConsts.USER_AGENT_HEADER);
         return StringUtils.isNotBlank(userAgent)
             && userAgent.contains(UtilsAndCommons.NACOS_SERVER_HEADER);
     }
-
+    
     private void proxyRequest(ReuseHttpServletRequest request, HttpServletResponse response,
         String internalClientId) throws IOException {
         try {
@@ -118,7 +118,7 @@ public class AiDistroFilter implements Filter {
                 "Server failed, " + ExceptionUtil.getAllExceptionMsg(e));
         }
     }
-
+    
     private List<String> getHeaders(HttpServletRequest request) {
         List<String> result = new ArrayList<>(16);
         Enumeration<String> names = request.getHeaderNames();
@@ -129,7 +129,7 @@ public class AiDistroFilter implements Filter {
         }
         return result;
     }
-
+    
     private String buildTargetUrl(String targetServer, HttpServletRequest request) {
         String result = HTTP_PREFIX + targetServer + request.getRequestURI();
         if (StringUtils.isNotBlank(request.getQueryString())) {

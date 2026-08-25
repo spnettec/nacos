@@ -49,21 +49,21 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author nacos
  */
 class ConfigInfoLikeEscapeDerbyTest {
-
+    
     private static final String JDBC_URL = "jdbc:derby:memory:configInfoLikeEscapeTest;create=true";
-
+    
     /**
      * Matches every tenant, so the assertions only depend on the data_id predicate.
      */
     private static final String ANY_TENANT = "*";
-
+    
     private static Connection connection;
-
+    
     private final ConfigInfoPersistService persistService = Mockito.mock(
         EmbeddedConfigInfoPersistServiceImpl.class, Mockito.CALLS_REAL_METHODS);
-
+    
     private final ConfigInfoMapperByDerby configInfoMapperByDerby = new ConfigInfoMapperByDerby();
-
+    
     @BeforeAll
     static void initDatabase() throws SQLException {
         connection = DriverManager.getConnection(JDBC_URL);
@@ -79,14 +79,14 @@ class ConfigInfoLikeEscapeDerbyTest {
         insertDataId(5L, "a\\Xb");
         insertDataId(6L, "trail\\");
     }
-
+    
     @AfterAll
     static void destroyDatabase() throws SQLException {
         if (null != connection) {
             connection.close();
         }
     }
-
+    
     private static void insertDataId(long id, String dataId) throws SQLException {
         String sql = "INSERT INTO config_info (id, data_id, group_id, tenant_id, content, "
             + "app_name, type) VALUES (?, ?, 'group', '', 'content', 'app', 'text')";
@@ -96,27 +96,27 @@ class ConfigInfoLikeEscapeDerbyTest {
             statement.executeUpdate();
         }
     }
-
+    
     @Test
     void testUnderscoreIsMatchedLiterally() throws SQLException {
         assertEquals(1, countByDataIdPattern("*nacos_test*"));
     }
-
+    
     @Test
     void testBackslashInSearchValueIsAccepted() throws SQLException {
         assertEquals(1, countByDataIdPattern("*C:\\path*"));
     }
-
+    
     @Test
     void testTrailingBackslashInSearchValueIsAccepted() throws SQLException {
         assertEquals(1, countByDataIdPattern("*trail\\*"));
     }
-
+    
     @Test
     void testEscapedUnderscoreAfterBackslashIsMatchedLiterally() throws SQLException {
         assertEquals(1, countByDataIdPattern("*a\\_b*"));
     }
-
+    
     /**
      * Counts the rows matched by the SQL the Derby mapper generates, binding the parameters produced
      * by the persist service. Throws {@link SQLException} if the escaped argument is invalid.
@@ -131,7 +131,7 @@ class ConfigInfoLikeEscapeDerbyTest {
             configInfoMapperByDerby.findConfigInfoLike4PageCountRows(context);
         assertTrue(mapperResult.getSql().contains("ESCAPE '\\'"),
             "Derby must declare the LIKE escape clause: " + mapperResult.getSql());
-
+        
         try (PreparedStatement statement = connection.prepareStatement(mapperResult.getSql())) {
             List<Object> paramList = mapperResult.getParamList();
             for (int i = 0; i < paramList.size(); i++) {

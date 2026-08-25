@@ -95,7 +95,7 @@ class GrpcClientTest {
             .build();
         clientConfig.setTlsConfig(tlsConfig);
         grpcClient = spy(new GrpcClient(clientConfig) {
-
+            
             @Override
             protected AbilityMode abilityMode() {
                 return AbilityMode.SDK_CLIENT;
@@ -429,7 +429,7 @@ class GrpcClientTest {
     void testConstructorWithServerListFactory() {
         ServerListFactory serverListFactory = mock(ServerListFactory.class);
         GrpcClient grpcClient = new GrpcClient(clientConfig, serverListFactory) {
-
+            
             @Override
             protected AbilityMode abilityMode() {
                 return null;
@@ -446,7 +446,7 @@ class GrpcClientTest {
     @Test
     void testConstructorWithoutServerListFactory() {
         GrpcClient grpcClient = new GrpcClient("testNoFactory", 2, 2, Collections.emptyMap()) {
-
+            
             @Override
             protected AbilityMode abilityMode() {
                 return null;

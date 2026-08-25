@@ -48,25 +48,25 @@ import static org.mockito.Mockito.when;
  * @author karsonto
  */
 class IoUtilsTest {
-
+    
     @Test
     void testTryDecompressForNotGzip() throws Exception {
         byte[] testCase = "123".getBytes(Charsets.toCharset("UTF-8"));
         assertEquals(testCase, IoUtils.tryDecompress(testCase));
     }
-
+    
     @Test
     void testTryDecompressForGzip() throws Exception {
         byte[] testCase = IoUtils.tryCompress("123", "UTF-8");
         assertEquals("123", new String(IoUtils.tryDecompress(testCase), StandardCharsets.UTF_8));
     }
-
+    
     @Test
     void testTryCompressWithEmptyString() {
         assertEquals(0, IoUtils.tryCompress("", "UTF-8").length);
         assertEquals(0, IoUtils.tryCompress(null, "UTF-8").length);
     }
-
+    
     @Test
     void testWriteStringToFile() throws IOException {
         File file = null;
@@ -82,12 +82,12 @@ class IoUtilsTest {
             }
         }
     }
-
+    
     @Test
     void testToStringWithNull() throws IOException {
         assertEquals("", IoUtils.toString(null, "UTF-8"));
     }
-
+    
     @Test
     void testToStringWithReader() throws IOException {
         String testCase = "123";
@@ -95,12 +95,12 @@ class IoUtilsTest {
             IoUtils.toString(
                 new ByteArrayInputStream(testCase.getBytes(Charsets.toCharset("UTF-8"))), "UTF-8"));
     }
-
+    
     @Test
     void testDeleteForNullFile() throws IOException {
         IoUtils.delete(null);
     }
-
+    
     @Test
     void testDeleteSuccess() throws IOException {
         File file = null;
@@ -115,7 +115,7 @@ class IoUtilsTest {
             }
         }
     }
-
+    
     @Test
     void testDeleteFileFailure() throws IOException {
         assertThrows(IOException.class, () -> {
@@ -125,7 +125,7 @@ class IoUtilsTest {
             IoUtils.delete(file);
         });
     }
-
+    
     @Test
     void testDeleteForDirectory() throws IOException {
         File file = null;
@@ -146,7 +146,7 @@ class IoUtilsTest {
             }
         }
     }
-
+    
     @Test
     void testCleanDirectoryForNonExistingDirectory() throws IOException {
         assertThrows(IllegalArgumentException.class, () -> {
@@ -154,7 +154,7 @@ class IoUtilsTest {
             IoUtils.cleanDirectory(nonexistentDir);
         });
     }
-
+    
     @Test
     void testCleanDirectoryForFile() throws IOException {
         assertThrows(IllegalArgumentException.class, () -> {
@@ -163,7 +163,7 @@ class IoUtilsTest {
             IoUtils.cleanDirectory(mockFile);
         });
     }
-
+    
     @Test
     void testCleanDirectoryWithEmptyDirectory() throws IOException {
         assertThrows(IOException.class, () -> {
@@ -173,7 +173,7 @@ class IoUtilsTest {
             IoUtils.cleanDirectory(mockFile);
         });
     }
-
+    
     @Test
     void testCleanDirectory() throws IOException {
         assertThrows(IOException.class, () -> {
@@ -186,17 +186,17 @@ class IoUtilsTest {
             IoUtils.cleanDirectory(mockFile);
         });
     }
-
+    
     @Test
     void testIsGzipStreamWithNull() {
         assertFalse(IoUtils.isGzipStream(null));
     }
-
+    
     @Test
     void testIsGzipStreamWithEmpty() {
         assertFalse(IoUtils.isGzipStream(new byte[0]));
     }
-
+    
     @Test
     void testCloseQuietly() throws IOException {
         BufferedReader br = new BufferedReader(
@@ -212,7 +212,7 @@ class IoUtilsTest {
         }
         fail();
     }
-
+    
     @Test
     void testCloseQuietly2() throws IOException {
         BufferedReader br = new BufferedReader(
@@ -237,7 +237,7 @@ class IoUtilsTest {
         }
         fail();
     }
-
+    
     @Test
     void testCloseQuietlyForHttpConnection() throws IOException {
         HttpURLConnection conn = mock(HttpURLConnection.class);
@@ -246,5 +246,5 @@ class IoUtilsTest {
         IoUtils.closeQuietly(conn);
         verify(inputStream).close();
     }
-
+    
 }

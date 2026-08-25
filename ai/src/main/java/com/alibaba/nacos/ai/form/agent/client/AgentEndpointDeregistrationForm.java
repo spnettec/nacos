@@ -29,16 +29,16 @@ import java.io.Serial;
  * @author Nacos
  */
 public class AgentEndpointDeregistrationForm implements NacosForm {
-
+    
     @Serial
     private static final long serialVersionUID = 1L;
-
+    
     private String namespaceId;
-
+    
     private String agentName;
-
+    
     private String protocol;
-
+    
     @Override
     public void validate() throws NacosApiException {
         namespaceId = NamespaceUtil.processNamespaceParameter(namespaceId);
@@ -46,27 +46,27 @@ public class AgentEndpointDeregistrationForm implements NacosForm {
         AgentValidationUtils.validateAgentName(agentName);
         AgentValidationUtils.validateProtocol(protocol);
     }
-
+    
     public String getNamespaceId() {
         return namespaceId;
     }
-
+    
     public void setNamespaceId(String namespaceId) {
         this.namespaceId = namespaceId;
     }
-
+    
     public String getAgentName() {
         return agentName;
     }
-
+    
     public void setAgentName(String agentName) {
         this.agentName = agentName;
     }
-
+    
     public String getProtocol() {
         return protocol;
     }
-
+    
     public void setProtocol(String protocol) {
         this.protocol = protocol;
     }

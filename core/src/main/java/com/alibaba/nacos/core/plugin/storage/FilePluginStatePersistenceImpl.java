@@ -42,35 +42,35 @@ import java.util.Map;
  */
 @Component
 public class FilePluginStatePersistenceImpl implements PluginStatePersistenceService {
-
+    
     private static final Logger LOGGER =
         LoggerFactory.getLogger(FilePluginStatePersistenceImpl.class);
-
+    
     private static final String PLUGIN_STATE_FILE = "plugin-states.json";
-
+    
     private static final String PLUGIN_CONFIG_FILE = "plugin-configs.json";
-
+    
     private static final String PLUGIN_DATA_DIR = "plugin";
-
+    
     private static final TypeReference<Map<String, Boolean>> STATE_TYPE_REF =
         new TypeReference<>() {
         };
-
+    
     private static final TypeReference<Map<String, Map<String, String>>> CONFIG_TYPE_REF =
         new TypeReference<>() {
         };
-
+    
     private final String dataDir;
-
+    
     private final Object stateLock = new Object();
-
+    
     private final Object configLock = new Object();
-
+    
     public FilePluginStatePersistenceImpl() {
         this.dataDir =
             EnvUtil.getNacosHome() + File.separator + "data" + File.separator + PLUGIN_DATA_DIR;
     }
-
+    
     private void ensureDataDirExists() {
         Path directory = Paths.get(dataDir);
         if (Files.isDirectory(directory)) {
@@ -85,7 +85,7 @@ public class FilePluginStatePersistenceImpl implements PluginStatePersistenceSer
                 "Failed to create plugin data directory: " + dataDir, e);
         }
     }
-
+    
     /**
      * Save plugin state.
      *
@@ -106,7 +106,7 @@ public class FilePluginStatePersistenceImpl implements PluginStatePersistenceSer
             }
         }
     }
-
+    
     @Override
     public void replaceAllStates(Map<String, Boolean> states) {
         synchronized (stateLock) {
@@ -120,7 +120,7 @@ public class FilePluginStatePersistenceImpl implements PluginStatePersistenceSer
             }
         }
     }
-
+    
     /**
      * Save plugin configuration.
      *
@@ -142,7 +142,7 @@ public class FilePluginStatePersistenceImpl implements PluginStatePersistenceSer
             }
         }
     }
-
+    
     @Override
     public void replaceAllConfigs(Map<String, Map<String, String>> configs) {
         synchronized (configLock) {
@@ -156,7 +156,7 @@ public class FilePluginStatePersistenceImpl implements PluginStatePersistenceSer
             }
         }
     }
-
+    
     /**
      * Load all plugin states.
      *
@@ -168,7 +168,7 @@ public class FilePluginStatePersistenceImpl implements PluginStatePersistenceSer
             return readJsonFromFile(PLUGIN_STATE_FILE, STATE_TYPE_REF);
         }
     }
-
+    
     /**
      * Load all plugin configurations.
      *
@@ -180,7 +180,7 @@ public class FilePluginStatePersistenceImpl implements PluginStatePersistenceSer
             return readJsonFromFile(PLUGIN_CONFIG_FILE, CONFIG_TYPE_REF, true);
         }
     }
-
+    
     /**
      * Delete plugin state.
      *
@@ -201,7 +201,7 @@ public class FilePluginStatePersistenceImpl implements PluginStatePersistenceSer
             }
         }
     }
-
+    
     /**
      * Delete plugin configuration.
      *
@@ -222,18 +222,18 @@ public class FilePluginStatePersistenceImpl implements PluginStatePersistenceSer
             }
         }
     }
-
+    
     private <T> T readJsonFromFile(String fileName, TypeReference<T> typeRef) {
         return readJsonFromFile(fileName, typeRef, false);
     }
-
+    
     private <T> T readJsonFromFile(String fileName, TypeReference<T> typeRef,
         boolean failOnError) {
         Path filePath = Paths.get(dataDir, fileName);
         if (!Files.exists(filePath)) {
             return createEmptyMap(typeRef);
         }
-
+        
         try {
             String content = new String(Files.readAllBytes(filePath), StandardCharsets.UTF_8);
             if (StringUtils.isBlank(content)) {
@@ -249,12 +249,12 @@ public class FilePluginStatePersistenceImpl implements PluginStatePersistenceSer
             return createEmptyMap(typeRef);
         }
     }
-
+    
     @SuppressWarnings("unchecked")
     private <T> T createEmptyMap(TypeReference<T> typeRef) {
         return (T) new HashMap<>(16);
     }
-
+    
     private void writeJsonToFile(String fileName, Object data) throws IOException {
         ensureDataDirExists();
         Path filePath = Paths.get(dataDir, fileName);

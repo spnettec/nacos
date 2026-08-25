@@ -151,6 +151,14 @@ class ExternalUserPersistServiceImplTest {
     }
     
     @Test
+    void testFindUserLikeUsernameEscapesTheUnderscoreWildcard() {
+        externalUserPersistService.findUserLikeUsername("na_me");
+        
+        Mockito.verify(jdbcTemplate)
+            .queryForList(any(String.class), eq(String.class), eq("%na\\_me%"));
+    }
+    
+    @Test
     void testFindUsersLikeAndGenerateLikeArgument() {
         assertEquals("na\\_me%", externalUserPersistService.generateLikeArgument("na_me*"));
         assertEquals("plain", externalUserPersistService.generateLikeArgument("plain"));

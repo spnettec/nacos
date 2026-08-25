@@ -40,24 +40,24 @@ import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class ReleaseAgentCardRequestHandlerTest {
-
+    
     @Mock
     private A2aCompatibilityOperationService a2aServerOperationService;
-
+    
     @Mock
     private RequestMeta meta;
-
+    
     private ReleaseAgentCardRequestHandler requestHandler;
-
+    
     @BeforeEach
     void setUp() {
         requestHandler = new ReleaseAgentCardRequestHandler(a2aServerOperationService);
     }
-
+    
     @AfterEach
     void tearDown() {
     }
-
+    
     @Test
     void handleWithNullAgentCard() throws NacosException {
         ReleaseAgentCardRequest request = new ReleaseAgentCardRequest();
@@ -66,7 +66,7 @@ class ReleaseAgentCardRequestHandlerTest {
         assertEquals(NacosException.INVALID_PARAM, response.getErrorCode());
         assertEquals("parameters `agentCard` can't be null", response.getMessage());
     }
-
+    
     @Test
     void handleWithValidNewAgentCard() throws NacosException {
         final ReleaseAgentCardRequest request = new ReleaseAgentCardRequest();
@@ -84,7 +84,7 @@ class ReleaseAgentCardRequestHandlerTest {
         verify(a2aServerOperationService).releaseAgent(eq(agentCard), eq("public"),
             eq("SERVICE"), eq(false));
     }
-
+    
     @Test
     void handleWithValidNewVersionAgentCard() throws NacosException {
         final ReleaseAgentCardRequest request = new ReleaseAgentCardRequest();
@@ -103,7 +103,7 @@ class ReleaseAgentCardRequestHandlerTest {
         verify(a2aServerOperationService).releaseAgent(eq(agentCard), eq("public"),
             eq("SERVICE"), eq(true));
     }
-
+    
     @Test
     void handleWithOtherException() throws NacosException {
         final ReleaseAgentCardRequest request = new ReleaseAgentCardRequest();

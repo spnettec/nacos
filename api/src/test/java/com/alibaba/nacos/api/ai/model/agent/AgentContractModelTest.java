@@ -35,27 +35,27 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AgentContractModelTest extends BasicRequestTest {
-
+    
     @Test
     void testEndpointOptionalValuesAreNotSerialized() throws JacksonException {
         Endpoint endpoint = new Endpoint();
         endpoint.setUri("https://example.com/agent");
         endpoint.setTransport("JSON-RPC");
         endpoint.setMetadata(Collections.singletonMap("zone", "cn-hangzhou-a"));
-
+        
         String json = mapper.writeValueAsString(endpoint);
         assertFalse(json.contains("effectivePriority"));
         assertFalse(json.contains("effectiveWeight"));
         assertFalse(json.contains("priority"));
         assertFalse(json.contains("weight"));
         assertFalse(json.contains("healthy"));
-
+        
         Endpoint deserialized = mapper.readValue(json, Endpoint.class);
         assertEquals("https://example.com/agent", deserialized.getUri());
         assertEquals("JSON-RPC", deserialized.getTransport());
         assertEquals("cn-hangzhou-a", deserialized.getMetadata().get("zone"));
     }
-
+    
     @Test
     void testEndpointExplicitValuesRoundTrip() throws JacksonException {
         Endpoint endpoint = new Endpoint();
@@ -64,36 +64,36 @@ class AgentContractModelTest extends BasicRequestTest {
         endpoint.setPriority(10);
         endpoint.setWeight(2.5D);
         endpoint.setHealthy(false);
-
+        
         Endpoint deserialized =
             mapper.readValue(mapper.writeValueAsString(endpoint), Endpoint.class);
         assertEquals(Integer.valueOf(10), deserialized.getPriority());
         assertEquals(Double.valueOf(2.5D), deserialized.getWeight());
         assertEquals(Boolean.FALSE, deserialized.getHealthy());
     }
-
+    
     @Test
     void testDefaultEnumWireValuesAreExact() throws JacksonException {
         assertEquals("\"RUNTIME\"", mapper.writeValueAsString(EndpointSource.RUNTIME));
         assertEquals("\"UNHEALTHY\"", mapper.writeValueAsString(RuntimeEndpointState.UNHEALTHY));
-
+        
         assertThrows(JacksonException.class,
             () -> mapper.readValue("\"runtime\"", EndpointSource.class));
     }
-
+    
     @Test
     void testNativeDescriptorNullIsBoundForControllerValidation() throws JacksonException {
         String json = "{\"protocol\":\"a2a\",\"descriptorMediaType\":\"application/json\","
             + "\"nativeDescriptor\":null,\"endpointSourceOrder\":[\"DECLARED\"]}";
-
+        
         AgentCallInterface callInterface = mapper.readValue(json, AgentCallInterface.class);
         assertNull(callInterface.getNativeDescriptor());
     }
-
+    
     @Test
     void testAgentRoundTripWithAllFields() throws JacksonException {
         Agent restored = roundTrip(newAgent(), Agent.class);
-
+        
         assertEquals("public", restored.getNamespaceId());
         assertEquals("Demo Agent", restored.getAgentName());
         assertEquals("Demo Agent Display", restored.getDisplayName());
@@ -112,7 +112,7 @@ class AgentContractModelTest extends BasicRequestTest {
         assertEquals(Long.valueOf(1L), restored.getCreateTime());
         assertEquals(Long.valueOf(2L), restored.getUpdateTime());
     }
-
+    
     @Test
     void testAgentSummaryRoundTripWithAllFields() throws JacksonException {
         AgentSummary summary = new AgentSummary();
@@ -131,7 +131,7 @@ class AgentContractModelTest extends BasicRequestTest {
         summary.setMetaVersion(3L);
         summary.setCreateTime(1L);
         summary.setUpdateTime(2L);
-
+        
         AgentSummary restored = roundTrip(summary, AgentSummary.class);
         assertEquals("public", restored.getNamespaceId());
         assertEquals("Demo Agent", restored.getAgentName());
@@ -150,7 +150,7 @@ class AgentContractModelTest extends BasicRequestTest {
         assertEquals(Long.valueOf(1L), restored.getCreateTime());
         assertEquals(Long.valueOf(2L), restored.getUpdateTime());
     }
-
+    
     @Test
     void testAgentOverviewRoundTripWithCompletePage() throws JacksonException {
         Page<AgentVersionSummary> versionPage = new Page<AgentVersionSummary>();
@@ -161,7 +161,7 @@ class AgentContractModelTest extends BasicRequestTest {
         AgentOverview overview = new AgentOverview();
         overview.setAgent(newAgent());
         overview.setVersionPage(versionPage);
-
+        
         AgentOverview restored = roundTrip(overview, AgentOverview.class);
         assertEquals("Demo Agent", restored.getAgent().getAgentName());
         assertEquals(1, restored.getVersionPage().getTotalCount());
@@ -169,7 +169,7 @@ class AgentContractModelTest extends BasicRequestTest {
         assertEquals(1, restored.getVersionPage().getPagesAvailable());
         assertVersionSummary(restored.getVersionPage().getPageItems().get(0));
     }
-
+    
     @Test
     void testAgentVersionDetailRoundTripWithCallInterface() throws JacksonException {
         AgentVersionDetail detail = new AgentVersionDetail();
@@ -183,7 +183,7 @@ class AgentContractModelTest extends BasicRequestTest {
         detail.setContentDigest(contentDigest());
         detail.setCreateTime(1L);
         detail.setUpdateTime(2L);
-
+        
         AgentVersionDetail restored = roundTrip(detail, AgentVersionDetail.class);
         assertEquals("public", restored.getNamespaceId());
         assertEquals("Demo Agent", restored.getAgentName());
@@ -196,7 +196,7 @@ class AgentContractModelTest extends BasicRequestTest {
         assertEquals(Long.valueOf(2L), restored.getUpdateTime());
         assertCallInterface(restored.getCallInterfaces().get(0));
     }
-
+    
     @Test
     void testRuntimeEndpointSnapshotRoundTripWithAllFields() throws JacksonException {
         RuntimeVersionBinding binding = new RuntimeVersionBinding();
@@ -215,7 +215,7 @@ class AgentContractModelTest extends BasicRequestTest {
         snapshot.setProtocol("a2a");
         snapshot.setVersion("1.0.0");
         snapshot.setItems(Collections.singletonList(item));
-
+        
         RuntimeEndpointSnapshot restored = roundTrip(snapshot, RuntimeEndpointSnapshot.class);
         assertEquals("public", restored.getNamespaceId());
         assertEquals("Demo Agent", restored.getAgentName());
@@ -230,67 +230,67 @@ class AgentContractModelTest extends BasicRequestTest {
         assertEquals(Boolean.TRUE, restoredItem.getHealthy());
         assertEquals(Long.valueOf(2L), restoredItem.getLastUpdatedTime());
     }
-
+    
     @Test
     void testAdminRequestModelsDoNotCarryNamespace() throws JacksonException {
         AgentUpdateRequest update = new AgentUpdateRequest();
         update.setAgentName("Demo Agent");
         update.setStatus(AiConstants.Agent.RESOURCE_STATUS_DISABLE);
         update.validate();
-
+        
         AgentVersionCommand command = new AgentVersionCommand();
         command.setAgentName("Demo Agent");
         command.setVersion("1.0.0");
         command.validate();
-
+        
         assertFalse(mapper.writeValueAsString(update).contains("namespaceId"));
         assertFalse(mapper.writeValueAsString(command).contains("namespaceId"));
     }
-
+    
     @Test
     void testAgentUpdateRequestRequiresResourceStatus() {
         AgentUpdateRequest request = new AgentUpdateRequest();
         request.setAgentName("Demo Agent");
         request.setStatus(AiConstants.Agent.RESOURCE_STATUS_ENABLE);
-
+        
         request.setStatus(null);
         assertThrows(IllegalArgumentException.class, request::validate);
         request.setStatus(AiConstants.Agent.RESOURCE_STATUS_ENABLE);
         request.validate();
     }
-
+    
     @Test
     void testDraftCreateRequiresExactlyOneContentSource() {
         AgentDraftCreateRequest request = new AgentDraftCreateRequest();
         request.setAgentName("Demo Agent");
         request.setVersion("2.0.0");
-
+        
         assertThrows(IllegalArgumentException.class, request::validate);
-
+        
         request.setCallInterfaces(Collections.singletonList(newCallInterface()));
         request.setBasedOnVersion("1.0.0");
         assertThrows(IllegalArgumentException.class, request::validate);
-
+        
         request.setBasedOnVersion(null);
         request.validate();
-
+        
         request.setCallInterfaces(null);
         request.setBasedOnVersion("1.0.0");
         request.validate();
     }
-
+    
     @Test
     void testLabelsUpdateRejectsLatestLabel() {
         AgentLabelsUpdateRequest request = new AgentLabelsUpdateRequest();
         request.setAgentName("Demo Agent");
         request.setLabels(Collections.singletonMap("latest", "1.0.0"));
-
+        
         assertThrows(IllegalArgumentException.class, request::validate);
-
+        
         request.setLabels(Collections.singletonMap("stable", "1.0.0"));
         request.validate();
     }
-
+    
     @Test
     void testDraftCreateRequestAccessors() {
         AgentDraftCreateRequest request = new AgentDraftCreateRequest();
@@ -309,9 +309,9 @@ class AgentContractModelTest extends BasicRequestTest {
         request.setAuthor("alice");
         request.setChangeDescription("initial draft");
         request.setBasedOnVersion(null);
-
+        
         request.validate();
-
+        
         assertEquals("Demo Agent", request.getAgentName());
         assertEquals("Demo", request.getDisplayName());
         assertEquals("description", request.getDescription());
@@ -325,7 +325,7 @@ class AgentContractModelTest extends BasicRequestTest {
         assertEquals("initial draft", request.getChangeDescription());
         assertNull(request.getBasedOnVersion());
     }
-
+    
     @Test
     void testDraftUpdateRequestAccessorsAndValidation() {
         AgentDraftUpdateRequest request = new AgentDraftUpdateRequest();
@@ -333,18 +333,18 @@ class AgentContractModelTest extends BasicRequestTest {
         request.setVersion("2.0.0");
         request.setCallInterfaces(Collections.singletonList(newCallInterface()));
         request.setChangeDescription("updated");
-
+        
         request.validate();
-
+        
         assertEquals("Demo Agent", request.getAgentName());
         assertEquals("2.0.0", request.getVersion());
         assertEquals("a2a", request.getCallInterfaces().get(0).getProtocol());
         assertEquals("updated", request.getChangeDescription());
-
+        
         request.setCallInterfaces(null);
         assertThrows(IllegalArgumentException.class, request::validate);
     }
-
+    
     @Test
     void testAgentUpdateRequestAccessorsAndEveryWritableStatus() {
         AgentUpdateRequest request = new AgentUpdateRequest();
@@ -358,9 +358,9 @@ class AgentContractModelTest extends BasicRequestTest {
         request.setTags(Collections.singletonList("assistant"));
         request.setExtensions(extensions);
         request.setStatus(AiConstants.Agent.RESOURCE_STATUS_DISABLE);
-
+        
         request.validate();
-
+        
         assertEquals("Demo Agent", request.getAgentName());
         assertEquals("Demo", request.getDisplayName());
         assertEquals("description", request.getDescription());
@@ -370,23 +370,23 @@ class AgentContractModelTest extends BasicRequestTest {
         assertEquals(extensions, request.getExtensions());
         assertEquals(AiConstants.Agent.RESOURCE_STATUS_DISABLE, request.getStatus());
     }
-
+    
     @Test
     void testLabelsUpdateRequestAccessorsAndNullLabels() {
         AgentLabelsUpdateRequest request = new AgentLabelsUpdateRequest();
         request.setAgentName("Demo Agent");
         request.setLabels(null);
-
+        
         assertEquals("Demo Agent", request.getAgentName());
         assertNull(request.getLabels());
         assertThrows(IllegalArgumentException.class, request::validate);
-
+        
         Map<String, String> labels = Collections.singletonMap("stable", "1.0.0");
         request.setLabels(labels);
         request.validate();
         assertEquals(labels, request.getLabels());
     }
-
+    
     @Test
     void testAdminRequestBlankUtility() {
         assertTrue(AgentAdminRequestUtils.isBlank(null));
@@ -394,7 +394,7 @@ class AgentContractModelTest extends BasicRequestTest {
         assertTrue(AgentAdminRequestUtils.isBlank(" \t"));
         assertFalse(AgentAdminRequestUtils.isBlank(" value"));
     }
-
+    
     private Agent newAgent() {
         Agent agent = new Agent();
         agent.setNamespaceId("public");
@@ -417,14 +417,14 @@ class AgentContractModelTest extends BasicRequestTest {
         agent.setUpdateTime(2L);
         return agent;
     }
-
+    
     private AgentProvider newProvider() {
         AgentProvider provider = new AgentProvider();
         provider.setName("Nacos");
         provider.setUrl("https://nacos.io");
         return provider;
     }
-
+    
     private AgentVersionInfo newVersionInfo() {
         AgentVersionInfo versionInfo = new AgentVersionInfo();
         versionInfo.setEditingVersion("2.0.0");
@@ -436,7 +436,7 @@ class AgentContractModelTest extends BasicRequestTest {
         versionInfo.setLabels(labels);
         return versionInfo;
     }
-
+    
     private AgentVersionCatalog newVersionCatalog() {
         AgentVersionCatalogEntry entry = new AgentVersionCatalogEntry();
         entry.setVersion("1.0.0");
@@ -447,7 +447,7 @@ class AgentContractModelTest extends BasicRequestTest {
         catalog.setOnlineVersions(Collections.singletonList(entry));
         return catalog;
     }
-
+    
     private AgentVersionSummary newVersionSummary() {
         AgentVersionSummary summary = new AgentVersionSummary();
         summary.setVersion("1.0.0");
@@ -459,7 +459,7 @@ class AgentContractModelTest extends BasicRequestTest {
         summary.setUpdateTime(2L);
         return summary;
     }
-
+    
     private AgentCallInterface newCallInterface() {
         AgentCallInterface callInterface = new AgentCallInterface();
         callInterface.setProtocol("a2a");
@@ -472,7 +472,7 @@ class AgentContractModelTest extends BasicRequestTest {
             newEndpoint("https://declared.example.com:443/a2a", null)));
         return callInterface;
     }
-
+    
     private Endpoint newEndpoint(String uri, Boolean healthy) {
         Endpoint endpoint = new Endpoint();
         endpoint.setUri(uri);
@@ -483,7 +483,7 @@ class AgentContractModelTest extends BasicRequestTest {
         endpoint.setHealthy(healthy);
         return endpoint;
     }
-
+    
     private void assertVersionInfo(AgentVersionInfo versionInfo) {
         assertEquals("2.0.0", versionInfo.getEditingVersion());
         assertEquals("2.1.0", versionInfo.getReviewingVersion());
@@ -491,7 +491,7 @@ class AgentContractModelTest extends BasicRequestTest {
         assertEquals("1.0.0", versionInfo.getLabels().get("latest"));
         assertEquals("1.0.0", versionInfo.getLabels().get("stable"));
     }
-
+    
     private void assertVersionCatalog(AgentVersionCatalog catalog) {
         assertEquals("1.0.0", catalog.getLatestVersion());
         AgentVersionCatalogEntry entry = catalog.getOnlineVersions().get(0);
@@ -499,7 +499,7 @@ class AgentContractModelTest extends BasicRequestTest {
         assertEquals(Collections.singletonList("stable"), entry.getLabels());
         assertEquals(Collections.singletonList("a2a"), entry.getProtocols());
     }
-
+    
     private void assertVersionSummary(AgentVersionSummary summary) {
         assertEquals("1.0.0", summary.getVersion());
         assertEquals(AiConstants.Agent.VERSION_STATUS_ONLINE, summary.getStatus());
@@ -509,7 +509,7 @@ class AgentContractModelTest extends BasicRequestTest {
         assertEquals(Long.valueOf(1L), summary.getCreateTime());
         assertEquals(Long.valueOf(2L), summary.getUpdateTime());
     }
-
+    
     @SuppressWarnings("unchecked")
     private void assertCallInterface(AgentCallInterface callInterface) {
         assertEquals("a2a", callInterface.getProtocol());
@@ -521,7 +521,7 @@ class AgentContractModelTest extends BasicRequestTest {
             callInterface.getEndpointSourceOrder());
         assertEndpoint(callInterface.getDeclaredEndpoints().get(0), null);
     }
-
+    
     private void assertEndpoint(Endpoint endpoint, Boolean healthy) {
         assertEquals(healthy == null ? "https://declared.example.com:443/a2a"
             : "https://runtime.example.com:443/a2a", endpoint.getUri());
@@ -531,12 +531,12 @@ class AgentContractModelTest extends BasicRequestTest {
         assertEquals("cn-hangzhou-a", endpoint.getMetadata().get("zone"));
         assertEquals(healthy, endpoint.getHealthy());
     }
-
+    
     private String contentDigest() {
         return "sha256:0123456789abcdef0123456789abcdef"
             + "0123456789abcdef0123456789abcdef";
     }
-
+    
     private <T> T roundTrip(T value, Class<T> type) throws JacksonException {
         String json = mapper.writeValueAsString(value);
         assertNotNull(json);

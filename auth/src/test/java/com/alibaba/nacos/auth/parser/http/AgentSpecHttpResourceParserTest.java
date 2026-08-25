@@ -31,33 +31,33 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class AgentSpecHttpResourceParserTest {
-
+    
     @Test
     void testParseClientName() throws NoSuchMethodException {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setRequestURI("/v3/client/ai/agentspecs");
         request.addParameter(Constants.NAMESPACE_ID, "testNs");
         request.addParameter("name", "client-spec");
-
+        
         Resource actual =
             new AgentSpecNameHttpResourceParser().parse(request, getSecured());
-
+        
         assertEquals("testNs", actual.getNamespaceId());
         assertEquals(Constants.DEFAULT_GROUP, actual.getGroup());
         assertEquals("client-spec", actual.getName());
         assertEquals(SignType.AI, actual.getType());
         assertEquals(AI_TYPE_AGENT_SPEC, actual.getProperties().getProperty(AI_TYPE));
     }
-
+    
     @Test
     void testRejectMissingClientName() throws NoSuchMethodException {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setRequestURI("/v3/client/ai/agentspecs");
-
+        
         assertThrows(IllegalArgumentException.class,
             () -> new AgentSpecNameHttpResourceParser().parse(request, getSecured()));
     }
-
+    
     @Test
     void testParseUpdateTargetFromAgentSpecCard() throws NoSuchMethodException {
         MockHttpServletRequest request = new MockHttpServletRequest();
@@ -65,42 +65,42 @@ class AgentSpecHttpResourceParserTest {
         request.addParameter(Constants.NAMESPACE_ID, "testNs");
         request.addParameter("agentSpecName", "non-authoritative-name");
         request.addParameter("agentSpecCard", "{\"name\":\"card-spec\"}");
-
+        
         Resource actual =
             new AgentSpecCardHttpResourceParser().parse(request, getSecured());
-
+        
         assertEquals("testNs", actual.getNamespaceId());
         assertEquals(Constants.DEFAULT_GROUP, actual.getGroup());
         assertEquals("card-spec", actual.getName());
         assertEquals(SignType.AI, actual.getType());
         assertEquals(AI_TYPE_AGENT_SPEC, actual.getProperties().getProperty(AI_TYPE));
     }
-
+    
     @Test
     void testRejectInvalidAgentSpecCard() throws NoSuchMethodException {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setRequestURI("/v3/admin/ai/agentspecs/draft");
         request.addParameter("agentSpecCard", "invalid-json");
-
+        
         assertThrows(IllegalArgumentException.class,
             () -> new AgentSpecCardHttpResourceParser().parse(request, getSecured()));
     }
-
+    
     @Test
     void testRejectAgentSpecCardWithoutName() throws NoSuchMethodException {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setRequestURI("/v3/admin/ai/agentspecs/draft");
         request.addParameter("agentSpecCard", "{\"description\":\"missing name\"}");
-
+        
         assertThrows(IllegalArgumentException.class,
             () -> new AgentSpecCardHttpResourceParser().parse(request, getSecured()));
     }
-
+    
     private Secured getSecured() throws NoSuchMethodException {
         Method method = getClass().getDeclaredMethod("securedMethod");
         return method.getAnnotation(Secured.class);
     }
-
+    
     @Secured(signType = SignType.AI)
     private void securedMethod() {
     }

@@ -50,15 +50,15 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class AgentClientRequestHandlerTest {
-
+    
     private AgentDiscoveryApplicationService discoveryService;
-
+    
     private AgentRuntimeRegistryService runtimeRegistryService;
-
+    
     private AgentPublishApplicationService publishService;
-
+    
     private RequestMeta meta;
-
+    
     @BeforeEach
     void setUp() {
         discoveryService = mock(AgentDiscoveryApplicationService.class);
@@ -67,7 +67,7 @@ class AgentClientRequestHandlerTest {
         meta = mock(RequestMeta.class);
         when(meta.getConnectionId()).thenReturn("connection");
     }
-
+    
     @Test
     void testPublishHandler() throws NacosException {
         AgentPublishRequest publication = new AgentPublishRequest();
@@ -75,14 +75,14 @@ class AgentClientRequestHandlerTest {
         AgentPublishRpcRequest request = new AgentPublishRpcRequest();
         request.setPublishRequest(publication);
         when(publishService.publish("public", publication)).thenReturn(detail);
-
+        
         AgentPublishRpcResponse response =
             new AgentPublishRpcRequestHandler(publishService).handle(request, meta);
         assertSame(detail, response.getVersionDetail());
         assertInvalid(new AgentPublishRpcRequestHandler(publishService)
             .handle(new AgentPublishRpcRequest(), meta));
     }
-
+    
     @Test
     void testSearchHandler() throws NacosException {
         AgentSearchRequest search = new AgentSearchRequest();
@@ -90,16 +90,16 @@ class AgentClientRequestHandlerTest {
         when(discoveryService.search(search)).thenReturn(page);
         AgentSearchRpcRequest request = new AgentSearchRpcRequest();
         request.setSearchRequest(search);
-
+        
         AgentSearchResponse response =
             new AgentSearchRpcRequestHandler(discoveryService).handle(request, meta);
-
+        
         assertSame(page, response.getPage());
         assertEquals("public", search.getNamespaceId());
         assertInvalid(new AgentSearchRpcRequestHandler(discoveryService)
             .handle(new AgentSearchRpcRequest(), meta));
     }
-
+    
     @Test
     void testDiscoveryHandler() throws NacosException {
         AgentDiscoveryRequest discovery = new AgentDiscoveryRequest();
@@ -107,47 +107,47 @@ class AgentClientRequestHandlerTest {
         when(discoveryService.discover(discovery)).thenReturn(result);
         AgentDiscoveryRpcRequest request = new AgentDiscoveryRpcRequest();
         request.setDiscoveryRequest(discovery);
-
+        
         AgentDiscoveryResponse response =
             new AgentDiscoveryRpcRequestHandler(discoveryService).handle(request, meta);
-
+        
         assertSame(result, response.getDiscoveryResult());
         assertEquals("public", discovery.getNamespaceId());
         assertInvalid(new AgentDiscoveryRpcRequestHandler(discoveryService)
             .handle(new AgentDiscoveryRpcRequest(), meta));
     }
-
+    
     @Test
     void testEndpointRegisterHandler() throws NacosException {
         AgentEndpointRegistrationBatch batch = new AgentEndpointRegistrationBatch();
         AgentEndpointRegisterRpcRequest request = new AgentEndpointRegisterRpcRequest();
         request.setRegistrationBatch(batch);
-
+        
         AgentEndpointOperationResponse response =
             new AgentEndpointRegisterRpcRequestHandler(runtimeRegistryService)
                 .handle(request, meta);
-
+        
         assertTrue(response.isSuccess());
         assertEquals("public", batch.getNamespaceId());
         verify(runtimeRegistryService).register("connection", batch);
         assertInvalid(new AgentEndpointRegisterRpcRequestHandler(runtimeRegistryService)
             .handle(new AgentEndpointRegisterRpcRequest(), meta));
     }
-
+    
     @Test
     void testEndpointDeregisterHandler() throws NacosException {
         AgentEndpointDeregisterRpcRequest request = new AgentEndpointDeregisterRpcRequest();
         request.setAgentName("demo");
         request.setProtocol("a2a");
-
+        
         AgentEndpointOperationResponse response =
             new AgentEndpointDeregisterRpcRequestHandler(runtimeRegistryService)
                 .handle(request, meta);
-
+        
         assertTrue(response.isSuccess());
         assertEquals("public", request.getNamespaceId());
         verify(runtimeRegistryService).deregisterPublisher("connection", "public", "demo", "a2a");
-
+        
         AgentEndpointDeregisterRpcRequest invalidRequest =
             new AgentEndpointDeregisterRpcRequest();
         invalidRequest.setAgentName("demo");
@@ -157,7 +157,7 @@ class AgentClientRequestHandlerTest {
         assertInvalid(new AgentEndpointDeregisterRpcRequestHandler(runtimeRegistryService)
             .handle(invalidRequest, meta));
     }
-
+    
     private void assertInvalid(Response response) {
         assertEquals(20002, response.getErrorCode());
     }

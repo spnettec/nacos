@@ -35,7 +35,7 @@ import org.springframework.context.annotation.Bean;
  * @author xiweng.yy
  */
 public class NacosAuthPluginControllerConfig {
-
+    
     @Bean
     public UserControllerV3 userControllerV3(NacosUserService userDetailsService,
         NacosRoleService roleService,
@@ -44,24 +44,24 @@ public class NacosAuthPluginControllerConfig {
         return new UserControllerV3(userDetailsService, roleService, iAuthenticationManager,
             jwtTokenManager);
     }
-
+    
     @Bean
     public RoleControllerV3 roleControllerV3(NacosRoleService roleService) {
         return new RoleControllerV3(roleService);
     }
-
+    
     @Bean
     public PermissionControllerV3 permissionControllerV3(NacosRoleService roleService) {
         return new PermissionControllerV3(roleService);
     }
-
+    
     @Bean
     @ConditionalOnMissingBean(VisibilityGrantService.class)
     public VisibilityGrantService visibilityGrantService(NacosRoleService roleService,
         NacosUserService userService) {
         return new DefaultVisibilityGrantService(roleService, userService);
     }
-
+    
     @Bean
     public VisibilityGrantControllerV3 visibilityGrantControllerV3(
         VisibilityGrantService visibilityGrantService) {

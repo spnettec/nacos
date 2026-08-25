@@ -41,20 +41,20 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class NacosLogbackConfiguratorAdapterV1Test {
-
+    
     ContextBase context;
-
+    
     NacosLogbackConfiguratorAdapterV1 nacosLogbackConfiguratorAdapter;
-
+    
     @Mock
     private URL url;
-
+    
     @Mock
     private URLConnection urlConnection;
-
+    
     @Mock
     private InputStream inputStream;
-
+    
     @BeforeEach
     void setUp() throws Exception {
         nacosLogbackConfiguratorAdapter = new NacosLogbackConfiguratorAdapterV1();
@@ -63,12 +63,12 @@ class NacosLogbackConfiguratorAdapterV1Test {
         when(url.openConnection()).thenReturn(urlConnection);
         when(urlConnection.getInputStream()).thenReturn(inputStream);
     }
-
+    
     @AfterEach
     void tearDown() throws Exception {
         context.stop();
     }
-
+    
     @Test
     void testConfigureWithError() throws Exception {
         doThrow(new IOException("test")).when(inputStream).close();

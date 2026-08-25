@@ -30,11 +30,11 @@ import java.util.Collections;
  */
 public class SkillWellKnownImportServiceBuilder
     extends AbstractAiResourceImportServiceBuilder {
-
+    
     public static final String PLUGIN_NAME = "skills-well-known";
-
+    
     public static final String IMPORTER_TYPE = "skills-well-known";
-
+    
     /**
      * Legacy Skill well-known importer configuration prefix.
      *
@@ -44,14 +44,14 @@ public class SkillWellKnownImportServiceBuilder
     @Deprecated
     private static final String LEGACY_PREFIX =
         "nacos.plugin.ai.importer.skills.well-known.";
-
+    
     public SkillWellKnownImportServiceBuilder() {
         super(PLUGIN_NAME, IMPORTER_TYPE, "Skill Well-known Registry",
             "Import Skills from a well-known Skill discovery endpoint.",
             Collections.singleton(AiResourceImportConstants.RESOURCE_TYPE_SKILL), null,
             LEGACY_PREFIX, LEGACY_PREFIX + "url", LEGACY_PREFIX + "endpoint");
     }
-
+    
     @Override
     protected AiResourceImportService createService(ConfigSnapshot config) {
         return new SkillWellKnownImportService(config.getEndpoint(), config.isAllowHttp(),

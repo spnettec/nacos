@@ -29,62 +29,62 @@ import java.util.Map;
  * @author Nacos
  */
 final class SkillScannerPluginConfig {
-
+    
     static final String ORDER = "order";
-
+    
     static final int DEFAULT_ORDER = 100;
-
+    
     static final String COMMAND = "command";
-
+    
     static final String DEFAULT_COMMAND = "skill-scanner";
-
+    
     // Deprecated compatibility aliases; use canonical kebab-case item keys.
     // Planned for removal in Nacos 4.0.0.
     @Deprecated
     static final String COMMAND_ALIAS_EXECUTABLE = "executable";
-
+    
     @Deprecated
     static final String COMMAND_ALIAS_PATH = "path";
-
+    
     static final String USE_LLM = "use-llm";
-
+    
     @Deprecated
     static final String USE_LLM_ALIAS = "useLlm";
-
+    
     static final String LLM_API_KEY = "llm-api-key";
-
+    
     @Deprecated
     static final String LLM_API_KEY_ALIAS = "llmApiKey";
-
+    
     static final String LLM_MODEL = "llm-model";
-
+    
     @Deprecated
     static final String LLM_MODEL_ALIAS = "llmModel";
-
+    
     static final String LLM_PROVIDER = "llm-provider";
-
+    
     @Deprecated
     static final String LLM_PROVIDER_ALIAS = "llmProvider";
-
+    
     static final String ENABLE_META = "enable-meta";
-
+    
     @Deprecated
     static final String ENABLE_META_ALIAS = "enableMeta";
-
+    
     private final String command;
-
+    
     private final int order;
-
+    
     private final boolean useLlm;
-
+    
     private final String llmApiKey;
-
+    
     private final String llmModel;
-
+    
     private final String llmProvider;
-
+    
     private final boolean enableMeta;
-
+    
     private SkillScannerPluginConfig(String command, int order, boolean useLlm, String llmApiKey,
         String llmModel, String llmProvider, boolean enableMeta) {
         this.command = command;
@@ -95,7 +95,7 @@ final class SkillScannerPluginConfig {
         this.llmProvider = llmProvider;
         this.enableMeta = enableMeta;
     }
-
+    
     static SkillScannerPluginConfig fromMap(Map<String, String> config) {
         Map<String, String> source = config == null ? Collections.emptyMap() : config;
         String command = normalizeCommand(read(source, COMMAND, COMMAND_ALIAS_EXECUTABLE,
@@ -109,7 +109,7 @@ final class SkillScannerPluginConfig {
         return new SkillScannerPluginConfig(command, order, useLlm, llmApiKey, llmModel,
             llmProvider, enableMeta);
     }
-
+    
     private static String read(Map<String, String> properties, String key, String... aliases) {
         if (properties.containsKey(key)) {
             return properties.get(key);
@@ -121,11 +121,11 @@ final class SkillScannerPluginConfig {
         }
         return null;
     }
-
+    
     private static String normalizeCommand(String value) {
         return StringUtils.isBlank(value) ? DEFAULT_COMMAND : value.trim();
     }
-
+    
     private static String trimToNull(String value) {
         if (value == null) {
             return null;
@@ -133,27 +133,27 @@ final class SkillScannerPluginConfig {
         String result = value.trim();
         return result.isEmpty() ? null : result;
     }
-
+    
     private static int parseOrder(String value) {
         if (StringUtils.isBlank(value)) {
             return DEFAULT_ORDER;
         }
         return new BigDecimal(value.trim()).intValueExact();
     }
-
+    
     String getCommand() {
         return command;
     }
-
+    
     int getOrder() {
         return order;
     }
-
+    
     SkillScannerScanOptions getScanOptions() {
         return new SkillScannerScanOptions(useLlm, llmApiKey, llmModel, llmProvider,
             enableMeta);
     }
-
+    
     Map<String, String> toMap() {
         Map<String, String> result = new LinkedHashMap<>();
         result.put(ORDER, Integer.toString(order));
@@ -165,7 +165,7 @@ final class SkillScannerPluginConfig {
         result.put(ENABLE_META, Boolean.toString(enableMeta));
         return result;
     }
-
+    
     private String valueOrEmpty(String value) {
         return value == null ? "" : value;
     }

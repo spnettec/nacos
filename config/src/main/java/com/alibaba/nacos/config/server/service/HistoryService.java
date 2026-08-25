@@ -174,7 +174,7 @@ public class HistoryService {
             configHistoryInfoDetail.setOriginalMd5(configHistoryInfo.getMd5());
             configHistoryInfoDetail
                 .setOriginalEncryptedDataKey(configHistoryInfo.getEncryptedDataKey());
-
+            
             ConfigHistoryInfo nextHistoryInfo =
                 historyConfigInfoPersistService.getNextHistoryInfo(dataId, group,
                     namespaceId, configHistoryInfoDetail.getPublishType(),
@@ -205,7 +205,7 @@ public class HistoryService {
                 configHistoryInfoDetail.setUpdatedMd5(currentConfigInfo.getMd5());
                 configHistoryInfoDetail
                     .setUpdatedEncryptedDataKey(currentConfigInfo.getEncryptedDataKey());
-
+                
             }
         }
         

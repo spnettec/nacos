@@ -27,73 +27,68 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AiResourceImportPropertiesTest {
-
+    
     @AfterEach
     void tearDown() {
         EnvUtil.setEnvironment(null);
     }
-
+    
     @Test
     void testStandardSwitchTakesPrecedenceAndLoadsOtherModuleFlags() {
         Properties raw = new Properties();
         raw.setProperty(AiResourceImportProperties.ENABLED_PROPERTY, " true ");
         raw.setProperty(AiResourceImportProperties.LEGACY_ENABLED_PROPERTY, "false");
-        raw.setProperty(AiResourceImportProperties.LEGACY_MCP_API_ENABLED_PROPERTY, "true");
         raw.setProperty(AiResourceImportProperties.ALLOW_USER_URL_PROPERTY, " true ");
-
+        
         AiResourceImportProperties properties = AiResourceImportProperties.load(raw);
-
+        
         assertTrue(properties.isEnabled());
-        assertTrue(properties.isLegacyMcpImportApiEnabled());
         assertTrue(properties.isAllowUserUrl());
     }
-
+    
     @Test
     void testLegacySwitchAndDefaults() {
         Properties raw = new Properties();
         raw.setProperty(AiResourceImportProperties.LEGACY_ENABLED_PROPERTY, "true");
         assertTrue(AiResourceImportProperties.resolveEnabled(raw));
         assertTrue(AiResourceImportProperties.load(raw).isEnabled());
-
+        
         assertTrue(AiResourceImportProperties.resolveEnabled(null));
         AiResourceImportProperties defaults = AiResourceImportProperties.load(null);
         assertTrue(defaults.isEnabled());
         assertTrue(new AiResourceImportProperties().isEnabled());
-        assertFalse(defaults.isLegacyMcpImportApiEnabled());
         assertFalse(defaults.isAllowUserUrl());
     }
-
+    
     @Test
     void testOnlyExplicitFalseDisablesImport() {
         Properties raw = new Properties();
         raw.setProperty(AiResourceImportProperties.LEGACY_ENABLED_PROPERTY, "false");
         assertFalse(AiResourceImportProperties.resolveEnabled(raw));
-
+        
         raw.setProperty(AiResourceImportProperties.ENABLED_PROPERTY, " ");
         assertTrue(AiResourceImportProperties.resolveEnabled(raw));
-
+        
         raw.setProperty(AiResourceImportProperties.ENABLED_PROPERTY, "invalid");
         assertTrue(AiResourceImportProperties.resolveEnabled(raw));
-
+        
         raw.setProperty(AiResourceImportProperties.ENABLED_PROPERTY, "false");
         assertFalse(AiResourceImportProperties.resolveEnabled(raw));
     }
-
+    
     @Test
     void testLoadFromEnvironmentAndAccessors() {
         MockEnvironment environment = new MockEnvironment()
             .withProperty(AiResourceImportProperties.ENABLED_PROPERTY, "true");
         EnvUtil.setEnvironment(environment);
-
+        
         AiResourceImportProperties properties =
             AiResourceImportProperties.loadFromEnvironment();
         assertTrue(properties.isEnabled());
-
+        
         properties.setEnabled(false);
-        properties.setLegacyMcpImportApiEnabled(true);
         properties.setAllowUserUrl(true);
         assertFalse(properties.isEnabled());
-        assertTrue(properties.isLegacyMcpImportApiEnabled());
         assertTrue(properties.isAllowUserUrl());
     }
 }

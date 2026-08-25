@@ -31,7 +31,7 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class AiResourceImportSecurityGuard {
-
+    
     /**
      * Check artifact type and size before validation or import.
      *
@@ -59,7 +59,7 @@ public class AiResourceImportSecurityGuard {
             throw invalid("AI resource import artifact size exceeds plugin limit.");
         }
     }
-
+    
     private NacosException invalid(String message) {
         return new NacosApiException(NacosException.INVALID_PARAM,
             ErrorCode.PARAMETER_VALIDATE_ERROR, message);

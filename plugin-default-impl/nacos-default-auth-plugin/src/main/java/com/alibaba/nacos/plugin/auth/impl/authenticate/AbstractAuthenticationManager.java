@@ -38,13 +38,13 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
  * @date 2023/1/13 12:48
  */
 public class AbstractAuthenticationManager implements IAuthenticationManager {
-
+    
     protected NacosUserService userDetailsService;
-
+    
     protected TokenManagerDelegate jwtTokenManager;
-
+    
     protected NacosRoleService roleService;
-
+    
     public AbstractAuthenticationManager(NacosUserService userDetailsService,
         TokenManagerDelegate jwtTokenManager,
         NacosRoleService roleService) {
@@ -52,7 +52,7 @@ public class AbstractAuthenticationManager implements IAuthenticationManager {
         this.jwtTokenManager = jwtTokenManager;
         this.roleService = roleService;
     }
-
+    
     @Override
     public NacosUser authenticate(String username, String rawPassword) throws AccessException {
         if (StringUtils.isBlank(username) || StringUtils.isBlank(rawPassword)) {
@@ -71,7 +71,7 @@ public class AbstractAuthenticationManager implements IAuthenticationManager {
         }
         return new NacosUser(nacosUserDetails.getUsername(), jwtTokenManager.createToken(username));
     }
-
+    
     @Override
     public NacosUser authenticate(String token) throws AccessException {
         if (StringUtils.isBlank(token)) {
@@ -79,11 +79,11 @@ public class AbstractAuthenticationManager implements IAuthenticationManager {
         }
         return jwtTokenManager.parseToken(token);
     }
-
+    
     @Override
     public NacosUser authenticate(HttpServletRequest httpServletRequest) throws AccessException {
         String token = resolveToken(httpServletRequest);
-
+        
         NacosUser user;
         if (StringUtils.isNotBlank(token)) {
             user = authenticate(token);
@@ -92,10 +92,10 @@ public class AbstractAuthenticationManager implements IAuthenticationManager {
             String password = httpServletRequest.getParameter(AuthConstants.PARAM_PASSWORD);
             user = authenticate(userName, password);
         }
-
+        
         return user;
     }
-
+    
     @Override
     public void authorize(Permission permission, NacosUser nacosUser) throws AccessException {
         if (Loggers.AUTH.isDebugEnabled()) {
@@ -107,12 +107,12 @@ public class AbstractAuthenticationManager implements IAuthenticationManager {
         if (hasGlobalAdminRole(nacosUser)) {
             return;
         }
-
+        
         if (!roleService.hasPermission(nacosUser, permission)) {
             throw new AccessException("authorization failed!");
         }
     }
-
+    
     private String resolveToken(HttpServletRequest request) {
         String bearerToken = request.getHeader(AuthConstants.AUTHORIZATION_HEADER);
         if (StringUtils.isNotBlank(bearerToken)
@@ -120,20 +120,20 @@ public class AbstractAuthenticationManager implements IAuthenticationManager {
             return bearerToken.substring(AuthConstants.TOKEN_PREFIX.length());
         }
         bearerToken = request.getParameter(Constants.ACCESS_TOKEN);
-
+        
         return bearerToken;
     }
-
+    
     @Override
     public boolean hasGlobalAdminRole(String username) {
         return roleService.hasGlobalAdminRole(username);
     }
-
+    
     @Override
     public boolean hasGlobalAdminRole() {
         return roleService.hasGlobalAdminRole();
     }
-
+    
     @Override
     public boolean hasGlobalAdminRole(NacosUser nacosUser) {
         if (nacosUser.isGlobalAdmin()) {

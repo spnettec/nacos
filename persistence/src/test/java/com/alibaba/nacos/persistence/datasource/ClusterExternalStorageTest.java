@@ -52,7 +52,7 @@ class ClusterExternalStorageTest {
     private DynamicDataSource dataSource;
     
     private MockEnvironment environment;
-
+    
     @Mock
     ConfigurableApplicationContext context;
     

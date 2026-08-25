@@ -36,7 +36,7 @@ import java.util.List;
  * @since 3.2.0
  */
 public interface PromptLegacyDataReader {
-
+    
     /**
      * Provider type identifier. Used to select the active reader via configuration
      * property {@code nacos.ai.prompt.migration.provider}.
@@ -44,7 +44,7 @@ public interface PromptLegacyDataReader {
      * @return type string, e.g. "nacos"
      */
     String type();
-
+    
     /**
      * Scan legacy storage and return all prompts with their metadata and version lists.
      * Version content is NOT included; use {@link #readVersionContent} to load on demand.
@@ -52,7 +52,7 @@ public interface PromptLegacyDataReader {
      * @return list of legacy prompt data
      */
     List<LegacyPromptData> scanLegacyPrompts();
-
+    
     /**
      * Read the content of a specific prompt version from legacy storage.
      *
@@ -62,7 +62,7 @@ public interface PromptLegacyDataReader {
      * @return version info with template/variables/srcUser/commitMsg, or null if not found
      */
     PromptVersionInfo readVersionContent(String namespaceId, String promptKey, String version);
-
+    
     /**
      * Clean up legacy storage entries for a prompt after it has been deleted in the new system.
      * This prevents the migration task from re-importing deleted prompts on next restart.

@@ -40,8 +40,8 @@ class ServerLoaderMetricsTest {
     @BeforeEach
     void setUp() {
         mapper = JsonMapper.builder()
-                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-                .build();
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .build();
         serverLoaderMetrics = new ServerLoaderMetrics();
         Map<String, String> metrics = new HashMap<>();
         metrics.put("conCount", "100");

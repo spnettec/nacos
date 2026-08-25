@@ -36,18 +36,18 @@ import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class HttpConnectionBasedClientTest {
-
+    
     private static final String CLIENT_ID = "HTTP_CLIENT@@client";
-
+    
     @BeforeAll
     static void setUpEnvironment() {
         EnvUtil.setEnvironment(new MockEnvironment());
     }
-
+    
     @Test
     void testIdentityAndDefaultLifecycle() {
         HttpConnectionBasedClient client = new HttpConnectionBasedClient(CLIENT_ID, null);
-
+        
         assertEquals(CLIENT_ID, client.getClientId());
         assertEquals(CLIENT_ID, HttpConnectionBasedClient.getInternalClientId("client"));
         assertTrue(HttpConnectionBasedClient.isHttpClientId(CLIENT_ID));
@@ -56,18 +56,18 @@ class HttpConnectionBasedClientTest {
         assertTrue(client.isEphemeral());
         assertTrue(client.isPublisherHealthy());
         assertEquals(0L, client.getRevision());
-
+        
         long oldClientTime = client.getLastUpdatedTime();
         long oldReplicaTime = client.getLastRenewTime();
         client.renewClient();
         client.renewReplica();
-
+        
         assertTrue(client.getLastUpdatedTime() >= oldClientTime);
         assertTrue(client.getLastRenewTime() >= oldReplicaTime);
         assertTrue(client.isExpire(Math.max(client.getLastUpdatedTime(), client.getLastRenewTime())
             + ClientConfig.getInstance().getClientExpiredTime() + 1));
         assertEquals(1L, client.recalculateRevision());
-
+        
         ClientSyncData syncData = client.generateSyncData();
         assertEquals(ClientConstants.HTTP_CONNECTION_BASED,
             syncData.getAttributes().getClientAttribute(ClientConstants.CONNECTION_TYPE));
@@ -83,33 +83,33 @@ class HttpConnectionBasedClientTest {
             syncData.getAttributes()
                 .getClientAttribute(ClientConstants.HTTP_PUBLISHER_HEALTHY));
     }
-
+    
     @Test
     void testAttributesAndSynchronization() {
         ClientAttributes attributes = attributes(7, 100L, 200L, false);
         attributes.addClientAttribute("subject", "user");
         HttpConnectionBasedClient client =
             new HttpConnectionBasedClient(CLIENT_ID, attributes);
-
+        
         assertEquals(7L, client.getRevision());
         assertEquals(100L, client.getLastUpdatedTime());
         assertEquals(200L, client.getPublisherLastUpdatedTime());
         assertFalse(client.isPublisherHealthy());
-
+        
         ClientSyncData syncData = client.generateSyncData();
         assertNotSame(attributes.getClientAttributes(),
             syncData.getAttributes().getClientAttributes());
         assertEquals("user", syncData.getAttributes().getClientAttribute("subject"));
-
+        
         long oldRenewTime = client.getLastRenewTime();
         ClientAttributes synchronizedAttributes = attributes(8L, 300L, 400L, true);
         client.synchronizeAttributes(synchronizedAttributes);
-
+        
         assertEquals(300L, client.getLastUpdatedTime());
         assertEquals(400L, client.getPublisherLastUpdatedTime());
         assertTrue(client.isPublisherHealthy());
         assertTrue(client.getLastRenewTime() >= oldRenewTime);
-
+        
         ClientAttributes invalidAttributes = new ClientAttributes();
         invalidAttributes.addClientAttribute(ClientConstants.REVISION, "invalid");
         invalidAttributes.addClientAttribute(ClientConstants.HTTP_CLIENT_LAST_UPDATED_TIME,
@@ -122,7 +122,7 @@ class HttpConnectionBasedClientTest {
         assertEquals(0L, defaults.getRevision());
         assertTrue(defaults.isPublisherHealthy());
     }
-
+    
     @Test
     void testPublisherHealthForSingleAndBatchPublications() {
         HttpConnectionBasedClient client =
@@ -130,7 +130,7 @@ class HttpConnectionBasedClientTest {
         Service singleService = Service.newService("namespace", "group", "single");
         InstancePublishInfo single = instance("1.1.1.1", 8080);
         client.addServiceInstance(singleService, single);
-
+        
         Service batchService = Service.newService("namespace", "group", "batch");
         InstancePublishInfo first = instance("2.2.2.2", 8081);
         InstancePublishInfo second = instance("3.3.3.3", 8082);
@@ -138,7 +138,7 @@ class HttpConnectionBasedClientTest {
         batch.setHealthy(true);
         batch.setInstancePublishInfos(Arrays.asList(first, second));
         client.addServiceInstance(batchService, batch);
-
+        
         assertTrue(client.markPublisherUnhealthy());
         assertFalse(client.isPublisherHealthy());
         assertFalse(single.isHealthy());
@@ -146,7 +146,7 @@ class HttpConnectionBasedClientTest {
         assertFalse(first.isHealthy());
         assertFalse(second.isHealthy());
         assertFalse(client.markPublisherUnhealthy());
-
+        
         long previousPublisherTime = client.getPublisherLastUpdatedTime();
         assertTrue(client.renewPublisher());
         assertTrue(client.isPublisherHealthy());
@@ -156,16 +156,16 @@ class HttpConnectionBasedClientTest {
         assertTrue(first.isHealthy());
         assertTrue(second.isHealthy());
         assertFalse(client.renewPublisher());
-
+        
         client.resetPublisherLiveness();
         assertEquals(0L, client.getPublisherLastUpdatedTime());
         assertTrue(client.isPublisherHealthy());
-
+        
         HttpConnectionBasedClient empty =
             new HttpConnectionBasedClient(CLIENT_ID, new ClientAttributes());
         assertFalse(empty.markPublisherUnhealthy());
     }
-
+    
     private ClientAttributes attributes(Object revision, long clientTime, long publisherTime,
         boolean healthy) {
         ClientAttributes result = new ClientAttributes();
@@ -175,7 +175,7 @@ class HttpConnectionBasedClientTest {
         result.addClientAttribute(ClientConstants.HTTP_PUBLISHER_HEALTHY, healthy);
         return result;
     }
-
+    
     private InstancePublishInfo instance(String ip, int port) {
         InstancePublishInfo result = new InstancePublishInfo(ip, port);
         result.setHealthy(true);

@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AgentVersionComparatorTest {
-
+    
     @Test
     void testCoreAndUnboundedNumericPrecedence() {
         assertEqual("1.0.0", "1.0.0");
@@ -37,7 +37,7 @@ class AgentVersionComparatorTest {
         assertLower("999999999999999999999999999999.0.0",
             "1000000000000000000000000000000.0.0");
     }
-
+    
     @Test
     void testPrereleasePrecedenceAndCaseSensitivity() {
         List<String> ascending = Arrays.asList("1.0.0-0", "1.0.0-1", "1.0.0-2",
@@ -51,7 +51,7 @@ class AgentVersionComparatorTest {
         assertLower("1.0.0-alpha", "1.0.0-alpha-1");
         assertLower("1.0.0-alpha", "1.0.0-alpha.1");
     }
-
+    
     @Test
     void testComparisonIsAntisymmetric() {
         String[] versions = {"0.0.0", "1.0.0-0", "1.0.0-RC1", "1.0.0-rc1",
@@ -64,7 +64,7 @@ class AgentVersionComparatorTest {
             }
         }
     }
-
+    
     @Test
     void testRejectInvalidVersionsWithoutNormalization() {
         assertThrows(IllegalArgumentException.class,
@@ -78,14 +78,14 @@ class AgentVersionComparatorTest {
         assertThrows(IllegalArgumentException.class,
             () -> AgentVersionComparator.compare("1.0.0-01", "1.0.0"));
     }
-
+    
     private void assertLower(String lower, String higher) {
         assertTrue(AgentVersionComparator.compare(lower, higher) < 0,
             lower + " should be lower than " + higher);
         assertTrue(AgentVersionComparator.compare(higher, lower) > 0,
             higher + " should be higher than " + lower);
     }
-
+    
     private void assertEqual(String left, String right) {
         assertEquals(0, AgentVersionComparator.compare(left, right));
         assertEquals(0, AgentVersionComparator.compare(right, left));

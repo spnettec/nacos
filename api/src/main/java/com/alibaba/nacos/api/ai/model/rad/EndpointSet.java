@@ -29,35 +29,35 @@ import java.util.List;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class EndpointSet implements Serializable {
-
+    
     private static final long serialVersionUID = 1L;
-
+    
     private EndpointSource source;
-
+    
     private String sourceRevision;
-
+    
     private List<AgentDiscoveryEndpoint> endpoints;
-
+    
     public EndpointSource getSource() {
         return source;
     }
-
+    
     public void setSource(EndpointSource source) {
         this.source = source;
     }
-
+    
     public String getSourceRevision() {
         return sourceRevision;
     }
-
+    
     public void setSourceRevision(String sourceRevision) {
         this.sourceRevision = sourceRevision;
     }
-
+    
     public List<AgentDiscoveryEndpoint> getEndpoints() {
         return endpoints;
     }
-
+    
     public void setEndpoints(List<AgentDiscoveryEndpoint> endpoints) {
         this.endpoints = endpoints;
     }

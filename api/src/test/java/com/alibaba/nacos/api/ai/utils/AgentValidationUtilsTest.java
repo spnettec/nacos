@@ -26,13 +26,13 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class AgentValidationUtilsTest {
-
+    
     @Test
     void testValidateNamespaceId() {
         assertDoesNotThrow(() -> AgentValidationUtils.validateNamespaceId("a"));
         assertDoesNotThrow(() -> AgentValidationUtils.validateNamespaceId("Name_space-1"));
         assertDoesNotThrow(() -> AgentValidationUtils.validateNamespaceId(repeat('a', 128)));
-
+        
         assertThrows(IllegalArgumentException.class,
             () -> AgentValidationUtils.validateNamespaceId(null));
         assertThrows(IllegalArgumentException.class,
@@ -46,7 +46,7 @@ class AgentValidationUtilsTest {
         assertThrows(IllegalArgumentException.class,
             () -> AgentValidationUtils.validateNamespaceId("命名空间"));
     }
-
+    
     @Test
     void testValidateAgentName() {
         assertDoesNotThrow(() -> AgentValidationUtils.validateAgentName("A"));
@@ -54,7 +54,7 @@ class AgentValidationUtilsTest {
         assertDoesNotThrow(() -> AgentValidationUtils.validateAgentName(" !\"#$%&'()*+,-./"));
         assertDoesNotThrow(() -> AgentValidationUtils.validateAgentName(
             repeat(' ', 63) + "~"));
-
+        
         assertThrows(IllegalArgumentException.class,
             () -> AgentValidationUtils.validateAgentName(null));
         assertThrows(IllegalArgumentException.class,
@@ -70,13 +70,13 @@ class AgentValidationUtilsTest {
         assertThrows(IllegalArgumentException.class,
             () -> AgentValidationUtils.validateAgentName("Nacos代理"));
     }
-
+    
     @Test
     void testValidateProtocol() {
         assertDoesNotThrow(() -> AgentValidationUtils.validateProtocol("A"));
         assertDoesNotThrow(() -> AgentValidationUtils.validateProtocol("A2A-v1"));
         assertDoesNotThrow(() -> AgentValidationUtils.validateProtocol(repeat('a', 32)));
-
+        
         assertThrows(IllegalArgumentException.class,
             () -> AgentValidationUtils.validateProtocol(null));
         assertThrows(IllegalArgumentException.class,
@@ -94,13 +94,13 @@ class AgentValidationUtilsTest {
         assertThrows(IllegalArgumentException.class,
             () -> AgentValidationUtils.validateProtocol("协议"));
     }
-
+    
     @Test
     void testValidateProtocolVersion() {
         assertDoesNotThrow(() -> AgentValidationUtils.validateProtocolVersion("!"));
         assertDoesNotThrow(() -> AgentValidationUtils.validateProtocolVersion("V1.0"));
         assertDoesNotThrow(() -> AgentValidationUtils.validateProtocolVersion(repeat('~', 64)));
-
+        
         assertThrows(IllegalArgumentException.class,
             () -> AgentValidationUtils.validateProtocolVersion(null));
         assertThrows(IllegalArgumentException.class,
@@ -116,14 +116,14 @@ class AgentValidationUtilsTest {
         assertThrows(IllegalArgumentException.class,
             () -> AgentValidationUtils.validateProtocolVersion("版本1"));
     }
-
+    
     @Test
     void testValidateLabel() {
         assertDoesNotThrow(() -> AgentValidationUtils.validateLabel("A"));
         assertDoesNotThrow(() -> AgentValidationUtils.validateLabel("Release_RC1.0"));
         assertDoesNotThrow(() -> AgentValidationUtils.validateLabel("A" + repeat('.', 63)));
         assertDoesNotThrow(() -> AgentValidationUtils.validateLabel("latest"));
-
+        
         assertThrows(IllegalArgumentException.class,
             () -> AgentValidationUtils.validateLabel(null));
         assertThrows(IllegalArgumentException.class,
@@ -141,25 +141,25 @@ class AgentValidationUtilsTest {
         assertThrows(IllegalArgumentException.class,
             () -> AgentValidationUtils.validateLabel("发布"));
     }
-
+    
     @Test
     void testValidateNonLatestLabel() {
         assertDoesNotThrow(() -> AgentValidationUtils.validateNonLatestLabel("Latest"));
         assertDoesNotThrow(() -> AgentValidationUtils.validateNonLatestLabel("stable"));
-
+        
         assertThrows(IllegalArgumentException.class,
             () -> AgentValidationUtils.validateNonLatestLabel("latest"));
         assertThrows(IllegalArgumentException.class,
             () -> AgentValidationUtils.validateNonLatestLabel("-invalid"));
     }
-
+    
     @Test
     void testValidateTransport() {
         assertDoesNotThrow(() -> AgentValidationUtils.validateTransport("-"));
         assertDoesNotThrow(() -> AgentValidationUtils.validateTransport("JSON-RPC"));
         assertDoesNotThrow(() -> AgentValidationUtils.validateTransport("HTTP+JSON"));
         assertDoesNotThrow(() -> AgentValidationUtils.validateTransport(repeat('A', 64)));
-
+        
         assertThrows(IllegalArgumentException.class,
             () -> AgentValidationUtils.validateTransport(null));
         assertThrows(IllegalArgumentException.class,
@@ -175,7 +175,7 @@ class AgentValidationUtilsTest {
         assertThrows(IllegalArgumentException.class,
             () -> AgentValidationUtils.validateTransport("传输"));
     }
-
+    
     @Test
     void testVersionValidators() {
         assertDoesNotThrow(() -> AgentValidationUtils.validateVersion("1.0.0-RC1"));
@@ -193,12 +193,12 @@ class AgentValidationUtilsTest {
         assertThrows(IllegalArgumentException.class,
             () -> AgentValidationUtils.validateVersionRange("[2.0.0,1.0.0]"));
     }
-
+    
     @Test
     void testValidateContentDigest() {
         assertDoesNotThrow(() -> AgentValidationUtils.validateContentDigest("sha256:"
             + "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"));
-
+        
         assertThrows(IllegalArgumentException.class,
             () -> AgentValidationUtils.validateContentDigest(null));
         assertThrows(IllegalArgumentException.class,
@@ -212,7 +212,7 @@ class AgentValidationUtilsTest {
         assertThrows(IllegalArgumentException.class,
             () -> AgentValidationUtils.validateContentDigest("sha256:" + repeat('g', 64)));
     }
-
+    
     @Test
     void testValidateMediaType() {
         assertDoesNotThrow(() -> AgentValidationUtils.validateMediaType("a/b"));
@@ -220,7 +220,7 @@ class AgentValidationUtilsTest {
             () -> AgentValidationUtils.validateMediaType("application/json;charset=utf-8"));
         assertDoesNotThrow(() -> AgentValidationUtils.validateMediaType(
             repeat('a', 63) + "/" + repeat('b', 64)));
-
+        
         assertThrows(IllegalArgumentException.class,
             () -> AgentValidationUtils.validateMediaType(null));
         assertThrows(IllegalArgumentException.class,
@@ -241,7 +241,7 @@ class AgentValidationUtilsTest {
             () -> AgentValidationUtils.validateMediaType(
                 repeat('a', 64) + "/" + repeat('b', 64)));
     }
-
+    
     @Test
     void testValidateNonNullJsonValue() {
         assertDoesNotThrow(() -> AgentValidationUtils.validateNonNullJsonValue("", "field"));
@@ -250,11 +250,11 @@ class AgentValidationUtilsTest {
             () -> AgentValidationUtils.validateNonNullJsonValue(Boolean.FALSE, "field"));
         assertDoesNotThrow(() -> AgentValidationUtils
             .validateNonNullJsonValue(Collections.emptyMap(), "field"));
-
+        
         assertThrows(IllegalArgumentException.class,
             () -> AgentValidationUtils.validateNonNullJsonValue(null, "nativeDescriptor"));
     }
-
+    
     @Test
     void testValidateEndpointMetadata() {
         Map<String, String> metadata = new LinkedHashMap<String, String>();
@@ -265,14 +265,14 @@ class AgentValidationUtilsTest {
         assertDoesNotThrow(() -> AgentValidationUtils.validateEndpointMetadata(null));
         assertDoesNotThrow(() -> AgentValidationUtils
             .validateEndpointMetadata(Collections.<String, String>emptyMap()));
-
+        
         Map<String, String> maximumEntries = new LinkedHashMap<String, String>();
         for (int i = 0; i < 32; i++) {
             maximumEntries.put("key-" + i, "");
         }
         assertDoesNotThrow(
             () -> AgentValidationUtils.validateEndpointMetadata(maximumEntries));
-
+        
         assertInvalidMetadata("preserved.heart.beat.interval", "1000");
         assertInvalidMetadata("preserved.heart.beat.timeout", "3000");
         assertInvalidMetadata("preserved.ip.delete.timeout", "5000");
@@ -283,7 +283,7 @@ class AgentValidationUtilsTest {
         assertInvalidMetadata(repeat("😀", 65), "value");
         assertInvalidMetadata("key", null);
         assertInvalidMetadata("key", repeat("😀", 257));
-
+        
         Map<String, String> tooMany = new LinkedHashMap<String, String>();
         for (int i = 0; i < 33; i++) {
             tooMany.put("key-" + i, "value");
@@ -291,13 +291,13 @@ class AgentValidationUtilsTest {
         assertThrows(IllegalArgumentException.class,
             () -> AgentValidationUtils.validateEndpointMetadata(tooMany));
     }
-
+    
     private void assertInvalidMetadata(String key, String value) {
         assertThrows(IllegalArgumentException.class,
             () -> AgentValidationUtils
                 .validateEndpointMetadata(Collections.singletonMap(key, value)));
     }
-
+    
     private String repeat(char value, int count) {
         StringBuilder result = new StringBuilder(count);
         for (int i = 0; i < count; i++) {
@@ -305,7 +305,7 @@ class AgentValidationUtilsTest {
         }
         return result.toString();
     }
-
+    
     private String repeat(String value, int count) {
         StringBuilder result = new StringBuilder(value.length() * count);
         for (int i = 0; i < count; i++) {

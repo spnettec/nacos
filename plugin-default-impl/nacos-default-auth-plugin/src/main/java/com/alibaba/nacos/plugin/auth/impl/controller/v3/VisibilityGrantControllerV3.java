@@ -41,13 +41,13 @@ import org.springframework.web.bind.annotation.RestController;
 @NacosApi
 @RequestMapping(AuthConstants.VISIBILITY_PATH)
 public class VisibilityGrantControllerV3 {
-
+    
     private final VisibilityGrantService visibilityGrantService;
-
+    
     public VisibilityGrantControllerV3(VisibilityGrantService visibilityGrantService) {
         this.visibilityGrantService = visibilityGrantService;
     }
-
+    
     /**
      * Grant one visibility action to a user for a resource.
      *
@@ -69,7 +69,7 @@ public class VisibilityGrantControllerV3 {
         visibilityGrantService.grant(namespaceId, resourceType, resourceName, username, action);
         return Result.success("grant visibility permission ok!");
     }
-
+    
     /**
      * Revoke one visibility action from a user for a resource.
      *

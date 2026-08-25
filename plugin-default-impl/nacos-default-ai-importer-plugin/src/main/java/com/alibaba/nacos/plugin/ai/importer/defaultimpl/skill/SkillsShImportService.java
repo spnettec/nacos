@@ -56,57 +56,57 @@ import java.util.zip.ZipOutputStream;
  * @since 3.2.1
  */
 public class SkillsShImportService implements AiResourceImportService {
-
+    
     public static final String RESOURCE_TYPE_SKILL = AiResourceImportConstants.RESOURCE_TYPE_SKILL;
-
+    
     private static final String API_SEARCH = "/api/search";
-
+    
     private static final String API_DOWNLOAD = "/api/download";
-
+    
     private static final String METADATA_SOURCE = "source";
-
+    
     private static final String METADATA_ARTIFACT_URL = "artifactUrl";
-
+    
     private static final String METADATA_REPOSITORY = "repository";
-
+    
     private static final String METADATA_REPOSITORY_SOURCE = "repositorySource";
-
+    
     private static final String METADATA_SKILL_ID = "skillId";
-
+    
     private static final String METADATA_INSTALLS = "installs";
-
+    
     private static final String METADATA_HASH = "hash";
-
+    
     private static final String SKILL_MARKDOWN_FILE = "SKILL.md";
-
+    
     private static final String DEFAULT_SEARCH_QUERY = "skill";
-
+    
     private static final int MIN_SEARCH_QUERY_LENGTH = 2;
-
+    
     private static final int DEFAULT_LIMIT = 30;
-
+    
     private static final int DEFAULT_READ_TIMEOUT_SECONDS = 20;
-
+    
     private static final int DEFAULT_MAX_FILE_COUNT = 500;
     private final String endpoint;
-
+    
     private final DefaultImportHttpClient httpClient;
-
+    
     private final int maxItemCount;
-
+    
     private final long maxArtifactSize;
-
+    
     public SkillsShImportService(String endpoint, boolean allowHttp,
         boolean allowPrivateNetwork, int maxItemCount, long maxArtifactSize) {
         this(endpoint, maxItemCount, maxArtifactSize,
             new DefaultImportHttpClient(allowHttp, allowPrivateNetwork, maxArtifactSize));
     }
-
+    
     SkillsShImportService(String endpoint, int maxItemCount, long maxArtifactSize,
         HttpClient httpClient) {
         this(endpoint, maxItemCount, maxArtifactSize, new DefaultImportHttpClient(httpClient));
     }
-
+    
     SkillsShImportService(String endpoint, int maxItemCount, long maxArtifactSize,
         DefaultImportHttpClient httpClient) {
         this.endpoint = endpoint;
@@ -114,7 +114,7 @@ public class SkillsShImportService implements AiResourceImportService {
         this.maxArtifactSize = maxArtifactSize;
         this.httpClient = httpClient;
     }
-
+    
     @Override
     public AiResourceImportCandidatePage search(AiResourceImportContext context)
         throws NacosException {
@@ -140,7 +140,7 @@ public class SkillsShImportService implements AiResourceImportService {
             throw dataAccess("Search skills.sh source failed: " + e.getMessage(), e);
         }
     }
-
+    
     @Override
     public AiResourceImportArtifact fetch(AiResourceImportContext context,
         AiResourceImportItem item) throws NacosException {
@@ -169,14 +169,15 @@ public class SkillsShImportService implements AiResourceImportService {
             throw dataAccess("Fetch skills.sh artifact failed: " + e.getMessage(), e);
         }
     }
+    
     private int resolveLimit(int limit) {
         return limit <= 0 ? DEFAULT_LIMIT : limit;
     }
-
+    
     private int resolveSearchFetchLimit(int resultLimit) {
         return Math.max(resultLimit, DEFAULT_LIMIT);
     }
-
+    
     private String resolveQuery(String query) throws NacosException {
         if (StringUtils.isBlank(query)) {
             return DEFAULT_SEARCH_QUERY;
@@ -187,7 +188,7 @@ public class SkillsShImportService implements AiResourceImportService {
         }
         return result;
     }
-
+    
     private List<AiResourceImportCandidate> toCandidates(String apiRoot,
         SkillsShSearchResponse searchResponse, int limit) throws NacosException {
         if (searchResponse == null || CollectionUtils.isEmpty(searchResponse.getSkills())) {
@@ -209,7 +210,7 @@ public class SkillsShImportService implements AiResourceImportService {
         }
         return result;
     }
-
+    
     private boolean isSupportedRepositorySource(String repositorySource) {
         if (StringUtils.isBlank(repositorySource)) {
             return true;
@@ -218,7 +219,7 @@ public class SkillsShImportService implements AiResourceImportService {
         return segments.length == 2 && StringUtils.isNotBlank(segments[0])
             && StringUtils.isNotBlank(segments[1]);
     }
-
+    
     private AiResourceImportCandidate toCandidate(String apiRoot, SkillsShSearchItem item)
         throws NacosException {
         SkillsShSkillRef skillRef = resolveSkillRef(item);
@@ -229,7 +230,7 @@ public class SkillsShImportService implements AiResourceImportService {
         result.setMetadata(buildCandidateMetadata(apiRoot, skillRef, item));
         return result;
     }
-
+    
     private SkillsShSkillRef resolveSkillRef(SkillsShSearchItem item) throws NacosException {
         String externalId = item.getId();
         String repositorySource = item.getSource();
@@ -238,7 +239,7 @@ public class SkillsShImportService implements AiResourceImportService {
         result.setName(StringUtils.isBlank(item.getName()) ? result.getSkillId() : item.getName());
         return result;
     }
-
+    
     private SkillsShSkillRef resolveSkillRef(AiResourceImportItem item) throws NacosException {
         if (item == null) {
             throw invalid("skills.sh import item must not be null.");
@@ -253,7 +254,7 @@ public class SkillsShImportService implements AiResourceImportService {
         result.setName(StringUtils.isBlank(item.getName()) ? result.getSkillId() : item.getName());
         return result;
     }
-
+    
     private SkillsShSkillRef resolveSkillRef(String externalId, String repositorySource,
         String skillId) throws NacosException {
         if (StringUtils.isBlank(repositorySource) || StringUtils.isBlank(skillId)) {
@@ -271,13 +272,13 @@ public class SkillsShImportService implements AiResourceImportService {
         String normalizedSkillId = normalizeSkillId(skillId);
         return new SkillsShSkillRef(repositorySource, normalizedSkillId);
     }
-
+    
     private void validateRepositorySource(String repositorySource) throws NacosException {
         if (!isSupportedRepositorySource(repositorySource)) {
             throw invalid("skills.sh repository source must use owner/repo format.");
         }
     }
-
+    
     private String normalizeSkillId(String skillId) throws NacosException {
         String result = skillId.trim();
         SkillUtils.validatePathSafety(result);
@@ -286,7 +287,7 @@ public class SkillsShImportService implements AiResourceImportService {
         }
         return result;
     }
-
+    
     private String joinSegments(String[] segments, int startIndex) {
         StringBuilder result = new StringBuilder();
         for (int i = startIndex; i < segments.length; i++) {
@@ -297,6 +298,7 @@ public class SkillsShImportService implements AiResourceImportService {
         }
         return result.toString();
     }
+    
     private byte[] toSkillZip(SkillsShSkillRef skillRef,
         SkillsShDownloadResponse downloadResponse) throws Exception {
         if (downloadResponse == null || CollectionUtils.isEmpty(downloadResponse.getFiles())) {
@@ -338,6 +340,7 @@ public class SkillsShImportService implements AiResourceImportService {
         }
         return output.toByteArray();
     }
+    
     private String normalizeFilePath(String path) {
         if (StringUtils.isBlank(path)) {
             return null;
@@ -348,12 +351,13 @@ public class SkillsShImportService implements AiResourceImportService {
         }
         return result;
     }
+    
     private void checkDownloadedSize(long totalSize) throws NacosException {
         if (maxArtifactSize > 0 && totalSize > maxArtifactSize) {
             throw invalid("skills.sh artifact size exceeds source limit.");
         }
     }
-
+    
     private Map<String, String> buildCandidateMetadata(String apiRoot, SkillsShSkillRef skillRef,
         SkillsShSearchItem item) {
         Map<String, String> metadata = baseMetadata(apiRoot, skillRef);
@@ -362,7 +366,7 @@ public class SkillsShImportService implements AiResourceImportService {
         }
         return metadata;
     }
-
+    
     private Map<String, String> buildArtifactMetadata(String apiRoot, SkillsShSkillRef skillRef,
         SkillsShDownloadResponse downloadResponse) {
         Map<String, String> metadata = baseMetadata(apiRoot, skillRef);
@@ -371,7 +375,7 @@ public class SkillsShImportService implements AiResourceImportService {
         }
         return metadata;
     }
-
+    
     private Map<String, String> baseMetadata(String apiRoot, SkillsShSkillRef skillRef) {
         Map<String, String> metadata = new LinkedHashMap<>();
         metadata.put(METADATA_SOURCE, sourcePageUrl(apiRoot, skillRef.getExternalId()));
@@ -381,6 +385,7 @@ public class SkillsShImportService implements AiResourceImportService {
         metadata.put(METADATA_SKILL_ID, skillRef.getSkillId());
         return metadata;
     }
+    
     private String resolveApiRoot() throws NacosException {
         String normalizedEndpoint = trimTrailingSlash(endpoint);
         if (normalizedEndpoint.endsWith(API_SEARCH)) {
@@ -393,27 +398,27 @@ public class SkillsShImportService implements AiResourceImportService {
         }
         return normalizedEndpoint;
     }
-
+    
     private String searchUrl(String apiRoot, String query, int limit) {
         return apiRoot + API_SEARCH + "?q=" + encodeQueryValue(nullToEmpty(query)) + "&limit="
             + limit;
     }
-
+    
     private String downloadUrl(String apiRoot, SkillsShSkillRef skillRef) {
         String[] repositorySegments = skillRef.getRepositorySource().split("/");
         return apiRoot + API_DOWNLOAD + "/" + encodePathSegment(repositorySegments[0]) + "/"
             + encodePathSegment(repositorySegments[1]) + "/"
             + encodePath(skillRef.getSkillId());
     }
-
+    
     private String sourcePageUrl(String apiRoot, String externalId) {
         return apiRoot + "/" + encodePath(externalId);
     }
-
+    
     private String repositoryUrl(String repositorySource) {
         return "https://github.com/" + repositorySource;
     }
-
+    
     private String encodePath(String path) {
         String[] segments = path.split("/");
         StringBuilder result = new StringBuilder();
@@ -425,15 +430,15 @@ public class SkillsShImportService implements AiResourceImportService {
         }
         return result.toString();
     }
-
+    
     private String encodePathSegment(String value) {
         return URLEncoder.encode(value, StandardCharsets.UTF_8).replace("+", "%20");
     }
-
+    
     private String encodeQueryValue(String value) {
         return URLEncoder.encode(value, StandardCharsets.UTF_8);
     }
-
+    
     private String trimTrailingSlash(String value) throws NacosException {
         if (StringUtils.isBlank(value)) {
             throw invalid("skills.sh import source endpoint must not be empty.");
@@ -444,166 +449,167 @@ public class SkillsShImportService implements AiResourceImportService {
         }
         return result;
     }
-
+    
     private String nullToEmpty(String value) {
         return value == null ? "" : value;
     }
+    
     private ImportHttpResponse fetchUrl(String url) throws Exception {
         return httpClient.get(url, DEFAULT_READ_TIMEOUT_SECONDS, "application/json");
     }
-
+    
     private NacosException invalid(String message) {
         return new NacosApiException(NacosException.INVALID_PARAM,
             ErrorCode.PARAMETER_VALIDATE_ERROR, message);
     }
-
+    
     private NacosException dataAccess(String message, Throwable cause) {
         return new NacosApiException(NacosException.SERVER_ERROR, ErrorCode.DATA_ACCESS_ERROR,
             cause, message);
     }
-
+    
     static class SkillsShSearchResponse {
-
+        
         private List<SkillsShSearchItem> skills;
-
+        
         public List<SkillsShSearchItem> getSkills() {
             return skills;
         }
-
+        
         public void setSkills(List<SkillsShSearchItem> skills) {
             this.skills = skills;
         }
     }
-
+    
     static class SkillsShSearchItem {
-
+        
         private String id;
-
+        
         private String skillId;
-
+        
         private String name;
-
+        
         private Integer installs;
-
+        
         private String source;
-
+        
         public String getId() {
             return id;
         }
-
+        
         public void setId(String id) {
             this.id = id;
         }
-
+        
         public String getSkillId() {
             return skillId;
         }
-
+        
         public void setSkillId(String skillId) {
             this.skillId = skillId;
         }
-
+        
         public String getName() {
             return name;
         }
-
+        
         public void setName(String name) {
             this.name = name;
         }
-
+        
         public Integer getInstalls() {
             return installs;
         }
-
+        
         public void setInstalls(Integer installs) {
             this.installs = installs;
         }
-
+        
         public String getSource() {
             return source;
         }
-
+        
         public void setSource(String source) {
             this.source = source;
         }
     }
-
+    
     static class SkillsShDownloadResponse {
-
+        
         private List<SkillsShFileSnapshot> files;
-
+        
         private String hash;
-
+        
         public List<SkillsShFileSnapshot> getFiles() {
             return files;
         }
-
+        
         public void setFiles(List<SkillsShFileSnapshot> files) {
             this.files = files;
         }
-
+        
         public String getHash() {
             return hash;
         }
-
+        
         public void setHash(String hash) {
             this.hash = hash;
         }
     }
-
+    
     static class SkillsShFileSnapshot {
-
+        
         private String path;
-
+        
         private String contents;
-
+        
         public String getPath() {
             return path;
         }
-
+        
         public void setPath(String path) {
             this.path = path;
         }
-
+        
         public String getContents() {
             return contents;
         }
-
+        
         public void setContents(String contents) {
             this.contents = contents;
         }
     }
-
+    
     static class SkillsShSkillRef {
-
+        
         private final String repositorySource;
-
+        
         private final String skillId;
-
+        
         private String name;
-
+        
         SkillsShSkillRef(String repositorySource, String skillId) {
             this.repositorySource = repositorySource.toLowerCase(Locale.ENGLISH);
             this.skillId = skillId;
             this.name = skillId;
         }
-
+        
         public String getRepositorySource() {
             return repositorySource;
         }
-
+        
         public String getSkillId() {
             return skillId;
         }
-
+        
         public String getName() {
             return name;
         }
-
+        
         public void setName(String name) {
             this.name = name;
         }
-
+        
         public String getExternalId() {
             return repositorySource + "/" + skillId;
         }

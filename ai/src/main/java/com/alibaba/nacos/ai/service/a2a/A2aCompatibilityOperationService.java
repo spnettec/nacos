@@ -33,68 +33,68 @@ import java.util.List;
  */
 @Component
 public class A2aCompatibilityOperationService implements A2aOperationService {
-
+    
     private final A2aCompatibilityModeResolver modeResolver;
-
+    
     private final A2aServerOperationService canonicalService;
-
+    
     private final LegacyA2aOperationService legacyService;
-
+    
     public A2aCompatibilityOperationService(A2aCompatibilityModeResolver modeResolver,
         A2aServerOperationService canonicalService, LegacyA2aOperationService legacyService) {
         this.modeResolver = modeResolver;
         this.canonicalService = canonicalService;
         this.legacyService = legacyService;
     }
-
+    
     @Override
     public void registerAgent(AgentCard agentCard, String namespaceId, String registrationType)
         throws NacosException {
         current().registerAgent(agentCard, namespaceId, registrationType);
     }
-
+    
     @Override
     public void releaseAgent(AgentCard agentCard, String namespaceId, String registrationType,
         boolean setAsLatest) throws NacosException {
         current().releaseAgent(agentCard, namespaceId, registrationType, setAsLatest);
     }
-
+    
     @Override
     public void updateAgentCard(AgentCard agentCard, String namespaceId, String registrationType,
         boolean setAsLatest) throws NacosException {
         current().updateAgentCard(agentCard, namespaceId, registrationType, setAsLatest);
     }
-
+    
     @Override
     public void deleteAgent(String namespaceId, String agentName, String version)
         throws NacosException {
         current().deleteAgent(namespaceId, agentName, version);
     }
-
+    
     @Override
     public AgentCardDetailInfo getAgentCard(String namespaceId, String agentName, String version,
         String registrationType) throws NacosException {
         return current().getAgentCard(namespaceId, agentName, version, registrationType);
     }
-
+    
     @Override
     public AgentCardDetailInfo getAgentCardForClient(String namespaceId, String agentName,
         String version, String registrationType) throws NacosException {
         return current().getAgentCardForClient(namespaceId, agentName, version, registrationType);
     }
-
+    
     @Override
     public Page<AgentCardVersionInfo> listAgents(String namespaceId, String agentName,
         String search, int pageNo, int pageSize) throws NacosException {
         return current().listAgents(namespaceId, agentName, search, pageNo, pageSize);
     }
-
+    
     @Override
     public List<AgentVersionDetail> listAgentVersions(String namespaceId, String name)
         throws NacosException {
         return current().listAgentVersions(namespaceId, name);
     }
-
+    
     private A2aOperationService current() {
         return A2aCompatibilityMode.CANONICAL == modeResolver.resolve() ? canonicalService
             : legacyService;

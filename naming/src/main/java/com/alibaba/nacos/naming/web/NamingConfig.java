@@ -66,9 +66,9 @@ public class NamingConfig {
     @PostConstruct
     public void init() {
         methodsCache.initClassMethod(Set.of(OperatorMetricsV1Controller.class,
-                ClientControllerV3.class, ClusterControllerV3.class, HealthControllerV3.class,
-                InstanceControllerV3.class, InstanceOpenApiController.class, OperatorControllerV3.class,
-                ServiceControllerV3.class));
+            ClientControllerV3.class, ClusterControllerV3.class, HealthControllerV3.class,
+            InstanceControllerV3.class, InstanceOpenApiController.class, OperatorControllerV3.class,
+            ServiceControllerV3.class));
         methodsCache.initClassMethod("com.alibaba.nacos.naming.controllers");
     }
     

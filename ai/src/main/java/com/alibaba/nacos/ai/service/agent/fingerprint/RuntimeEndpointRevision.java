@@ -42,20 +42,20 @@ import java.util.TreeMap;
  * @author Nacos
  */
 public final class RuntimeEndpointRevision {
-
+    
     public static final String ALGORITHM_ID = "murmur3-x64-128-v1";
-
+    
     public static final String TOKEN_PREFIX = ALGORITHM_ID + ':';
-
+    
     private static final int MAX_ENDPOINTS = 1000;
-
+    
     private static final int MURMUR_SEED = 0;
-
+    
     private static final char[] HEX = "0123456789abcdef".toCharArray();
-
+    
     private RuntimeEndpointRevision() {
     }
-
+    
     /**
      * Compute the opaque revision for an already aggregated and Version-filtered runtime set.
      *
@@ -75,7 +75,7 @@ public final class RuntimeEndpointRevision {
         appendHex(hash[1], value, 16);
         return TOKEN_PREFIX + new String(value);
     }
-
+    
     static byte[] revisionBytes(String namespaceId, String agentName, String protocol,
         List<AgentDiscoveryEndpoint> endpoints) {
         AgentValidationUtils.validateNamespaceId(namespaceId);
@@ -105,7 +105,7 @@ public final class RuntimeEndpointRevision {
         }
         return frame(canonicalEndpoints);
     }
-
+    
     private static byte[] frame(Map<EndpointNaturalKey, AgentDiscoveryEndpoint> endpoints) {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         try (DataOutputStream output = new DataOutputStream(buffer)) {
@@ -125,7 +125,7 @@ public final class RuntimeEndpointRevision {
         }
         return buffer.toByteArray();
     }
-
+    
     private static List<RuntimeVersionBinding> canonicalBindings(
         List<RuntimeVersionBinding> bindings) {
         if (bindings == null || bindings.isEmpty()) {
@@ -139,7 +139,7 @@ public final class RuntimeEndpointRevision {
             }
         }
         Collections.sort(result, new Comparator<RuntimeVersionBinding>() {
-
+            
             @Override
             public int compare(RuntimeVersionBinding left, RuntimeVersionBinding right) {
                 int comparison = AgentVersionComparator.compare(left.getRuntimeVersion(),
@@ -150,7 +150,7 @@ public final class RuntimeEndpointRevision {
         });
         return result;
     }
-
+    
     private static void writeBindings(DataOutputStream output,
         List<RuntimeVersionBinding> bindings) throws IOException {
         output.writeInt(bindings.size());
@@ -159,7 +159,7 @@ public final class RuntimeEndpointRevision {
             writeUtf8(output, binding.getVersionRange());
         }
     }
-
+    
     private static AgentDiscoveryEndpoint copyEndpoint(Endpoint source) {
         AgentDiscoveryEndpoint result = new AgentDiscoveryEndpoint();
         result.setUri(source.getUri());
@@ -170,13 +170,13 @@ public final class RuntimeEndpointRevision {
         result.setHealthy(source.getHealthy());
         return result;
     }
-
+    
     private static void writeUtf8(DataOutputStream output, String value) throws IOException {
         byte[] bytes = value.getBytes(StandardCharsets.UTF_8);
         output.writeInt(bytes.length);
         output.write(bytes);
     }
-
+    
     private static void writeMetadata(DataOutputStream output, Map<String, String> metadata)
         throws IOException {
         if (metadata == null || metadata.isEmpty()) {
@@ -190,7 +190,7 @@ public final class RuntimeEndpointRevision {
             writeUtf8(output, entry.getValue());
         }
     }
-
+    
     private static void appendHex(long value, char[] target, int offset) {
         for (int i = 15; i >= 0; i--) {
             target[offset + i] = HEX[(int) (value & 0x0F)];

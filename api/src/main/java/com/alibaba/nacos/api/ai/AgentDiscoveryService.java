@@ -38,7 +38,7 @@ import com.alibaba.nacos.api.model.Page;
  * @author Nacos
  */
 public interface AgentDiscoveryService {
-
+    
     /**
      * Search visible Agent catalog entries.
      *
@@ -52,7 +52,7 @@ public interface AgentDiscoveryService {
         throw new NacosException(NacosException.SERVER_NOT_IMPLEMENTED,
             "Agent discovery is not implemented by this AiService.");
     }
-
+    
     /**
      * Discover the latest, exact-version, or labeled Agent referenced by {@code reference}.
      *
@@ -64,7 +64,7 @@ public interface AgentDiscoveryService {
     default AgentDiscoveryResult discoverAgent(AgentReference reference) throws NacosException {
         return discoverAgent(reference, null);
     }
-
+    
     /**
      * Discover one Agent and filter its call interfaces and Endpoint sets.
      *
@@ -79,7 +79,7 @@ public interface AgentDiscoveryService {
         throw new NacosException(NacosException.SERVER_NOT_IMPLEMENTED,
             "Agent discovery is not implemented by this AiService.");
     }
-
+    
     /**
      * Subscribe to one Agent by periodically performing the same Discover operation.
      *
@@ -93,7 +93,7 @@ public interface AgentDiscoveryService {
         AbstractNacosAgentDiscoveryListener listener) throws NacosException {
         return subscribeAgent(reference, null, listener);
     }
-
+    
     /**
      * Subscribe to one filtered Agent view by periodically performing Discover.
      *
@@ -110,7 +110,7 @@ public interface AgentDiscoveryService {
         throw new NacosException(NacosException.SERVER_NOT_IMPLEMENTED,
             "Agent discovery is not implemented by this AiService.");
     }
-
+    
     /**
      * Cancel one local polling subscription.
      *
@@ -123,7 +123,7 @@ public interface AgentDiscoveryService {
         AbstractNacosAgentDiscoveryListener listener) throws NacosException {
         unsubscribeAgent(reference, null, listener);
     }
-
+    
     /**
      * Cancel one local filtered polling subscription.
      *
@@ -138,7 +138,7 @@ public interface AgentDiscoveryService {
         throw new NacosException(NacosException.SERVER_NOT_IMPLEMENTED,
             "Agent discovery is not implemented by this AiService.");
     }
-
+    
     /**
      * Replace this SDK publisher's complete Endpoint Batch for one Agent protocol.
      *
@@ -151,7 +151,7 @@ public interface AgentDiscoveryService {
         throw new NacosException(NacosException.SERVER_NOT_IMPLEMENTED,
             "Agent discovery is not implemented by this AiService.");
     }
-
+    
     /**
      * Remove Endpoint natural keys from this SDK publisher's expected complete Batch.
      *

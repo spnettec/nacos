@@ -30,14 +30,15 @@ public class ExternalDataSourcePropertiesTest {
     @SuppressWarnings("checkstyle:linelength")
     public static final String JDBC_URL =
         "jdbc:mysql://127.0.0.1:3306/nacos_devtest?characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true&useUnicode=true&useSSL=false&serverTimezone=UTC";
-
+    
     public static final String MARIADB_JDBC_URL = "jdbc:mariadb://127.0.0.1:3306/nacos_devtest";
-
+    
     public static final String ORACLE_JDBC_URL = "jdbc:oracle:thin:@127.0.0.1:1521/orcl";
-
+    
     public static final String POSTGRESQL_JDBC_URL = "jdbc:postgresql://127.0.0.1:5432/nacos";
-
-    public static final String SQLSERVER_JDBC_URL = "jdbc:sqlserver://127.0.0.1:1433;databaseName=nacos";
+    
+    public static final String SQLSERVER_JDBC_URL =
+        "jdbc:sqlserver://127.0.0.1:1433;databaseName=nacos";
     
     public static final String PASSWORD = "nacos";
     
@@ -63,22 +64,25 @@ public class ExternalDataSourcePropertiesTest {
             }));
         assertEquals(1, dataSources.size());
     }
-
+    
     @Test
     void externalDatasourceShouldInferDriverFromJdbcUrl() {
-        assertEquals("com.mysql.cj.jdbc.Driver", ExternalDataSourceProperties.resolveDriverName(null, JDBC_URL));
+        assertEquals("com.mysql.cj.jdbc.Driver",
+            ExternalDataSourceProperties.resolveDriverName(null, JDBC_URL));
         assertEquals("org.mariadb.jdbc.Driver",
-                ExternalDataSourceProperties.resolveDriverName(null, MARIADB_JDBC_URL));
-        assertEquals("oracle.jdbc.OracleDriver", ExternalDataSourceProperties.resolveDriverName(null, ORACLE_JDBC_URL));
-        assertEquals("org.postgresql.Driver", ExternalDataSourceProperties.resolveDriverName(null, POSTGRESQL_JDBC_URL));
+            ExternalDataSourceProperties.resolveDriverName(null, MARIADB_JDBC_URL));
+        assertEquals("oracle.jdbc.OracleDriver",
+            ExternalDataSourceProperties.resolveDriverName(null, ORACLE_JDBC_URL));
+        assertEquals("org.postgresql.Driver",
+            ExternalDataSourceProperties.resolveDriverName(null, POSTGRESQL_JDBC_URL));
         assertEquals("com.microsoft.sqlserver.jdbc.SQLServerDriver",
-                ExternalDataSourceProperties.resolveDriverName(null, SQLSERVER_JDBC_URL));
+            ExternalDataSourceProperties.resolveDriverName(null, SQLSERVER_JDBC_URL));
     }
-
+    
     @Test
     void externalDatasourceShouldPreferConfiguredDriverName() {
         assertEquals("custom.Driver",
-                ExternalDataSourceProperties.resolveDriverName("custom.Driver", MARIADB_JDBC_URL));
+            ExternalDataSourceProperties.resolveDriverName("custom.Driver", MARIADB_JDBC_URL));
     }
     
     @Test
@@ -220,5 +224,5 @@ public class ExternalDataSourcePropertiesTest {
                 }));
         });
     }
-
+    
 }

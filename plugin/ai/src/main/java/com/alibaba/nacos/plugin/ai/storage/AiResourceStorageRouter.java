@@ -44,18 +44,18 @@ import java.util.concurrent.ConcurrentHashMap;
  * @since 3.2.0
  */
 public class AiResourceStorageRouter {
-
+    
     private static final Logger LOGGER = LoggerFactory.getLogger(AiResourceStorageRouter.class);
-
+    
     private static final AiResourceStorageRouter INSTANCE = new AiResourceStorageRouter();
-
+    
     private static final Map<String, AiResourceStorage> STORAGES_BY_TYPE =
         new ConcurrentHashMap<>(8);
-
+    
     private AiResourceStorageRouter() {
         // Storage implementations are registered via join() by external initializer
     }
-
+    
     /**
      * Get global singleton instance.
      *
@@ -64,7 +64,7 @@ public class AiResourceStorageRouter {
     public static AiResourceStorageRouter getInstance() {
         return INSTANCE;
     }
-
+    
     /**
      * Route to storage implementation by {@link StorageKey#getProvider()}.
      *
@@ -87,11 +87,11 @@ public class AiResourceStorageRouter {
         }
         return storage;
     }
-
+    
     public Map<String, AiResourceStorage> allStorages() {
         return Collections.unmodifiableMap(STORAGES_BY_TYPE);
     }
-
+    
     /**
      * Register a storage implementation at runtime using first-wins semantics.
      *
@@ -105,7 +105,7 @@ public class AiResourceStorageRouter {
         return PluginRegistryUtils.registerFirst(STORAGES_BY_TYPE,
             PluginType.AI_STORAGE.getType(), type, storage, LOGGER);
     }
-
+    
     @JustForTest
     public static synchronized void reset() {
         STORAGES_BY_TYPE.clear();

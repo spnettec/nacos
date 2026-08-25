@@ -32,13 +32,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
 class AiResourceImportServiceTest {
-
+    
     @Test
     void testBuilderCreatesRequestScopedImporter() throws Exception {
         FakeImportServiceBuilder builder = new FakeImportServiceBuilder();
-
+        
         AiResourceImportService service = builder.build();
-
+        
         assertEquals("fake-source", builder.pluginName());
         assertEquals("fake-importer", builder.importerType());
         assertEquals("Fake source", builder.displayName());
@@ -47,7 +47,7 @@ class AiResourceImportServiceTest {
         assertSame(builder.service, service);
         service.close();
     }
-
+    
     @Test
     void testSearchAndFetchContract() throws NacosException {
         AiResourceImportService service = new FakeImportService();
@@ -55,53 +55,53 @@ class AiResourceImportServiceTest {
         context.setResourceType("mcp");
         AiResourceImportItem item = new AiResourceImportItem();
         item.setExternalId("server-1");
-
+        
         AiResourceImportCandidatePage page = service.search(context);
         AiResourceImportArtifact artifact = service.fetch(context, item);
-
+        
         assertEquals(1, page.getItems().size());
         assertEquals("server-1", page.getItems().get(0).getExternalId());
         assertEquals("server-1", artifact.getExternalId());
         assertEquals(AiResourceImportPayloadKind.MCP_DETAIL, artifact.getPayloadKind());
     }
-
+    
     private static class FakeImportServiceBuilder implements AiResourceImportServiceBuilder {
-
+        
         private final FakeImportService service = new FakeImportService();
-
+        
         @Override
         public String pluginName() {
             return "fake-source";
         }
-
+        
         @Override
         public String importerType() {
             return "fake-importer";
         }
-
+        
         @Override
         public String displayName() {
             return "Fake source";
         }
-
+        
         @Override
         public String description() {
             return "Fake description";
         }
-
+        
         @Override
         public Set<String> supportedResourceTypes() {
             return Collections.singleton("mcp");
         }
-
+        
         @Override
         public AiResourceImportService build() {
             return service;
         }
     }
-
+    
     private static class FakeImportService implements AiResourceImportService {
-
+        
         @Override
         public AiResourceImportCandidatePage search(AiResourceImportContext context) {
             AiResourceImportCandidate candidate = new AiResourceImportCandidate();
@@ -112,7 +112,7 @@ class AiResourceImportServiceTest {
             page.setItems(Collections.singletonList(candidate));
             return page;
         }
-
+        
         @Override
         public AiResourceImportArtifact fetch(AiResourceImportContext context,
             AiResourceImportItem item) {

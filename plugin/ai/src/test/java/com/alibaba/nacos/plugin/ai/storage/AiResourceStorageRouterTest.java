@@ -34,13 +34,13 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AiResourceStorageRouterTest {
-
+    
     @AfterEach
     void tearDown() {
         PluginStateCheckerHolder.setInstance(null);
         AiResourceStorageRouter.reset();
     }
-
+    
     @Test
     void testJoinAndRouteStorage() throws NacosException {
         FakeStorage storage = new FakeStorage("fake");
@@ -48,24 +48,24 @@ class AiResourceStorageRouterTest {
         StorageKey emptyStorageKey = new StorageKey();
         emptyStorageKey.setProvider("fake");
         emptyStorageKey.setKey("resource");
-
+        
         assertTrue(AiResourceStorageRouter.join(storage));
         assertFalse(AiResourceStorageRouter.join(duplicate));
-
+        
         AiResourceStorage routed = AiResourceStorageRouter.getInstance().route(emptyStorageKey);
         routed.save(emptyStorageKey, "content".getBytes(StandardCharsets.UTF_8));
-
+        
         assertSame(storage, routed);
         assertArrayEquals("resource".getBytes(StandardCharsets.UTF_8), routed.get(emptyStorageKey));
         assertEquals(1, AiResourceStorageRouter.getInstance().allStorages().size());
         assertEquals("StorageKey{provider='fake', key='resource'}", emptyStorageKey.toString());
     }
-
+    
     @Test
     void testJoinRejectsInvalidStorageAndRouteRejectsInvalidKey() {
         assertFalse(AiResourceStorageRouter.join(null));
         assertFalse(AiResourceStorageRouter.join(new FakeStorage(" ")));
-
+        
         assertThrows(IllegalArgumentException.class,
             () -> AiResourceStorageRouter.getInstance().route(null));
         assertThrows(IllegalArgumentException.class,
@@ -73,43 +73,43 @@ class AiResourceStorageRouterTest {
         assertThrows(IllegalStateException.class,
             () -> AiResourceStorageRouter.getInstance().route(new StorageKey("missing", "key")));
     }
-
+    
     @Test
     void testRouteRejectsDisabledStorage() {
         AiResourceStorageRouter.join(new FakeStorage("disabled"));
         PluginStateCheckerHolder.setInstance(
             (pluginType, pluginName) -> !PluginType.AI_STORAGE.getType().equals(pluginType)
                 || !"disabled".equals(pluginName));
-
+        
         IllegalStateException exception = assertThrows(IllegalStateException.class,
             () -> AiResourceStorageRouter.getInstance()
                 .route(new StorageKey("disabled", "resource")));
-
+        
         assertTrue(exception.getMessage().contains("disabled"));
     }
-
+    
     private static class FakeStorage implements AiResourceStorage {
-
+        
         private final String type;
-
+        
         private FakeStorage(String type) {
             this.type = type;
         }
-
+        
         @Override
         public String type() {
             return type;
         }
-
+        
         @Override
         public void save(StorageKey storageKey, byte[] content) {
         }
-
+        
         @Override
         public byte[] get(StorageKey storageKey) {
             return storageKey.getKey().getBytes(StandardCharsets.UTF_8);
         }
-
+        
         @Override
         public void delete(StorageKey storageKey) {
         }

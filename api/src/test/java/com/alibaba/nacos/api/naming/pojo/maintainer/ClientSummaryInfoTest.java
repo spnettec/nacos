@@ -37,8 +37,8 @@ class ClientSummaryInfoTest {
     @BeforeEach
     void setUp() throws Exception {
         mapper = JsonMapper.builder()
-                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-                .build();
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .build();
         clientSummaryInfo = new ClientSummaryInfo();
         clientSummaryInfo.setClientId("clientId");
         clientSummaryInfo.setEphemeral(true);

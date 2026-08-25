@@ -29,7 +29,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 class DefaultPluginStateSynchronizationContextTest {
-
+    
     @Test
     void applyStateChangePersistsBeforeApplying() {
         PluginStatePersistenceService persistence =
@@ -37,15 +37,15 @@ class DefaultPluginStateSynchronizationContextTest {
         PluginStateApplier applier = mock(PluginStateApplier.class);
         DefaultPluginStateSynchronizationContext context =
             new DefaultPluginStateSynchronizationContext(persistence, () -> applier);
-
+        
         context.applyStateChange("trace:otel", false);
-
+        
         InOrder order = inOrder(applier, persistence);
         order.verify(applier).validateStateChange("trace:otel", false);
         order.verify(persistence).saveState("trace:otel", false);
         order.verify(applier).applyStateChange("trace:otel", false);
     }
-
+    
     @Test
     void applyConfigChangeDelegatesToCoreApplier() {
         PluginStatePersistenceService persistence =
@@ -54,18 +54,18 @@ class DefaultPluginStateSynchronizationContextTest {
         DefaultPluginStateSynchronizationContext context =
             new DefaultPluginStateSynchronizationContext(persistence, () -> applier);
         Map<String, String> config = Collections.singletonMap("endpoint", "value");
-
+        
         context.applyConfigChange("trace:otel", config);
-
+        
         verify(applier).applyConfigChange("trace:otel", config);
     }
-
+    
     @Test
     void missingCoreApplierFailsExplicitly() {
         DefaultPluginStateSynchronizationContext context =
             new DefaultPluginStateSynchronizationContext(
                 mock(PluginStatePersistenceService.class), () -> null);
-
+        
         assertThrows(IllegalStateException.class,
             () -> context.applyStateChange("trace:otel", true));
         assertThrows(IllegalStateException.class,

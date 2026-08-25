@@ -27,33 +27,33 @@ import java.util.Map;
  * @author nacos
  */
 public class ArdSearchQuery {
-
+    
     private String text;
-
+    
     private Map<String, Object> filter = new LinkedHashMap<>();
-
+    
     private List<ArdSearchFilter> filters = new ArrayList<>();
-
+    
     public String getText() {
         return text;
     }
-
+    
     public void setText(String text) {
         this.text = text;
     }
-
+    
     public Map<String, Object> getFilter() {
         return filter;
     }
-
+    
     public void setFilter(Map<String, Object> filter) {
         this.filter = filter;
     }
-
+    
     public List<ArdSearchFilter> getFilters() {
         return filters;
     }
-
+    
     public void setFilters(List<ArdSearchFilter> filters) {
         this.filters = filters;
     }

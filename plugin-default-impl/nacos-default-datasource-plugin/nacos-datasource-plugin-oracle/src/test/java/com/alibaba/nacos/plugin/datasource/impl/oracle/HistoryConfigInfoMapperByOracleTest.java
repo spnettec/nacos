@@ -30,25 +30,25 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class HistoryConfigInfoMapperByOracleTest {
-
+    
     int startRow = 0;
-
+    
     int pageSize = 5;
-
+    
     int limitSize = 6;
-
+    
     long lastMaxId = 644;
-
+    
     Timestamp startTime = new Timestamp(System.currentTimeMillis());
-
+    
     Timestamp endTime = new Timestamp(System.currentTimeMillis());
-
+    
     String publishType = "formal";
-
+    
     MapperContext context;
-
+    
     private HistoryConfigInfoMapperByOracle historyConfigInfoMapperByOracle;
-
+    
     @BeforeEach
     void setUp() throws Exception {
         historyConfigInfoMapperByOracle = new HistoryConfigInfoMapperByOracle();
@@ -60,7 +60,7 @@ class HistoryConfigInfoMapperByOracleTest {
         context.putWhereParameter(FieldConstant.PAGE_SIZE, pageSize);
         context.putWhereParameter(FieldConstant.PUBLISH_TYPE, publishType);
     }
-
+    
     @Test
     void testRemoveConfigHistory() {
         MapperResult mapperResult = historyConfigInfoMapperByOracle.removeConfigHistory(context);
@@ -70,7 +70,7 @@ class HistoryConfigInfoMapperByOracleTest {
         assertArrayEquals(new Object[] {startTime, limitSize},
             mapperResult.getParamList().toArray());
     }
-
+    
     @Test
     void testFindDeletedConfig() {
         MapperResult mapperResult = historyConfigInfoMapperByOracle.findDeletedConfig(context);
@@ -79,21 +79,21 @@ class HistoryConfigInfoMapperByOracleTest {
                 + "op_type, tenant_id, publish_type, gray_name, ext_info, encrypted_data_key FROM his_config_info WHERE op_type = 'D' AND "
                 + "publish_type = ? and gmt_modified >= ? and nid > ? order by nid fetch first ? rows only",
             mapperResult.getSql());
-
+        
         assertArrayEquals(new Object[] {publishType, startTime, lastMaxId, pageSize},
             mapperResult.getParamList().toArray());
     }
-
+    
     @Test
     void testPageFindConfigHistoryFetchRows() {
         Object dataId = "dataId";
         Object groupId = "groupId";
         Object tenantId = "tenantId";
-
+        
         context.putWhereParameter(FieldConstant.DATA_ID, dataId);
         context.putWhereParameter(FieldConstant.GROUP_ID, groupId);
         context.putWhereParameter(FieldConstant.TENANT_ID, tenantId);
-
+        
         MapperResult mapperResult =
             historyConfigInfoMapperByOracle.pageFindConfigHistoryFetchRows(context);
         assertEquals(mapperResult.getSql(),
@@ -104,19 +104,19 @@ class HistoryConfigInfoMapperByOracleTest {
         assertArrayEquals(new Object[] {dataId, groupId, tenantId},
             mapperResult.getParamList().toArray());
     }
-
+    
     @Test
     void testGetNextHistoryInfo() {
         Object dataId = "dataId";
         Object groupId = "groupId";
         Object tenantId = "tenantId";
         Object nid = 100L;
-
+        
         context.putWhereParameter(FieldConstant.DATA_ID, dataId);
         context.putWhereParameter(FieldConstant.GROUP_ID, groupId);
         context.putWhereParameter(FieldConstant.TENANT_ID, tenantId);
         context.putWhereParameter(FieldConstant.NID, nid);
-
+        
         MapperResult mapperResult = historyConfigInfoMapperByOracle.getNextHistoryInfo(context);
         assertEquals(mapperResult.getSql(),
             "SELECT nid,data_id,group_id,tenant_id,app_name,content,md5,src_user,src_ip,op_type,publish_type,"
@@ -126,7 +126,7 @@ class HistoryConfigInfoMapperByOracleTest {
         assertArrayEquals(new Object[] {dataId, groupId, tenantId, publishType, nid},
             mapperResult.getParamList().toArray());
     }
-
+    
     @Test
     void testGetNextHistoryInfoWithGrayName() {
         Object dataId = "dataId";
@@ -134,13 +134,13 @@ class HistoryConfigInfoMapperByOracleTest {
         Object tenantId = "tenantId";
         Object grayName = "beta";
         Object nid = 100L;
-
+        
         context.putWhereParameter(FieldConstant.DATA_ID, dataId);
         context.putWhereParameter(FieldConstant.GROUP_ID, groupId);
         context.putWhereParameter(FieldConstant.TENANT_ID, tenantId);
         context.putWhereParameter(FieldConstant.GRAY_NAME, grayName);
         context.putWhereParameter(FieldConstant.NID, nid);
-
+        
         MapperResult mapperResult = historyConfigInfoMapperByOracle.getNextHistoryInfo(context);
         assertEquals(
             "SELECT nid,data_id,group_id,tenant_id,app_name,content,md5,src_user,src_ip,op_type,publish_type,"
@@ -151,13 +151,13 @@ class HistoryConfigInfoMapperByOracleTest {
         assertArrayEquals(new Object[] {dataId, groupId, tenantId, publishType, grayName, nid},
             mapperResult.getParamList().toArray());
     }
-
+    
     @Test
     void testGetTableName() {
         String tableName = historyConfigInfoMapperByOracle.getTableName();
         assertEquals(TableConstant.HIS_CONFIG_INFO, tableName);
     }
-
+    
     @Test
     void testGetDataSource() {
         String dataSource = historyConfigInfoMapperByOracle.getDataSource();

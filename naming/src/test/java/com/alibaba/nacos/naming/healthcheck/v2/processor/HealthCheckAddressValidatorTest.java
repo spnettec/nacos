@@ -24,14 +24,14 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class HealthCheckAddressValidatorTest {
-
+    
     @ParameterizedTest
     @ValueSource(strings = {"localhost", "127.0.0.1", "mysql-service.internal",
         "mysql_service", "[::1]", "::1", "fe80::1%eth0"})
     void testValidAddress(String address) {
         assertTrue(HealthCheckAddressValidator.isValid(address));
     }
-
+    
     @ParameterizedTest
     @ValueSource(strings = {"", "host:3306", "host/path", "host?query=true", "host#fragment",
         "user@host", "host\\path", "host%3Fquery=true", "[::1]:3306", "[::1]suffix",
@@ -39,7 +39,7 @@ class HealthCheckAddressValidatorTest {
     void testInvalidAddress(String address) {
         assertFalse(HealthCheckAddressValidator.isValid(address));
     }
-
+    
     @Test
     void testNullAddress() {
         assertFalse(HealthCheckAddressValidator.isValid(null));

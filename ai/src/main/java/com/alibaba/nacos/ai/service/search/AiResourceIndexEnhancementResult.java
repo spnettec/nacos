@@ -25,21 +25,21 @@ import java.util.List;
  * @author nacos
  */
 public class AiResourceIndexEnhancementResult {
-
+    
     private final List<AiResourceIndexEnhancementChunk> chunks;
-
+    
     private final String fingerprint;
-
+    
     public AiResourceIndexEnhancementResult(List<AiResourceIndexEnhancementChunk> chunks,
         String fingerprint) {
         this.chunks = chunks == null ? Collections.emptyList() : chunks;
         this.fingerprint = fingerprint;
     }
-
+    
     public List<AiResourceIndexEnhancementChunk> getChunks() {
         return chunks;
     }
-
+    
     public String getFingerprint() {
         return fingerprint;
     }

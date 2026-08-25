@@ -32,24 +32,26 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ServerRemoteAbilityTest {
-
+    
     private static ObjectMapper mapper;
-
+    
     private ServerRemoteAbility serverAbilities;
-
+    
     @BeforeAll
     static void setUpBeforeClass() throws Exception {
         mapper = JsonMapper.builder().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-                .changeDefaultPropertyInclusion(incl -> incl.withValueInclusion(JsonInclude.Include.NON_NULL))
-                .changeDefaultPropertyInclusion(incl -> incl.withContentInclusion(JsonInclude.Include.NON_NULL))
-                .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY).build();
+            .changeDefaultPropertyInclusion(
+                incl -> incl.withValueInclusion(JsonInclude.Include.NON_NULL))
+            .changeDefaultPropertyInclusion(
+                incl -> incl.withContentInclusion(JsonInclude.Include.NON_NULL))
+            .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY).build();
     }
-
+    
     @BeforeEach
     void setUp() throws Exception {
         serverAbilities = new ServerRemoteAbility();
     }
-
+    
     @Test
     void testSerialize() throws JacksonException {
         serverAbilities = new ServerRemoteAbility();
@@ -57,7 +59,7 @@ class ServerRemoteAbilityTest {
         assertTrue(json.contains("\"supportRemoteConnection\":false"));
         assertTrue(json.contains("\"grpcReportEnabled\":true"));
     }
-
+    
     @Test
     void testDeserialize() throws JacksonException {
         String json = "{\"supportRemoteConnection\":true,\"grpcReportEnabled\":true}";
@@ -65,7 +67,7 @@ class ServerRemoteAbilityTest {
         assertTrue(abilities.isSupportRemoteConnection());
         assertTrue(abilities.isGrpcReportEnabled());
     }
-
+    
     @Test
     void testEqualsAndHashCode() {
         assertEquals(serverAbilities, serverAbilities);

@@ -29,51 +29,51 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AuthIdentityUtilsTest {
-
+    
     @AfterEach
     void tearDown() {
         RequestContextHolder.removeContext();
     }
-
+    
     @Test
     void resolveCurrentUsernameShouldReturnNacosUserName() {
         setCurrentIdentity(new NacosUser("alice"));
-
+        
         assertEquals("alice", AuthIdentityUtils.resolveCurrentUsername());
     }
-
+    
     @Test
     void resolveCurrentUsernameShouldReturnNullForMissingOrUnexpectedIdentity() {
         assertNull(AuthIdentityUtils.resolveCurrentUsername());
-
+        
         IdentityContext identityContext = new IdentityContext();
         identityContext.setParameter(AuthConstants.NACOS_USER_KEY, "alice");
         RequestContextHolder.getContext().getAuthContext().setIdentityContext(identityContext);
-
+        
         assertNull(AuthIdentityUtils.resolveCurrentUsername());
     }
-
+    
     @Test
     void isCurrentIdentityGlobalAdminShouldRequireSameGlobalAdminUser() {
         NacosUser user = new NacosUser("alice");
         user.setGlobalAdmin(true);
         setCurrentIdentity(user);
-
+        
         assertTrue(AuthIdentityUtils.isCurrentIdentityGlobalAdmin("alice"));
         assertFalse(AuthIdentityUtils.isCurrentIdentityGlobalAdmin("bob"));
     }
-
+    
     @Test
     void isCurrentIdentityGlobalAdminShouldReturnFalseForBlankOrNonAdminIdentity() {
         assertFalse(AuthIdentityUtils.isCurrentIdentityGlobalAdmin(""));
-
+        
         NacosUser user = new NacosUser("alice");
         user.setGlobalAdmin(false);
         setCurrentIdentity(user);
-
+        
         assertFalse(AuthIdentityUtils.isCurrentIdentityGlobalAdmin("alice"));
     }
-
+    
     private void setCurrentIdentity(Object nacosUser) {
         IdentityContext identityContext = new IdentityContext();
         identityContext.setParameter(AuthConstants.NACOS_USER_KEY, nacosUser);

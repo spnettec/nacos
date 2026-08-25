@@ -28,13 +28,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class SecuredMetadataTest {
-
+    
     @Test
     void testCapacityUsesConsoleSignType() {
         assertConsoleSignType("getCapacity");
         assertConsoleSignType("updateCapacity");
     }
-
+    
     private void assertConsoleSignType(String methodName) {
         Method method = Arrays.stream(CapacityControllerV3.class.getDeclaredMethods())
             .filter(candidate -> methodName.equals(candidate.getName()))

@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class SecuredMetadataTest {
-
+    
     @Test
     void testConsoleManagementResources() {
         assertSecured(ConsoleClusterController.class, "getNodeList",
@@ -50,7 +50,7 @@ class SecuredMetadataTest {
         assertSecured(ConsoleAgentController.class, "forcePublish",
             "/v3/console/ai/agents/force-publish", ActionTypes.WRITE, SignType.AI);
     }
-
+    
     @Test
     void testConsoleApiTypesAndTypedResources() {
         assertSecured(ConsoleConfigController.class, "getAllSubClientConfigByIp",
@@ -62,7 +62,7 @@ class SecuredMetadataTest {
         assertSecured(ConsoleA2aController.class, "listAgentVersions",
             "", ActionTypes.READ, SignType.AI);
     }
-
+    
     @Test
     void testConsoleAiForcePublishSignTypes() {
         assertSecured(ConsoleAgentSpecController.class, "forcePublish",
@@ -72,7 +72,7 @@ class SecuredMetadataTest {
         assertSecured(ConsoleSkillController.class, "forcePublish",
             "console/skills", ActionTypes.WRITE, SignType.AI);
     }
-
+    
     @Test
     void testConsoleAgentSpecUpdateParser() {
         Method method = Arrays.stream(ConsoleAgentSpecController.class.getDeclaredMethods())
@@ -85,7 +85,7 @@ class SecuredMetadataTest {
         assertEquals(SignType.AI, secured.signType());
         assertEquals(ApiType.CONSOLE_API, secured.apiType());
     }
-
+    
     private void assertSecured(Class<?> controllerClass, String methodName, String resource,
         ActionTypes action, String signType) {
         Method method = Arrays.stream(controllerClass.getDeclaredMethods())

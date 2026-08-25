@@ -64,74 +64,74 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author xiweng.yy
  */
 public class NacosGrpcClient implements RpcClient {
-
+    
     private static final Logger LOGGER = LoggerFactory.getLogger(NacosGrpcClient.class);
-
+    
     private static final String FIXED_METHOD_NAME = "_call";
-
+    
     private static final int RESET_CONN_THRESHOLD =
         SystemPropertyUtil.getInt("jraft.grpc.max.conn.failures.to_reset", 2);
-
+    
     private static final int RPC_MAX_INBOUND_MESSAGE_SIZE = SystemPropertyUtil.getInt(
         "jraft.grpc.max_inbound_message_size.bytes", 4 * 1024 * 1024);
-
+    
     private final Map<Endpoint, ManagedChannel> managedChannelPool = new ConcurrentHashMap<>();
-
+    
     private final Map<Endpoint, AtomicInteger> transientFailures = new ConcurrentHashMap<>();
-
+    
     private final Map<String, Message> parserClasses;
-
+    
     private final MarshallerRegistry marshallerRegistry;
-
+    
     private final CallCredentials callCredentials;
-
+    
     private volatile ReplicatorGroup replicatorGroup;
-
+    
     public NacosGrpcClient(Map<String, Message> parserClasses,
         MarshallerRegistry marshallerRegistry) {
         this(parserClasses, marshallerRegistry, new NacosJRaftCallCredentials());
     }
-
+    
     NacosGrpcClient(Map<String, Message> parserClasses, MarshallerRegistry marshallerRegistry,
         CallCredentials callCredentials) {
         this.parserClasses = parserClasses;
         this.marshallerRegistry = marshallerRegistry;
         this.callCredentials = callCredentials;
     }
-
+    
     @Override
     public boolean init(RpcOptions rpcOptions) {
         return true;
     }
-
+    
     @Override
     public void shutdown() {
         closeAllChannels();
         transientFailures.clear();
     }
-
+    
     @Override
     public boolean checkConnection(Endpoint endpoint) {
         return checkConnection(endpoint, false);
     }
-
+    
     @Override
     public boolean checkConnection(Endpoint endpoint, boolean createIfAbsent) {
         Requires.requireNonNull(endpoint, "endpoint");
         return checkChannel(endpoint, createIfAbsent);
     }
-
+    
     @Override
     public void closeConnection(Endpoint endpoint) {
         Requires.requireNonNull(endpoint, "endpoint");
         closeChannel(endpoint);
     }
-
+    
     @Override
     public void registerConnectEventListener(ReplicatorGroup replicatorGroup) {
         this.replicatorGroup = replicatorGroup;
     }
-
+    
     @Override
     public Object invokeSync(Endpoint endpoint, Object request, InvokeContext invokeContext,
         long timeoutMillis) throws RemotingException {
@@ -153,7 +153,7 @@ public class NacosGrpcClient implements RpcClient {
             throw new RemotingException(e);
         }
     }
-
+    
     @Override
     public void invokeAsync(Endpoint endpoint, Object request, InvokeContext invokeContext,
         InvokeCallback callback, long timeoutMillis) {
@@ -173,23 +173,23 @@ public class NacosGrpcClient implements RpcClient {
             .withCallCredentials(callCredentials);
         ClientCalls.asyncUnaryCall(channel.newCall(callMethod, callOptions), (Message) request,
             new StreamObserver<Message>() {
-
+                
                 @Override
                 public void onNext(Message value) {
                     executor.execute(() -> callback.complete(value, null));
                 }
-
+                
                 @Override
                 public void onError(Throwable throwable) {
                     executor.execute(() -> callback.complete(null, throwable));
                 }
-
+                
                 @Override
                 public void onCompleted() {
                 }
             });
     }
-
+    
     private MethodDescriptor<Message, Message> getCallMethod(Object request) {
         String requestClassName = request.getClass().getName();
         Message requestInstance = Requires.requireNonNull(parserClasses.get(requestClassName),
@@ -203,19 +203,19 @@ public class NacosGrpcClient implements RpcClient {
                 marshallerRegistry.findResponseInstanceByRequest(requestClassName)))
             .build();
     }
-
+    
     private ManagedChannel getCheckedChannel(Endpoint endpoint) {
         ManagedChannel channel = getChannel(endpoint, true);
         return checkConnectivity(endpoint, channel) ? channel : null;
     }
-
+    
     private ManagedChannel getChannel(Endpoint endpoint, boolean createIfAbsent) {
         if (createIfAbsent) {
             return managedChannelPool.computeIfAbsent(endpoint, this::newChannel);
         }
         return managedChannelPool.get(endpoint);
     }
-
+    
     private ManagedChannel newChannel(Endpoint endpoint) {
         ManagedChannel channel = ManagedChannelBuilder.forAddress(endpoint.getIp(),
             endpoint.getPort())
@@ -227,16 +227,16 @@ public class NacosGrpcClient implements RpcClient {
         notifyWhenStateChanged(ConnectivityState.IDLE, endpoint, channel);
         return channel;
     }
-
+    
     private ManagedChannel removeChannel(Endpoint endpoint) {
         return managedChannelPool.remove(endpoint);
     }
-
+    
     private void notifyWhenStateChanged(ConnectivityState state, Endpoint endpoint,
         ManagedChannel channel) {
         channel.notifyWhenStateChanged(state, () -> onStateChanged(endpoint, channel));
     }
-
+    
     private void onStateChanged(Endpoint endpoint, ManagedChannel channel) {
         ConnectivityState state = channel.getState(false);
         LOGGER.info("The channel {} is in state: {}.", endpoint, state);
@@ -262,7 +262,7 @@ public class NacosGrpcClient implements RpcClient {
                 break;
         }
     }
-
+    
     private void notifyReady(Endpoint endpoint) {
         LOGGER.info("The channel {} has successfully established.", endpoint);
         clearConnFailuresCount(endpoint);
@@ -284,16 +284,16 @@ public class NacosGrpcClient implements RpcClient {
             LOGGER.error("Fail to check replicator {}.", endpoint, e);
         }
     }
-
+    
     private void notifyFailure(Endpoint endpoint) {
         LOGGER.warn("There has been some transient failure on this channel {}.", endpoint);
     }
-
+    
     private void notifyShutdown(Endpoint endpoint) {
         LOGGER.warn("This channel {} has started shutting down. Any new RPCs should fail "
             + "immediately.", endpoint);
     }
-
+    
     private void closeAllChannels() {
         for (Map.Entry<Endpoint, ManagedChannel> entry : managedChannelPool.entrySet()) {
             ManagedChannel channel = entry.getValue();
@@ -302,7 +302,7 @@ public class NacosGrpcClient implements RpcClient {
         }
         managedChannelPool.clear();
     }
-
+    
     private void closeChannel(Endpoint endpoint) {
         ManagedChannel channel = removeChannel(endpoint);
         LOGGER.info("Close connection: {}, {}.", endpoint, channel);
@@ -310,21 +310,21 @@ public class NacosGrpcClient implements RpcClient {
             ManagedChannelHelper.shutdownAndAwaitTermination(channel);
         }
     }
-
+    
     private boolean checkChannel(Endpoint endpoint, boolean createIfAbsent) {
         ManagedChannel channel = getChannel(endpoint, createIfAbsent);
         return channel != null && checkConnectivity(endpoint, channel);
     }
-
+    
     private int incConnFailuresCount(Endpoint endpoint) {
         return transientFailures.computeIfAbsent(endpoint, key -> new AtomicInteger())
             .incrementAndGet();
     }
-
+    
     private void clearConnFailuresCount(Endpoint endpoint) {
         transientFailures.remove(endpoint);
     }
-
+    
     private boolean checkConnectivity(Endpoint endpoint, ManagedChannel channel) {
         ConnectivityState state = channel.getState(false);
         if (state != ConnectivityState.TRANSIENT_FAILURE

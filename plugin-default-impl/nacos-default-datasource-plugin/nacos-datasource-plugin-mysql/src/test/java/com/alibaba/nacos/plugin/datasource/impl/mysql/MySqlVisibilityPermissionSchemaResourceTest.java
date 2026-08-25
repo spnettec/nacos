@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class MySqlVisibilityPermissionSchemaResourceTest {
-
+    
     @Test
     void testPermissionResourceColumnSupportsCanonicalVisibilityResource() throws IOException {
         String schema = readResource("META-INF/mysql-schema.sql");
@@ -37,7 +37,7 @@ class MySqlVisibilityPermissionSchemaResourceTest {
         assertFalse(schema.contains("idx_permission_resource"));
         assertFalse(schema.contains("idx_role_user"));
     }
-
+    
     @Test
     void testPermissionResourceUpgradeScriptDocumentsIndexPreChecks() throws IOException {
         String sql = readResource("META-INF/mysql-upgrade-visibility-permission-resource.sql");
@@ -52,7 +52,7 @@ class MySqlVisibilityPermissionSchemaResourceTest {
                 + "COLLATE utf8mb4_bin NOT NULL"));
         assertFalse(sql.contains("idx_permission_resource"));
     }
-
+    
     private String readResource(String resourceName) throws IOException {
         try (InputStream inputStream =
             getClass().getClassLoader().getResourceAsStream(resourceName)) {

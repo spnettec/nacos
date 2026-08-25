@@ -22,33 +22,33 @@ package com.alibaba.nacos.airegistry.model.ard;
  * @author nacos
  */
 public class ArdSearchFilter {
-
+    
     private String fieldPath;
-
+    
     private Object value;
-
+    
     private Object values;
-
+    
     public String getFieldPath() {
         return fieldPath;
     }
-
+    
     public void setFieldPath(String fieldPath) {
         this.fieldPath = fieldPath;
     }
-
+    
     public Object getValue() {
         return value;
     }
-
+    
     public void setValue(Object value) {
         this.value = value;
     }
-
+    
     public Object getValues() {
         return values;
     }
-
+    
     public void setValues(Object values) {
         this.values = values;
     }

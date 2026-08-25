@@ -27,14 +27,14 @@ package com.alibaba.nacos.core.plugin.config.storage;
  * @author Nacos
  */
 public interface PluginConfigStorageProvider {
-
+    
     /**
      * Get the stable storage identity used by its static enable property.
      *
      * @return storage name
      */
     String getName();
-
+    
     /**
      * Get startup selection order.
      *
@@ -43,7 +43,7 @@ public interface PluginConfigStorageProvider {
     default int getOrder() {
         return 0;
     }
-
+    
     /**
      * Whether this provider is enabled when no explicit static property exists.
      *
@@ -52,7 +52,7 @@ public interface PluginConfigStorageProvider {
     default boolean isEnabledByDefault() {
         return false;
     }
-
+    
     /**
      * Create the selected storage.
      *

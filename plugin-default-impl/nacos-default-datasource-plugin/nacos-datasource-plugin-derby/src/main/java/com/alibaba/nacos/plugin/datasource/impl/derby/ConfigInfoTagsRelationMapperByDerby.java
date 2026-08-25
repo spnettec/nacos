@@ -135,7 +135,7 @@ public class ConfigInfoTagsRelationMapperByDerby extends AbstractMapperByDerby
         final String tenantId = (String) context.getWhereParameter(FieldConstant.TENANT_ID);
         final String[] tagArr = (String[]) context.getWhereParameter(FieldConstant.TAG_ARR);
         final String[] types = (String[]) context.getWhereParameter(FieldConstant.TYPE);
-
+        
         // 增强 SELECT 子句，包含 desc 字段，但不包含 configTags（Derby 不支持 GROUP_CONCAT）
         WhereBuilder where = new WhereBuilder(
             "SELECT a.ID,a.data_id,a.group_id,a.tenant_id,a.app_name,a.content,a.md5,a.encrypted_data_key,a.type,a.c_desc "

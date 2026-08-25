@@ -38,17 +38,17 @@ import java.util.Set;
  * @author Nacos
  */
 public final class PluginConfigDefinitionNormalizer {
-
+    
     private static final Logger LOGGER =
         LoggerFactory.getLogger(PluginConfigDefinitionNormalizer.class);
-
+    
     private static final String STANDARD_KEY_PREFIX = "nacos.plugin.";
-
+    
     private static final String RESERVED_ENABLED_KEY = "enabled";
-
+    
     private PluginConfigDefinitionNormalizer() {
     }
-
+    
     /**
      * Normalize definitions using first-wins conflict handling.
      *
@@ -71,7 +71,7 @@ public final class PluginConfigDefinitionNormalizer {
         }
         return Collections.unmodifiableList(result);
     }
-
+    
     private static Optional<ConfigItemDefinition> normalizeDefinition(String pluginId,
         ConfigItemDefinition definition, PluginInitializationPhase initializationPhase,
         Map<String, String> inputKeyOwners) {
@@ -111,7 +111,7 @@ public final class PluginConfigDefinitionNormalizer {
         }
         return Optional.of(result);
     }
-
+    
     private static List<String> normalizeAliases(String pluginId, String itemKey,
         List<String> aliases, Map<String, String> inputKeyOwners) {
         if (aliases == null) {
@@ -143,7 +143,7 @@ public final class PluginConfigDefinitionNormalizer {
         }
         return result;
     }
-
+    
     private static Set<String> resolveInputKeys(String pluginId, String key) {
         Set<String> result = new LinkedHashSet<>();
         result.add(key);
@@ -156,11 +156,11 @@ public final class PluginConfigDefinitionNormalizer {
         }
         return result;
     }
-
+    
     private static boolean isReservedEnabledKey(String pluginId, String key) {
         return resolveInputKeys(pluginId, RESERVED_ENABLED_KEY).contains(key);
     }
-
+    
     private static String findConflict(Set<String> inputKeys,
         Map<String, String> inputKeyOwners) {
         for (String inputKey : inputKeys) {
@@ -170,14 +170,14 @@ public final class PluginConfigDefinitionNormalizer {
         }
         return null;
     }
-
+    
     private static void registerInputKeys(Set<String> inputKeys, String itemKey,
         Map<String, String> inputKeyOwners) {
         for (String inputKey : inputKeys) {
             inputKeyOwners.put(inputKey, itemKey);
         }
     }
-
+    
     private static ConfigItemDefinition copyDefinition(ConfigItemDefinition source) {
         ConfigItemDefinition result =
             new ConfigItemDefinition(source.getKey(), source.getName(), source.getType());
@@ -189,7 +189,7 @@ public final class PluginConfigDefinitionNormalizer {
         result.setEffectMode(source.getEffectMode());
         return result;
     }
-
+    
     private static List<String> copyList(List<String> source) {
         return source == null ? null : new ArrayList<>(source);
     }

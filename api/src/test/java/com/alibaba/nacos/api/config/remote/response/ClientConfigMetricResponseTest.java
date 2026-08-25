@@ -53,7 +53,7 @@ public class ClientConfigMetricResponseTest extends BasedConfigResponseTest {
     
     @Override
     public void testSerializeFailResponse() throws JacksonException {
-
+        
     }
     
     @Override

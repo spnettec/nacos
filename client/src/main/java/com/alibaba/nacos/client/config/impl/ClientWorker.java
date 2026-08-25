@@ -153,7 +153,7 @@ public class ClientWorker implements Closeable {
     private boolean enableRemoteSyncConfig = false;
     
     private static final int MIN_THREAD_NUM = 2;
-
+    
     private static final int THREAD_MULTIPLE = 1;
     
     private boolean enableClientMetrics = true;
@@ -553,10 +553,10 @@ public class ClientWorker implements Closeable {
         agent = new ConfigRpcTransportClient(properties, serverListManager);
         
         configFuzzyWatchGroupKeyHolder = new ConfigFuzzyWatchGroupKeyHolder(agent, uuid);
-
+        
         ThreadPoolExecutor executor = instantiateClientExecutor(properties);
         agent.setExecutor(executor);
-
+        
         agent.start();
         configFuzzyWatchGroupKeyHolder.start();
     }
@@ -566,10 +566,10 @@ public class ClientWorker implements Closeable {
             defaultLabelsCollectorManager.getLabels(properties),
             APP_CONN_PREFIX);
     }
-
+    
     private ThreadPoolExecutor instantiateClientExecutor(final NacosClientProperties properties) {
         int workerThreadCount = initWorkerThreadCount(properties);
-
+        
         return new ThreadPoolExecutor(workerThreadCount, workerThreadCount * 2,
             60 * 5, TimeUnit.SECONDS,
             // when corePoolSize is not enough, task will not wait in queue, because SynchronousQueue 0 capacity
@@ -579,7 +579,7 @@ public class ClientWorker implements Closeable {
             // CallerRunsPolicy ensures that tasks are not lost
             new ThreadPoolExecutor.CallerRunsPolicy());
     }
-
+    
     private int initWorkerThreadCount(NacosClientProperties properties) {
         int count = ThreadUtils.getSuitableThreadCount(THREAD_MULTIPLE);
         if (properties == null) {
@@ -674,9 +674,9 @@ public class ClientWorker implements Closeable {
     public class ConfigRpcTransportClient extends ConfigTransportClient {
         
         Map<String, ExecutorService> multiTaskExecutor = new ConcurrentHashMap<>();
-
+        
         private ExecutorService listenExecutor;
-
+        
         private final BlockingQueue<Object> listenExecutebell = new ArrayBlockingQueue<>(1);
         
         private final Object bellItem = new Object();
@@ -732,7 +732,7 @@ public class ClientWorker implements Closeable {
                 if (subscriber != null) {
                     NotifyCenter.deregisterSubscriber(subscriber);
                 }
-
+                
                 multiTaskExecutor.values().forEach((executor) -> {
                     if (executor != null && !executor.isShutdown()) {
                         LOGGER.info("Shutdown multi task executor {}", executor);
@@ -856,7 +856,7 @@ public class ClientWorker implements Closeable {
             });
             
             rpcClientInner.serverListFactory(new ServerListFactory() {
-
+                
                 @Override
                 public String genNextServer() {
                     return ConfigRpcTransportClient.super.serverListManager.genNextServer();
@@ -877,7 +877,7 @@ public class ClientWorker implements Closeable {
             });
             
             subscriber = new Subscriber() {
-
+                
                 @Override
                 public void onEvent(Event event) {
                     rpcClientInner.onServerListChange();

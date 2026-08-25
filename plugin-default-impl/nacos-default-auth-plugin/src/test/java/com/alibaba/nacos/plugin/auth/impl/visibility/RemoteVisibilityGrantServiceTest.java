@@ -51,23 +51,23 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class RemoteVisibilityGrantServiceTest {
-
+    
     @Mock
     private NacosRestTemplate nacosRestTemplate;
-
+    
     private RemoteVisibilityGrantService service;
-
+    
     @BeforeEach
     void setUp() throws Exception {
         prepareRemoteServer();
         service = new RemoteVisibilityGrantService(nacosRestTemplate);
     }
-
+    
     @AfterEach
     void tearDown() {
         RequestContextHolder.resetRequestAttributes();
     }
-
+    
     @Test
     void testGrantForwardsRequestToRemoteVisibilityApiWithAuthorizationHeader()
         throws Exception {
@@ -76,9 +76,9 @@ class RemoteVisibilityGrantServiceTest {
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
         when(nacosRestTemplate.<String>postForm(any(String.class), any(Header.class),
             any(Query.class), any(Map.class), eq(String.class))).thenReturn(okText());
-
+        
         service.grant("public", "skill", "demo", "bob", "rw");
-
+        
         ArgumentCaptor<Header> headerCaptor = ArgumentCaptor.forClass(Header.class);
         ArgumentCaptor<Query> queryCaptor = ArgumentCaptor.forClass(Query.class);
         ArgumentCaptor<Map<String, String>> bodyCaptor = ArgumentCaptor.forClass(Map.class);
@@ -93,7 +93,7 @@ class RemoteVisibilityGrantServiceTest {
         assertEquals("bob", bodyCaptor.getValue().get("username"));
         assertEquals("rw", bodyCaptor.getValue().get("action"));
     }
-
+    
     @Test
     void testRevokeForwardsRequestToRemoteVisibilityApiWithAccessTokenParameter()
         throws Exception {
@@ -102,9 +102,9 @@ class RemoteVisibilityGrantServiceTest {
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
         when(nacosRestTemplate.<String>delete(any(String.class), any(Header.class),
             any(Query.class), eq(String.class))).thenReturn(okText());
-
+        
         service.revoke("public", "agentspec", "agent-demo", "bob", "r");
-
+        
         ArgumentCaptor<Query> queryCaptor = ArgumentCaptor.forClass(Query.class);
         verify(nacosRestTemplate).delete(eq("http://127.0.0.1:8848/nacos/v3/auth/visibility"),
             any(Header.class), queryCaptor.capture(), eq(String.class));
@@ -116,51 +116,51 @@ class RemoteVisibilityGrantServiceTest {
         assertEquals("r", query.getValue("action"));
         assertEquals("token", query.getValue(Constants.ACCESS_TOKEN));
     }
-
+    
     @Test
     void testRemoteFailurePropagatesNacosException() throws Exception {
         when(nacosRestTemplate.<String>delete(any(String.class), any(Header.class),
             any(Query.class), eq(String.class))).thenReturn(
                 new HttpRestResult<>(Header.newInstance(), 403, "forbidden", "access denied"));
-
+        
         NacosException exception = assertThrows(NacosException.class,
             () -> service.revoke("public", "skill", "demo", "bob", "r"));
-
+        
         assertEquals(403, exception.getErrCode());
         assertEquals("access denied", exception.getErrMsg());
     }
-
+    
     @Test
     void testUnexpectedRemoteExceptionWrapsAsServerError() throws Exception {
         when(nacosRestTemplate.<String>postForm(any(String.class), any(Header.class),
             any(Query.class), any(Map.class), eq(String.class))).thenThrow(
                 new IllegalStateException("boom"));
-
+        
         NacosException exception = assertThrows(NacosException.class,
             () -> service.grant("public", "skill", "demo", "bob", "r"));
-
+        
         assertEquals(NacosException.SERVER_ERROR, exception.getErrCode());
         assertEquals("boom", exception.getErrMsg());
     }
-
+    
     @Test
     void testFindAuthorizedResourceNamesIsEmptyInConsoleRuntime() {
         List<String> actual =
             service.findAuthorizedResourceNames("bob", "public", "skill", "r");
-
+        
         assertTrue(actual.isEmpty());
     }
-
+    
     private static HttpRestResult<String> okText() {
         return new HttpRestResult<>(Header.newInstance(), 200, "ok", "success");
     }
-
+    
     private static void prepareRemoteServer() throws Exception {
         setRemoteServerUtilField("serverAddresses", Collections.singletonList("127.0.0.1:8848"));
         setRemoteServerUtilField("index", new AtomicInteger());
         setRemoteServerUtilField("remoteServerContextPath", "/nacos");
     }
-
+    
     private static void setRemoteServerUtilField(String fieldName, Object value) throws Exception {
         Field field = RemoteServerUtil.class.getDeclaredField(fieldName);
         field.setAccessible(true);

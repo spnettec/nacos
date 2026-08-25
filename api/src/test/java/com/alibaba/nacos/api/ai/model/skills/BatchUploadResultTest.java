@@ -23,14 +23,14 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class BatchUploadResultTest {
-
+    
     @Test
     void testAddResultGeneratesLegacyFields() {
         BatchUploadResult result = new BatchUploadResult();
         result.addResult(BatchUploadItemResult.success("successful-skill"));
         result.addResult(BatchUploadItemResult.failure("failed-skill", "INVALID_SKILL",
             "Invalid SKILL.md", "owner"));
-
+        
         assertEquals(2, result.getResults().size());
         assertEquals("successful-skill", result.getSucceeded().get(0));
         assertEquals(1, result.getFailed().size());
@@ -38,13 +38,13 @@ class BatchUploadResultTest {
         assertEquals("Invalid SKILL.md", result.getFailed().get(0).getReason());
         assertEquals("owner", result.getFailed().get(0).getOwner());
     }
-
+    
     @Test
     void testLegacyFieldsGenerateResults() {
         BatchUploadResult result = new BatchUploadResult();
         result.addSucceeded("successful-skill");
         result.addFailed("failed-skill", "owner", "Upload failed");
-
+        
         assertEquals(2, result.getResults().size());
         BatchUploadItemResult successfulItem = result.getResults().get(0);
         assertEquals("successful-skill", successfulItem.getName());

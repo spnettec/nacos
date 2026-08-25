@@ -41,13 +41,13 @@ import java.util.stream.Collectors;
  * @author liyunfei
  */
 public class ConfigChangePluginManager {
-
+    
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfigChangePluginManager.class);
-
+    
     private static final Integer PLUGIN_SERVICE_COUNT = 4;
-
+    
     private static final Integer POINT_CUT_TYPE_COUNT = ConfigChangePointCutTypes.values().length;
-
+    
     /**
      * The relationship of serviceType and  {@link ConfigChangePluginService} ,default capacity is the count of plugin
      * service.
@@ -55,7 +55,7 @@ public class ConfigChangePluginManager {
     private static final Map<String, ConfigChangePluginService> CONFIG_CHANGE_PLUGIN_SERVICE_MAP =
         new ConcurrentHashMap<>(
             PLUGIN_SERVICE_COUNT);
-
+    
     /**
      * The relationship of config change pointcut type and the list of {@link ConfigChangePluginService} will pointcut
      * it, default capacity is the count of pointcutTypes.
@@ -63,13 +63,13 @@ public class ConfigChangePluginManager {
     private static final Map<ConfigChangePointCutTypes, List<ConfigChangePluginService>> CONFIG_CHANGE_PLUGIN_SERVICES_MAP =
         new ConcurrentHashMap<>(
             POINT_CUT_TYPE_COUNT);
-
+    
     private static final ConfigChangePluginManager INSTANCE = new ConfigChangePluginManager();
-
+    
     private ConfigChangePluginManager() {
         loadConfigChangeServices();
     }
-
+    
     /**
      * Load all config change plugin services by spi.
      */
@@ -90,11 +90,11 @@ public class ConfigChangePluginManager {
         // sort plugin service
         sortPluginServiceByPointCut();
     }
-
+    
     public static ConfigChangePluginManager getInstance() {
         return INSTANCE;
     }
-
+    
     /**
      * Dynamic add new ConfigChangeService.
      *
@@ -111,7 +111,7 @@ public class ConfigChangePluginManager {
         addPluginServiceByPointCut(configChangePluginService);
         return true;
     }
-
+    
     /**
      * Get the plugin service queue of the pointcut method.
      *
@@ -126,7 +126,7 @@ public class ConfigChangePluginManager {
                 PluginType.CONFIG_CHANGE.getType(), service.getServiceType()))
             .collect(Collectors.toList());
     }
-
+    
     private static void addPluginServiceByPointCut(
         ConfigChangePluginService configChangePluginService) {
         ConfigChangePointCutTypes[] pointcutNames = configChangePluginService.pointcutMethodNames();
@@ -141,7 +141,7 @@ public class ConfigChangePluginManager {
             CONFIG_CHANGE_PLUGIN_SERVICES_MAP.put(name, configChangePluginServiceList);
         }
     }
-
+    
     private static void sortPluginServiceByPointCut() {
         CONFIG_CHANGE_PLUGIN_SERVICES_MAP.forEach((type, pluginServices) -> {
             List<ConfigChangePluginService> sortedList = new ArrayList<>(pluginServices);
@@ -149,13 +149,13 @@ public class ConfigChangePluginManager {
             CONFIG_CHANGE_PLUGIN_SERVICES_MAP.put(type, sortedList);
         });
     }
-
+    
     @JustForTest
     public static synchronized void reset() {
         CONFIG_CHANGE_PLUGIN_SERVICE_MAP.clear();
         CONFIG_CHANGE_PLUGIN_SERVICES_MAP.clear();
     }
-
+    
     /**
      * Get all config change plugin services.
      *

@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PluginTypeTest {
-
+    
     @Test
     @DisplayName("test AUTH enum values")
     void testAuthEnumValues() {
@@ -33,7 +33,7 @@ class PluginTypeTest {
         assertEquals(PluginExecutionMode.EXCLUSIVE, PluginType.AUTH.getExecutionMode());
         assertTrue(PluginType.AUTH.isCritical());
     }
-
+    
     @Test
     @DisplayName("test DATASOURCE_DIALECT enum values")
     void testDatasourceDialectEnumValues() {
@@ -43,7 +43,7 @@ class PluginTypeTest {
             PluginType.DATASOURCE_DIALECT.getExecutionMode());
         assertTrue(PluginType.DATASOURCE_DIALECT.isCritical());
     }
-
+    
     @Test
     @DisplayName("test CONFIG_CHANGE enum values")
     void testConfigChangeEnumValues() {
@@ -52,7 +52,7 @@ class PluginTypeTest {
         assertEquals(PluginExecutionMode.CHAIN, PluginType.CONFIG_CHANGE.getExecutionMode());
         assertFalse(PluginType.CONFIG_CHANGE.isCritical());
     }
-
+    
     @Test
     @DisplayName("test ENCRYPTION enum values")
     void testEncryptionEnumValues() {
@@ -60,7 +60,7 @@ class PluginTypeTest {
         assertEquals("Encryption plugin", PluginType.ENCRYPTION.getDescription());
         assertEquals(PluginExecutionMode.ROUTED, PluginType.ENCRYPTION.getExecutionMode());
     }
-
+    
     @Test
     @DisplayName("test TRACE enum values")
     void testTraceEnumValues() {
@@ -68,7 +68,7 @@ class PluginTypeTest {
         assertEquals("Trace plugin", PluginType.TRACE.getDescription());
         assertEquals(PluginExecutionMode.BROADCAST, PluginType.TRACE.getExecutionMode());
     }
-
+    
     @Test
     @DisplayName("test ENVIRONMENT enum values")
     void testEnvironmentEnumValues() {
@@ -78,7 +78,7 @@ class PluginTypeTest {
         assertEquals(PluginInitializationPhase.PRE_CONTEXT,
             PluginType.ENVIRONMENT.getInitializationPhase());
     }
-
+    
     @Test
     @DisplayName("test CONTROL enum values")
     void testControlEnumValues() {
@@ -86,7 +86,7 @@ class PluginTypeTest {
         assertEquals("Control plugin", PluginType.CONTROL.getDescription());
         assertEquals(PluginExecutionMode.EXCLUSIVE, PluginType.CONTROL.getExecutionMode());
     }
-
+    
     @Test
     @DisplayName("test VISIBILITY enum values")
     void testVisibilityEnumValues() {
@@ -94,7 +94,7 @@ class PluginTypeTest {
         assertEquals("Visibility plugin", PluginType.VISIBILITY.getDescription());
         assertEquals(PluginExecutionMode.ROUTED, PluginType.VISIBILITY.getExecutionMode());
     }
-
+    
     @Test
     @DisplayName("test AI_PIPELINE enum values")
     void testAiPipelineEnumValues() {
@@ -102,7 +102,7 @@ class PluginTypeTest {
         assertEquals("AI publish pipeline plugin", PluginType.AI_PIPELINE.getDescription());
         assertEquals(PluginExecutionMode.CHAIN, PluginType.AI_PIPELINE.getExecutionMode());
     }
-
+    
     @Test
     @DisplayName("test AI_STORAGE enum values")
     void testAiStorageEnumValues() {
@@ -111,7 +111,7 @@ class PluginTypeTest {
         assertEquals(PluginExecutionMode.ROUTED, PluginType.AI_STORAGE.getExecutionMode());
         assertTrue(PluginType.AI_STORAGE.isCritical());
     }
-
+    
     @Test
     @DisplayName("test AI_VECTOR enum values")
     void testAiVectorEnumValues() {
@@ -120,7 +120,7 @@ class PluginTypeTest {
         assertEquals(PluginExecutionMode.ROUTED, PluginType.AI_VECTOR.getExecutionMode());
         assertFalse(PluginType.AI_VECTOR.isCritical());
     }
-
+    
     @Test
     @DisplayName("test AI_RESOURCE_IMPORT enum values")
     void testAiResourceImportEnumValues() {
@@ -129,14 +129,14 @@ class PluginTypeTest {
         assertEquals(PluginExecutionMode.ROUTED,
             PluginType.AI_RESOURCE_IMPORT.getExecutionMode());
     }
-
+    
     @Test
     @DisplayName("test all enum values count")
     void testAllEnumValuesCount() {
         PluginType[] values = PluginType.values();
         assertEquals(12, values.length);
     }
-
+    
     @Test
     @DisplayName("test enum valueOf")
     void testEnumValueOf() {
@@ -146,7 +146,7 @@ class PluginTypeTest {
         assertEquals(PluginType.AI_VECTOR, PluginType.valueOf("AI_VECTOR"));
         assertEquals(PluginType.AI_RESOURCE_IMPORT, PluginType.valueOf("AI_RESOURCE_IMPORT"));
     }
-
+    
     @Test
     @DisplayName("test exclusive type capability")
     void testExclusiveTypeCapability() {
@@ -155,7 +155,7 @@ class PluginTypeTest {
         assertTrue(PluginType.CONTROL.isExclusive());
         assertFalse(PluginType.TRACE.isExclusive());
     }
-
+    
     @Test
     void testExecutionModeValues() {
         assertEquals(4, PluginExecutionMode.values().length);
@@ -165,7 +165,7 @@ class PluginTypeTest {
         assertEquals(PluginExecutionMode.ROUTED, PluginExecutionMode.valueOf("ROUTED"));
         assertEquals(PluginExecutionMode.BROADCAST, PluginExecutionMode.valueOf("BROADCAST"));
     }
-
+    
     @Test
     void testInitializationPhaseValues() {
         assertEquals(2, PluginInitializationPhase.values().length);

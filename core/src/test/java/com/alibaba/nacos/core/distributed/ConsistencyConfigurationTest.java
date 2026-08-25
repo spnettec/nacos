@@ -36,10 +36,10 @@ import static org.mockito.Mockito.mock;
  */
 @ExtendWith(MockitoExtension.class)
 class ConsistencyConfigurationTest {
-
+    
     @Mock
     private ServerMemberManager memberManager;
-
+    
     @Test
     void testStrongAgreementProtocolReturnsProtocol() throws Exception {
         ConsistencyConfiguration config = new ConsistencyConfiguration();
@@ -47,7 +47,7 @@ class ConsistencyConfigurationTest {
             mock(JRaftAuthUpgradeCoordinator.class));
         assertNotNull(protocol);
     }
-
+    
     @Test
     void testGetProtocolUsesBuilderWhenIteratorEmpty() throws Exception {
         ConsistencyConfiguration config = new ConsistencyConfiguration();

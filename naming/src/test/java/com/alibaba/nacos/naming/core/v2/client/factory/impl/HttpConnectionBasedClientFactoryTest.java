@@ -25,17 +25,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 
 class HttpConnectionBasedClientFactoryTest {
-
+    
     @Test
     void testFactory() {
         HttpConnectionBasedClientFactory factory = new HttpConnectionBasedClientFactory();
         ClientAttributes attributes = new ClientAttributes();
-
+        
         HttpConnectionBasedClient client =
             factory.newClient("HTTP_CLIENT@@client", attributes);
         HttpConnectionBasedClient syncedClient =
             factory.newSyncedClient("HTTP_CLIENT@@client", attributes);
-
+        
         assertEquals(ClientConstants.HTTP_CONNECTION_BASED, factory.getType());
         assertEquals("HTTP_CLIENT@@client", client.getClientId());
         assertEquals("HTTP_CLIENT@@client", syncedClient.getClientId());

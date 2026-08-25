@@ -44,8 +44,8 @@ class ConfigInfoTest {
     void setUp() {
         createTime = System.currentTimeMillis();
         mapper = JsonMapper.builder()
-                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-                .build();
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .build();
         basicInfo = new ConfigBasicInfo();
         detailInfo = new ConfigDetailInfo();
         grayInfo = new ConfigGrayInfo();

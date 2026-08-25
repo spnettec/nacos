@@ -63,52 +63,52 @@ import static org.mockito.Mockito.verifyNoInteractions;
  */
 @ExtendWith(MockitoExtension.class)
 class DefaultImportHttpClientTest {
-
+    
     @Mock
     private HttpClient httpClient;
-
+    
     @BeforeEach
     void setUp() throws Exception {
         lenient().when(httpClient.send(any(HttpRequest.class),
             anyBodyHandler())).thenReturn(response(200, "ok"));
     }
-
+    
     @Test
     void testRejectsHttpByDefault() {
         DefaultImportHttpClient client = newClient("93.184.216.34");
-
+        
         assertThrows(NacosException.class,
             () -> client.get("http://registry.example.com/index.json", "*/*"));
         verifyNoInteractions(httpClient);
     }
-
+    
     @Test
     void testRejectsResolvedPrivateAddressByDefault() {
         DefaultImportHttpClient client = newClient("127.0.0.1");
-
+        
         assertThrows(NacosException.class,
             () -> client.get("https://registry.example.com/index.json", "*/*"));
         verifyNoInteractions(httpClient);
     }
-
+    
     @Test
     void testAllowsPrivateAddressWhenSourceOptIn() throws Exception {
         DefaultImportHttpClient client = newClient("127.0.0.1", false, true, 1024);
-
+        
         ImportHttpResponse response =
             client.get("https://registry.example.com/index.json", "*/*");
-
+        
         assertEquals(200, response.getStatusCode());
         assertEquals("ok", new String(response.getBody(), StandardCharsets.UTF_8));
     }
-
+    
     @Test
     void testAllowsHttpWhenCamelPropertyOptIn() throws Exception {
         DefaultImportHttpClient client = newClient("93.184.216.34", true, false, 1024);
-
+        
         ImportHttpResponse response =
             client.get("http://registry.example.com/index.json", 3, "application/json");
-
+        
         assertEquals(200, response.getStatusCode());
         assertEquals("ok", new String(response.getBody(), StandardCharsets.UTF_8));
         org.mockito.Mockito.verify(httpClient).send(argThat(
@@ -116,277 +116,277 @@ class DefaultImportHttpClientTest {
                 && request.headers().firstValue("Accept").orElse("").equals("application/json")),
             anyBodyHandler());
     }
-
+    
     @Test
     void testRejectsOversizedResponse() throws Exception {
         lenient().when(httpClient.send(any(HttpRequest.class),
             anyBodyHandler())).thenReturn(response(200, "toolong"));
         DefaultImportHttpClient client = newClient("93.184.216.34", false, false, 2);
-
+        
         assertThrows(NacosException.class,
             () -> client.get("https://registry.example.com/index.json", "*/*"));
     }
-
+    
     @Test
     void testRejectsBlankUrl() {
         DefaultImportHttpClient client = newClient("93.184.216.34");
-
+        
         assertThrows(NacosException.class, () -> client.get(" ", "*/*"));
         verifyNoInteractions(httpClient);
     }
-
+    
     @Test
     void testRejectsRelativeUrl() {
         DefaultImportHttpClient client = newClient("93.184.216.34");
-
+        
         assertThrows(NacosException.class, () -> client.get("/index.json", "*/*"));
         verifyNoInteractions(httpClient);
     }
-
+    
     @Test
     void testRejectsMalformedUrl() {
         DefaultImportHttpClient client = newClient("93.184.216.34");
-
+        
         assertThrows(NacosException.class,
             () -> client.get("https://[bad", "*/*"));
         verifyNoInteractions(httpClient);
     }
-
+    
     @Test
     void testRejectsUnsupportedScheme() {
         DefaultImportHttpClient client = newClient("93.184.216.34");
-
+        
         assertThrows(NacosException.class,
             () -> client.get("ftp://registry.example.com/index.json", "*/*"));
         verifyNoInteractions(httpClient);
     }
-
+    
     @Test
     void testHttpClientConstructorUsesDefaultPolicy() {
         DefaultImportHttpClient client = new DefaultImportHttpClient(httpClient);
-
+        
         assertThrows(NacosException.class,
             () -> client.get("http://registry.example.com/index.json", "*/*"));
         verifyNoInteractions(httpClient);
     }
-
+    
     @Test
     void testDefaultConstructorUsesDefaultPolicy() {
         DefaultImportHttpClient client = new DefaultImportHttpClient();
-
+        
         assertThrows(NacosException.class, () -> client.get(" ", "*/*"));
     }
-
+    
     @Test
     void testRejectsMissingHost() {
         DefaultImportHttpClient client = newClient("93.184.216.34");
-
+        
         assertThrows(NacosException.class,
             () -> client.get("https:///index.json", "*/*"));
         verifyNoInteractions(httpClient);
     }
-
+    
     @Test
     void testRejectsLocalhostWithoutResolvingDns() {
         DefaultImportHttpClient client = new DefaultImportHttpClient(httpClient, host -> {
             throw new AssertionError("localhost should be rejected before DNS lookup");
         });
-
+        
         assertThrows(NacosException.class,
             () -> client.get("https://api.localhost/index.json", "*/*"));
         verifyNoInteractions(httpClient);
     }
-
+    
     @Test
     void testRejectsUnknownHost() {
         DefaultImportHttpClient client = new DefaultImportHttpClient(httpClient, host -> {
             throw new UnknownHostException(host);
         });
-
+        
         assertThrows(NacosException.class,
             () -> client.get("https://registry.example.com/index.json", "*/*"));
         verifyNoInteractions(httpClient);
     }
-
+    
     @Test
     void testRejectsEmptyDnsResult() {
         DefaultImportHttpClient client =
             new DefaultImportHttpClient(httpClient, host -> new InetAddress[0]);
-
+        
         assertThrows(NacosException.class,
             () -> client.get("https://registry.example.com/index.json", "*/*"));
         verifyNoInteractions(httpClient);
     }
-
+    
     @Test
     void testUsesDefaultMaxResponseBytes() throws Exception {
         DefaultImportHttpClient client = newClient("93.184.216.34");
-
+        
         ImportHttpResponse response =
             client.get("https://registry.example.com/index.json", null);
-
+        
         assertEquals(200, response.getStatusCode());
         assertEquals("ok", new String(response.getBody(), StandardCharsets.UTF_8));
     }
-
+    
     @Test
     void testLimitedBodyHandlerReadsChunks() throws Exception {
         DefaultImportHttpClient client =
             new DefaultImportHttpClient(new BodyHandlerHttpClient("ok", false),
                 host -> new InetAddress[] {InetAddress.getByName("93.184.216.34")});
-
+        
         ImportHttpResponse response =
             client.get("https://registry.example.com/index.json", "*/*");
-
+        
         assertEquals(200, response.getStatusCode());
         assertEquals("ok", new String(response.getBody(), StandardCharsets.UTF_8));
     }
-
+    
     @Test
     void testLimitedBodyHandlerRejectsOversizedChunks() {
         DefaultImportHttpClient client =
             new DefaultImportHttpClient(new BodyHandlerHttpClient("toolong", false),
                 host -> new InetAddress[] {InetAddress.getByName("93.184.216.34")},
                 false, false, 2);
-
+        
         assertThrows(Exception.class,
             () -> client.get("https://registry.example.com/index.json", "*/*"));
     }
-
+    
     @Test
     void testLimitedBodyHandlerIgnoresChunksAfterError() {
         DefaultImportHttpClient client =
             new DefaultImportHttpClient(new BodyHandlerHttpClient("ok", true),
                 host -> new InetAddress[] {InetAddress.getByName("93.184.216.34")});
-
+        
         assertThrows(Exception.class,
             () -> client.get("https://registry.example.com/index.json", "*/*"));
     }
-
+    
     private DefaultImportHttpClient newClient(String address) {
         return newClient(address, false, false, 10L * 1024L * 1024L);
     }
-
+    
     private DefaultImportHttpClient newClient(String address, boolean allowHttp,
         boolean allowPrivateNetwork, long maxResponseBytes) {
         return new DefaultImportHttpClient(httpClient,
             host -> new InetAddress[] {InetAddress.getByName(address)}, allowHttp,
             allowPrivateNetwork, maxResponseBytes);
     }
-
+    
     private HttpResponse.BodyHandler<byte[]> anyBodyHandler() {
         return any();
     }
-
+    
     private HttpResponse<byte[]> response(int status, String body) {
         Map<String, java.util.List<String>> headers = new HashMap<>(1);
         headers.put("Content-Type", Collections.singletonList("application/json"));
         byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
         return response(status, bytes, headers);
     }
-
+    
     private HttpResponse<byte[]> response(int status, byte[] bytes,
         Map<String, java.util.List<String>> headers) {
         return new HttpResponse<>() {
-
+            
             @Override
             public int statusCode() {
                 return status;
             }
-
+            
             @Override
             public HttpRequest request() {
                 return null;
             }
-
+            
             @Override
             public Optional<HttpResponse<byte[]>> previousResponse() {
                 return Optional.empty();
             }
-
+            
             @Override
             public HttpHeaders headers() {
                 return HttpHeaders.of(headers, (key, value) -> true);
             }
-
+            
             @Override
             public byte[] body() {
                 return bytes;
             }
-
+            
             @Override
             public Optional<SSLSession> sslSession() {
                 return Optional.empty();
             }
-
+            
             @Override
             public URI uri() {
                 return null;
             }
-
+            
             @Override
             public HttpClient.Version version() {
                 return HttpClient.Version.HTTP_1_1;
             }
         };
     }
-
+    
     private class BodyHandlerHttpClient extends HttpClient {
-
+        
         private final String body;
-
+        
         private final boolean completeWithError;
-
+        
         BodyHandlerHttpClient(String body, boolean completeWithError) {
             this.body = body;
             this.completeWithError = completeWithError;
         }
-
+        
         @Override
         public Optional<CookieHandler> cookieHandler() {
             return Optional.empty();
         }
-
+        
         @Override
         public Optional<Duration> connectTimeout() {
             return Optional.empty();
         }
-
+        
         @Override
         public Redirect followRedirects() {
             return Redirect.NEVER;
         }
-
+        
         @Override
         public Optional<ProxySelector> proxy() {
             return Optional.empty();
         }
-
+        
         @Override
         public SSLContext sslContext() {
             return null;
         }
-
+        
         @Override
         public SSLParameters sslParameters() {
             return null;
         }
-
+        
         @Override
         public Optional<Authenticator> authenticator() {
             return Optional.empty();
         }
-
+        
         @Override
         public Version version() {
             return Version.HTTP_1_1;
         }
-
+        
         @Override
         public Optional<Executor> executor() {
             return Optional.empty();
         }
-
+        
         @Override
         @SuppressWarnings("unchecked")
         public <T> HttpResponse<T> send(HttpRequest request,
@@ -394,28 +394,28 @@ class DefaultImportHttpClientTest {
             InterruptedException {
             HttpResponse.BodySubscriber<T> subscriber = responseBodyHandler.apply(
                 new HttpResponse.ResponseInfo() {
-
+                    
                     @Override
                     public int statusCode() {
                         return 200;
                     }
-
+                    
                     @Override
                     public HttpHeaders headers() {
                         return HttpHeaders.of(Collections.emptyMap(), (key, value) -> true);
                     }
-
+                    
                     @Override
                     public Version version() {
                         return Version.HTTP_1_1;
                     }
                 });
             subscriber.onSubscribe(new Flow.Subscription() {
-
+                
                 @Override
                 public void request(long n) {
                 }
-
+                
                 @Override
                 public void cancel() {
                 }
@@ -435,13 +435,13 @@ class DefaultImportHttpClientTest {
             headers.put("Content-Type", Collections.singletonList("application/json"));
             return (HttpResponse<T>) response(200, (byte[]) responseBody, headers);
         }
-
+        
         @Override
         public <T> CompletableFuture<HttpResponse<T>> sendAsync(HttpRequest request,
             HttpResponse.BodyHandler<T> responseBodyHandler) {
             return CompletableFuture.failedFuture(new UnsupportedOperationException());
         }
-
+        
         @Override
         public <T> CompletableFuture<HttpResponse<T>> sendAsync(HttpRequest request,
             HttpResponse.BodyHandler<T> responseBodyHandler,

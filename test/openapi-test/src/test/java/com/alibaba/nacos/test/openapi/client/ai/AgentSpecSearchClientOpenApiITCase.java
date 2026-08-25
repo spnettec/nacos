@@ -45,9 +45,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author xiweng.yy
  */
 public class AgentSpecSearchClientOpenApiITCase extends AgentSpecOpenApiBaseITCase {
-
+    
     private static final String AGENT_SPEC_SEARCH_PATH = AGENT_SPEC_CLIENT_PATH + "/search";
 
+    private static final int SEARCH_MAX_RETRIES = 120;
+
+    private static final long SEARCH_RETRY_INTERVAL_MILLIS = 250L;
+    
     @Test
     public void testSearchAgentSpecsByKeywordAndPagination() throws Exception {
         String suffix = randomAgentSpecSuffix();
@@ -55,16 +59,22 @@ public class AgentSpecSearchClientOpenApiITCase extends AgentSpecOpenApiBaseITCa
         String secondName = "oit-search-b-" + suffix;
         publishAgentSpec(firstName, "1.0.0", null, "Search AgentSpec A", "search-a", "soul a");
         addCleanup(() -> deleteAgentSpec(firstName));
+        updateAgentSpecBizTags(firstName, "[\"openapi-it\"]");
         publishAgentSpec(secondName, "1.0.0", null, "Search AgentSpec B", "search-b", "soul b");
         addCleanup(() -> deleteAgentSpec(secondName));
-
-        JsonNode both = search(Query.newInstance().addParam("keyword", suffix));
+        updateAgentSpecBizTags(secondName, "[\"openapi-it\"]");
+        
+        JsonNode both = waitForSearchTotal(Query.newInstance().addParam("keyword", suffix), 2);
         JsonNode bothPage = both.get("data");
         assertEquals(1, bothPage.get("pageNumber").asInt(), bothPage.toString());
         assertEquals(2, bothPage.get("totalCount").asInt(), bothPage.toString());
         assertContainsAgentSpec(bothPage, firstName, "Search AgentSpec A");
         assertContainsAgentSpec(bothPage, secondName, "Search AgentSpec B");
 
+        JsonNode tagged = search(Query.newInstance().addParam("keyword", suffix)
+                .addParam("tagsAll", "openapi-it"));
+        assertEquals(2, tagged.get("data").get("totalCount").asInt(), tagged.toString());
+        
         JsonNode paged = search(Query.newInstance().addParam("keyword", suffix)
                 .addParam("pageNo", "1").addParam("pageSize", "1"));
         JsonNode pagedData = paged.get("data");
@@ -72,26 +82,27 @@ public class AgentSpecSearchClientOpenApiITCase extends AgentSpecOpenApiBaseITCa
         assertEquals(2, pagedData.get("totalCount").asInt(), pagedData.toString());
         assertEquals(2, pagedData.get("pagesAvailable").asInt(), pagedData.toString());
         assertEquals(1, pagedData.get("pageItems").size(), pagedData.toString());
-
+        
         JsonNode firstOnly = search(Query.newInstance().addParam("keyword", "search-a-" + suffix));
         JsonNode firstOnlyPage = firstOnly.get("data");
         assertEquals(1, firstOnlyPage.get("totalCount").asInt(), firstOnlyPage.toString());
         assertContainsAgentSpec(firstOnlyPage, firstName, "Search AgentSpec A");
         assertNotContainsAgentSpec(firstOnlyPage, secondName);
     }
-
+    
     @Test
     public void testSearchAgentSpecsEmptyKeywordUsesPublicNamespace() throws Exception {
         String name = randomAgentSpecName("open-search");
         publishAgentSpec(name, "1.0.0", null, "Open Search AgentSpec", "open-search", "open soul");
         addCleanup(() -> deleteAgentSpec(name));
-
-        JsonNode root = search(Query.newInstance().addParam("pageNo", "1").addParam("pageSize", "500"));
+        
+        JsonNode root = waitForSearchContains(Query.newInstance().addParam("pageNo", "1")
+                .addParam("pageSize", "500"), name);
         JsonNode page = root.get("data");
         assertEquals(1, page.get("pageNumber").asInt(), page.toString());
         assertContainsAgentSpec(page, name, "Open Search AgentSpec");
     }
-
+    
     @Test
     public void testSearchAgentSpecsNoMatchReturnsEmptyPage() throws Exception {
         JsonNode root = search(Query.newInstance().addParam("keyword", "no-match-" + randomAgentSpecSuffix()));
@@ -101,7 +112,7 @@ public class AgentSpecSearchClientOpenApiITCase extends AgentSpecOpenApiBaseITCa
         assertEquals(0, page.get("pagesAvailable").asInt(), page.toString());
         assertEquals(0, page.get("pageItems").size(), page.toString());
     }
-
+    
     @Test
     public void testSearchAgentSpecsInvalidPaginationReturnsBadRequest() throws Exception {
         assertError(getRaw(AGENT_SPEC_SEARCH_PATH + "?pageNo=0"), 400,
@@ -109,21 +120,52 @@ public class AgentSpecSearchClientOpenApiITCase extends AgentSpecOpenApiBaseITCa
         assertError(getRaw(AGENT_SPEC_SEARCH_PATH + "?pageSize=0"), 400,
                 ErrorCode.PARAMETER_VALIDATE_ERROR, "pageSize");
     }
-
+    
     private JsonNode search(Query query) throws Exception {
         return getJsonOk(AGENT_SPEC_SEARCH_PATH, query);
     }
 
+    private JsonNode waitForSearchTotal(Query query, int expectedTotal) throws Exception {
+        JsonNode last = null;
+        for (int retry = 0; retry <= SEARCH_MAX_RETRIES; retry++) {
+            last = search(query);
+            if (last.get("data").get("totalCount").asInt() == expectedTotal) {
+                return last;
+            }
+            if (retry < SEARCH_MAX_RETRIES) {
+                Thread.sleep(SEARCH_RETRY_INTERVAL_MILLIS);
+            }
+        }
+        assertEquals(expectedTotal, last.get("data").get("totalCount").asInt(),
+                last.toString());
+        return last;
+    }
+
+    private JsonNode waitForSearchContains(Query query, String name) throws Exception {
+        JsonNode last = null;
+        for (int retry = 0; retry <= SEARCH_MAX_RETRIES; retry++) {
+            last = search(query);
+            if (!findAgentSpec(last.get("data"), name).isMissingNode()) {
+                return last;
+            }
+            if (retry < SEARCH_MAX_RETRIES) {
+                Thread.sleep(SEARCH_RETRY_INTERVAL_MILLIS);
+            }
+        }
+        assertContainsAgentSpec(last.get("data"), name, "Open Search AgentSpec");
+        return last;
+    }
+    
     private void assertContainsAgentSpec(JsonNode page, String name, String description) {
         JsonNode found = findAgentSpec(page, name);
         assertFalse(found.isMissingNode(), page.toString());
         assertEquals(description, found.get("description").asText(), found.toString());
     }
-
+    
     private void assertNotContainsAgentSpec(JsonNode page, String name) {
         assertTrue(findAgentSpec(page, name).isMissingNode(), page.toString());
     }
-
+    
     private JsonNode findAgentSpec(JsonNode page, String name) {
         for (JsonNode item : page.get("pageItems")) {
             if (name.equals(item.get("name").asText())) {

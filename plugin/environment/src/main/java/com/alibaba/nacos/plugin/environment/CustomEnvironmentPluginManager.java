@@ -38,15 +38,15 @@ import java.util.Set;
  * @author : huangtianhui
  */
 public class CustomEnvironmentPluginManager {
-
+    
     private static final Logger LOGGER =
         LoggerFactory.getLogger(CustomEnvironmentPluginManager.class);
-
+    
     private static final CustomEnvironmentPluginManager INSTANCE =
         new CustomEnvironmentPluginManager();
-
+    
     private volatile List<CustomEnvironmentPluginService> services = Collections.emptyList();
-
+    
     /**
      * Replace the services with instances initialized by the pre-context plugin flow.
      *
@@ -77,11 +77,11 @@ public class CustomEnvironmentPluginManager {
             Comparator.comparingInt(CustomEnvironmentPluginService::order));
         services = Collections.unmodifiableList(initializedServices);
     }
-
+    
     public static CustomEnvironmentPluginManager getInstance() {
         return INSTANCE;
     }
-
+    
     public Set<String> getPropertyKeys() {
         Set<String> keys = new HashSet<>();
         for (CustomEnvironmentPluginService customEnvironmentPluginService : services) {
@@ -89,7 +89,7 @@ public class CustomEnvironmentPluginManager {
         }
         return keys;
     }
-
+    
     public Map<String, Object> getCustomValues(Map<String, Object> sourceProperty) {
         Map<String, Object> customValuesMap = new HashMap<>(1);
         for (CustomEnvironmentPluginService customEnvironmentPluginService : services) {
@@ -112,7 +112,7 @@ public class CustomEnvironmentPluginManager {
         customValuesMap.entrySet().removeIf(entry -> Objects.isNull(entry.getValue()));
         return customValuesMap;
     }
-
+    
     /**
      * Injection realization.
      *

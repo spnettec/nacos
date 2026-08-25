@@ -31,13 +31,13 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PluginConfigSourceRegistryTest {
-
+    
     @Test
     void testDefaultRegistryUsesFixedSourceOrder() {
         PluginConfigSourceRegistry registry = new PluginConfigSourceRegistry();
-
+        
         List<PluginConfigSourceResolver> resolvers = registry.getSourceResolvers();
-
+        
         assertEquals(Arrays.asList(PluginConfigSourceType.LOCAL_ONLY,
             PluginConfigSourceType.RUNTIME_PERSISTED, PluginConfigSourceType.STATIC,
             PluginConfigSourceType.DEFAULT),
@@ -46,7 +46,7 @@ class PluginConfigSourceRegistryTest {
         assertThrows(UnsupportedOperationException.class,
             () -> resolvers.add(new TestSourceResolver(PluginConfigSourceType.DEFAULT)));
     }
-
+    
     @Test
     void testRegistryDelegatesSourceLifecycle() {
         TestSourceResolver staticResolver = new TestSourceResolver(PluginConfigSourceType.STATIC);
@@ -56,12 +56,12 @@ class PluginConfigSourceRegistryTest {
         PluginInfo pluginInfo = new PluginInfo();
         Map<String, Map<String, String>> restored = Collections.singletonMap("trace:test",
             Collections.singletonMap("key", "value"));
-
+        
         registry.initializeConfig(PluginConfigSourceType.STATIC, pluginInfo);
         registry.refreshConfig(PluginConfigSourceType.STATIC, pluginInfo);
         registry.initializePersistedConfigs();
         registry.restorePersistedConfigs(restored);
-
+        
         assertSame(staticResolver,
             registry.getSourceResolver(PluginConfigSourceType.STATIC));
         assertTrue(staticResolver.initialized);
@@ -69,12 +69,12 @@ class PluginConfigSourceRegistryTest {
         assertTrue(persistedResolver.persistedInitialized);
         assertEquals(restored, registry.getAllPersistedConfigs());
     }
-
+    
     @Test
     void testRegistryRejectsDuplicateAndMissingSources() {
         List<PluginConfigSourceResolver> duplicateSources = defaultSources();
         duplicateSources.add(new TestSourceResolver(PluginConfigSourceType.DEFAULT));
-
+        
         IllegalArgumentException duplicateException = assertThrows(IllegalArgumentException.class,
             () -> new PluginConfigSourceRegistry(duplicateSources));
         IllegalArgumentException missingException = assertThrows(IllegalArgumentException.class,
@@ -87,13 +87,13 @@ class PluginConfigSourceRegistryTest {
         IllegalArgumentException unsupportedException = assertThrows(
             IllegalArgumentException.class,
             () -> new PluginConfigSourceRegistry(unsupportedPersistedSource));
-
+        
         assertTrue(duplicateException.getMessage().contains("Duplicate"));
         assertTrue(missingException.getMessage().contains("Required"));
         assertTrue(unknownException.getMessage().contains("not found"));
         assertTrue(unsupportedException.getMessage().contains("persistence lifecycle"));
     }
-
+    
     private PluginConfigSourceRegistry registryWithResolvers(
         PluginConfigSourceResolver staticResolver,
         PersistedPluginConfigSourceResolver persistedResolver) {
@@ -102,7 +102,7 @@ class PluginConfigSourceRegistryTest {
         sources.set(2, staticResolver);
         return new PluginConfigSourceRegistry(sources);
     }
-
+    
     private List<PluginConfigSourceResolver> defaultSources() {
         return new java.util.ArrayList<>(Arrays.asList(
             new TestSourceResolver(PluginConfigSourceType.LOCAL_ONLY),
@@ -110,70 +110,70 @@ class PluginConfigSourceRegistryTest {
             new TestSourceResolver(PluginConfigSourceType.STATIC),
             new TestSourceResolver(PluginConfigSourceType.DEFAULT)));
     }
-
+    
     private static class TestPersistedSourceResolver extends TestSourceResolver
         implements PersistedPluginConfigSourceResolver {
-
+        
         private boolean persistedInitialized;
-
+        
         private Map<String, Map<String, String>> configs = Collections.emptyMap();
-
+        
         TestPersistedSourceResolver() {
             super(PluginConfigSourceType.RUNTIME_PERSISTED);
         }
-
+        
         @Override
         public void initialize() {
             persistedInitialized = true;
         }
-
+        
         @Override
         public boolean isAvailable() {
             return true;
         }
-
+        
         @Override
         public Map<String, Map<String, String>> getAllConfigs() {
             return configs;
         }
-
+        
         @Override
         public void restoreConfigs(Map<String, Map<String, String>> configs) {
             this.configs = configs;
         }
-
+        
         @Override
         public void shutdown() {
         }
     }
-
+    
     private static class TestSourceResolver implements PluginConfigSourceResolver {
-
+        
         private final PluginConfigSourceType sourceType;
-
+        
         private boolean initialized;
-
+        
         private boolean refreshed;
-
+        
         TestSourceResolver(PluginConfigSourceType sourceType) {
             this.sourceType = sourceType;
         }
-
+        
         @Override
         public void initializeConfig(PluginInfo pluginInfo) {
             initialized = true;
         }
-
+        
         @Override
         public void refreshConfig(PluginInfo pluginInfo) {
             refreshed = true;
         }
-
+        
         @Override
         public Map<String, String> getConfig(PluginInfo pluginInfo) {
             return Collections.emptyMap();
         }
-
+        
         @Override
         public PluginConfigSourceType getSourceType() {
             return sourceType;

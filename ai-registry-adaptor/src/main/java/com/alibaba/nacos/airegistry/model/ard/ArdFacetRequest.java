@@ -22,33 +22,33 @@ package com.alibaba.nacos.airegistry.model.ard;
  * @author nacos
  */
 public class ArdFacetRequest {
-
+    
     private String field;
-
+    
     private Integer limit;
-
+    
     private Integer minCount;
-
+    
     public String getField() {
         return field;
     }
-
+    
     public void setField(String field) {
         this.field = field;
     }
-
+    
     public Integer getLimit() {
         return limit;
     }
-
+    
     public void setLimit(Integer limit) {
         this.limit = limit;
     }
-
+    
     public Integer getMinCount() {
         return minCount;
     }
-
+    
     public void setMinCount(Integer minCount) {
         this.minCount = minCount;
     }

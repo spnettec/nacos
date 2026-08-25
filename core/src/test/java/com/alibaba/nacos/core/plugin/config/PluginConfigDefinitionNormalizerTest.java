@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PluginConfigDefinitionNormalizerTest {
-
+    
     @Test
     void testEmptyDefinitions() {
         assertTrue(PluginConfigDefinitionNormalizer.normalize("trace:test", null,
@@ -42,7 +42,7 @@ class PluginConfigDefinitionNormalizerTest {
         assertTrue(PluginConfigDefinitionNormalizer.normalize("trace:test",
             Collections.emptyList(), PluginInitializationPhase.STANDARD).isEmpty());
     }
-
+    
     @Test
     void testIgnoreInvalidAndConflictingDefinitionsAndAliases() {
         ConfigItemDefinition first = definition("first");
@@ -59,12 +59,12 @@ class PluginConfigDefinitionNormalizerTest {
         third.setAliases(Arrays.asList("nacos.plugin.trace.test.first",
             "nacos.plugin.trace.test.third", "legacy.third"));
         ConfigItemDefinition fullKey = definition("nacos.legacy.key");
-
+        
         List<ConfigItemDefinition> result = PluginConfigDefinitionNormalizer.normalize(
             "trace:test", Arrays.asList(null, first, duplicateKey, aliasClaimedKey, reserved,
                 normalizedReserved, blank, third, fullKey),
             PluginInitializationPhase.STANDARD);
-
+        
         assertEquals(3, result.size());
         assertEquals("first", result.get(0).getKey());
         assertEquals(Arrays.asList("legacy.first", "nacos.legacy.first", "second"),
@@ -73,7 +73,7 @@ class PluginConfigDefinitionNormalizerTest {
         assertEquals(Collections.singletonList("legacy.third"), result.get(1).getAliases());
         assertEquals("nacos.legacy.key", result.get(2).getKey());
     }
-
+    
     @Test
     void testCopyMetadataAndNormalizePreContextEffectMode() {
         ConfigItemDefinition source =
@@ -85,11 +85,11 @@ class PluginConfigDefinitionNormalizerTest {
         source.setAliases(null);
         source.setSensitive(true);
         source.setEffectMode(ConfigItemEffectMode.RUNTIME);
-
+        
         List<ConfigItemDefinition> standard = PluginConfigDefinitionNormalizer.normalize(
             "trace:test", Collections.singletonList(source),
             PluginInitializationPhase.STANDARD);
-
+        
         ConfigItemDefinition standardCopy = standard.get(0);
         assertNotSame(source, standardCopy);
         assertEquals(source.getKey(), standardCopy.getKey());
@@ -111,22 +111,22 @@ class PluginConfigDefinitionNormalizerTest {
         assertThrows(UnsupportedOperationException.class,
             () -> standard.add(definition("other")));
     }
-
+    
     @Test
     void testPluginIdWithoutSeparatorKeepsRawInputKeys() {
         ConfigItemDefinition first = definition("first");
         first.setAliases(Collections.singletonList("legacy"));
         ConfigItemDefinition second = definition("second");
         second.setAliases(Collections.singletonList("nacos.legacy"));
-
+        
         List<ConfigItemDefinition> result = PluginConfigDefinitionNormalizer.normalize(
             "invalid", Arrays.asList(first, second), PluginInitializationPhase.STANDARD);
-
+        
         assertEquals(2, result.size());
         assertFalse(result.get(0).getAliases().isEmpty());
         assertFalse(result.get(1).getAliases().isEmpty());
     }
-
+    
     private ConfigItemDefinition definition(String key) {
         return new ConfigItemDefinition(key, key, ConfigItemType.STRING);
     }

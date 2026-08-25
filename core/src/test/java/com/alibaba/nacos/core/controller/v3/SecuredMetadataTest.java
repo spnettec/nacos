@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class SecuredMetadataTest {
-
+    
     @Test
     void testServerLoaderUsesConsoleSignType() {
         assertConsoleSignType("currentClients");
@@ -37,7 +37,7 @@ class SecuredMetadataTest {
         assertConsoleSignType("reloadSingle");
         assertConsoleSignType("loaderMetrics");
     }
-
+    
     private void assertConsoleSignType(String methodName) {
         Method method = Arrays.stream(ServerLoaderControllerV3.class.getDeclaredMethods())
             .filter(candidate -> methodName.equals(candidate.getName()))

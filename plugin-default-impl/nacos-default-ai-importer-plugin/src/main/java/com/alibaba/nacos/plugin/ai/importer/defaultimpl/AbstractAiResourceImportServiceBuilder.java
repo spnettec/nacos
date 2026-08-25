@@ -44,27 +44,27 @@ import java.util.Set;
  */
 public abstract class AbstractAiResourceImportServiceBuilder
     implements AiResourceImportServiceBuilder {
-
+    
     private final String pluginName;
-
+    
     private final String importerType;
-
+    
     private final String defaultDisplayName;
-
+    
     private final String defaultDescription;
-
+    
     private final Set<String> resourceTypes;
-
+    
     private final String fixedEndpoint;
-
+    
     private final boolean configurableEndpoint;
-
+    
     private final List<ConfigItemDefinition> definitions;
-
+    
     private volatile ConfigSnapshot snapshot;
-
+    
     private volatile boolean initialized;
-
+    
     protected AbstractAiResourceImportServiceBuilder(String pluginName, String importerType,
         String defaultDisplayName, String defaultDescription, Set<String> resourceTypes,
         String fixedEndpoint, String legacyPrefix, String... endpointAliases) {
@@ -79,48 +79,48 @@ public abstract class AbstractAiResourceImportServiceBuilder
         this.definitions = buildDefinitions(legacyPrefix, endpointAliases);
         this.snapshot = parseConfig(Collections.emptyMap());
     }
-
+    
     @Override
     public final String pluginName() {
         return pluginName;
     }
-
+    
     @Override
     public final String importerType() {
         return importerType;
     }
-
+    
     @Override
     public final String displayName() {
         return snapshot.getDisplayName();
     }
-
+    
     @Override
     public final String description() {
         return snapshot.getDescription();
     }
-
+    
     @Override
     public final Set<String> supportedResourceTypes() {
         return resourceTypes;
     }
-
+    
     @Override
     public final List<ConfigItemDefinition> getConfigDefinitions() {
         return definitions;
     }
-
+    
     @Override
     public final synchronized void applyConfig(Map<String, String> config) {
         snapshot = parseConfig(config == null ? Collections.emptyMap() : config);
         initialized = true;
     }
-
+    
     @Override
     public final Map<String, String> getCurrentConfig() {
         return new LinkedHashMap<>(snapshot.getValues());
     }
-
+    
     @Override
     public final AiResourceImportService build() throws NacosException {
         if (!initialized) {
@@ -130,10 +130,10 @@ public abstract class AbstractAiResourceImportServiceBuilder
         validateEndpoint(current);
         return createService(current);
     }
-
+    
     protected abstract AiResourceImportService createService(ConfigSnapshot config)
         throws NacosException;
-
+    
     private List<ConfigItemDefinition> buildDefinitions(String legacyPrefix,
         String... endpointAliases) {
         List<ConfigItemDefinition> result = new ArrayList<>();
@@ -174,14 +174,14 @@ public abstract class AbstractAiResourceImportServiceBuilder
             legacyAliases(legacyPrefix, AiResourceImportConstants.CONFIG_MAX_ARTIFACT_SIZE)));
         return Collections.unmodifiableList(result);
     }
-
+    
     private ConfigItemDefinition definition(String key, String name, ConfigItemType type,
         String defaultValue, String description, ConfigItemEffectMode effectMode,
         List<String> aliases) {
         return new ConfigItemDefinition.Builder(key, name, type).defaultValue(defaultValue)
             .description(description).effectMode(effectMode).aliases(aliases).build();
     }
-
+    
     private List<String> displayNameAliases(String legacyPrefix) {
         if (StringUtils.isBlank(legacyPrefix)) {
             return Collections.emptyList();
@@ -189,12 +189,12 @@ public abstract class AbstractAiResourceImportServiceBuilder
         return Arrays.asList(legacyPrefix + AiResourceImportConstants.CONFIG_DISPLAY_NAME,
             legacyPrefix + "displayName");
     }
-
+    
     private List<String> legacyAliases(String legacyPrefix, String itemKey) {
         return StringUtils.isBlank(legacyPrefix) ? Collections.emptyList()
             : Collections.singletonList(legacyPrefix + itemKey);
     }
-
+    
     private ConfigSnapshot parseConfig(Map<String, String> config) {
         Map<String, String> values = new LinkedHashMap<>();
         String endpoint = fixedEndpoint;
@@ -234,12 +234,12 @@ public abstract class AbstractAiResourceImportServiceBuilder
         return new ConfigSnapshot(values, endpoint, allowHttp, allowPrivateNetwork,
             displayName, description, maxItemCount, maxArtifactSize);
     }
-
+    
     private String value(Map<String, String> config, String key, String defaultValue) {
         String result = config.get(key);
         return result == null ? defaultValue : result.trim();
     }
-
+    
     private int positiveInt(String value, String key) {
         int result = Integer.parseInt(value);
         if (result <= 0) {
@@ -247,7 +247,7 @@ public abstract class AbstractAiResourceImportServiceBuilder
         }
         return result;
     }
-
+    
     private long positiveLong(String value, String key) {
         long result = Long.parseLong(value);
         if (result <= 0) {
@@ -255,7 +255,7 @@ public abstract class AbstractAiResourceImportServiceBuilder
         }
         return result;
     }
-
+    
     private void validateEndpoint(ConfigSnapshot config) throws NacosException {
         if (StringUtils.isBlank(config.getEndpoint())) {
             throw invalid("AI resource import plugin endpoint is missing: " + pluginName);
@@ -269,33 +269,33 @@ public abstract class AbstractAiResourceImportServiceBuilder
             throw invalid("AI resource import plugin endpoint is invalid: " + pluginName);
         }
     }
-
+    
     private NacosException invalid(String message) {
         return new NacosApiException(NacosException.INVALID_PARAM,
             ErrorCode.PARAMETER_VALIDATE_ERROR, message);
     }
-
+    
     /**
      * Immutable configuration captured by one request-scoped service.
      */
     protected static final class ConfigSnapshot {
-
+        
         private final Map<String, String> values;
-
+        
         private final String endpoint;
-
+        
         private final boolean allowHttp;
-
+        
         private final boolean allowPrivateNetwork;
-
+        
         private final String displayName;
-
+        
         private final String description;
-
+        
         private final int maxItemCount;
-
+        
         private final long maxArtifactSize;
-
+        
         private ConfigSnapshot(Map<String, String> values, String endpoint, boolean allowHttp,
             boolean allowPrivateNetwork, String displayName, String description,
             int maxItemCount, long maxArtifactSize) {
@@ -308,35 +308,35 @@ public abstract class AbstractAiResourceImportServiceBuilder
             this.maxItemCount = maxItemCount;
             this.maxArtifactSize = maxArtifactSize;
         }
-
+        
         public Map<String, String> getValues() {
             return values;
         }
-
+        
         public String getEndpoint() {
             return endpoint;
         }
-
+        
         public boolean isAllowHttp() {
             return allowHttp;
         }
-
+        
         public boolean isAllowPrivateNetwork() {
             return allowPrivateNetwork;
         }
-
+        
         public String getDisplayName() {
             return displayName;
         }
-
+        
         public String getDescription() {
             return description;
         }
-
+        
         public int getMaxItemCount() {
             return maxItemCount;
         }
-
+        
         public long getMaxArtifactSize() {
             return maxArtifactSize;
         }

@@ -68,71 +68,71 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Component
 public class PluginManager implements PluginStateChecker, PluginStateApplier {
-
+    
     private static final Logger LOGGER = LoggerFactory.getLogger(PluginManager.class);
-
+    
     /**
      * Plugin registry: pluginId -> PluginInfo.
      */
     private final Map<String, PluginInfo> pluginRegistry = new ConcurrentHashMap<>();
-
+    
     /**
      * Plugin states: pluginId -> enabled.
      */
     private final Map<String, Boolean> pluginStates = new ConcurrentHashMap<>();
-
+    
     /**
      * Plugin states derived from startup policy before persisted overrides are applied.
      */
     private final Map<String, Boolean> pluginDefaultStates = new ConcurrentHashMap<>();
-
+    
     /**
      * Plugin instances: pluginId -> instance.
      */
     private final Map<String, Object> pluginInstances = new ConcurrentHashMap<>();
-
+    
     /**
      * Accepted masked configuration snapshots for pre-context plugins.
      */
     private final Map<String, PluginConfigResolution> preContextConfigResolutions =
         new ConcurrentHashMap<>();
-
+    
     /**
      * Discovered lightweight providers grouped by plugin type.
      */
     private final Map<PluginType, List<PluginProvider<?>>> pluginProviders =
         new EnumMap<>(PluginType.class);
-
+    
     /**
      * Providers whose implementation instances have already been loaded.
      */
     private final Set<PluginProvider<?>> loadedProviders = new HashSet<>();
-
+    
     /**
      * Configurable plugins that have been discovered but not initialized successfully.
      */
     private final Set<String> pendingConfigInitializationPluginIds = new HashSet<>();
-
+    
     /**
      * Startup lifecycle plugins that have been discovered but not initialized successfully.
      */
     private final Set<String> pendingStartupInitializationPluginIds = new HashSet<>();
-
+    
     private final PluginConfigService pluginConfigService;
-
+    
     private final PluginStatePersistenceService persistence;
-
+    
     private final PluginTypePolicyRegistry policyRegistry;
-
+    
     private final PreContextPluginInitializationResult preContextInitializationResult;
-
+    
     /**
      * Plugin state synchronizer for cluster synchronization.
      */
     private final PluginStateSynchronizer synchronizer;
-
+    
     private boolean initialized;
-
+    
     @Autowired
     public PluginManager(PluginStatePersistenceService persistence,
         ObjectProvider<PluginStateSynchronizer> synchronizerProvider,
@@ -141,7 +141,7 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
             preContextResultProvider.getIfAvailable(
                 PreContextPluginInitializationResult::empty));
     }
-
+    
     public PluginManager(PluginStatePersistenceService persistence,
         PluginStateSynchronizer synchronizer,
         ObjectProvider<PreContextPluginInitializationResult> preContextResultProvider) {
@@ -149,19 +149,19 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
             preContextResultProvider.getIfAvailable(
                 PreContextPluginInitializationResult::empty));
     }
-
+    
     public PluginManager(PluginStatePersistenceService persistence,
         PluginStateSynchronizer synchronizer) {
         this(persistence, synchronizer, new PluginTypePolicyRegistry(),
             PreContextPluginInitializationResult.empty());
     }
-
+    
     PluginManager(PluginStatePersistenceService persistence,
         PluginStateSynchronizer synchronizer, PluginTypePolicyRegistry policyRegistry) {
         this(persistence, synchronizer, policyRegistry,
             PreContextPluginInitializationResult.empty());
     }
-
+    
     PluginManager(PluginStatePersistenceService persistence,
         PluginStateSynchronizer synchronizer, PluginTypePolicyRegistry policyRegistry,
         PreContextPluginInitializationResult preContextInitializationResult) {
@@ -171,7 +171,7 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
         this.preContextInitializationResult = preContextInitializationResult;
         this.pluginConfigService = new PluginConfigService(persistence);
     }
-
+    
     /**
      * Discover plugins and apply persisted state and effective configuration before Nacos is
      * marked as started. The application-ready listener invokes the same method as a fallback for
@@ -184,26 +184,26 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
         // Register to static holder
         PluginStateCheckerHolder.setInstance(this);
         policyRegistry.initialize();
-
+        
         importPreContextPlugins();
-
+        
         // Discover lightweight providers, then load only currently required plugin types.
         discoverPluginProviders();
         loadEnabledPluginTypes();
-
+        
         // Load persisted states and configs
         loadPersistedData();
         initialized = true;
-
+        
         LOGGER.info("[PluginManager] Initialized, {} plugins discovered", pluginRegistry.size());
     }
-
+    
     @Override
     public boolean isPluginEnabled(String pluginType, String pluginName) {
         String pluginId = buildPluginId(pluginType, pluginName);
         return pluginStates.getOrDefault(pluginId, true);
     }
-
+    
     /**
      * Build plugin ID from type and name.
      *
@@ -214,7 +214,7 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
     private static String buildPluginId(String pluginType, String pluginName) {
         return pluginType + ":" + pluginName;
     }
-
+    
     /**
      * Set plugin enabled/disabled state.
      *
@@ -225,7 +225,7 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
     public void setPluginEnabled(String pluginId, boolean enabled) throws NacosApiException {
         setPluginEnabled(pluginId, enabled, false);
     }
-
+    
     /**
      * Set plugin enabled/disabled state.
      *
@@ -241,7 +241,7 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
             throw new NacosApiException(NacosException.NOT_FOUND, ErrorCode.RESOURCE_NOT_FOUND,
                 "Plugin not found: " + pluginId);
         }
-
+        
         try {
             validateRuntimeChangeSupported(info, "state");
             validateStateChangeInternal(info, enabled);
@@ -253,7 +253,7 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
             LOGGER.debug("[PluginManager] Plugin {} already has enabled={}", pluginId, enabled);
             return;
         }
-
+        
         // LocalOnly mode: only update local memory, skip cluster sync
         if (localOnly) {
             LOGGER.warn(
@@ -267,17 +267,17 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
             }
             return;
         }
-
+        
         if (EnvUtil.getStandaloneMode()) {
             applyStandaloneStateChange(pluginId, enabled);
         } else {
             getClusterSynchronizer().syncStateChange(pluginId, enabled);
         }
-
+        
         LOGGER.info("[PluginManager] Plugin {} status changed to {}", pluginId,
             enabled ? "enabled" : "disabled");
     }
-
+    
     /**
      * Update plugin configuration.
      *
@@ -289,7 +289,7 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
         throws NacosApiException {
         updatePluginConfig(pluginId, config, false);
     }
-
+    
     /**
      * Update plugin configuration.
      *
@@ -305,20 +305,20 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
             throw new NacosApiException(NacosException.NOT_FOUND, ErrorCode.RESOURCE_NOT_FOUND,
                 "Plugin not found: " + pluginId);
         }
-
+        
         try {
             validateRuntimeChangeSupported(info, "configuration");
         } catch (IllegalArgumentException e) {
             throw new NacosApiException(NacosException.INVALID_PARAM,
                 ErrorCode.PARAMETER_VALIDATE_ERROR, e.getMessage());
         }
-
+        
         if (!info.isConfigurable()) {
             throw new NacosApiException(NacosException.INVALID_PARAM,
                 ErrorCode.PARAMETER_VALIDATE_ERROR,
                 "Plugin does not support configuration: " + pluginId);
         }
-
+        
         PluginConfigSourceType sourceType = localOnly ? PluginConfigSourceType.LOCAL_ONLY
             : PluginConfigSourceType.RUNTIME_PERSISTED;
         Map<String, String> normalizedConfig;
@@ -331,7 +331,7 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
             throw new NacosApiException(NacosException.SERVER_ERROR, ErrorCode.SERVER_ERROR, e,
                 e.getMessage());
         }
-
+        
         // LocalOnly mode: only update local memory, skip cluster sync
         if (localOnly) {
             LOGGER.warn(
@@ -352,16 +352,16 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
             }
             return;
         }
-
+        
         if (EnvUtil.getStandaloneMode()) {
             applyStandaloneConfigChange(pluginId, normalizedConfig);
         } else {
             getClusterSynchronizer().syncConfigChange(pluginId, normalizedConfig);
         }
-
+        
         LOGGER.info("[PluginManager] Plugin {} config updated", pluginId);
     }
-
+    
     /**
      * List all plugins.
      *
@@ -370,7 +370,7 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
     public List<PluginInfo> listAllPlugins() {
         return new ArrayList<>(pluginRegistry.values());
     }
-
+    
     /**
      * Get plugin by ID.
      *
@@ -380,7 +380,7 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
     public Optional<PluginInfo> getPlugin(String pluginId) {
         return Optional.ofNullable(pluginRegistry.get(pluginId));
     }
-
+    
     /**
      * Resolve plugin effective config for detail output.
      *
@@ -393,7 +393,7 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
         }
         return pluginConfigService.resolve(pluginInfo, true);
     }
-
+    
     /**
      * Refresh static configuration for all configurable plugins.
      */
@@ -412,7 +412,7 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
             }
         }
     }
-
+    
     /**
      * Re-evaluate domain policies after server configuration changes.
      */
@@ -424,7 +424,7 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
         initializePluginConfigs(pendingConfigInitializationPluginIds);
         initializePluginLifecycles(pendingStartupInitializationPluginIds);
     }
-
+    
     /**
      * Get local plugin IDs.
      *
@@ -433,7 +433,7 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
     public Set<String> getLocalPluginIds() {
         return new HashSet<>(pluginRegistry.keySet());
     }
-
+    
     private void importPreContextPlugins() {
         preContextInitializationResult.getPluginInfos().forEach((pluginId, pluginInfo) -> {
             Object instance =
@@ -461,7 +461,7 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
             }
         });
     }
-
+    
     /**
      * Discover lightweight plugin providers without loading their implementation instances.
      */
@@ -470,7 +470,7 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
         Collection<PluginProvider> providers = NacosServiceLoader.load(PluginProvider.class);
         List<PluginProvider> orderedProviders = new ArrayList<>(providers);
         orderedProviders.sort(Comparator.comparingInt(PluginProvider::getOrder));
-
+        
         for (PluginProvider provider : orderedProviders) {
             try {
                 PluginType pluginType = provider.getPluginType();
@@ -489,7 +489,7 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
             }
         }
     }
-
+    
     private Set<String> loadEnabledPluginTypes() {
         Set<String> result = new HashSet<>();
         for (Map.Entry<PluginType, List<PluginProvider<?>>> entry : pluginProviders.entrySet()) {
@@ -512,7 +512,7 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
         }
         return result;
     }
-
+    
     /**
      * Discover plugins from a single provider.
      *
@@ -521,12 +521,12 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
     private Set<String> discoverPluginsFromProvider(PluginType pluginType,
         PluginProvider<?> provider) {
         Map<String, ?> plugins = provider.getAllPlugins();
-
+        
         if (plugins == null || plugins.isEmpty()) {
             LOGGER.info("[PluginManager] No plugins found for type: {}", pluginType.getType());
             return new HashSet<>();
         }
-
+        
         Set<String> result = new HashSet<>();
         plugins.forEach((name, instance) -> {
             String pluginId = registerPlugin(pluginType, name, instance);
@@ -538,7 +538,7 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
             pluginType.getType());
         return result;
     }
-
+    
     private String registerPlugin(PluginType type, String name, Object instance) {
         if (StringUtils.isBlank(name) || instance == null) {
             LOGGER.warn("[PluginManager] Ignore invalid {} plugin, name={}, instancePresent={}.",
@@ -553,7 +553,7 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
                 instance.getClass().getName());
             return null;
         }
-
+        
         PluginInfo info = new PluginInfo();
         info.setPluginId(pluginId);
         info.setPluginName(name);
@@ -563,7 +563,7 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
         info.setLoadTimestamp(System.currentTimeMillis());
         boolean defaultEnabled = policyRegistry.isPluginEnabledByDefault(type, name);
         info.setEnabled(defaultEnabled);
-
+        
         // Check if plugin supports configuration
         if (instance instanceof PluginConfigSpec) {
             PluginConfigSpec configSpec = (PluginConfigSpec) instance;
@@ -574,7 +574,7 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
                 info.setConfig(configSpec.getCurrentConfig());
             }
         }
-
+        
         pluginRegistry.put(pluginId, info);
         pluginInstances.put(pluginId, instance);
         pluginDefaultStates.put(pluginId, defaultEnabled);
@@ -586,24 +586,24 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
             pendingStartupInitializationPluginIds.add(pluginId);
         }
         refreshCriticalFlags(type);
-
+        
         LOGGER.debug("[PluginManager] Registered plugin {} with default enabled={}", pluginId,
             defaultEnabled);
         return pluginId;
     }
-
+    
     private void loadPersistedData() {
         Set<String> standardPluginIds = getStandardPluginIds();
         loadPersistedStates(standardPluginIds);
         ensureCriticalTypesAvailable();
         refreshAllCriticalFlags();
-
+        
         // Load configs
         pluginConfigService.initializeRuntimePersistedConfigs();
         initializePluginConfigs(standardPluginIds);
         initializePluginLifecycles(pendingStartupInitializationPluginIds);
     }
-
+    
     private void loadPersistedStates(Collection<String> pluginIds) {
         if (pluginIds.isEmpty()) {
             return;
@@ -634,7 +634,7 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
             }
         });
     }
-
+    
     private void initializePluginConfigs(Collection<String> pluginIds) {
         for (String pluginId : new HashSet<>(pluginIds)) {
             PluginInfo info = pluginRegistry.get(pluginId);
@@ -644,7 +644,7 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
             }
         }
     }
-
+    
     private void initializePluginLifecycles(Collection<String> pluginIds) {
         for (String pluginId : new HashSet<>(pluginIds)) {
             PluginInfo info = pluginRegistry.get(pluginId);
@@ -664,11 +664,11 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
             }
         }
     }
-
+    
     private String getSelectionProperty(PluginType type) {
         return policyRegistry.getSelectionProperty(type);
     }
-
+    
     /**
      * Validate a state change without mutating the current state.
      *
@@ -686,7 +686,7 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
                 "Pre-context plugin state requires restart: " + pluginId);
         }
     }
-
+    
     /**
      * Apply state change.
      * Called by synchronizers after successful synchronization.
@@ -704,7 +704,7 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
             refreshCriticalFlags(info.getPluginType());
         }
     }
-
+    
     /**
      * Restore plugin states from a consensus snapshot as one final state map.
      *
@@ -754,7 +754,7 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
         });
         refreshAllCriticalFlags();
     }
-
+    
     private void validateStateChangeInternal(PluginInfo info, boolean enabled) {
         validateRuntimeChangeSupported(info, "state");
         if (info.isEnabled() == enabled) {
@@ -775,12 +775,12 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
                 + "' instead.");
         }
     }
-
+    
     private long countEnabledPlugins(PluginType type) {
         return pluginRegistry.values().stream()
             .filter(info -> type == info.getPluginType() && info.isEnabled()).count();
     }
-
+    
     private void validateCriticalStates(Map<String, Boolean> targetStates) {
         for (PluginType type : PluginType.values()) {
             String validationError = getCriticalValidationError(type, targetStates);
@@ -790,17 +790,17 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
             }
         }
     }
-
+    
     private void ensureCriticalTypesAvailable() {
         validateCriticalStates(getCurrentStates());
     }
-
+    
     private void refreshAllCriticalFlags() {
         for (PluginType type : PluginType.values()) {
             refreshCriticalFlags(type);
         }
     }
-
+    
     private void refreshCriticalFlags(PluginType type) {
         if (!type.isCritical() || !policyRegistry.isActive(type)) {
             pluginRegistry.values().stream().filter(info -> type == info.getPluginType())
@@ -814,13 +814,13 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
                 && (requiredPlugins.contains(info.getPluginName())
                     || requiredPlugins.isEmpty() && enabledCount <= 1)));
     }
-
+    
     private Map<String, Boolean> getCurrentStates() {
         Map<String, Boolean> result = new HashMap<>();
         pluginRegistry.forEach((pluginId, info) -> result.put(pluginId, info.isEnabled()));
         return result;
     }
-
+    
     private String getCriticalValidationError(PluginType type,
         Map<String, Boolean> targetStates) {
         Map<String, Boolean> implementations = new HashMap<>();
@@ -833,7 +833,7 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
         return PluginTypePolicyRegistry.getCriticalValidationError(policyRegistry, type,
             implementations);
     }
-
+    
     private Set<String> getStandardPluginIds() {
         Set<String> result = new HashSet<>();
         pluginRegistry.forEach((pluginId, pluginInfo) -> {
@@ -843,12 +843,12 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
         });
         return result;
     }
-
+    
     private boolean isPreContextPlugin(PluginInfo pluginInfo) {
         return pluginInfo != null && PluginInitializationPhase.PRE_CONTEXT == pluginInfo
             .getPluginType().getInitializationPhase();
     }
-
+    
     private boolean isPreContextPluginId(String pluginId) {
         if (pluginId == null) {
             return false;
@@ -866,14 +866,14 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
         }
         return false;
     }
-
+    
     private void validateRuntimeChangeSupported(PluginInfo pluginInfo, String operation) {
         if (isPreContextPlugin(pluginInfo)) {
             throw new IllegalArgumentException("Pre-context plugin " + operation
                 + " requires restart: " + pluginInfo.getPluginId());
         }
     }
-
+    
     private PluginStateSynchronizer getClusterSynchronizer() throws NacosApiException {
         if (synchronizer == null) {
             throw new NacosApiException(NacosException.SERVER_ERROR, ErrorCode.SERVER_ERROR,
@@ -881,7 +881,7 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
         }
         return synchronizer;
     }
-
+    
     private void applyStandaloneStateChange(String pluginId, boolean enabled)
         throws NacosApiException {
         try {
@@ -895,7 +895,7 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
                 "Failed to persist plugin state: " + pluginId);
         }
     }
-
+    
     private void applyStandaloneConfigChange(String pluginId, Map<String, String> config)
         throws NacosApiException {
         try {
@@ -911,7 +911,7 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
                 "Failed to apply or persist plugin config: " + pluginId);
         }
     }
-
+    
     private <T> Map<String, T> filterStandardEntries(Map<String, T> source,
         String sourceDescription) {
         Map<String, T> result = new LinkedHashMap<>();
@@ -928,7 +928,7 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
         });
         return result;
     }
-
+    
     /**
      * Apply config change.
      * Called by synchronizers after successful synchronization.
@@ -946,7 +946,7 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
         pluginConfigService.applyRuntimePersistedConfig(pluginId, info,
             pluginInstances.get(pluginId), config);
     }
-
+    
     /**
      * Get all runtime persisted configs for a consensus snapshot.
      *
@@ -956,7 +956,7 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
         return filterStandardEntries(pluginConfigService.getAllRuntimePersistedConfigs(),
             "runtime persisted plugin config");
     }
-
+    
     /**
      * Restore all runtime persisted configs from a consensus snapshot.
      *
@@ -973,11 +973,11 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
             }
         });
     }
-
+    
     Map<String, Boolean> getPersistedPluginStates() {
         return filterStandardEntries(persistence.loadAllStates(), "persisted plugin state");
     }
-
+    
     /**
      * Check if plugin is available locally.
      *
@@ -987,7 +987,7 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
     public boolean isPluginAvailable(String pluginId) {
         return pluginRegistry.containsKey(pluginId);
     }
-
+    
     /**
      * Release internal plugin configuration storage resources.
      */
@@ -995,5 +995,5 @@ public class PluginManager implements PluginStateChecker, PluginStateApplier {
     public void shutdown() {
         pluginConfigService.shutdown();
     }
-
+    
 }

@@ -29,9 +29,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 
 class PrometheusAuthFilterTest {
-
+    
     private final PrometheusAuthFilter prometheusAuthFilter = new PrometheusAuthFilter();
-
+    
     @Test
     void testAllAuthFiltersCoverPrometheusSubPaths() {
         assertUrlPatterns(prometheusAuthFilter.basicAuthenticationFilter(
@@ -40,7 +40,7 @@ class PrometheusAuthFilterTest {
         assertUrlPatterns(prometheusAuthFilter.authorizationFilter());
         assertUrlPatterns(prometheusAuthFilter.exceptionTranslationFilter());
     }
-
+    
     private void assertUrlPatterns(FilterRegistrationBean<? extends Filter> registration) {
         Set<String> expected =
             Set.of(PROMETHEUS_CONTROLLER_PATH, PROMETHEUS_CONTROLLER_PATH + "/*");

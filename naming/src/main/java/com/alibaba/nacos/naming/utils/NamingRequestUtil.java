@@ -33,7 +33,7 @@ import org.springframework.http.HttpStatus;
  * @author xiweng.yy
  */
 public class NamingRequestUtil {
-
+    
     /**
      * Get source ip from request context.
      *
@@ -48,7 +48,7 @@ public class NamingRequestUtil {
         }
         return sourceIp;
     }
-
+    
     /**
      * Get source ip from request context first, if it can't found, get from http request.
      *
@@ -63,7 +63,7 @@ public class NamingRequestUtil {
         }
         return sourceIp;
     }
-
+    
     /**
      * Get source ip from request context first, if it can't found, get from http request.
      *
@@ -78,7 +78,7 @@ public class NamingRequestUtil {
         }
         return sourceIp;
     }
-
+    
     /**
      * Check request weight is validate.
      *

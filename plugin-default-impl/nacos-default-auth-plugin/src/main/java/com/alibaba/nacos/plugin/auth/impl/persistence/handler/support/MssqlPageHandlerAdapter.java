@@ -37,9 +37,11 @@ public class MssqlPageHandlerAdapter implements PageHandlerAdapter {
     }
     
     @Override
-    public OffsetFetchResult addOffsetAndFetchNext(String fetchSql, Object[] arg, int pageNo, int pageSize) {
+    public OffsetFetchResult addOffsetAndFetchNext(String fetchSql, Object[] arg, int pageNo,
+        int pageSize) {
         if (!fetchSql.contains(AuthPageConstant.OFFSET)) {
-            fetchSql += " ORDER BY 1 " + AuthPageConstant.OFFSET_ROWS + " " + AuthPageConstant.FETCH_NEXT;
+            fetchSql +=
+                " ORDER BY 1 " + AuthPageConstant.OFFSET_ROWS + " " + AuthPageConstant.FETCH_NEXT;
             
             List<Object> newArgsList = new ArrayList<>(Arrays.asList(arg));
             newArgsList.add((pageNo - 1) * pageSize);

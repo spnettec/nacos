@@ -186,7 +186,7 @@ public class ProtocolManager extends MemberChangeListener implements DisposableB
                 .cpMemberChange(() -> cpProtocol.memberChange(toCPMembersInfo(event.getMembers())));
         }
     }
-
+    
     private ProtocolManager getParentProtocolManager() {
         ApplicationContext context = ApplicationUtils.getApplicationContext();
         if (context == null || context.getParent() == null) {

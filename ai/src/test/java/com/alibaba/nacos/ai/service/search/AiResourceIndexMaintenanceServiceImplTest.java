@@ -33,49 +33,49 @@ import static org.mockito.Mockito.when;
  */
 @ExtendWith(MockitoExtension.class)
 class AiResourceIndexMaintenanceServiceImplTest {
-
+    
     @Mock
     private AiResourceIndexTaskRepository taskRepository;
-
+    
     @Mock
     private AiResourceIndexEnhancementService enhancementService;
-
+    
     private AiResourceIndexMaintenanceService service;
-
+    
     @BeforeEach
     void setUp() {
         service = new AiResourceIndexMaintenanceServiceImpl(taskRepository, enhancementService);
     }
-
+    
     @Test
     void resourceChangeShouldRequestEnabledEnhancement() {
         when(enhancementService.requested()).thenReturn(true);
-
+        
         assertTrue(service.schedule("public", "skill", "avatar"));
-
+        
         verify(taskRepository).schedule("public", "skill", "avatar", true);
     }
-
+    
     @Test
     void resourceChangeShouldNotRequestDisabledEnhancement() {
         assertTrue(service.schedule("public", "skill", "avatar"));
-
+        
         verify(taskRepository).schedule("public", "skill", "avatar", false);
     }
-
+    
     @Test
     void reconciliationShouldRequestEnabledEnhancement() {
         when(enhancementService.requested()).thenReturn(true);
-
+        
         assertTrue(service.scheduleReconciliation("public", "skill", "avatar"));
-
+        
         verify(taskRepository).scheduleReconciliation("public", "skill", "avatar", true);
     }
-
+    
     @Test
     void reconciliationShouldNotRequestDisabledEnhancement() {
         assertTrue(service.scheduleReconciliation("public", "skill", "avatar"));
-
+        
         verify(taskRepository).scheduleReconciliation("public", "skill", "avatar", false);
     }
 }

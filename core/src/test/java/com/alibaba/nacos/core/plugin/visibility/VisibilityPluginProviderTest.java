@@ -32,11 +32,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class VisibilityPluginProviderTest {
-
+    
     private VisibilityPluginProvider provider;
-
+    
     private boolean initialized;
-
+    
     @BeforeEach
     void setUp() throws Exception {
         provider = new VisibilityPluginProvider();
@@ -45,14 +45,14 @@ class VisibilityPluginProviderTest {
         initialized = (Boolean) field.get(VisibilityPluginManager.getInstance());
         field.set(VisibilityPluginManager.getInstance(), true);
     }
-
+    
     @AfterEach
     void tearDown() throws Exception {
         Field field = VisibilityPluginManager.class.getDeclaredField("initialized");
         field.setAccessible(true);
         field.set(VisibilityPluginManager.getInstance(), initialized);
     }
-
+    
     @Test
     void testGetPluginType() {
         PluginType pluginType = provider.getPluginType();
@@ -60,13 +60,13 @@ class VisibilityPluginProviderTest {
         assertEquals(PluginType.VISIBILITY, pluginType);
         assertEquals("visibility", pluginType.getType());
     }
-
+    
     @Test
     void testGetAllPlugins() {
         Map<String, VisibilityService> plugins = provider.getAllPlugins();
         assertNotNull(plugins);
     }
-
+    
     @Test
     void testProviderIsRegisteredInCore() {
         assertTrue(NacosServiceLoader.load(PluginProvider.class).stream()

@@ -51,19 +51,19 @@ import java.util.concurrent.TimeUnit;
 @DependsOn("clientServiceIndexesManager")
 @Component("httpConnectionBasedClientManager")
 public class HttpConnectionBasedClientManager implements ClientManager {
-
+    
     private final ConcurrentMap<String, HttpConnectionBasedClient> clients =
         new ConcurrentHashMap<>();
-
+    
     private final DistroMapper distroMapper;
-
+    
     private final ClientFactory<HttpConnectionBasedClient> clientFactory;
-
+    
     @Autowired
     public HttpConnectionBasedClientManager(DistroMapper distroMapper) {
         this(distroMapper, true);
     }
-
+    
     HttpConnectionBasedClientManager(DistroMapper distroMapper, boolean scheduleCleaner) {
         this.distroMapper = distroMapper;
         this.clientFactory = ClientFactoryHolder.getInstance()
@@ -73,12 +73,12 @@ public class HttpConnectionBasedClientManager implements ClientManager {
                 Constants.DEFAULT_HEART_BEAT_INTERVAL, TimeUnit.MILLISECONDS);
         }
     }
-
+    
     @Override
     public boolean clientConnected(String clientId, ClientAttributes attributes) {
         return clientConnected(clientFactory.newClient(clientId, attributes));
     }
-
+    
     @Override
     public boolean clientConnected(Client client) {
         clients.computeIfAbsent(client.getClientId(), key -> {
@@ -87,7 +87,7 @@ public class HttpConnectionBasedClientManager implements ClientManager {
         });
         return true;
     }
-
+    
     @Override
     public boolean syncClientConnected(String clientId, ClientAttributes attributes) {
         HttpConnectionBasedClient syncedClient =
@@ -102,7 +102,7 @@ public class HttpConnectionBasedClientManager implements ClientManager {
         });
         return true;
     }
-
+    
     @Override
     public boolean clientDisconnected(String clientId) {
         Loggers.SRV_LOG.info(
@@ -118,28 +118,28 @@ public class HttpConnectionBasedClientManager implements ClientManager {
             new ClientOperationEvent.ClientReleaseEvent(client, responsible));
         return true;
     }
-
+    
     @Override
     public Client getClient(String clientId) {
         return clients.get(clientId);
     }
-
+    
     @Override
     public boolean contains(String clientId) {
         return clients.containsKey(clientId);
     }
-
+    
     @Override
     public Collection<String> allClientId() {
         return clients.keySet();
     }
-
+    
     @Override
     public boolean isResponsibleClient(Client client) {
         return client instanceof HttpConnectionBasedClient
             && distroMapper.responsible(client.getClientId());
     }
-
+    
     @Override
     public boolean verifyClient(DistroClientVerifyInfo verifyData) {
         HttpConnectionBasedClient client = clients.get(verifyData.getClientId());
@@ -156,7 +156,7 @@ public class HttpConnectionBasedClientManager implements ClientManager {
         client.renewReplica();
         return true;
     }
-
+    
     /**
      * Renew only an existing HTTP client.
      *
@@ -171,7 +171,7 @@ public class HttpConnectionBasedClientManager implements ClientManager {
         client.renewClient();
         return true;
     }
-
+    
     /**
      * Renew an existing HTTP publisher and its client.
      *
@@ -189,7 +189,7 @@ public class HttpConnectionBasedClientManager implements ClientManager {
         }
         return true;
     }
-
+    
     /**
      * Remove an HTTP client when it no longer owns publishers or subscribers.
      *
@@ -207,11 +207,11 @@ public class HttpConnectionBasedClientManager implements ClientManager {
         }
         return clientDisconnected(clientId);
     }
-
+    
     void cleanExpiredClients() {
         cleanExpiredClients(System.currentTimeMillis());
     }
-
+    
     void cleanExpiredClients(long currentTime) {
         for (String clientId : allClientId()) {
             HttpConnectionBasedClient client = clients.get(clientId);
@@ -228,7 +228,7 @@ public class HttpConnectionBasedClientManager implements ClientManager {
             cleanPublisher(client, currentTime);
         }
     }
-
+    
     private void cleanPublisher(HttpConnectionBasedClient client, long currentTime) {
         if (client.getAllPublishedService().isEmpty()) {
             return;
@@ -244,7 +244,7 @@ public class HttpConnectionBasedClientManager implements ClientManager {
             publishHealthChange(client);
         }
     }
-
+    
     private void removeAllPublishers(HttpConnectionBasedClient client) {
         Collection<Service> publishedServices =
             new ArrayList<>(client.getAllPublishedService());
@@ -258,7 +258,7 @@ public class HttpConnectionBasedClientManager implements ClientManager {
         client.recalculateRevision();
         disconnectIfEmpty(client.getClientId());
     }
-
+    
     private void publishHealthChange(HttpConnectionBasedClient client) {
         client.recalculateRevision();
         for (Service service : client.getAllPublishedService()) {
@@ -267,5 +267,5 @@ public class HttpConnectionBasedClientManager implements ClientManager {
         }
         NotifyCenter.publishEvent(new ClientEvent.ClientChangedEvent(client));
     }
-
+    
 }

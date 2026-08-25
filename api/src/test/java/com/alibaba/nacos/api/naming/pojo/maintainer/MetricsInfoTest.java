@@ -37,8 +37,8 @@ class MetricsInfoTest {
     @BeforeEach
     void setUp() throws Exception {
         mapper = JsonMapper.builder()
-                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-                .build();
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .build();
         metricsInfo = new MetricsInfo();
         metricsInfo.setStatus("UP");
         metricsInfo.setClientCount(10);

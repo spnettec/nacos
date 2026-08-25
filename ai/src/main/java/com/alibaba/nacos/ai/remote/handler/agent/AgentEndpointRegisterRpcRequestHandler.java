@@ -42,14 +42,14 @@ import org.springframework.stereotype.Component;
 @Component
 public class AgentEndpointRegisterRpcRequestHandler
     extends RequestHandler<AgentEndpointRegisterRpcRequest, AgentEndpointOperationResponse> {
-
+    
     private final AgentRuntimeRegistryService runtimeRegistryService;
-
+    
     public AgentEndpointRegisterRpcRequestHandler(
         AgentRuntimeRegistryService runtimeRegistryService) {
         this.runtimeRegistryService = runtimeRegistryService;
     }
-
+    
     @Override
     @NamespaceValidation
     @ExtractorManager.Extractor(rpcExtractor = AgentClientRpcParamExtractor.class)
@@ -68,7 +68,7 @@ public class AgentEndpointRegisterRpcRequestHandler
         }
         return response;
     }
-
+    
     private <T> T requireRequest(T value, String fieldName) {
         if (value == null) {
             throw new IllegalArgumentException(fieldName + " must not be null");

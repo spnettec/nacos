@@ -28,10 +28,10 @@ import com.alibaba.nacos.plugin.auth.impl.users.NacosUser;
  * @author Zhengcy05
  */
 public final class AuthIdentityUtils {
-
+    
     private AuthIdentityUtils() {
     }
-
+    
     /**
      * Resolve current username from auth context.
      *
@@ -53,7 +53,7 @@ public final class AuthIdentityUtils {
             return null;
         }
     }
-
+    
     /**
      * Check whether the current authenticated user is a global admin and matches the given identity.
      *

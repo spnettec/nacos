@@ -69,13 +69,13 @@ import static com.alibaba.nacos.plugin.auth.constant.Constants.Resource.CONSOLE_
 @RequestMapping(Constants.AgentSpecs.CONSOLE_PATH)
 @ExtractorManager.Extractor(httpExtractor = AgentSpecHttpParamExtractor.class)
 public class ConsoleAgentSpecController {
-
+    
     private final AgentSpecProxy agentSpecProxy;
-
+    
     public ConsoleAgentSpecController(AgentSpecProxy agentSpecProxy) {
         this.agentSpecProxy = agentSpecProxy;
     }
-
+    
     /**
      * Get agentspec detail.
      *
@@ -90,7 +90,7 @@ public class ConsoleAgentSpecController {
         form.validate();
         return Result.success(agentSpecProxy.getAgentSpec(form));
     }
-
+    
     /**
      * Get specific version detail of an agentspec for viewing or editing.
      *
@@ -105,7 +105,7 @@ public class ConsoleAgentSpecController {
         form.validate();
         return Result.success(agentSpecProxy.getAgentSpecVersion(form));
     }
-
+    
     /**
      * Delete agentspec.
      *
@@ -121,7 +121,7 @@ public class ConsoleAgentSpecController {
         agentSpecProxy.deleteAgentSpec(form);
         return Result.success("ok");
     }
-
+    
     /**
      * List agentspecs with pagination.
      *
@@ -141,7 +141,7 @@ public class ConsoleAgentSpecController {
         return Result
             .success(agentSpecProxy.listAgentSpecs(agentSpecListForm, filterableForm, pageForm));
     }
-
+    
     /**
      * Upload agentspec from zip file.
      *
@@ -166,7 +166,7 @@ public class ConsoleAgentSpecController {
             agentSpecProxy.uploadAgentSpecFromZip(namespaceId, zipBytes, overwrite);
         return Result.success(agentSpecName);
     }
-
+    
     /**
      * Create draft version.
      *
@@ -181,7 +181,7 @@ public class ConsoleAgentSpecController {
         form.validate();
         return Result.success(agentSpecProxy.createDraft(form));
     }
-
+    
     /**
      * Update current draft content.
      *
@@ -198,7 +198,7 @@ public class ConsoleAgentSpecController {
         agentSpecProxy.updateDraft(form);
         return Result.success("ok");
     }
-
+    
     /**
      * Delete current draft version.
      *
@@ -214,7 +214,7 @@ public class ConsoleAgentSpecController {
         agentSpecProxy.deleteDraft(form);
         return Result.success("ok");
     }
-
+    
     /**
      * Submit a version for pipeline review.
      *
@@ -229,7 +229,7 @@ public class ConsoleAgentSpecController {
         form.validate();
         return Result.success(agentSpecProxy.submit(form));
     }
-
+    
     /**
      * Publish an approved reviewing version.
      *
@@ -245,7 +245,7 @@ public class ConsoleAgentSpecController {
         agentSpecProxy.publish(form);
         return Result.success("ok");
     }
-
+    
     /**
      * Force-publish an agentspec version, bypassing pipeline validation. Accepts draft, reviewing, and reviewed
      * versions. Restricted to admin users only (apiType = ADMIN_API enforces global admin check).
@@ -260,7 +260,7 @@ public class ConsoleAgentSpecController {
         agentSpecProxy.forcePublish(form);
         return Result.success("ok");
     }
-
+    
     /**
      * Re-edit a reviewed agent spec version, transitioning it back to draft status.
      *
@@ -276,7 +276,7 @@ public class ConsoleAgentSpecController {
         agentSpecProxy.redraft(form);
         return Result.success("ok");
     }
-
+    
     /**
      * Update runtime route labels.
      *
@@ -292,7 +292,7 @@ public class ConsoleAgentSpecController {
         agentSpecProxy.updateLabels(form);
         return Result.success("ok");
     }
-
+    
     /**
      * Update agentspec biz tags without changing version status.
      */
@@ -304,7 +304,7 @@ public class ConsoleAgentSpecController {
         agentSpecProxy.updateBizTags(form);
         return Result.success("ok");
     }
-
+    
     /**
      * Online operation.
      *
@@ -320,7 +320,7 @@ public class ConsoleAgentSpecController {
         agentSpecProxy.online(form);
         return Result.success("ok");
     }
-
+    
     /**
      * Update agentspec visibility scope.
      *
@@ -336,7 +336,7 @@ public class ConsoleAgentSpecController {
         agentSpecProxy.updateScope(form);
         return Result.success("ok");
     }
-
+    
     /**
      * Offline operation.
      *

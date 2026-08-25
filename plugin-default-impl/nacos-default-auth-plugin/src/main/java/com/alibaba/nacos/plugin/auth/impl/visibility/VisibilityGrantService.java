@@ -26,7 +26,7 @@ import java.util.List;
  * @author Zhengcy05
  */
 public interface VisibilityGrantService {
-
+    
     /**
      * Grant visibility access to one user.
      *
@@ -39,7 +39,7 @@ public interface VisibilityGrantService {
      */
     void grant(String namespaceId, String resourceType, String resourceName, String username,
         String action) throws NacosException;
-
+    
     /**
      * Revoke visibility access from one user.
      *
@@ -52,7 +52,7 @@ public interface VisibilityGrantService {
      */
     void revoke(String namespaceId, String resourceType, String resourceName, String username,
         String action) throws NacosException;
-
+    
     /**
      * Find explicitly authorized resource names for one user and query action.
      *

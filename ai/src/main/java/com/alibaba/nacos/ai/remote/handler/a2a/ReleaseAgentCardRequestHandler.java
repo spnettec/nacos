@@ -47,17 +47,17 @@ import org.springframework.stereotype.Component;
 @Component
 public class ReleaseAgentCardRequestHandler
     extends RequestHandler<ReleaseAgentCardRequest, ReleaseAgentCardResponse> {
-
+    
     private static final Logger LOGGER =
         LoggerFactory.getLogger(ReleaseAgentCardRequestHandler.class);
-
+    
     private final A2aCompatibilityOperationService a2aServerOperationService;
-
+    
     public ReleaseAgentCardRequestHandler(
         A2aCompatibilityOperationService a2aServerOperationService) {
         this.a2aServerOperationService = a2aServerOperationService;
     }
-
+    
     @Override
     @NamespaceValidation
     @ExtractorManager.Extractor(rpcExtractor = AgentRequestParamExtractor.class)
@@ -78,7 +78,7 @@ public class ReleaseAgentCardRequestHandler
         }
         return response;
     }
-
+    
     private void validateRequest(ReleaseAgentCardRequest request) throws NacosApiException {
         if (null == request.getAgentCard()) {
             throw new NacosApiException(NacosException.INVALID_PARAM, ErrorCode.PARAMETER_MISSING,
@@ -86,7 +86,7 @@ public class ReleaseAgentCardRequestHandler
         }
         AgentRequestUtil.validateAgentCard(request.getAgentCard());
     }
-
+    
     private void doHandler(ReleaseAgentCardRequest request, RequestMeta meta)
         throws NacosException {
         String namespaceId = request.getNamespaceId();

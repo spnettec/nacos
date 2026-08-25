@@ -54,11 +54,11 @@ public class CapacityManagementAspect {
     
     private static final String DELETE_CONFIG =
         "execution(* com.alibaba.nacos.config.server.service.ConfigOperationService.deleteConfig(..))";
-
+    
     private final CapacityService capacityService;
-
+    
     private final ConfigInfoPersistService configInfoPersistService;
-
+    
     public CapacityManagementAspect(ConfigInfoPersistService configInfoPersistService,
         CapacityService capacityService) {
         this.configInfoPersistService = configInfoPersistService;
@@ -73,7 +73,7 @@ public class CapacityManagementAspect {
         if (!PropertyUtil.isManageCapacity()) {
             return pjp.proceed();
         }
-
+        
         Object[] args = pjp.getArgs();
         ConfigForm configForm = (ConfigForm) args[0];
         ConfigRequestInfo configRequestInfo = (ConfigRequestInfo) args[1];
@@ -83,11 +83,11 @@ public class CapacityManagementAspect {
         String content = configForm.getContent();
         String betaIps = configRequestInfo.getBetaIps();
         String tag = configForm.getTag();
-
+        
         LOGGER.info(
             "[CapacityManagement] Intercepting publishConfig operation for dataId: {}, group: {}, namespaceId: {}",
             dataId, group, namespaceId);
-
+        
         if (StringUtils.isBlank(betaIps) && StringUtils.isBlank(tag)
             && StringUtils.isBlank(configForm.getGrayName())) {
             // do capacity management limitation check for writing or updating config_info table.
@@ -451,7 +451,7 @@ public class CapacityManagementAspect {
      * @author Nacos.
      */
     public enum LimitType {
-
+        
         /**
          * over limit.
          */

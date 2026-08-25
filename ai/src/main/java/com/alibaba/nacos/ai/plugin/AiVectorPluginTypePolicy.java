@@ -29,17 +29,17 @@ import com.alibaba.nacos.common.utils.StringUtils;
  * @author nacos
  */
 public class AiVectorPluginTypePolicy implements PluginTypePolicy {
-
+    
     @Override
     public PluginType getPluginType() {
         return PluginType.AI_VECTOR;
     }
-
+    
     @Override
     public boolean isActive(PluginTypeConfiguration configuration) {
-        return configuration.getBooleanProperty(Constants.ARD_ENABLED_KEY, false);
+        return configuration.getBooleanProperty(Constants.AI_RESOURCE_SEARCH_ENABLED_KEY, true);
     }
-
+    
     @Override
     public boolean isPluginEnabledByDefault(String pluginName,
         PluginTypeConfiguration configuration) {
@@ -53,12 +53,12 @@ public class AiVectorPluginTypePolicy implements PluginTypePolicy {
         return pluginName.equals(StringUtils.isBlank(provider)
             ? AiResourceVectorIndexRouter.DEFAULT_VECTOR_PROVIDER : provider.trim());
     }
-
+    
     @Override
     public String getSelectionProperty() {
         return AiResourceVectorIndexRouter.KEY_VECTOR_PROVIDER;
     }
-
+    
     @Override
     public String getActivationDescription() {
         return "AI resource search uses the configured vector provider when available";

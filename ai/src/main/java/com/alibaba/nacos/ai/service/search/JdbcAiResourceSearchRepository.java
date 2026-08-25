@@ -31,6 +31,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.sql.DataSource;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -48,46 +49,46 @@ import java.util.Locale;
 @Repository
 @ConditionalOnAiResourceSearchEnabled
 public class JdbcAiResourceSearchRepository implements AiResourceSearchRepository {
-
+    
     private static final String SQL_INSERT_ENTRY = "INSERT INTO ai_resource_search_document "
         + "(namespace_id, resource_type, resource_name, resource_version, display_name, c_desc, "
         + "tags, capabilities, representative_queries, metadata, source_digest, status, "
         + "generate_mode, gmt_create, gmt_modified) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "
         + "CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
-
+    
     private static final String SQL_INSERT_CHUNK = "INSERT INTO ai_resource_search_chunk "
         + "(document_id, namespace_id, resource_type, resource_name, resource_version, "
         + "chunk_type, chunk_text, canonical_text, language, chunk_hash, metadata, status, gmt_create, gmt_modified) "
         + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
-
+    
     private static final RowMapper<AiResourceSearchDocument> ENTRY_ROW_MAPPER =
         new AiResourceSearchDocumentRowMapper();
-
+    
     private static final RowMapper<AiResourceSearchHit> HIT_ROW_MAPPER =
         new AiResourceSearchHitRowMapper();
-
+    
     private static final RowMapper<AiResourceSearchChunk> CHUNK_ROW_MAPPER =
         new AiResourceSearchChunkRowMapper();
-
+    
     private final JdbcTemplate injectedJdbcTemplate;
-
+    
     private final TransactionTemplate injectedTransactionTemplate;
-
+    
     public JdbcAiResourceSearchRepository() {
         this.injectedJdbcTemplate = null;
         this.injectedTransactionTemplate = null;
     }
-
+    
     public JdbcAiResourceSearchRepository(JdbcTemplate jdbcTemplate) {
         this(jdbcTemplate, transactionTemplate(jdbcTemplate));
     }
-
+    
     JdbcAiResourceSearchRepository(JdbcTemplate jdbcTemplate,
         TransactionTemplate transactionTemplate) {
         this.injectedJdbcTemplate = jdbcTemplate;
         this.injectedTransactionTemplate = transactionTemplate;
     }
-
+    
     @Override
     public List<AiResourceSearchChunk> replaceEntry(AiResourceSearchDocument entry,
         List<AiResourceSearchChunk> chunks) {
@@ -99,7 +100,7 @@ public class JdbcAiResourceSearchRepository implements AiResourceSearchRepositor
             return appendChunks(entry, chunks);
         });
     }
-
+    
     @Override
     public List<AiResourceSearchChunk> appendChunks(AiResourceSearchDocument entry,
         List<AiResourceSearchChunk> chunks) {
@@ -118,7 +119,7 @@ public class JdbcAiResourceSearchRepository implements AiResourceSearchRepositor
         }
         return result;
     }
-
+    
     @Override
     public List<AiResourceSearchChunk> replaceEnhancementChunks(AiResourceSearchDocument entry,
         List<AiResourceSearchChunk> chunks) {
@@ -135,20 +136,20 @@ public class JdbcAiResourceSearchRepository implements AiResourceSearchRepositor
             return listChunks(entry.getId());
         });
     }
-
+    
     @Override
     public List<AiResourceSearchChunk> listChunks(long documentId) {
         return getJdbcTemplate().query(
             "SELECT * FROM ai_resource_search_chunk WHERE document_id=? ORDER BY id",
             CHUNK_ROW_MAPPER, documentId);
     }
-
+    
     @Override
     public void updateEntryStatus(long documentId, String status) {
         getJdbcTemplate().update("UPDATE ai_resource_search_document SET status=?, "
             + "gmt_modified=CURRENT_TIMESTAMP WHERE id=?", status, documentId);
     }
-
+    
     @Override
     public void deleteByResource(String namespaceId, String resourceType, String resourceName) {
         List<Object> args = new ArrayList<>();
@@ -158,7 +159,7 @@ public class JdbcAiResourceSearchRepository implements AiResourceSearchRepositor
         args.add(resourceName);
         getTransactionTemplate().executeWithoutResult(status -> deleteByWhere(where, args));
     }
-
+    
     @Override
     public void deleteByResourceVersion(String namespaceId, String resourceType,
         String resourceName, String resourceVersion) {
@@ -166,7 +167,7 @@ public class JdbcAiResourceSearchRepository implements AiResourceSearchRepositor
             .executeWithoutResult(status -> deleteByResourceVersionWithoutTransaction(
                 namespaceId, resourceType, resourceName, resourceVersion));
     }
-
+    
     private void deleteByResourceVersionWithoutTransaction(String namespaceId,
         String resourceType, String resourceName, String resourceVersion) {
         List<Object> args = new ArrayList<>();
@@ -178,7 +179,7 @@ public class JdbcAiResourceSearchRepository implements AiResourceSearchRepositor
         args.add(resourceVersion);
         deleteByWhere(where, args);
     }
-
+    
     @Override
     public AiResourceSearchDocument findEntry(String namespaceId, String resourceType,
         String resourceName) {
@@ -188,7 +189,7 @@ public class JdbcAiResourceSearchRepository implements AiResourceSearchRepositor
             List.of(namespaceId, resourceType, resourceName), ENTRY_ROW_MAPPER, 1);
         return entries.isEmpty() ? null : entries.get(0);
     }
-
+    
     @Override
     public List<AiResourceSearchDocument> findEntriesByIds(Collection<Long> documentIds) {
         if (documentIds == null || documentIds.isEmpty()) {
@@ -201,7 +202,7 @@ public class JdbcAiResourceSearchRepository implements AiResourceSearchRepositor
             "SELECT * FROM ai_resource_search_document WHERE id IN (" + placeholders + ")",
             ENTRY_ROW_MAPPER, args.toArray());
     }
-
+    
     @Override
     public List<AiResourceSearchHit> searchChunks(String namespaceId, String text,
         List<String> resourceTypes, int limit) {
@@ -226,7 +227,7 @@ public class JdbcAiResourceSearchRepository implements AiResourceSearchRepositor
         sql.append(" ORDER BY score DESC");
         return queryWithMaxRows(sql.toString(), args, HIT_ROW_MAPPER, limit);
     }
-
+    
     @Override
     public List<AiResourceSearchDocument> listEnabledEntries(String namespaceId,
         List<String> resourceTypes,
@@ -241,7 +242,7 @@ public class JdbcAiResourceSearchRepository implements AiResourceSearchRepositor
         sql.append(" ORDER BY gmt_modified DESC");
         return queryWithMaxRows(sql.toString(), args, ENTRY_ROW_MAPPER, limit);
     }
-
+    
     @Override
     public List<AiResourceSearchDocument> listEntries(String namespaceId,
         List<String> resourceTypes, int limit) {
@@ -253,19 +254,43 @@ public class JdbcAiResourceSearchRepository implements AiResourceSearchRepositor
         sql.append(" ORDER BY gmt_modified DESC");
         return queryWithMaxRows(sql.toString(), args, ENTRY_ROW_MAPPER, limit);
     }
-
+    
     @Override
     public List<AiResourceSearchDocument> scanEnabledEntries(String namespaceId,
         List<String> resourceTypes, long afterId, int limit) {
         return scanEntriesBatch(namespaceId, resourceTypes, afterId, limit, true);
     }
-
+    
+    @Override
+    public List<AiResourceSearchDocument> scanEnabledEntriesByResourceKey(String namespaceId,
+        List<String> resourceTypes, String afterResourceType, String afterResourceName,
+        long afterId, int limit) {
+        List<Object> args = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+            "SELECT * FROM ai_resource_search_document WHERE namespace_id=? AND status=?");
+        args.add(namespaceId);
+        args.add(AiResourceSearchConstants.STATUS_ENABLED);
+        appendResourceTypeFilter(sql, args, resourceTypes);
+        if (afterResourceType != null) {
+            sql.append(" AND (resource_type>? OR (resource_type=? AND resource_name>?) "
+                + "OR (resource_type=? AND resource_name=? AND id>?))");
+            args.add(afterResourceType);
+            args.add(afterResourceType);
+            args.add(afterResourceName);
+            args.add(afterResourceType);
+            args.add(afterResourceName);
+            args.add(afterId);
+        }
+        sql.append(" ORDER BY resource_type, resource_name, id");
+        return queryWithMaxRows(sql.toString(), args, ENTRY_ROW_MAPPER, limit);
+    }
+    
     @Override
     public List<AiResourceSearchDocument> scanEntries(String namespaceId,
         List<String> resourceTypes, long afterId, int limit) {
         return scanEntriesBatch(namespaceId, resourceTypes, afterId, limit, false);
     }
-
+    
     @Override
     public int countChunks(long documentId) {
         Integer count = getJdbcTemplate().queryForObject(
@@ -273,12 +298,12 @@ public class JdbcAiResourceSearchRepository implements AiResourceSearchRepositor
             documentId);
         return count == null ? 0 : count;
     }
-
+    
     private long insertEntry(AiResourceSearchDocument entry) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         getJdbcTemplate().update(connection -> {
-            PreparedStatement ps = connection.prepareStatement(SQL_INSERT_ENTRY,
-                new String[] {"id"});
+            PreparedStatement ps = prepareStatementWithGeneratedKey(connection,
+                SQL_INSERT_ENTRY);
             ps.setString(1, entry.getNamespaceId());
             ps.setString(2, entry.getResourceType());
             ps.setString(3, entry.getResourceName());
@@ -301,12 +326,12 @@ public class JdbcAiResourceSearchRepository implements AiResourceSearchRepositor
         }
         return key.longValue();
     }
-
+    
     private AiResourceSearchChunk insertChunk(AiResourceSearchChunk chunk) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         getJdbcTemplate().update(connection -> {
-            PreparedStatement ps = connection.prepareStatement(SQL_INSERT_CHUNK,
-                new String[] {"id"});
+            PreparedStatement ps = prepareStatementWithGeneratedKey(connection,
+                SQL_INSERT_CHUNK);
             ps.setLong(1, chunk.getDocumentId());
             ps.setString(2, chunk.getNamespaceId());
             ps.setString(3, chunk.getResourceType());
@@ -329,7 +354,13 @@ public class JdbcAiResourceSearchRepository implements AiResourceSearchRepositor
         chunk.setId(key.longValue());
         return chunk;
     }
-
+    
+    private PreparedStatement prepareStatementWithGeneratedKey(Connection connection, String sql)
+        throws SQLException {
+        String primaryKey = connection.getMetaData().storesUpperCaseIdentifiers() ? "ID" : "id";
+        return connection.prepareStatement(sql, new String[] {primaryKey});
+    }
+    
     private boolean entryExists(AiResourceSearchDocument entry) {
         Integer count = getJdbcTemplate().queryForObject(
             "SELECT COUNT(1) FROM ai_resource_search_document WHERE id=? AND namespace_id=? "
@@ -338,14 +369,14 @@ public class JdbcAiResourceSearchRepository implements AiResourceSearchRepositor
             entry.getResourceName(), entry.getResourceVersion());
         return count != null && count > 0;
     }
-
+    
     private void deleteByWhere(String where, List<Object> args) {
         getJdbcTemplate().update("DELETE FROM ai_resource_search_chunk WHERE document_id IN "
             + "(SELECT id FROM ai_resource_search_document WHERE " + where + ")", args.toArray());
         getJdbcTemplate().update("DELETE FROM ai_resource_search_document WHERE " + where,
             args.toArray());
     }
-
+    
     private void appendResourceTypeFilter(StringBuilder sql, List<Object> args,
         List<String> resourceTypes) {
         if (resourceTypes == null || resourceTypes.isEmpty()) {
@@ -355,7 +386,7 @@ public class JdbcAiResourceSearchRepository implements AiResourceSearchRepositor
             .append(")");
         args.addAll(resourceTypes);
     }
-
+    
     private String placeholders(int size) {
         StringBuilder result = new StringBuilder();
         for (int i = 0; i < size; i++) {
@@ -366,7 +397,7 @@ public class JdbcAiResourceSearchRepository implements AiResourceSearchRepositor
         }
         return result.toString();
     }
-
+    
     private List<AiResourceSearchDocument> scanEntriesBatch(String namespaceId,
         List<String> resourceTypes, long afterId, int limit, boolean enabledOnly) {
         List<Object> args = new ArrayList<>();
@@ -383,7 +414,7 @@ public class JdbcAiResourceSearchRepository implements AiResourceSearchRepositor
         sql.append(" ORDER BY id");
         return queryWithMaxRows(sql.toString(), args, ENTRY_ROW_MAPPER, limit);
     }
-
+    
     private <T> List<T> queryWithMaxRows(String sql, List<Object> args, RowMapper<T> rowMapper,
         int limit) {
         if (limit <= 0) {
@@ -398,21 +429,21 @@ public class JdbcAiResourceSearchRepository implements AiResourceSearchRepositor
             return statement;
         }, rowMapper);
     }
-
+    
     private JdbcTemplate getJdbcTemplate() {
         if (injectedJdbcTemplate != null) {
             return injectedJdbcTemplate;
         }
         return DynamicDataSource.getInstance().getDataSource().getJdbcTemplate();
     }
-
+    
     private TransactionTemplate getTransactionTemplate() {
         if (injectedTransactionTemplate != null) {
             return injectedTransactionTemplate;
         }
         return DynamicDataSource.getInstance().getDataSource().getTransactionTemplate();
     }
-
+    
     private static TransactionTemplate transactionTemplate(JdbcTemplate jdbcTemplate) {
         DataSource dataSource = jdbcTemplate == null ? null : jdbcTemplate.getDataSource();
         if (dataSource == null) {
@@ -420,10 +451,10 @@ public class JdbcAiResourceSearchRepository implements AiResourceSearchRepositor
         }
         return new TransactionTemplate(new DataSourceTransactionManager(dataSource));
     }
-
+    
     private static class AiResourceSearchDocumentRowMapper
         implements RowMapper<AiResourceSearchDocument> {
-
+        
         @Override
         public AiResourceSearchDocument mapRow(ResultSet rs, int rowNum) throws SQLException {
             AiResourceSearchDocument entry = new AiResourceSearchDocument();
@@ -446,9 +477,9 @@ public class JdbcAiResourceSearchRepository implements AiResourceSearchRepositor
             return entry;
         }
     }
-
+    
     private static class AiResourceSearchHitRowMapper implements RowMapper<AiResourceSearchHit> {
-
+        
         @Override
         public AiResourceSearchHit mapRow(ResultSet rs, int rowNum) throws SQLException {
             AiResourceSearchHit hit = new AiResourceSearchHit();
@@ -462,10 +493,10 @@ public class JdbcAiResourceSearchRepository implements AiResourceSearchRepositor
             return hit;
         }
     }
-
+    
     private static class AiResourceSearchChunkRowMapper
         implements RowMapper<AiResourceSearchChunk> {
-
+        
         @Override
         public AiResourceSearchChunk mapRow(ResultSet rs, int rowNum) throws SQLException {
             AiResourceSearchChunk chunk = new AiResourceSearchChunk();

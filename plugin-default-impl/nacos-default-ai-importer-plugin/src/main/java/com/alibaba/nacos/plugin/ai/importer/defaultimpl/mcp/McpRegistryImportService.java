@@ -47,30 +47,30 @@ import java.util.Map;
  * @since 3.2.1
  */
 public class McpRegistryImportService implements AiResourceImportService {
-
+    
     public static final String RESOURCE_TYPE_MCP = AiResourceImportConstants.RESOURCE_TYPE_MCP;
-
+    
     private static final int DEFAULT_FETCH_LIMIT = 30;
-
+    
     private static final String METADATA_ID = "id";
-
+    
     private static final String METADATA_PROTOCOL = "protocol";
-
+    
     private static final String METADATA_STATUS = "status";
-
+    
     private static final String METADATA_REPOSITORY = "repository";
-
+    
     private final McpRegistryClient client;
-
+    
     public McpRegistryImportService(String endpoint, boolean allowHttp,
         boolean allowPrivateNetwork, long maxArtifactSize) {
         this(new McpRegistryClient(endpoint, allowHttp, allowPrivateNetwork, maxArtifactSize));
     }
-
+    
     McpRegistryImportService(McpRegistryClient client) {
         this.client = client;
     }
-
+    
     @Override
     public AiResourceImportCandidatePage search(AiResourceImportContext context)
         throws NacosException {
@@ -88,7 +88,7 @@ public class McpRegistryImportService implements AiResourceImportService {
             throw dataAccess("Search MCP registry source failed: " + e.getMessage(), e);
         }
     }
-
+    
     @Override
     public AiResourceImportArtifact fetch(AiResourceImportContext context,
         AiResourceImportItem item) throws NacosException {
@@ -103,7 +103,7 @@ public class McpRegistryImportService implements AiResourceImportService {
             throw dataAccess("Fetch MCP registry artifact failed: " + e.getMessage(), e);
         }
     }
-
+    
     private String resolveExternalId(AiResourceImportItem item) throws NacosException {
         if (item == null) {
             throw invalid("MCP registry import item must not be null.");
@@ -115,11 +115,11 @@ public class McpRegistryImportService implements AiResourceImportService {
         }
         return externalId;
     }
-
+    
     private int resolveFetchLimit(AiResourceImportContext context) {
         return context.getLimit() > 0 ? context.getLimit() : DEFAULT_FETCH_LIMIT;
     }
-
+    
     private List<AiResourceImportCandidate> toCandidates(List<McpServerDetailInfo> servers) {
         if (CollectionUtils.isEmpty(servers)) {
             return Collections.emptyList();
@@ -130,7 +130,7 @@ public class McpRegistryImportService implements AiResourceImportService {
         }
         return result;
     }
-
+    
     private AiResourceImportCandidate toCandidate(McpServerDetailInfo server) {
         AiResourceImportCandidate result = new AiResourceImportCandidate();
         result.setResourceType(RESOURCE_TYPE_MCP);
@@ -141,7 +141,7 @@ public class McpRegistryImportService implements AiResourceImportService {
         result.setMetadata(buildMetadata(server));
         return result;
     }
-
+    
     private AiResourceImportArtifact toArtifact(String externalId, McpServerDetailInfo server) {
         AiResourceImportArtifact result = new AiResourceImportArtifact();
         result.setResourceType(RESOURCE_TYPE_MCP);
@@ -154,12 +154,12 @@ public class McpRegistryImportService implements AiResourceImportService {
         result.setSourceMetadata(buildMetadata(server));
         return result;
     }
-
+    
     private String resolveVersion(McpServerDetailInfo server) {
         ServerVersionDetail versionDetail = server.getVersionDetail();
         return versionDetail == null ? server.getVersion() : versionDetail.getVersion();
     }
-
+    
     private Map<String, String> buildMetadata(McpServerDetailInfo server) {
         Map<String, String> metadata = new LinkedHashMap<>();
         putIfNotBlank(metadata, METADATA_ID, server.getId());
@@ -171,18 +171,18 @@ public class McpRegistryImportService implements AiResourceImportService {
         }
         return metadata;
     }
-
+    
     private void putIfNotBlank(Map<String, String> metadata, String key, String value) {
         if (StringUtils.isNotBlank(value)) {
             metadata.put(key, value);
         }
     }
-
+    
     private NacosException invalid(String message) {
         return new NacosApiException(NacosException.INVALID_PARAM,
             ErrorCode.PARAMETER_VALIDATE_ERROR, message);
     }
-
+    
     private NacosException dataAccess(String message, Throwable cause) {
         return new NacosApiException(NacosException.SERVER_ERROR, ErrorCode.DATA_ACCESS_ERROR,
             cause, message);

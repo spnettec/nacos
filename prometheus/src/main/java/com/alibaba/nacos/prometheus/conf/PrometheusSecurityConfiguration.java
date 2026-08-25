@@ -42,7 +42,7 @@ import static com.alibaba.nacos.prometheus.api.ApiConstants.PROMETHEUS_CONTROLLE
 @NacosWebBean
 @ConditionalOnProperty(name = "nacos.prometheus.metrics.enabled", havingValue = "true")
 public class PrometheusSecurityConfiguration {
-
+    
     @Bean
     @Conditional(ConditionOnNoAuthPluginType.class)
     public SecurityFilterChain prometheusSecurityFilterChain(HttpSecurity http) throws Exception {
@@ -53,9 +53,9 @@ public class PrometheusSecurityConfiguration {
                 .permitAll());
         return http.getOrBuild();
     }
-
+    
     private static class ConditionOnNoAuthPluginType implements Condition {
-
+        
         @Override
         public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
             String nacosAuthSystemType = context.getEnvironment()

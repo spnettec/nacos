@@ -42,8 +42,8 @@ class ConfigHistoryInfoTest {
     void setUp() {
         createTime = System.currentTimeMillis();
         mapper = JsonMapper.builder()
-                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-                .build();
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .build();
         basicInfo = new ConfigHistoryBasicInfo();
         detailInfo = new ConfigHistoryDetailInfo();
         modifyTime = System.currentTimeMillis();

@@ -44,21 +44,21 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 @Component
 public class PluginStateProcessor extends RequestProcessor4CP {
-
+    
     private static final Logger LOGGER = LoggerFactory.getLogger(PluginStateProcessor.class);
-
+    
     private static final String GROUP = "plugin_state";
-
+    
     private final PluginManager pluginManager;
-
+    
     private final PluginStatePersistenceService persistence;
-
+    
     private final Serializer serializer;
-
+    
     private final ReentrantReadWriteLock lock;
-
+    
     private final ReentrantReadWriteLock.ReadLock readLock;
-
+    
     public PluginStateProcessor(PluginManager pluginManager,
         PluginStatePersistenceService persistence) {
         this.pluginManager = pluginManager;
@@ -67,18 +67,18 @@ public class PluginStateProcessor extends RequestProcessor4CP {
         this.lock = new ReentrantReadWriteLock();
         this.readLock = lock.readLock();
     }
-
+    
     @Override
     public String group() {
         return GROUP;
     }
-
+    
     @Override
     public Response onRequest(ReadRequest request) {
         // Read operations can go directly to PluginManager
         return Response.newBuilder().setSuccess(true).build();
     }
-
+    
     @Override
     public Response onApply(WriteRequest request) {
         readLock.lock();
@@ -87,7 +87,7 @@ public class PluginStateProcessor extends RequestProcessor4CP {
             operation = serializer.deserialize(
                 request.getData().toByteArray(),
                 PluginStateOperation.class);
-
+            
             switch (operation.getType()) {
                 case CHANGE_STATE:
                     applyStateChange(operation);
@@ -101,7 +101,7 @@ public class PluginStateProcessor extends RequestProcessor4CP {
                         .setErrMsg("Unknown operation type: " + operation.getType())
                         .build();
             }
-
+            
             return Response.newBuilder().setSuccess(true).build();
         } catch (Exception e) {
             String context = buildErrorContext(operation);
@@ -122,7 +122,7 @@ public class PluginStateProcessor extends RequestProcessor4CP {
             readLock.unlock();
         }
     }
-
+    
     private String buildErrorContext(PluginStateOperation operation) {
         if (operation == null) {
             return "operation=null";
@@ -131,33 +131,33 @@ public class PluginStateProcessor extends RequestProcessor4CP {
         String opType = operation.getType() != null ? operation.getType().name() : "unknown";
         return "pluginId=" + pluginId + ", operation=" + opType;
     }
-
+    
     private void applyStateChange(PluginStateOperation operation) {
         String pluginId = operation.getPluginId();
         Boolean enabled = operation.getEnabled();
-
+        
         if (enabled == null) {
             throw new IllegalArgumentException(
                 "Enabled state cannot be null for CHANGE_STATE operation, pluginId=" + pluginId);
         }
-
+        
         pluginManager.validateStateChange(pluginId, enabled);
         persistence.saveState(pluginId, enabled);
         pluginManager.applyStateChange(pluginId, enabled);
-
+        
         LOGGER.info("[PluginStateProcessor] Applied state change: {}={}", pluginId, enabled);
     }
-
+    
     private void applyConfigUpdate(PluginStateOperation operation) {
         String pluginId = operation.getPluginId();
         Map<String, String> config = operation.getConfig();
-
+        
         // Apply to in-memory config
         pluginManager.applyConfigChange(pluginId, config);
-
+        
         LOGGER.info("[PluginStateProcessor] Applied config update: {}", pluginId);
     }
-
+    
     @Override
     public List<SnapshotOperation> loadSnapshotOperate() {
         return Collections.singletonList(

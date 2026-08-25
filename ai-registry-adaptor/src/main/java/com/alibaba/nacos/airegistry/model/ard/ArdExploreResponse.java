@@ -30,75 +30,75 @@ import java.util.Map;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ArdExploreResponse {
-
+    
     private String resultType = "facets";
-
+    
     private Map<String, FacetResult> facets = new LinkedHashMap<>();
-
+    
     public String getResultType() {
         return resultType;
     }
-
+    
     public void setResultType(String resultType) {
         this.resultType = resultType;
     }
-
+    
     public Map<String, FacetResult> getFacets() {
         return facets;
     }
-
+    
     public void setFacets(Map<String, FacetResult> facets) {
         this.facets = facets;
     }
-
+    
     /**
      * Facet buckets for one field.
      */
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class FacetResult {
-
+        
         private List<FacetBucket> buckets = new ArrayList<>();
-
+        
         private Integer otherCount;
-
+        
         public List<FacetBucket> getBuckets() {
             return buckets;
         }
-
+        
         public void setBuckets(List<FacetBucket> buckets) {
             this.buckets = buckets;
         }
-
+        
         public Integer getOtherCount() {
             return otherCount;
         }
-
+        
         public void setOtherCount(Integer otherCount) {
             this.otherCount = otherCount;
         }
     }
-
+    
     /**
      * Single facet bucket.
      */
     public static class FacetBucket {
-
+        
         private String value;
-
+        
         private Integer count;
-
+        
         public String getValue() {
             return value;
         }
-
+        
         public void setValue(String value) {
             this.value = value;
         }
-
+        
         public Integer getCount() {
             return count;
         }
-
+        
         public void setCount(Integer count) {
             this.count = count;
         }

@@ -37,12 +37,12 @@ import java.util.TreeMap;
  * @author Nacos
  */
 public final class AgentVersionCatalogBuilder {
-
+    
     private static final int MAX_PROTOCOLS_PER_VERSION = 16;
-
+    
     private AgentVersionCatalogBuilder() {
     }
-
+    
     /**
      * Build deterministic derived metadata from online Version facts.
      *
@@ -63,19 +63,19 @@ public final class AgentVersionCatalogBuilder {
         if (labels == null) {
             throw new IllegalArgumentException("labels must not be null");
         }
-
+        
         Map<String, List<String>> protocolsByVersion =
             validateAndCopyProtocols(onlineVersionProtocols);
         Map<String, String> normalizedLabels = validateAndSortLabels(labels);
         List<String> versions = new ArrayList<String>(protocolsByVersion.keySet());
         versions.sort(new Comparator<String>() {
-
+            
             @Override
             public int compare(String left, String right) {
                 return AgentVersionComparator.compare(right, left);
             }
         });
-
+        
         if (versions.isEmpty()) {
             normalizedLabels.remove("latest");
         } else {
@@ -85,7 +85,7 @@ public final class AgentVersionCatalogBuilder {
                 normalizedLabels = sortLabels(normalizedLabels);
             }
         }
-
+        
         AgentVersionCatalog catalog = new AgentVersionCatalog();
         catalog.setLatestVersion(normalizedLabels.get("latest"));
         List<AgentVersionCatalogEntry> entries =
@@ -102,7 +102,7 @@ public final class AgentVersionCatalogBuilder {
         AgentModelValidator.validateVersionCatalog(catalog);
         return new Result(catalog, normalizedLabels);
     }
-
+    
     private static Map<String, List<String>> validateAndCopyProtocols(
         Map<String, List<String>> onlineVersionProtocols) {
         Map<String, List<String>> result = new LinkedHashMap<String, List<String>>();
@@ -130,7 +130,7 @@ public final class AgentVersionCatalogBuilder {
         }
         return result;
     }
-
+    
     private static Map<String, String> validateAndSortLabels(Map<String, String> labels) {
         for (Map.Entry<String, String> entry : labels.entrySet()) {
             AgentValidationUtils.validateLabel(entry.getKey());
@@ -138,11 +138,11 @@ public final class AgentVersionCatalogBuilder {
         }
         return sortLabels(labels);
     }
-
+    
     private static Map<String, String> sortLabels(Map<String, String> labels) {
         return new LinkedHashMap<String, String>(new TreeMap<String, String>(labels));
     }
-
+    
     private static List<String> labelsForVersion(Map<String, String> labels, String version) {
         List<String> result = new ArrayList<String>();
         for (Map.Entry<String, String> label : labels.entrySet()) {
@@ -152,29 +152,29 @@ public final class AgentVersionCatalogBuilder {
         }
         return Collections.unmodifiableList(result);
     }
-
+    
     /**
      * Result of rebuilding all resource-level facts derived from online Versions.
      */
     public static final class Result {
-
+        
         private final AgentVersionCatalog versionCatalog;
-
+        
         private final Map<String, String> labels;
-
+        
         private Result(AgentVersionCatalog versionCatalog, Map<String, String> labels) {
             this.versionCatalog = versionCatalog;
             this.labels = Collections.unmodifiableMap(
                 new LinkedHashMap<String, String>(labels));
         }
-
+        
         public AgentVersionCatalog getVersionCatalog() {
             return versionCatalog;
         }
-
+        
         public Map<String, String> getLabels() {
             return labels;
         }
-
+        
     }
 }

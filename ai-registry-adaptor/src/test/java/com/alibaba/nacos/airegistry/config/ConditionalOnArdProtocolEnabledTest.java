@@ -36,22 +36,22 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author nacos
  */
 class ConditionalOnArdProtocolEnabledTest {
-
+    
     private static final Class<?>[] ARD_PROTOCOL_COMPONENTS = {ArdSearchController.class,
         ArdWellKnownController.class, ArdArtifactService.class, ArdSearchServiceImpl.class,
         ArdWebConfiguration.class};
-
+    
     @Test
     void shouldBeDisabledByDefault() {
         assertArdProtocolComponentsDisabled(Collections.emptyMap());
     }
-
+    
     @Test
     void shouldBeDisabledWhenExplicitlyConfiguredFalse() {
         assertArdProtocolComponentsDisabled(
             Collections.singletonMap(Constants.ARD_ENABLED_KEY, "false"));
     }
-
+    
     private void assertArdProtocolComponentsDisabled(Map<String, Object> properties) {
         try (AnnotationConfigApplicationContext context =
             new AnnotationConfigApplicationContext()) {
@@ -61,7 +61,7 @@ class ConditionalOnArdProtocolEnabledTest {
             }
             context.register(ARD_PROTOCOL_COMPONENTS);
             context.refresh();
-
+            
             for (Class<?> component : ARD_PROTOCOL_COMPONENTS) {
                 assertTrue(context.getBeansOfType(component).isEmpty(),
                     () -> component.getSimpleName() + " should not be registered");

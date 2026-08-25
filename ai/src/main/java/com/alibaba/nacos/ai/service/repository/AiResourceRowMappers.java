@@ -30,12 +30,12 @@ import java.sql.SQLException;
  */
 @Component
 public final class AiResourceRowMappers {
-
+    
     static final RowMapper<AiResource> AI_RESOURCE_ROW_MAPPER = new AiResourceRowMapper();
-
+    
     static final RowMapper<AiResourceVersion> AI_RESOURCE_VERSION_ROW_MAPPER =
         new AiResourceVersionRowMapper();
-
+    
     static {
         RowMapperManager.registerRowMapper(
             AI_RESOURCE_ROW_MAPPER.getClass().getCanonicalName(), AI_RESOURCE_ROW_MAPPER);
@@ -43,12 +43,12 @@ public final class AiResourceRowMappers {
             AI_RESOURCE_VERSION_ROW_MAPPER.getClass().getCanonicalName(),
             AI_RESOURCE_VERSION_ROW_MAPPER);
     }
-
+    
     public AiResourceRowMappers() {
     }
-
+    
     private static final class AiResourceRowMapper implements RowMapper<AiResource> {
-
+        
         @Override
         public AiResource mapRow(ResultSet resultSet, int rowNum) throws SQLException {
             AiResource result = new AiResource();
@@ -71,10 +71,10 @@ public final class AiResourceRowMappers {
             return result;
         }
     }
-
+    
     private static final class AiResourceVersionRowMapper
         implements RowMapper<AiResourceVersion> {
-
+        
         @Override
         public AiResourceVersion mapRow(ResultSet resultSet, int rowNum) throws SQLException {
             AiResourceVersion result = new AiResourceVersion();

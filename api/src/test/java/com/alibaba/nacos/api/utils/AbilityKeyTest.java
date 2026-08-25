@@ -36,13 +36,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @date 2022/9/8 12:27
  **/
 class AbilityKeyTest {
-
+    
     @Test
     void testMapStr() {
         Map<AbilityKey, Boolean> enumMap = new HashMap<>();
         Map<String, Boolean> stringBooleanMap = AbilityKey.mapStr(enumMap);
         assertEquals(0, stringBooleanMap.size());
-
+        
         enumMap.put(AbilityKey.SERVER_FUZZY_WATCH, true);
         enumMap.put(AbilityKey.SERVER_DISTRIBUTED_LOCK, false);
         enumMap.put(AbilityKey.SERVER_PERSISTENT_INSTANCE_BY_GRPC, false);
@@ -63,7 +63,7 @@ class AbilityKeyTest {
         assertFalse(stringBooleanMap.get(AbilityKey.SERVER_AGENT_DISCOVERY_V1.getName()));
         assertFalse(stringBooleanMap.get(AbilityKey.SERVER_AGENT_ENDPOINT_V1.getName()));
         assertFalse(stringBooleanMap.get(AbilityKey.SERVER_AGENT_PUBLISH_V1.getName()));
-
+        
         enumMap.put(AbilityKey.SERVER_DISTRIBUTED_LOCK, true);
         enumMap.put(AbilityKey.SERVER_PERSISTENT_INSTANCE_BY_GRPC, true);
         enumMap.put(AbilityKey.SERVER_MCP_REGISTRY, true);
@@ -84,7 +84,7 @@ class AbilityKeyTest {
         assertTrue(stringBooleanMap.get(AbilityKey.SERVER_AGENT_ENDPOINT_V1.getName()));
         assertTrue(stringBooleanMap.get(AbilityKey.SERVER_AGENT_PUBLISH_V1.getName()));
     }
-
+    
     @Test
     void testGetAllValues() {
         Collection<AbilityKey> actual = AbilityKey.getAllValues(AbilityMode.SERVER);
@@ -94,7 +94,7 @@ class AbilityKeyTest {
         actual = AbilityKey.getAllValues(AbilityMode.CLUSTER_CLIENT);
         assertEquals(1, actual.size());
     }
-
+    
     @Test
     void testGetAllNames() {
         Collection<String> actual = AbilityKey.getAllNames(AbilityMode.SERVER);
@@ -104,7 +104,7 @@ class AbilityKeyTest {
         actual = AbilityKey.getAllNames(AbilityMode.CLUSTER_CLIENT);
         assertEquals(1, actual.size());
     }
-
+    
     @Test
     void testGetDescription() {
         assertEquals("Server whether support fuzzy watch service or config",

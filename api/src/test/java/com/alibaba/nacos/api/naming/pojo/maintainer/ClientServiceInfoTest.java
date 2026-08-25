@@ -37,8 +37,8 @@ class ClientServiceInfoTest {
     @BeforeEach
     void setUp() throws Exception {
         mapper = JsonMapper.builder()
-                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-                .build();
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .build();
         clientServiceInfo = new ClientServiceInfo();
         clientServiceInfo.setNamespaceId("namespaceId");
         clientServiceInfo.setGroupName("groupName");

@@ -46,12 +46,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author nacos
  */
 class AiResourceIndexContentLoaderImplTest {
-
+    
     @AfterEach
     void tearDown() {
         AiResourceStorageRouter.reset();
     }
-
+    
     @Test
     void loadShouldOnlyReadSkillMdFromStorage() throws Exception {
         TestStorage storage = new TestStorage("test");
@@ -59,17 +59,17 @@ class AiResourceIndexContentLoaderImplTest {
         save(storage, "SKILL.md", "Create AI avatar and talking head videos.");
         save(storage, "templates/prompt.md", "Avatar video prompt template.");
         save(storage, "assets/logo.png", "binary");
-
+        
         AiResourceIndexContentLoaderImpl loader = new AiResourceIndexContentLoaderImpl(
             new AiResourceFileReader());
         List<AiResourceIndexEnhancementContent> contents = loader.load(entry(), version());
-
+        
         assertEquals(1, contents.size());
         assertEquals("SKILL.md", contents.get(0).getPath());
         assertFalse(contents.stream().anyMatch(content -> "templates/prompt.md".equals(
             content.getPath())));
     }
-
+    
     @Test
     void loadShouldReadPromptContentFromStorage() throws Exception {
         TestStorage storage = new TestStorage("test");
@@ -78,32 +78,32 @@ class AiResourceIndexContentLoaderImplTest {
         prompt.setTemplate("生成头像视频脚本，适合数字人介绍产品");
         prompt.setVariables(List.of(new PromptVariable("avatar", null, "头像图片 URL")));
         savePrompt(storage, JacksonUtils.toJson(prompt));
-
+        
         AiResourceIndexContentLoaderImpl loader = new AiResourceIndexContentLoaderImpl(
             new AiResourceFileReader());
         List<AiResourceIndexEnhancementContent> contents =
             loader.load(promptEntry(), promptVersion());
-
+        
         assertEquals(1, contents.size());
         assertEquals(PromptUtils.PROMPT_MAIN_DATA_ID, contents.get(0).getPath());
         assertFalse(contents.get(0).getText().contains("{\"template\""));
         assertFalse(contents.get(0).getText().contains("\"variables\""));
         assertTrue(contents.get(0).getText().contains("头像图片 URL"));
     }
-
+    
     private void save(TestStorage storage, String filePath, String content) throws Exception {
         StorageKey key = NacosConfigAiResourceStorage.buildStorageKey(storage.type(), "public",
             "ai-video-avatar", "1.0.0", filePath);
         storage.save(key, content.getBytes(StandardCharsets.UTF_8));
     }
-
+    
     private void savePrompt(TestStorage storage, String content) throws Exception {
         StorageKey key = NacosConfigAiResourceStorage.buildStorageKey(storage.type(), "public",
             NacosConfigAiResourceStorage.RESOURCE_TYPE_PROMPT, "avatar-prompt", "1.0.0",
             PromptUtils.PROMPT_MAIN_DATA_ID);
         storage.save(key, content.getBytes(StandardCharsets.UTF_8));
     }
-
+    
     private AiResourceSearchDocument entry() {
         AiResourceSearchDocument entry = new AiResourceSearchDocument();
         entry.setNamespaceId("public");
@@ -112,7 +112,7 @@ class AiResourceIndexContentLoaderImplTest {
         entry.setResourceVersion("1.0.0");
         return entry;
     }
-
+    
     private AiResourceSearchDocument promptEntry() {
         AiResourceSearchDocument entry = new AiResourceSearchDocument();
         entry.setNamespaceId("public");
@@ -121,46 +121,46 @@ class AiResourceIndexContentLoaderImplTest {
         entry.setResourceVersion("1.0.0");
         return entry;
     }
-
+    
     private AiResourceVersion version() {
         AiResourceVersion version = new AiResourceVersion();
         version.setStorage(JacksonUtils.toJson(Map.of("provider", "test", "files",
             List.of("SKILL.md", "templates/prompt.md", "assets/logo.png"))));
         return version;
     }
-
+    
     private AiResourceVersion promptVersion() {
         AiResourceVersion version = new AiResourceVersion();
         version.setStorage(JacksonUtils.toJson(Map.of("provider", "test", "files",
             List.of(PromptUtils.PROMPT_MAIN_DATA_ID))));
         return version;
     }
-
+    
     private static class TestStorage implements AiResourceStorage {
-
+        
         private final String type;
-
+        
         private final Map<String, byte[]> values = new HashMap<>();
-
+        
         private TestStorage(String type) {
             this.type = type;
         }
-
+        
         @Override
         public String type() {
             return type;
         }
-
+        
         @Override
         public void save(StorageKey storageKey, byte[] content) {
             values.put(storageKey.getKey(), content);
         }
-
+        
         @Override
         public byte[] get(StorageKey storageKey) {
             return values.get(storageKey.getKey());
         }
-
+        
         @Override
         public void delete(StorageKey storageKey) {
             values.remove(storageKey.getKey());

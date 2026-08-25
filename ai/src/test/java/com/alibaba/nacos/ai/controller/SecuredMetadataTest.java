@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class SecuredMetadataTest {
-
+    
     @Test
     void testAdminAiForcePublishMetadata() {
         assertSecured(AgentAdminController.class, "forcePublish",
@@ -44,7 +44,7 @@ class SecuredMetadataTest {
         assertSecured(SkillAdminController.class, "forcePublish",
             "/v3/admin/ai/skills/force-publish");
     }
-
+    
     @Test
     void testAgentSpecResourceParsers() {
         assertParser(AgentSpecAdminController.class, "updateDraft",
@@ -52,7 +52,7 @@ class SecuredMetadataTest {
         assertParser(AgentSpecClientController.class, "get",
             AgentSpecNameHttpResourceParser.class, ApiType.OPEN_API);
     }
-
+    
     private void assertSecured(Class<?> controllerClass, String methodName, String resource) {
         Method method = Arrays.stream(controllerClass.getDeclaredMethods())
             .filter(candidate -> methodName.equals(candidate.getName()))
@@ -65,7 +65,7 @@ class SecuredMetadataTest {
         assertEquals(SignType.AI, secured.signType());
         assertEquals(ApiType.ADMIN_API, secured.apiType());
     }
-
+    
     private void assertParser(Class<?> controllerClass, String methodName,
         Class<? extends ResourceParser> parser, ApiType apiType) {
         Method method = Arrays.stream(controllerClass.getDeclaredMethods())

@@ -45,7 +45,7 @@ import java.util.Map;
  * @author nacos
  */
 public class DefaultVisibilityAdvisorConverter implements VisibilityAdvisorConverter {
-
+    
     @Override
     public QueryCondition convert(QueryCondition condition, String identity, QueryAdvisor advisor,
         VisibilityQueryContext context) {
@@ -56,7 +56,7 @@ public class DefaultVisibilityAdvisorConverter implements VisibilityAdvisorConve
         }
         BaseVisibilityPredicate base = advisor.getBasePredicate();
         BaseResolution resolution = resolveBase(base, result, identity);
-
+        
         List<String> authorized =
             advisor.getAuthorizedPredicate() == null ? null : advisor.getAuthorizedPredicate()
                 .getResources();
@@ -67,7 +67,7 @@ public class DefaultVisibilityAdvisorConverter implements VisibilityAdvisorConve
         applyResolution(result, resolution, hasAuthorized ? authorized : null);
         return result;
     }
-
+    
     private BaseResolution resolveBase(BaseVisibilityPredicate base, QueryCondition condition,
         String identity) {
         switch (base) {
@@ -82,7 +82,7 @@ public class DefaultVisibilityAdvisorConverter implements VisibilityAdvisorConve
                 return resolvePublicAndOwner(condition, identity);
         }
     }
-
+    
     private BaseResolution resolvePublic(QueryCondition condition) {
         if (StringUtils.isBlank(condition.getScope())) {
             return BaseResolution.branches(singleBranch("scope", VisibilityConstants.SCOPE_PUBLIC));
@@ -92,7 +92,7 @@ public class DefaultVisibilityAdvisorConverter implements VisibilityAdvisorConve
         }
         return BaseResolution.alwaysFalse();
     }
-
+    
     private BaseResolution resolveOwner(QueryCondition condition, String identity) {
         if (StringUtils.isBlank(identity)) {
             // B (owner=identity) cannot be satisfied without an identity, so this branch of B
@@ -110,7 +110,7 @@ public class DefaultVisibilityAdvisorConverter implements VisibilityAdvisorConve
         }
         return BaseResolution.alwaysFalse();
     }
-
+    
     private BaseResolution resolvePublicAndOwner(QueryCondition condition, String identity) {
         if (StringUtils.isBlank(identity)) {
             return resolvePublic(condition);
@@ -138,13 +138,13 @@ public class DefaultVisibilityAdvisorConverter implements VisibilityAdvisorConve
         }
         return BaseResolution.branches(branches);
     }
-
+    
     private Map<String, Object> singleBranch(String field, Object value) {
         Map<String, Object> branch = new LinkedHashMap<>();
         branch.put(field, value);
         return branch;
     }
-
+    
     /**
      * Union the resolved base predicate {@code B} with {@code G} (authorized resource names,
      * or {@code null}/empty when there are none) and collapse the result into the condition.
@@ -175,7 +175,7 @@ public class DefaultVisibilityAdvisorConverter implements VisibilityAdvisorConve
                 simplifyOrGroup(condition);
         }
     }
-
+    
     private void simplifyOrGroup(QueryCondition condition) {
         Map<String, Object> orGroup = condition.getOrGroup();
         if (orGroup == null || orGroup.isEmpty()) {
@@ -197,44 +197,44 @@ public class DefaultVisibilityAdvisorConverter implements VisibilityAdvisorConve
             condition.setOrGroup(new LinkedHashMap<>());
         }
     }
-
+    
     /**
      * Self-contained resolution of the base visibility predicate {@code B}, computed independently
      * of {@code G} so the two can be unioned correctly before any simplification happens.
      */
     private static final class BaseResolution {
-
+        
         private enum Kind {
             ALWAYS_TRUE,
             ALWAYS_FALSE,
             BRANCHES
         }
-
+        
         private final Kind kind;
-
+        
         private final Map<String, Object> branches;
-
+        
         private BaseResolution(Kind kind, Map<String, Object> branches) {
             this.kind = kind;
             this.branches = branches;
         }
-
+        
         static BaseResolution alwaysTrue() {
             return new BaseResolution(Kind.ALWAYS_TRUE, null);
         }
-
+        
         static BaseResolution alwaysFalse() {
             return new BaseResolution(Kind.ALWAYS_FALSE, null);
         }
-
+        
         static BaseResolution branches(Map<String, Object> branches) {
             return new BaseResolution(Kind.BRANCHES, branches);
         }
-
+        
         Kind getKind() {
             return kind;
         }
-
+        
         Map<String, Object> getBranches() {
             return branches;
         }

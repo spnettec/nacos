@@ -44,33 +44,33 @@ import org.springframework.stereotype.Component;
 @EnabledInnerHandler
 @EnabledAiHandler
 public class AgentInnerHandler implements AgentHandler {
-
+    
     private final AgentOperationService agentOperationService;
-
+    
     private final AgentRuntimeRegistryService runtimeRegistryService;
-
+    
     public AgentInnerHandler(AgentOperationService agentOperationService,
         AgentRuntimeRegistryService runtimeRegistryService) {
         this.agentOperationService = agentOperationService;
         this.runtimeRegistryService = runtimeRegistryService;
     }
-
+    
     @Override
     public AgentOverview getAgent(String namespaceId, String agentName) throws NacosException {
         return agentOperationService.getOverview(namespaceId, agentName);
     }
-
+    
     @Override
     public Agent updateAgent(String namespaceId, AgentUpdateRequest request)
         throws NacosException {
         return agentOperationService.updateAgent(toAgent(namespaceId, request));
     }
-
+    
     @Override
     public void deleteAgent(String namespaceId, String agentName) throws NacosException {
         agentOperationService.deleteAgent(namespaceId, agentName);
     }
-
+    
     @Override
     public Page<AgentSummary> listAgents(String namespaceId, String agentName, String bizTag,
         String scope, String owner, String orderBy, int pageNo, int pageSize)
@@ -78,89 +78,89 @@ public class AgentInnerHandler implements AgentHandler {
         return agentOperationService.listAgents(namespaceId, agentName, bizTag, scope, owner,
             orderBy, pageNo, pageSize);
     }
-
+    
     @Override
     public Page<AgentVersionSummary> listVersions(String namespaceId, String agentName,
         String status, int pageNo, int pageSize) throws NacosException {
         return agentOperationService.listVersions(namespaceId, agentName, status, pageNo,
             pageSize);
     }
-
+    
     @Override
     public AgentVersionDetail getVersion(String namespaceId, String agentName, String version)
         throws NacosException {
         return agentOperationService.getVersion(namespaceId, agentName, version);
     }
-
+    
     @Override
     public RuntimeEndpointSnapshot getRuntimeEndpoints(String namespaceId, String agentName,
         String protocol, String version) throws NacosException {
         return runtimeRegistryService.getRuntimeEndpointSnapshot(namespaceId, agentName, protocol,
             version);
     }
-
+    
     @Override
     public AgentVersionDetail createDraft(String namespaceId, AgentDraftCreateRequest request)
         throws NacosException {
         return agentOperationService.createDraft(namespaceId, request);
     }
-
+    
     @Override
     public AgentVersionDetail updateDraft(String namespaceId, AgentDraftUpdateRequest request)
         throws NacosException {
         return agentOperationService.updateDraft(namespaceId, request.getAgentName(),
             request.getVersion(), request.getCallInterfaces(), request.getChangeDescription());
     }
-
+    
     @Override
     public void deleteDraft(String namespaceId, String agentName, String version)
         throws NacosException {
         agentOperationService.deleteDraft(namespaceId, agentName, version);
     }
-
+    
     @Override
     public AgentVersionSummary submit(String namespaceId, String agentName, String version)
         throws NacosException {
         return agentOperationService.submit(namespaceId, agentName, version);
     }
-
+    
     @Override
     public AgentVersionSummary publish(String namespaceId, String agentName, String version)
         throws NacosException {
         return agentOperationService.publish(namespaceId, agentName, version);
     }
-
+    
     @Override
     public AgentVersionSummary forcePublish(String namespaceId, String agentName, String version)
         throws NacosException {
         return agentOperationService.forcePublish(namespaceId, agentName, version);
     }
-
+    
     @Override
     public AgentVersionSummary redraft(String namespaceId, String agentName, String version)
         throws NacosException {
         return agentOperationService.redraft(namespaceId, agentName, version);
     }
-
+    
     @Override
     public AgentVersionSummary online(String namespaceId, String agentName, String version)
         throws NacosException {
         return agentOperationService.online(namespaceId, agentName, version);
     }
-
+    
     @Override
     public AgentVersionSummary offline(String namespaceId, String agentName, String version)
         throws NacosException {
         return agentOperationService.offline(namespaceId, agentName, version);
     }
-
+    
     @Override
     public Agent updateLabels(String namespaceId, AgentLabelsUpdateRequest request)
         throws NacosException {
         return agentOperationService.updateLabels(namespaceId, request.getAgentName(),
             request.getLabels());
     }
-
+    
     private Agent toAgent(String namespaceId, AgentUpdateRequest request) {
         Agent result = new Agent();
         result.setNamespaceId(namespaceId);

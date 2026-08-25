@@ -38,9 +38,9 @@ import java.util.Collections;
  * @author xiweng.yy
  */
 public class AgentCardUtil {
-
+    
     private static final String AGENT_INTERFACE_URL_PATTERN = "%s://%s:%s";
-
+    
     /**
      * Build Agent Card Storage Info from Agent Detail form.
      *
@@ -54,7 +54,7 @@ public class AgentCardUtil {
         agentCardDetailInfo.setRegistrationType(registrationType);
         return agentCardDetailInfo;
     }
-
+    
     /**
      * Build Agent Card Storage Info from AgentCard.
      *
@@ -76,7 +76,7 @@ public class AgentCardUtil {
             Collections.singletonList(buildAgentVersionDetail(agentCard, isLatest)));
         return agentCardVersionInfo;
     }
-
+    
     /**
      * Build Agent version detail from Agent Detail form.
      *
@@ -92,7 +92,7 @@ public class AgentCardUtil {
         agentVersionDetail.setLatest(isLatest);
         return agentVersionDetail;
     }
-
+    
     /**
      * Update update time of agent version detail.
      *
@@ -101,7 +101,7 @@ public class AgentCardUtil {
     public static void updateUpdateTime(AgentVersionDetail versionDetail) {
         versionDetail.setUpdatedAt(getCurrentTime());
     }
-
+    
     /**
      * Build {@link AgentInterface} from service {@link Instance}.
      *
@@ -139,20 +139,20 @@ public class AgentCardUtil {
             .setTenant(instance.getMetadata().get(Constants.Agent.AGENT_ENDPOINT_TENANT_KEY));
         return agentInterface;
     }
-
+    
     private static String handlerTlsIfNeeded(String protocol, boolean isSupportTls) {
         if (AiConstants.A2a.A2A_ENDPOINT_DEFAULT_PROTOCOL.equalsIgnoreCase(protocol)) {
             return isSupportTls ? Constants.PROTOCOL_TYPE_HTTPS : Constants.PROTOCOL_TYPE_HTTP;
         }
         return protocol;
     }
-
+    
     private static String getCurrentTime() {
         ZonedDateTime currentTime = ZonedDateTime.now(ZoneOffset.UTC);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(Constants.RELEASE_DATE_FORMAT);
         return currentTime.format(formatter);
     }
-
+    
     private static void copyAgentCardInfo(AgentCard target, AgentCard source) {
         copyAgentCardBasicInfo(target, source);
         target.setUrl(source.getUrl());
@@ -169,7 +169,7 @@ public class AgentCardUtil {
         target.setSignatures(source.getSignatures());
         target.setDocumentationUrl(source.getDocumentationUrl());
     }
-
+    
     private static void copyAgentCardBasicInfo(AgentCardBasicInfo target,
         AgentCardBasicInfo source) {
         target.setProtocolVersion(source.getProtocolVersion());

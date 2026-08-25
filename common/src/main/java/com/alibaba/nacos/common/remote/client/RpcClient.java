@@ -954,7 +954,7 @@ public abstract class RpcClient implements Closeable {
         protected int serverPort;
         
         public ServerInfo() {
-
+            
         }
         
         public ServerInfo(String serverIp, int serverPort) {

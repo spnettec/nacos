@@ -46,18 +46,18 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class AbstractProcessorTest {
-
+    
     @Mock
     private JRaftServer serverWithNullTuple;
-
+    
     @Mock
     private JRaftServer serverWithFollowerNode;
-
+    
     @Mock
     private Node followerNode;
-
+    
     private JRaftServer server = new JRaftServer(mock(JRaftAuthUpgradeCoordinator.class)) {
-
+        
         @Override
         public void applyOperation(Node node, Message data, FailoverClosure closure) {
             closure.setResponse(Response.newBuilder().setSuccess(false)
@@ -65,23 +65,23 @@ class AbstractProcessorTest {
             closure.run(new Status(RaftError.UNKNOWN, "Error message transmission"));
         }
     };
-
+    
     @Test
     void testErrorThroughRpc() {
         final AtomicReference<Response> reference = new AtomicReference<>();
-
+        
         RpcContext context = new RpcContext() {
-
+            
             @Override
             public void sendResponse(Object responseObj) {
                 reference.set((Response) responseObj);
             }
-
+            
             @Override
             public Connection getConnection() {
                 return null;
             }
-
+            
             @Override
             public String getRemoteAddress() {
                 return null;
@@ -90,31 +90,31 @@ class AbstractProcessorTest {
         AbstractProcessor processor = new NacosWriteRequestProcessor(server);
         processor.execute(server, context, WriteRequest.newBuilder().build(),
             new JRaftServer.RaftGroupTuple());
-
+        
         Response response = reference.get();
         assertNotNull(response);
-
+        
         assertEquals("Error message transmission", response.getErrMsg());
         assertFalse(response.getSuccess());
     }
-
+    
     @Test
     void testHandleRequestWhenTupleNotFound() {
         when(serverWithNullTuple.findTupleByGroup(anyString())).thenReturn(null);
         NacosWriteRequestProcessor processor = new NacosWriteRequestProcessor(serverWithNullTuple);
         final AtomicReference<Response> reference = new AtomicReference<>();
         RpcContext context = new RpcContext() {
-
+            
             @Override
             public void sendResponse(Object responseObj) {
                 reference.set((Response) responseObj);
             }
-
+            
             @Override
             public Connection getConnection() {
                 return null;
             }
-
+            
             @Override
             public String getRemoteAddress() {
                 return null;
@@ -128,7 +128,7 @@ class AbstractProcessorTest {
         assertTrue(response.getErrMsg().contains("Could not find the corresponding Raft Group"));
         assertTrue(response.getErrMsg().contains("unknown-group"));
     }
-
+    
     @Test
     void testHandleRequestWhenNodeIsNotLeader() {
         when(followerNode.isLeader()).thenReturn(false);
@@ -139,17 +139,17 @@ class AbstractProcessorTest {
             new NacosWriteRequestProcessor(serverWithFollowerNode);
         final AtomicReference<Response> reference = new AtomicReference<>();
         RpcContext context = new RpcContext() {
-
+            
             @Override
             public void sendResponse(Object responseObj) {
                 reference.set((Response) responseObj);
             }
-
+            
             @Override
             public Connection getConnection() {
                 return null;
             }
-
+            
             @Override
             public String getRemoteAddress() {
                 return null;
@@ -162,7 +162,7 @@ class AbstractProcessorTest {
         assertTrue(response.getErrMsg().contains("Could not find leader"));
         assertTrue(response.getErrMsg().contains("g"));
     }
-
+    
     @Test
     void testHandleRequestWhenThrowableInTryBlockSendsErrorResponse() {
         when(followerNode.isLeader()).thenThrow(new RuntimeException("node error"));
@@ -173,17 +173,17 @@ class AbstractProcessorTest {
             new NacosWriteRequestProcessor(serverWithFollowerNode);
         final AtomicReference<Response> reference = new AtomicReference<>();
         RpcContext context = new RpcContext() {
-
+            
             @Override
             public void sendResponse(Object responseObj) {
                 reference.set((Response) responseObj);
             }
-
+            
             @Override
             public Connection getConnection() {
                 return null;
             }
-
+            
             @Override
             public String getRemoteAddress() {
                 return null;
@@ -195,22 +195,22 @@ class AbstractProcessorTest {
         assertFalse(response.getSuccess());
         assertTrue(response.getErrMsg().contains("node error"));
     }
-
+    
     @Test
     void testExecuteSuccessPathSendsResponseData() {
         final AtomicReference<Response> reference = new AtomicReference<>();
         RpcContext context = new RpcContext() {
-
+            
             @Override
             public void sendResponse(Object responseObj) {
                 reference.set((Response) responseObj);
             }
-
+            
             @Override
             public Connection getConnection() {
                 return null;
             }
-
+            
             @Override
             public String getRemoteAddress() {
                 return null;
@@ -233,22 +233,22 @@ class AbstractProcessorTest {
         assertNotNull(response);
         assertTrue(response.getSuccess());
     }
-
+    
     @Test
     void testExecuteWhenClosureSetThrowableSendsErrorResponseViaRpcContext() {
         final AtomicReference<Response> reference = new AtomicReference<>();
         RpcContext context = new RpcContext() {
-
+            
             @Override
             public void sendResponse(Object responseObj) {
                 reference.set((Response) responseObj);
             }
-
+            
             @Override
             public Connection getConnection() {
                 return null;
             }
-
+            
             @Override
             public String getRemoteAddress() {
                 return null;
@@ -272,5 +272,5 @@ class AbstractProcessorTest {
         assertFalse(response.getSuccess());
         assertTrue(response.getErrMsg().contains("execute exception branch"));
     }
-
+    
 }

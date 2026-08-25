@@ -31,7 +31,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class LocalFilePluginConfigStorageTest {
-
+    
     @Test
     void delegatesStorageOperations() {
         PluginStatePersistenceService persistence = mock(PluginStatePersistenceService.class);
@@ -39,26 +39,26 @@ class LocalFilePluginConfigStorageTest {
             Collections.singletonMap("endpoint", "value"));
         when(persistence.loadAllConfigs()).thenReturn(configs);
         LocalFilePluginConfigStorage storage = new LocalFilePluginConfigStorage(persistence);
-
+        
         assertSame(configs, storage.loadAllConfigs());
         storage.saveConfig("trace:test", configs.get("trace:test"));
         storage.replaceAllConfigs(configs);
-
+        
         verify(persistence).saveConfig("trace:test", configs.get("trace:test"));
         verify(persistence).replaceAllConfigs(configs);
     }
-
+    
     @Test
     void rejectsMissingPersistenceInsteadOfSilentlyDiscardingWrites() {
         assertThrows(NullPointerException.class, () -> new LocalFilePluginConfigStorage(null));
     }
-
+    
     @Test
     void providerExposesBuiltInMetadataAndCreatesStorage() {
         PluginStatePersistenceService persistence = mock(PluginStatePersistenceService.class);
         LocalFilePluginConfigStorageProvider provider =
             new LocalFilePluginConfigStorageProvider(persistence);
-
+        
         assertEquals("local-file", provider.getName());
         assertEquals(Integer.MAX_VALUE, provider.getOrder());
         assertTrue(provider.isEnabledByDefault());

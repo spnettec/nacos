@@ -54,15 +54,15 @@ import java.util.concurrent.atomic.AtomicReference;
  * @author xiweng.yy
  */
 public class DefaultVisibilityService implements VisibilityService {
-
+    
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultVisibilityService.class);
-
+    
     private static final String NAME = AuthConstants.AUTH_PLUGIN_TYPE;
-
+    
     private static final String RESOURCE_PREFIX = "@@visibility";
-
+    
     private static final String ANONYMOUS_IDENTITY = AuthConstants.ANONYMOUS_USER;
-
+    
     @Override
     public ValidationResult validateVisibility(String identity, String action, String apiType,
         VisibilityResource resource) {
@@ -79,7 +79,7 @@ public class DefaultVisibilityService implements VisibilityService {
         return ValidationResult
             .deny("No visibility permission for resource: " + resource.getResourceName());
     }
-
+    
     @Override
     public QueryAdvisor adviseQuery(String identity, String action, String apiType,
         VisibilityQueryContext context) {
@@ -98,12 +98,12 @@ public class DefaultVisibilityService implements VisibilityService {
         advisor.setAuthorizedPredicate(buildAuthorizedResources(identity, action, context));
         return advisor;
     }
-
+    
     @Override
     public String getVisibilityServiceName() {
         return NAME;
     }
-
+    
     private boolean isPermitted(String currentUser, boolean isRead, VisibilityResource candidate) {
         if (isOwner(currentUser, candidate)) {
             return true;
@@ -114,18 +114,18 @@ public class DefaultVisibilityService implements VisibilityService {
         String action = isRead ? VisibilityConstants.ACTION_READ : VisibilityConstants.ACTION_WRITE;
         return checkResourcePermission(candidate, action);
     }
-
+    
     private boolean isOwner(String currentUser, VisibilityResource resource) {
         return StringUtils.isNotBlank(currentUser) && currentUser.equals(resource.getOwner());
     }
-
+    
     private String buildResourceIdentifier(VisibilityResource res) {
         String ns = StringUtils.isBlank(res.getNamespaceId()) ? Constants.DEFAULT_NAMESPACE_ID
             : res.getNamespaceId();
         return RESOURCE_PREFIX + "/" + ns + "/" + res.getResourceType() + "/"
             + res.getResourceName();
     }
-
+    
     private boolean checkResourcePermission(VisibilityResource res, String action) {
         String resourceId = buildResourceIdentifier(res);
         Resource resource = new Resource("", "", resourceId, SignType.SPECIFIED, new Properties());
@@ -146,7 +146,7 @@ public class DefaultVisibilityService implements VisibilityService {
             return false;
         }
     }
-
+    
     private Optional<AuthPluginService> findAuthPluginService() {
         NacosAuthConfigHolder holder = NacosAuthConfigHolder.getInstance();
         for (NacosAuthConfig config : holder.getAllNacosAuthConfig()) {
@@ -157,7 +157,7 @@ public class DefaultVisibilityService implements VisibilityService {
         }
         return Optional.empty();
     }
-
+    
     private boolean isAuthDisabled(String apiType) {
         if (StringUtils.isBlank(apiType)) {
             return !NacosAuthConfigHolder.getInstance().isAnyAuthEnabled();
@@ -166,15 +166,15 @@ public class DefaultVisibilityService implements VisibilityService {
             NacosAuthConfigHolder.getInstance().getNacosAuthConfigByScope(apiType);
         return authConfig == null || !authConfig.isAuthEnabled();
     }
-
+    
     private boolean isAnonymousIdentity(String identity) {
         return ANONYMOUS_IDENTITY.equals(identity);
     }
-
+    
     private boolean isCurrentIdentityGlobalAdmin(String identity) {
         return AuthIdentityUtils.isCurrentIdentityGlobalAdmin(identity);
     }
-
+    
     private AuthorizedResources buildAuthorizedResources(String identity, String action,
         VisibilityQueryContext context) {
         AuthorizedResources authorized = new AuthorizedResources();

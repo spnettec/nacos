@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class NacosGrpcRaftRpcFactoryTest {
-
+    
     @Test
     void testCreatesNacosGrpcClientAndAppliesHelper() {
         NacosGrpcRaftRpcFactory factory = new NacosGrpcRaftRpcFactory();
@@ -39,17 +39,17 @@ class NacosGrpcRaftRpcFactoryTest {
         factory.getMarshallerRegistry().registerResponseInstance(ReadRequest.class.getName(),
             Response.getDefaultInstance());
         AtomicBoolean helperCalled = new AtomicBoolean(false);
-
+        
         RpcClient rpcClient = factory.createRpcClient(client -> helperCalled.set(true));
-
+        
         assertInstanceOf(NacosGrpcClient.class, rpcClient);
         assertTrue(helperCalled.get());
     }
-
+    
     @Test
     void testNacosFactoryHasHighestSpiPriority() {
         RaftRpcFactory factory = JRaftServiceLoader.load(RaftRpcFactory.class).first();
-
+        
         assertInstanceOf(NacosGrpcRaftRpcFactory.class, factory);
         assertInstanceOf(NacosGrpcRaftRpcFactory.class, RpcFactoryHelper.rpcFactory());
     }

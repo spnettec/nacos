@@ -39,20 +39,20 @@ import static com.alibaba.nacos.plugin.auth.impl.persistence.AuthRowMapperManage
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>
  */
 public class ExternalUserPersistServiceImpl implements UserPersistService {
-
+    
     private static final Logger LOGGER = LoggerFactory.getLogger("com.alibaba.nacos.persistence");
-
+    
     private JdbcTemplate jt;
-
+    
     private String dataSourceType = "";
-
+    
     private static final String PATTERN_STR = "*";
-
+    
     @PostConstruct
     protected void init() {
         ensureDataSourceInitialized();
     }
-
+    
     private void ensureDataSourceInitialized() {
         if (jt != null) {
             return;
@@ -61,12 +61,12 @@ public class ExternalUserPersistServiceImpl implements UserPersistService {
         jt = dataSource.getJdbcTemplate();
         dataSourceType = dataSource.getDataSourceType();
     }
-
+    
     private JdbcTemplate getJdbcTemplate() {
         ensureDataSourceInitialized();
         return jt;
     }
-
+    
     /**
      * Execute create user operation.
      *
@@ -76,7 +76,7 @@ public class ExternalUserPersistServiceImpl implements UserPersistService {
     @Override
     public void createUser(String username, String password) {
         String sql = "INSERT INTO users (username, password, enabled) VALUES (?, ?, ?)";
-
+        
         try {
             getJdbcTemplate().update(sql, username, password, true);
         } catch (CannotGetJdbcConnectionException e) {
@@ -84,7 +84,7 @@ public class ExternalUserPersistServiceImpl implements UserPersistService {
             throw e;
         }
     }
-
+    
     /**
      * Execute delete user operation.
      *
@@ -100,7 +100,7 @@ public class ExternalUserPersistServiceImpl implements UserPersistService {
             throw e;
         }
     }
-
+    
     /**
      * Execute update user password operation.
      *
@@ -117,7 +117,7 @@ public class ExternalUserPersistServiceImpl implements UserPersistService {
             throw e;
         }
     }
-
+    
     /**
      * Execute find user by username operation.
      *
@@ -139,23 +139,23 @@ public class ExternalUserPersistServiceImpl implements UserPersistService {
             throw new RuntimeException(e);
         }
     }
-
+    
     @Override
     public Page<User> getUsers(int pageNo, int pageSize, String username) {
-
+        
         AuthPaginationHelper<User> helper = createPaginationHelper();
-
+        
         String sqlCountRows = "SELECT count(*) FROM users ";
-
+        
         String sqlFetchRows = "SELECT username,password FROM users ";
-
+        
         StringBuilder where = new StringBuilder(" WHERE 1 = 1 ");
         List<String> params = new ArrayList<>();
         if (StringUtils.isNotBlank(username)) {
             where.append(" AND username = ? ");
             params.add(username);
         }
-
+        
         try {
             Page<User> pageInfo = helper.fetchPage(sqlCountRows + where, sqlFetchRows + where,
                 params.toArray(), pageNo,
@@ -171,27 +171,27 @@ public class ExternalUserPersistServiceImpl implements UserPersistService {
             throw e;
         }
     }
-
+    
     @Override
     public List<String> findUserLikeUsername(String username) {
         String sql = "SELECT username FROM users WHERE username LIKE ?";
         List<String> users = getJdbcTemplate().queryForList(sql, String.class,
-            String.format("%%%s%%", username));
+            String.format("%%%s%%", generateLikeArgument(username)));
         return users;
     }
-
+    
     @Override
     public Page<User> findUsersLike4Page(String username, int pageNo, int pageSize) {
         String sqlCountRows = "SELECT count(*) FROM users ";
         String sqlFetchRows = "SELECT username,password FROM users ";
-
+        
         StringBuilder where = new StringBuilder(" WHERE 1 = 1 ");
         List<String> params = new ArrayList<>();
         if (StringUtils.isNotBlank(username)) {
             where.append(" AND username LIKE ? ");
             params.add(generateLikeArgument(username));
         }
-
+        
         AuthPaginationHelper<User> helper = createPaginationHelper();
         try {
             return helper.fetchPage(sqlCountRows + where, sqlFetchRows + where, params.toArray(),
@@ -202,7 +202,7 @@ public class ExternalUserPersistServiceImpl implements UserPersistService {
             throw e;
         }
     }
-
+    
     @Override
     public String generateLikeArgument(String s) {
         String underscore = "_";
@@ -217,7 +217,7 @@ public class ExternalUserPersistServiceImpl implements UserPersistService {
             return s;
         }
     }
-
+    
     @Override
     public <E> AuthPaginationHelper<E> createPaginationHelper() {
         ensureDataSourceInitialized();

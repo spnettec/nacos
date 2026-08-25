@@ -26,15 +26,15 @@ package com.alibaba.nacos.api.ai.model.agent;
  * @author Nacos
  */
 public class AgentPublishRequest extends AgentDraftCreateRequest {
-
+    
     private static final long serialVersionUID = 1L;
-
+    
     private boolean autoSubmit;
-
+    
     public boolean isAutoSubmit() {
         return autoSubmit;
     }
-
+    
     public void setAutoSubmit(boolean autoSubmit) {
         this.autoSubmit = autoSubmit;
     }

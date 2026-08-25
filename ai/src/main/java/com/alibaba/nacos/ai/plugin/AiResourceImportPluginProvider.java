@@ -31,12 +31,12 @@ import java.util.Map;
  */
 public class AiResourceImportPluginProvider
     implements PluginProvider<AiResourceImportServiceBuilder> {
-
+    
     @Override
     public PluginType getPluginType() {
         return PluginType.AI_RESOURCE_IMPORT;
     }
-
+    
     @Override
     public Map<String, AiResourceImportServiceBuilder> getAllPlugins() {
         if (ApplicationUtils.getApplicationContext() == null) {

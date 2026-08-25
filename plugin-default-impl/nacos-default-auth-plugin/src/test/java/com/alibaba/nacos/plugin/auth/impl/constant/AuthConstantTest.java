@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class AuthConstantTest {
-
+    
     @Test
     void testAuthPageConstantConstructorAndValues() {
         assertNotNull(new AuthPageConstant());
@@ -32,7 +32,7 @@ class AuthConstantTest {
         assertEquals("LIMIT", AuthPageConstant.LIMIT);
         assertEquals("LIMIT ?,?", AuthPageConstant.LIMIT_SIZE);
     }
-
+    
     @SuppressWarnings("deprecation")
     @Test
     void testAuthConstantsConstructorAndValues() {

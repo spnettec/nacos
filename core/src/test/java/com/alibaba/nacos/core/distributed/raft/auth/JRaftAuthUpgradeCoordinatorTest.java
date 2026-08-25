@@ -41,74 +41,74 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class JRaftAuthUpgradeCoordinatorTest {
-
+    
     @TempDir
     private Path temporaryDirectory;
-
+    
     @Mock
     private ServerMemberManager serverMemberManager;
-
+    
     @Test
     void testInitialStateAllowsInvalidCredential() {
         JRaftAuthUpgradeCoordinator coordinator = newCoordinator();
-
+        
         assertFalse(coordinator.isEnforced());
         assertTrue(coordinator.allowInvalidCredential());
     }
-
+    
     @Test
     void testDoesNotEnforceUntilEveryMemberSupportsAuthentication() {
         Member supported = memberWithCapability(true);
         Member unsupported = memberWithCapability(false);
         when(serverMemberManager.allMembers()).thenReturn(Arrays.asList(supported, unsupported));
         JRaftAuthUpgradeCoordinator coordinator = newCoordinator();
-
+        
         coordinator.doCheck();
-
+        
         assertFalse(coordinator.isEnforced());
         assertFalse(Files.exists(stateFile()));
     }
-
+    
     @Test
     void testPersistsAfterEnforcingAndRemainsEnforced() {
         Member supported = memberWithCapability(true);
         List<Member> members = new ArrayList<>(Collections.singletonList(supported));
         when(serverMemberManager.allMembers()).thenReturn(members);
         JRaftAuthUpgradeCoordinator coordinator = newCoordinator();
-
+        
         coordinator.doCheck();
-
+        
         assertTrue(coordinator.isEnforced());
         assertTrue(Files.isRegularFile(stateFile()));
         assertFalse(coordinator.allowInvalidCredential());
-
+        
         members.clear();
         members.add(memberWithCapability(false));
         coordinator.doCheck();
         assertTrue(coordinator.isEnforced());
     }
-
+    
     @Test
     void testRestoresEnforcedStateFromMarker() throws Exception {
         Files.write(stateFile(), Arrays.asList("version=1", "state=ENFORCED"),
             StandardCharsets.UTF_8);
-
+        
         JRaftAuthUpgradeCoordinator coordinator = newCoordinator();
-
+        
         assertTrue(coordinator.isEnforced());
         assertFalse(coordinator.allowInvalidCredential());
     }
-
+    
     @Test
     void testInvalidMarkerDoesNotEnableEnforcement() throws Exception {
         Files.write(stateFile(), Collections.singletonList("state=COMPATIBLE"),
             StandardCharsets.UTF_8);
-
+        
         JRaftAuthUpgradeCoordinator coordinator = newCoordinator();
-
+        
         assertFalse(coordinator.isEnforced());
     }
-
+    
     @Test
     void testPersistenceFailureDoesNotBlockEnforcementAndRetries() throws Exception {
         Path parentFile = temporaryDirectory.resolve("not-a-directory");
@@ -118,28 +118,28 @@ class JRaftAuthUpgradeCoordinatorTest {
         when(serverMemberManager.allMembers()).thenReturn(Collections.singletonList(supported));
         JRaftAuthUpgradeCoordinator coordinator =
             new JRaftAuthUpgradeCoordinator(serverMemberManager, stateFile);
-
+        
         coordinator.doCheck();
-
+        
         assertTrue(coordinator.isEnforced());
         assertFalse(coordinator.allowInvalidCredential());
         assertFalse(Files.exists(stateFile));
-
+        
         Files.delete(parentFile);
         Files.createDirectories(parentFile);
         coordinator.doCheck();
-
+        
         assertTrue(Files.isRegularFile(stateFile));
     }
-
+    
     private JRaftAuthUpgradeCoordinator newCoordinator() {
         return new JRaftAuthUpgradeCoordinator(serverMemberManager, stateFile());
     }
-
+    
     private Path stateFile() {
         return temporaryDirectory.resolve(JRaftAuthUpgradeCoordinator.STATE_FILE_NAME);
     }
-
+    
     private Member memberWithCapability(boolean supported) {
         Member member = mock(Member.class);
         lenient().when(member.getExtendVal(MemberMetaDataConstants.SUPPORT_JRAFT_AUTH))

@@ -30,19 +30,19 @@ import java.util.List;
  * @author Nacos
  */
 public class AgentDraftUpdateForm extends AgentVersionForm {
-
+    
     @Serial
     private static final long serialVersionUID = 1L;
-
+    
     private String callInterfaces;
-
+    
     private String changeDescription;
-
+    
     @Override
     public void validate() throws NacosApiException {
         toRequest();
     }
-
+    
     /**
      * Validate this form, parse JSON-valued fields, and build the public request model.
      *
@@ -65,19 +65,19 @@ public class AgentDraftUpdateForm extends AgentVersionForm {
         result.validate();
         return result;
     }
-
+    
     public String getCallInterfaces() {
         return callInterfaces;
     }
-
+    
     public void setCallInterfaces(String callInterfaces) {
         this.callInterfaces = callInterfaces;
     }
-
+    
     public String getChangeDescription() {
         return changeDescription;
     }
-
+    
     public void setChangeDescription(String changeDescription) {
         this.changeDescription = changeDescription;
     }

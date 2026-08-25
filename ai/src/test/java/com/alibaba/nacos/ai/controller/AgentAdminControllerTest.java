@@ -35,29 +35,29 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ExtendWith(MockitoExtension.class)
 class AgentAdminControllerTest {
-
+    
     private static final String PATH = Constants.Agent.ADMIN_PATH;
-
+    
     @Mock
     private AgentOperationService operationService;
-
+    
     @Mock
     private AgentRuntimeRegistryService runtimeRegistryService;
-
+    
     private MockMvc mockMvc;
-
+    
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(
             new AgentAdminController(operationService, runtimeRegistryService)).build();
     }
-
+    
     @Test
     void testAgentDefinitionAndReadRoutes() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get(PATH).param("agentName", "Demo Agent"))
             .andExpect(status().isOk());
         verify(operationService).getOverview("public", "Demo Agent");
-
+        
         mockMvc.perform(MockMvcRequestBuilders.put(PATH)
             .param("agentName", "Demo Agent").param("status", "disable"))
             .andExpect(status().isOk());
@@ -66,11 +66,11 @@ class AgentAdminControllerTest {
                 && "Demo Agent".equals(agent.getAgentName())
                 && "disable".equals(agent.getStatus()) && agent.getOwner() == null
                 && agent.getScope() == null));
-
+        
         mockMvc.perform(MockMvcRequestBuilders.delete(PATH).param("agentName", "Demo Agent"))
             .andExpect(status().isOk());
         verify(operationService).deleteAgent("public", "Demo Agent");
-
+        
         mockMvc.perform(MockMvcRequestBuilders.get(PATH + "/list")
             .param("agentName", "Demo").param("bizTag", "assistant")
             .param("scope", "private").param("owner", "alice")
@@ -78,28 +78,28 @@ class AgentAdminControllerTest {
             .andExpect(status().isOk());
         verify(operationService).listAgents("public", "Demo", "assistant", "PRIVATE", "alice",
             "download_count", 2, 20);
-
+        
         mockMvc.perform(MockMvcRequestBuilders.get(PATH + "/list"))
             .andExpect(status().isOk());
         verify(operationService).listAgents("public", null, null, null, null, null, 1, 100);
-
+        
         mockMvc.perform(MockMvcRequestBuilders.get(PATH + "/versions")
             .param("agentName", "Demo Agent").param("status", "draft")
             .param("pageNo", "2").param("pageSize", "20")).andExpect(status().isOk());
         verify(operationService).listVersions("public", "Demo Agent", "draft", 2, 20);
-
+        
         mockMvc.perform(MockMvcRequestBuilders.get(PATH + "/version")
             .param("agentName", "Demo Agent").param("version", "1.0.0"))
             .andExpect(status().isOk());
         verify(operationService).getVersion("public", "Demo Agent", "1.0.0");
-
+        
         mockMvc.perform(MockMvcRequestBuilders.get(PATH + "/runtime-endpoints")
             .param("agentName", "Demo Agent").param("protocol", "a2a"))
             .andExpect(status().isOk());
         verify(runtimeRegistryService).getRuntimeEndpointSnapshot("public", "Demo Agent", "a2a",
             null);
     }
-
+    
     @Test
     void testDraftRoutes() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.post(PATH + "/draft")
@@ -120,51 +120,51 @@ class AgentAdminControllerTest {
                 && "internal".equals(request.getExtensions().get("channel"))
                 && "alice".equals(request.getAuthor())
                 && request.getBasedOnVersion() == null));
-
+        
         mockMvc.perform(MockMvcRequestBuilders.put(PATH + "/draft")
             .param("agentName", "Demo Agent").param("version", "2.0.0")
             .param("callInterfaces", "[]").param("changeDescription", "updated"))
             .andExpect(status().isOk());
         verify(operationService).updateDraft("public", "Demo Agent", "2.0.0",
             java.util.Collections.emptyList(), "updated");
-
+        
         mockMvc.perform(MockMvcRequestBuilders.delete(PATH + "/draft")
             .param("agentName", "Demo Agent").param("version", "2.0.0"))
             .andExpect(status().isOk());
         verify(operationService).deleteDraft("public", "Demo Agent", "2.0.0");
     }
-
+    
     @Test
     void testLifecycleRoutes() throws Exception {
         performVersionCommand("/submit");
         verify(operationService).submit("public", "Demo Agent", "1.0.0");
-
+        
         performVersionCommand("/publish");
         verify(operationService).publish("public", "Demo Agent", "1.0.0");
-
+        
         performVersionCommand("/force-publish");
         verify(operationService).forcePublish("public", "Demo Agent", "1.0.0");
-
+        
         performVersionCommand("/redraft");
         verify(operationService).redraft("public", "Demo Agent", "1.0.0");
-
+        
         performVersionCommand("/online");
         verify(operationService).online("public", "Demo Agent", "1.0.0");
-
+        
         performVersionCommand("/offline");
         verify(operationService).offline("public", "Demo Agent", "1.0.0");
     }
-
+    
     @Test
     void testLabelsRoute() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.put(PATH + "/labels")
             .param("agentName", "Demo Agent")
             .param("labels", "{\"stable\":\"1.0.0\"}")).andExpect(status().isOk());
-
+        
         verify(operationService).updateLabels(eq("public"), eq("Demo Agent"),
             eq(java.util.Collections.singletonMap("stable", "1.0.0")));
     }
-
+    
     private void performVersionCommand(String relativePath) throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.post(PATH + relativePath)
             .param("agentName", "Demo Agent").param("version", "1.0.0"))

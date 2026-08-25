@@ -25,13 +25,13 @@ import com.alibaba.nacos.api.exception.api.NacosApiException;
  * @author Nacos
  */
 public class AgentRuntimeEndpointForm extends AgentAdminForm {
-
+    
     private static final long serialVersionUID = 1L;
-
+    
     private String protocol;
-
+    
     private String version;
-
+    
     @Override
     public void validate() throws NacosApiException {
         super.validate();
@@ -40,19 +40,19 @@ public class AgentRuntimeEndpointForm extends AgentAdminForm {
             AgentValidationUtils.validateVersion(version);
         }
     }
-
+    
     public String getProtocol() {
         return protocol;
     }
-
+    
     public void setProtocol(String protocol) {
         this.protocol = protocol;
     }
-
+    
     public String getVersion() {
         return version;
     }
-
+    
     public void setVersion(String version) {
         this.version = version;
     }

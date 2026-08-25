@@ -31,11 +31,11 @@ import java.util.List;
  * @author nacos
  */
 public class SkillListHttpParamExtractor extends AbstractHttpParamExtractor {
-
+    
     private static final String SKILL_NAME_PARAM = "skillName";
-
+    
     private static final String SEARCH_PARAM = "search";
-
+    
     @Override
     public List<ParamInfo> extractParam(HttpServletRequest request) throws NacosException {
         ParamInfo paramInfo = new ParamInfo();

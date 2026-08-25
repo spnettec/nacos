@@ -39,33 +39,33 @@ import java.util.Map;
  * @author Nacos
  */
 public class AgentDiscoveryForm implements NacosForm {
-
+    
     @Serial
     private static final long serialVersionUID = 1L;
-
+    
     private String namespaceId;
-
+    
     private String agentName;
-
+    
     private String version;
-
+    
     private String label;
-
+    
     private List<String> protocol;
-
+    
     private String protocolVersion;
-
+    
     private List<String> transport;
-
+    
     private List<String> endpointSource;
-
+    
     private String metadataSelector;
-
+    
     @Override
     public void validate() throws NacosApiException {
         toRequest();
     }
-
+    
     /**
      * Normalize the namespace, parse JSON, validate this form, and build the RAD request.
      *
@@ -81,7 +81,7 @@ public class AgentDiscoveryForm implements NacosForm {
         reference.setAgentName(agentName);
         reference.setVersion(version);
         reference.setLabel(label);
-
+        
         AgentDiscoveryRequest result = new AgentDiscoveryRequest();
         result.setNamespaceId(namespaceId);
         result.setReference(reference);
@@ -89,7 +89,7 @@ public class AgentDiscoveryForm implements NacosForm {
         RadModelValidator.validate(result);
         return result;
     }
-
+    
     private AgentDiscoveryFilter buildFilter() throws NacosApiException {
         Map<String, String> selector = AgentClientFormJsonParser.parseOptional("metadataSelector",
             metadataSelector, new NacosTypeReference<Map<String, String>>() {
@@ -106,7 +106,7 @@ public class AgentDiscoveryForm implements NacosForm {
         result.setMetadataSelector(selector);
         return result;
     }
-
+    
     private List<EndpointSource> parseEndpointSources() throws NacosApiException {
         if (endpointSource == null) {
             return null;
@@ -123,75 +123,75 @@ public class AgentDiscoveryForm implements NacosForm {
                 "Request parameter `endpointSource` contains an invalid value.");
         }
     }
-
+    
     public String getNamespaceId() {
         return namespaceId;
     }
-
+    
     public void setNamespaceId(String namespaceId) {
         this.namespaceId = namespaceId;
     }
-
+    
     public String getAgentName() {
         return agentName;
     }
-
+    
     public void setAgentName(String agentName) {
         this.agentName = agentName;
     }
-
+    
     public String getVersion() {
         return version;
     }
-
+    
     public void setVersion(String version) {
         this.version = version;
     }
-
+    
     public String getLabel() {
         return label;
     }
-
+    
     public void setLabel(String label) {
         this.label = label;
     }
-
+    
     public List<String> getProtocol() {
         return protocol;
     }
-
+    
     public void setProtocol(List<String> protocol) {
         this.protocol = protocol;
     }
-
+    
     public String getProtocolVersion() {
         return protocolVersion;
     }
-
+    
     public void setProtocolVersion(String protocolVersion) {
         this.protocolVersion = protocolVersion;
     }
-
+    
     public List<String> getTransport() {
         return transport;
     }
-
+    
     public void setTransport(List<String> transport) {
         this.transport = transport;
     }
-
+    
     public List<String> getEndpointSource() {
         return endpointSource;
     }
-
+    
     public void setEndpointSource(List<String> endpointSource) {
         this.endpointSource = endpointSource;
     }
-
+    
     public String getMetadataSelector() {
         return metadataSelector;
     }
-
+    
     public void setMetadataSelector(String metadataSelector) {
         this.metadataSelector = metadataSelector;
     }

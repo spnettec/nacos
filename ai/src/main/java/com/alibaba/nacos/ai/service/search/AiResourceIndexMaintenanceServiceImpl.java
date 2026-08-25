@@ -30,20 +30,20 @@ import org.springframework.stereotype.Service;
 @Service
 @ConditionalOnAiResourceSearchEnabled
 public class AiResourceIndexMaintenanceServiceImpl implements AiResourceIndexMaintenanceService {
-
+    
     private static final Logger LOGGER =
         LoggerFactory.getLogger(AiResourceIndexMaintenanceServiceImpl.class);
-
+    
     private final AiResourceIndexTaskRepository taskRepository;
-
+    
     private final AiResourceIndexEnhancementService enhancementService;
-
+    
     public AiResourceIndexMaintenanceServiceImpl(AiResourceIndexTaskRepository taskRepository,
         AiResourceIndexEnhancementService enhancementService) {
         this.taskRepository = taskRepository;
         this.enhancementService = enhancementService;
     }
-
+    
     @Override
     public boolean schedule(String namespaceId, String resourceType, String resourceName) {
         if (StringUtils.isBlank(resourceType) || StringUtils.isBlank(resourceName)) {
@@ -60,7 +60,7 @@ public class AiResourceIndexMaintenanceServiceImpl implements AiResourceIndexMai
             return false;
         }
     }
-
+    
     @Override
     public boolean scheduleReconciliation(String namespaceId, String resourceType,
         String resourceName) {

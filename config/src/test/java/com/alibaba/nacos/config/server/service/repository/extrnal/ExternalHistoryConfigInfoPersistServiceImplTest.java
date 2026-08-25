@@ -230,7 +230,7 @@ class ExternalHistoryConfigInfoPersistServiceImplTest {
         int pageSize = 100;
         int pageNo = 2;
         Mockito.when(
-                jdbcTemplate.query(anyString(), Mockito.<Object[]>any(), eq(HISTORY_LIST_ROW_MAPPER)))
+            jdbcTemplate.query(anyString(), Mockito.<Object[]>any(), eq(HISTORY_LIST_ROW_MAPPER)))
             .thenReturn(mockList);
         //execute & verify
         Page<ConfigHistoryInfo> historyReturn =

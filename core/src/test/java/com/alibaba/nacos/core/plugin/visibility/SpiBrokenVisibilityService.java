@@ -17,7 +17,7 @@
 package com.alibaba.nacos.core.plugin.visibility;
 
 public class SpiBrokenVisibilityService extends SpiLoadedVisibilityService {
-
+    
     public SpiBrokenVisibilityService() {
         throw new IllegalStateException("broken visibility service");
     }

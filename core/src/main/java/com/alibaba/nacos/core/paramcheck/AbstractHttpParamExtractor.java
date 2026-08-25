@@ -39,5 +39,5 @@ public abstract class AbstractHttpParamExtractor
      */
     @Override
     public abstract List<ParamInfo> extractParam(HttpServletRequest request) throws NacosException;
-
+    
 }

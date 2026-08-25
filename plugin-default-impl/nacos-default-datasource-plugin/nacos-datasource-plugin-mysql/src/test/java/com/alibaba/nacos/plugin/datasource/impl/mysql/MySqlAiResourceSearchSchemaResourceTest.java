@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class MySqlAiResourceSearchSchemaResourceTest {
-
+    
     @Test
     void testAiResourceSearchTablesUseCaseSensitiveCollation() throws IOException {
         String schema = readResource("META-INF/mysql-schema.sql");
@@ -36,8 +36,10 @@ class MySqlAiResourceSearchSchemaResourceTest {
             "COLLATE=utf8mb4_bin COMMENT='AI资源检索分片表'"));
         assertTrue(schema.contains(
             "COLLATE=utf8mb4_bin COMMENT='AI资源持久化异步任务表'"));
+        assertTrue(schema.contains("KEY `idx_search_document_type_status` "
+            + "(`namespace_id`,`resource_type`,`status`,`resource_name`,`id`)"));
     }
-
+    
     private String readResource(String resourceName) throws IOException {
         try (InputStream inputStream =
             getClass().getClassLoader().getResourceAsStream(resourceName)) {

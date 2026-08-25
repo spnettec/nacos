@@ -24,23 +24,23 @@ import com.alibaba.nacos.api.ai.model.rad.AgentEndpointRegistrationBatch;
  * @author Nacos
  */
 public class AgentEndpointRegisterRpcRequest extends AbstractAgentClientRpcRequest {
-
+    
     private AgentEndpointRegistrationBatch registrationBatch;
-
+    
     @Override
     public String extractNamespaceId() {
         return registrationBatch == null ? null : registrationBatch.getNamespaceId();
     }
-
+    
     @Override
     public String extractAgentName() {
         return registrationBatch == null ? null : registrationBatch.getAgentName();
     }
-
+    
     public AgentEndpointRegistrationBatch getRegistrationBatch() {
         return registrationBatch;
     }
-
+    
     public void setRegistrationBatch(AgentEndpointRegistrationBatch registrationBatch) {
         this.registrationBatch = registrationBatch;
     }

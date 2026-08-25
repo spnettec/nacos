@@ -44,29 +44,29 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class AgentPublishApplicationServiceTest {
-
+    
     private static final String NAMESPACE_ID = "team";
-
+    
     private static final String AGENT_NAME = "demo-agent";
-
+    
     private static final String VERSION = "1.0.0";
-
+    
     private AgentOperationService operationService;
-
+    
     private AgentPublishApplicationService service;
-
+    
     @BeforeEach
     void setUp() {
         operationService = mock(AgentOperationService.class);
         service = new AgentPublishApplicationService(operationService);
     }
-
+    
     @Test
     void testRejectsNullRequest() {
         assertThrows(IllegalArgumentException.class,
             () -> service.publish(NAMESPACE_ID, null));
     }
-
+    
     @Test
     void testCreatesDraftWithoutSubmit() throws Exception {
         AgentPublishRequest request = request(false);
@@ -74,11 +74,11 @@ class AgentPublishApplicationServiceTest {
         when(operationService.getVersion(NAMESPACE_ID, AGENT_NAME, VERSION))
             .thenThrow(notFound());
         when(operationService.createDraft(NAMESPACE_ID, request)).thenReturn(draft);
-
+        
         assertSame(draft, service.publish(NAMESPACE_ID, request));
         verify(operationService, never()).submit(NAMESPACE_ID, AGENT_NAME, VERSION);
     }
-
+    
     @Test
     void testCreatesAndSubmitsDraft() throws Exception {
         AgentPublishRequest request = request(true);
@@ -87,11 +87,11 @@ class AgentPublishApplicationServiceTest {
         when(operationService.getVersion(NAMESPACE_ID, AGENT_NAME, VERSION))
             .thenThrow(notFound()).thenReturn(online);
         when(operationService.createDraft(NAMESPACE_ID, request)).thenReturn(draft);
-
+        
         assertSame(online, service.publish(NAMESPACE_ID, request));
         verify(operationService).submit(NAMESPACE_ID, AGENT_NAME, VERSION);
     }
-
+    
     @Test
     void testEquivalentExistingDraftCanResumeSubmit() throws Exception {
         AgentPublishRequest request = request(true);
@@ -100,11 +100,11 @@ class AgentPublishApplicationServiceTest {
             detail(request, AiConstants.Agent.VERSION_STATUS_REVIEWING);
         when(operationService.getVersion(NAMESPACE_ID, AGENT_NAME, VERSION))
             .thenReturn(draft, reviewing);
-
+        
         assertSame(reviewing, service.publish(NAMESPACE_ID, request));
         verify(operationService, never()).createDraft(NAMESPACE_ID, request);
     }
-
+    
     @Test
     void testEquivalentSubmittedRetriesConverge() throws Exception {
         for (String status : Arrays.asList(AiConstants.Agent.VERSION_STATUS_REVIEWING,
@@ -118,7 +118,7 @@ class AgentPublishApplicationServiceTest {
         }
         verify(operationService, never()).submit(NAMESPACE_ID, AGENT_NAME, VERSION);
     }
-
+    
     @Test
     void testNonSubmitRejectsAdvancedStateAndSubmitRejectsOfflineState() throws Exception {
         AgentPublishRequest noSubmit = request(false);
@@ -127,7 +127,7 @@ class AgentPublishApplicationServiceTest {
         NacosApiException advanced = assertThrows(NacosApiException.class,
             () -> service.publish(NAMESPACE_ID, noSubmit));
         assertEquals(ErrorCode.ILLEGAL_STATE.getCode(), advanced.getDetailErrCode());
-
+        
         AgentPublishRequest submit = request(true);
         when(operationService.getVersion(NAMESPACE_ID, AGENT_NAME, VERSION))
             .thenReturn(detail(submit, AiConstants.Agent.VERSION_STATUS_OFFLINE));
@@ -135,7 +135,7 @@ class AgentPublishApplicationServiceTest {
             () -> service.publish(NAMESPACE_ID, submit));
         assertEquals(ErrorCode.ILLEGAL_STATE.getCode(), offline.getDetailErrCode());
     }
-
+    
     @Test
     void testCreateRaceRecoversEquivalentDraft() throws Exception {
         AgentPublishRequest request = request(false);
@@ -143,10 +143,10 @@ class AgentPublishApplicationServiceTest {
         when(operationService.getVersion(NAMESPACE_ID, AGENT_NAME, VERSION))
             .thenThrow(notFound()).thenReturn(draft);
         when(operationService.createDraft(NAMESPACE_ID, request)).thenThrow(conflictFailure());
-
+        
         assertSame(draft, service.publish(NAMESPACE_ID, request));
     }
-
+    
     @Test
     void testCreateFailurePreservesSuppressedReadFailure() throws Exception {
         AgentPublishRequest request = request(false);
@@ -155,12 +155,12 @@ class AgentPublishApplicationServiceTest {
         when(operationService.getVersion(NAMESPACE_ID, AGENT_NAME, VERSION))
             .thenThrow(notFound()).thenThrow(readFailure);
         when(operationService.createDraft(NAMESPACE_ID, request)).thenThrow(createFailure);
-
+        
         assertSame(createFailure, assertThrows(NacosException.class,
             () -> service.publish(NAMESPACE_ID, request)));
         assertSame(readFailure, createFailure.getSuppressed()[0]);
     }
-
+    
     @Test
     void testInitialReadFailureIsNotHidden() throws Exception {
         AgentPublishRequest request = request(false);
@@ -169,7 +169,7 @@ class AgentPublishApplicationServiceTest {
         assertSame(failure, assertThrows(NacosException.class,
             () -> service.publish(NAMESPACE_ID, request)));
     }
-
+    
     @Test
     void testSubmitFailureConvergesOnlyAfterStateAdvanced() throws Exception {
         AgentPublishRequest request = request(true);
@@ -181,13 +181,13 @@ class AgentPublishApplicationServiceTest {
         when(operationService.submit(NAMESPACE_ID, AGENT_NAME, VERSION))
             .thenThrow(submitFailure);
         assertSame(online, service.publish(NAMESPACE_ID, request));
-
+        
         when(operationService.getVersion(NAMESPACE_ID, AGENT_NAME, VERSION))
             .thenReturn(draft);
         assertSame(submitFailure, assertThrows(NacosException.class,
             () -> service.publish(NAMESPACE_ID, request)));
     }
-
+    
     @Test
     void testExistingContentMustBeEquivalent() throws Exception {
         AgentPublishRequest request = request(false);
@@ -197,14 +197,14 @@ class AgentPublishApplicationServiceTest {
         when(operationService.getVersion(NAMESPACE_ID, AGENT_NAME, VERSION))
             .thenReturn(differentContent);
         assertConflict(() -> service.publish(NAMESPACE_ID, request));
-
+        
         AgentVersionDetail differentAuthor =
             detail(request, AiConstants.Agent.VERSION_STATUS_DRAFT);
         differentAuthor.setAuthor("bob");
         when(operationService.getVersion(NAMESPACE_ID, AGENT_NAME, VERSION))
             .thenReturn(differentAuthor);
         assertConflict(() -> service.publish(NAMESPACE_ID, request));
-
+        
         AgentVersionDetail differentDescription =
             detail(request, AiConstants.Agent.VERSION_STATUS_DRAFT);
         differentDescription.setChangeDescription("different");
@@ -212,7 +212,7 @@ class AgentPublishApplicationServiceTest {
             .thenReturn(differentDescription);
         assertConflict(() -> service.publish(NAMESPACE_ID, request));
     }
-
+    
     @Test
     void testBasedOnVersionUsesSourceDigest() throws Exception {
         AgentPublishRequest request = request(false);
@@ -232,11 +232,11 @@ class AgentPublishApplicationServiceTest {
         when(operationService.getVersion(NAMESPACE_ID, AGENT_NAME, "0.9.0"))
             .thenReturn(source);
         assertSame(existing, service.publish(NAMESPACE_ID, request));
-
+        
         source.setContentDigest("sha256:different");
         assertConflict(() -> service.publish(NAMESPACE_ID, request));
     }
-
+    
     @Test
     void testInitialMetadataMustBeEquivalent() throws Exception {
         AgentPublishRequest request = request(false);
@@ -255,16 +255,16 @@ class AgentPublishApplicationServiceTest {
             .thenReturn(existing);
         when(operationService.getAgent(NAMESPACE_ID, AGENT_NAME)).thenReturn(agent);
         assertSame(existing, service.publish(NAMESPACE_ID, request));
-
+        
         agent.setDisplayName("different");
         assertConflict(() -> service.publish(NAMESPACE_ID, request));
-
+        
         agent = matchingAgent(request);
         agent.setProvider(null);
         when(operationService.getAgent(NAMESPACE_ID, AGENT_NAME)).thenReturn(agent);
         assertConflict(() -> service.publish(NAMESPACE_ID, request));
     }
-
+    
     private Agent matchingAgent(AgentPublishRequest request) {
         Agent result = new Agent();
         result.setDisplayName(request.getDisplayName());
@@ -278,7 +278,7 @@ class AgentPublishApplicationServiceTest {
         result.setExtensions(new HashMap<String, Object>(request.getExtensions()));
         return result;
     }
-
+    
     private AgentPublishRequest request(boolean autoSubmit) {
         AgentPublishRequest result = new AgentPublishRequest();
         result.setAgentName(AGENT_NAME);
@@ -289,7 +289,7 @@ class AgentPublishApplicationServiceTest {
         result.setAutoSubmit(autoSubmit);
         return result;
     }
-
+    
     private AgentCallInterface callInterface() {
         AgentCallInterface result = new AgentCallInterface();
         result.setProtocol("a2a");
@@ -299,7 +299,7 @@ class AgentPublishApplicationServiceTest {
         result.setEndpointSourceOrder(Collections.singletonList(EndpointSource.RUNTIME));
         return result;
     }
-
+    
     private AgentVersionDetail detail(AgentPublishRequest request, String status) {
         AgentVersionDetail result = new AgentVersionDetail();
         result.setAgentName(AGENT_NAME);
@@ -311,24 +311,24 @@ class AgentPublishApplicationServiceTest {
         result.setChangeDescription(request.getChangeDescription());
         return result;
     }
-
+    
     private NacosApiException notFound() {
         return new NacosApiException(NacosException.NOT_FOUND, ErrorCode.RESOURCE_NOT_FOUND,
             "not found");
     }
-
+    
     private NacosException conflictFailure() {
         return new NacosException(NacosException.CONFLICT, "conflict");
     }
-
+    
     private void assertConflict(ThrowingRunnable runnable) {
         NacosApiException exception = assertThrows(NacosApiException.class, runnable::run);
         assertEquals(ErrorCode.RESOURCE_CONFLICT.getCode(), exception.getDetailErrCode());
     }
-
+    
     @FunctionalInterface
     private interface ThrowingRunnable {
-
+        
         void run() throws Exception;
     }
 }

@@ -60,28 +60,28 @@ import java.util.concurrent.ConcurrentMap;
  */
 @Component
 public class CanonicalA2aEndpointOperationService extends ClientConnectionEventListener {
-
+    
     static final String CHILD_CLIENT_ID_PREFIX = "A2A_ENDPOINT_";
-
+    
     private static final String A2A_PROTOCOL = "a2a";
-
+    
     private static final String CHILD_ID_SEPARATOR = "@@";
-
+    
     private static final int MAX_RUNTIME_ENDPOINTS = 1000;
-
+    
     private final AiConnectionBasedClientManager clientManager;
-
+    
     private final EphemeralClientOperationServiceImpl clientOperationService;
-
+    
     private final ConcurrentMap<String, Set<String>> childClientIds =
         new ConcurrentHashMap<String, Set<String>>();
-
+    
     public CanonicalA2aEndpointOperationService(AiConnectionBasedClientManager clientManager,
         EphemeralClientOperationServiceImpl clientOperationService) {
         this.clientManager = clientManager;
         this.clientOperationService = clientOperationService;
     }
-
+    
     /**
      * Replace one legacy exact-Version Endpoint publication in the canonical Runtime service.
      *
@@ -132,7 +132,7 @@ public class CanonicalA2aEndpointOperationService extends ClientConnectionEventL
             throw e;
         }
     }
-
+    
     /**
      * Remove one legacy exact-Version Endpoint publication from the canonical Runtime service.
      *
@@ -152,11 +152,11 @@ public class CanonicalA2aEndpointOperationService extends ClientConnectionEventL
             new Instance(), childClientId);
         disconnectChild(parentClientId, childClientId);
     }
-
+    
     @Override
     public void clientConnected(Connection connect) {
     }
-
+    
     @Override
     public void clientDisConnected(Connection connect) {
         if (!RemoteConstants.LABEL_MODULE_AI
@@ -171,7 +171,7 @@ public class CanonicalA2aEndpointOperationService extends ClientConnectionEventL
             clientManager.clientDisconnected(childClientId);
         }
     }
-
+    
     private String ensureChildClient(String parentClientId, String namespaceId, String agentName,
         String version) {
         if (!clientManager.contains(parentClientId)) {
@@ -194,12 +194,12 @@ public class CanonicalA2aEndpointOperationService extends ClientConnectionEventL
         }
         return childClientId;
     }
-
+    
     private void disconnectChild(String parentClientId, String childClientId) {
         clientManager.clientDisconnected(childClientId);
         removeChildId(parentClientId, childClientId);
     }
-
+    
     private void removeChildId(String parentClientId, String childClientId) {
         Set<String> children = childClientIds.get(parentClientId);
         if (children == null) {
@@ -210,7 +210,7 @@ public class CanonicalA2aEndpointOperationService extends ClientConnectionEventL
             childClientIds.remove(parentClientId, children);
         }
     }
-
+    
     private String childClientId(String parentClientId, String namespaceId, String agentName,
         String version) {
         String identity = parentClientId + CHILD_ID_SEPARATOR + namespaceId + CHILD_ID_SEPARATOR
@@ -218,12 +218,12 @@ public class CanonicalA2aEndpointOperationService extends ClientConnectionEventL
         return CHILD_CLIENT_ID_PREFIX
             + UUID.nameUUIDFromBytes(identity.getBytes(StandardCharsets.UTF_8));
     }
-
+    
     private Service composeService(String namespaceId, String agentName) {
         return Service.newService(namespaceId, Constants.Agent.AGENT_ENDPOINT_GROUP,
             RadServiceNameComposer.compose(agentName, A2A_PROTOCOL));
     }
-
+    
     private Instance toInstance(AgentEndpoint source) {
         if (StringUtils.isBlank(source.getAddress())) {
             throw new IllegalArgumentException("Legacy A2A Endpoint address must not be empty");
@@ -234,7 +234,7 @@ public class CanonicalA2aEndpointOperationService extends ClientConnectionEventL
         return AgentRuntimeEndpointMapper.toLegacyA2aInstance(endpoint, source.getVersion(),
             source.getProtocolVersion(), source.getTenant());
     }
-
+    
     private String composeUri(AgentEndpoint endpoint) {
         String protocol = StringUtils.isBlank(endpoint.getProtocol())
             ? AiConstants.A2a.A2A_ENDPOINT_DEFAULT_PROTOCOL : endpoint.getProtocol();
@@ -251,7 +251,7 @@ public class CanonicalA2aEndpointOperationService extends ClientConnectionEventL
         return protocol.toLowerCase(Locale.ROOT) + "://" + host + ':'
             + endpoint.getPort() + path + query;
     }
-
+    
     private NacosApiException invalidEndpoint(String message) {
         return new NacosApiException(NacosException.INVALID_PARAM,
             ErrorCode.PARAMETER_VALIDATE_ERROR, message);

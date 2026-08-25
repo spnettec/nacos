@@ -51,25 +51,25 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class RuntimePersistedPluginConfigSourceResolverTest {
-
+    
     private static final String PLUGIN_ID = "trace:test";
-
+    
     @Mock
     private PluginStatePersistenceService persistence;
-
+    
     private ConfigurableEnvironment previousEnvironment;
-
+    
     @BeforeEach
     void setUp() {
         previousEnvironment = EnvUtil.getEnvironment();
         EnvUtil.setEnvironment(new MockEnvironment());
     }
-
+    
     @AfterEach
     void tearDown() {
         EnvUtil.setEnvironment(previousEnvironment);
     }
-
+    
     @Test
     void testInitializeAndNormalizeLoadedConfig() {
         Map<String, String> loadedConfig = Collections.singletonMap(
@@ -79,35 +79,35 @@ class RuntimePersistedPluginConfigSourceResolverTest {
         RuntimePersistedPluginConfigSourceResolver resolver =
             new RuntimePersistedPluginConfigSourceResolver(persistence);
         PluginInfo pluginInfo = pluginInfo();
-
+        
         resolver.initialize();
         resolver.initializeConfig(pluginInfo);
-
+        
         assertEquals(Collections.singletonMap("endpoint", "loaded"),
             resolver.getConfig(pluginInfo));
         assertEquals(PluginConfigSourceType.RUNTIME_PERSISTED, resolver.getSourceType());
         verify(persistence).loadAllConfigs();
     }
-
+    
     @Test
     void testUpdatePersistsBeforeReplacingSource() {
         RuntimePersistedPluginConfigSourceResolver resolver =
             new RuntimePersistedPluginConfigSourceResolver(persistence);
         Map<String, String> config = new HashMap<>();
         config.put("endpoint", "new");
-
+        
         resolver.updateConfig(PLUGIN_ID, config);
         config.put("endpoint", "mutated");
-
+        
         assertEquals("new", resolver.getConfig(pluginInfo()).get("endpoint"));
         verify(persistence).saveConfig(PLUGIN_ID,
             Collections.singletonMap("endpoint", "new"));
-
+        
         resolver.updateConfig(PLUGIN_ID, null);
         assertTrue(resolver.getConfig(pluginInfo()).isEmpty());
         verify(persistence).saveConfig(PLUGIN_ID, Collections.emptyMap());
     }
-
+    
     @Test
     void testPersistenceFailureKeepsCurrentSource() {
         RuntimePersistedPluginConfigSourceResolver resolver =
@@ -115,32 +115,32 @@ class RuntimePersistedPluginConfigSourceResolverTest {
         resolver.updateConfig(PLUGIN_ID, Collections.singletonMap("endpoint", "current"));
         doThrow(new PluginPersistenceException("save failed")).when(persistence)
             .saveConfig(PLUGIN_ID, Collections.singletonMap("endpoint", "failed"));
-
+        
         assertThrows(PluginPersistenceException.class, () -> resolver.updateConfig(PLUGIN_ID,
             Collections.singletonMap("endpoint", "failed")));
-
+        
         assertEquals("current", resolver.getConfig(pluginInfo()).get("endpoint"));
     }
-
+    
     @Test
     void testSnapshotIsDefensiveCopy() {
         RuntimePersistedPluginConfigSourceResolver resolver =
             new RuntimePersistedPluginConfigSourceResolver();
         resolver.initialize();
         resolver.updateConfig(PLUGIN_ID, Collections.singletonMap("endpoint", "value"));
-
+        
         Map<String, Map<String, String>> snapshot = resolver.getAllConfigs();
         snapshot.get(PLUGIN_ID).put("endpoint", "mutated");
         snapshot.put("other:test", Collections.emptyMap());
-
+        
         assertEquals("value", resolver.getConfig(pluginInfo()).get("endpoint"));
         assertEquals(1, resolver.getAllConfigs().size());
-
+        
         resolver.restoreConfigs(Collections.singletonMap(PLUGIN_ID,
             Collections.singletonMap("endpoint", "restored")));
         assertEquals("restored", resolver.getConfig(pluginInfo()).get("endpoint"));
     }
-
+    
     @Test
     void testRestoreReplacesCompleteSource() {
         RuntimePersistedPluginConfigSourceResolver resolver =
@@ -151,10 +151,10 @@ class RuntimePersistedPluginConfigSourceResolverTest {
         restoredPluginConfig.put("endpoint", "restored");
         restored.put(PLUGIN_ID, restoredPluginConfig);
         restored.put("unknown:test", null);
-
+        
         resolver.restoreConfigs(restored);
         restored.get(PLUGIN_ID).put("endpoint", "mutated");
-
+        
         assertEquals(Collections.singletonMap("endpoint", "restored"),
             resolver.getConfig(pluginInfo()));
         PluginInfo unknownPlugin = new PluginInfo();
@@ -163,12 +163,12 @@ class RuntimePersistedPluginConfigSourceResolverTest {
         verify(persistence).replaceAllConfigs(org.mockito.ArgumentMatchers
             .argThat(configs -> "restored".equals(configs.get(PLUGIN_ID).get("endpoint"))
                 && configs.get("unknown:test").isEmpty()));
-
+        
         resolver.restoreConfigs(null);
         assertTrue(resolver.getAllConfigs().isEmpty());
         verify(persistence).replaceAllConfigs(Collections.emptyMap());
     }
-
+    
     @Test
     void testRestoreFailureKeepsCurrentSource() {
         RuntimePersistedPluginConfigSourceResolver resolver =
@@ -178,21 +178,21 @@ class RuntimePersistedPluginConfigSourceResolverTest {
             Collections.singletonMap("endpoint", "failed"));
         doThrow(new PluginPersistenceException("restore failed")).when(persistence)
             .replaceAllConfigs(restored);
-
+        
         assertThrows(PluginPersistenceException.class,
             () -> resolver.restoreConfigs(restored));
         assertEquals("current", resolver.getConfig(pluginInfo()).get("endpoint"));
     }
-
+    
     @Test
     void testStorageInitializationFailureIsIsolatedFromStartup() {
         PluginConfigStorage storage = mock(PluginConfigStorage.class);
         doThrow(new IllegalStateException("initialization failed")).when(storage).initialize();
         RuntimePersistedPluginConfigSourceResolver resolver =
             new RuntimePersistedPluginConfigSourceResolver(provider("remote", storage));
-
+        
         resolver.initialize();
-
+        
         assertFalse(resolver.isAvailable());
         assertTrue(resolver.getAllConfigs().isEmpty());
         assertThrows(PluginPersistenceException.class, () -> resolver.updateConfig(PLUGIN_ID,
@@ -200,21 +200,21 @@ class RuntimePersistedPluginConfigSourceResolverTest {
         verify(storage).shutdown();
         verify(storage, never()).loadAllConfigs();
     }
-
+    
     @Test
     void testStorageReadFailureIsIsolatedFromStartup() {
         PluginConfigStorage storage = mock(PluginConfigStorage.class);
         when(storage.loadAllConfigs()).thenThrow(new IllegalStateException("read failed"));
         RuntimePersistedPluginConfigSourceResolver resolver =
             new RuntimePersistedPluginConfigSourceResolver(provider("remote", storage));
-
+        
         resolver.initialize();
-
+        
         assertFalse(resolver.isAvailable());
         verify(storage).initialize();
         verify(storage).shutdown();
     }
-
+    
     @Test
     void testNullOrBrokenProviderLeavesSourceUnavailable() {
         RuntimePersistedPluginConfigSourceResolver missing =
@@ -230,18 +230,18 @@ class RuntimePersistedPluginConfigSourceResolverTest {
         when(broken.createStorage()).thenThrow(new LinkageError("create failed"));
         RuntimePersistedPluginConfigSourceResolver brokenResolver =
             new RuntimePersistedPluginConfigSourceResolver(broken);
-
+        
         missing.initialize();
         nullStorageResolver.initialize();
         brokenResolver.initialize();
-
+        
         assertFalse(missing.isAvailable());
         assertFalse(nullStorageResolver.isAvailable());
         assertFalse(brokenResolver.isAvailable());
         assertThrows(PluginPersistenceException.class, () -> missing.updateConfig(PLUGIN_ID,
             Collections.singletonMap("endpoint", "value")));
     }
-
+    
     @Test
     void testInitializeIsIdempotentAndShutdownFailureIsContained() {
         PluginConfigStorage storage = mock(PluginConfigStorage.class);
@@ -250,25 +250,25 @@ class RuntimePersistedPluginConfigSourceResolverTest {
         PluginConfigStorageProvider provider = provider("remote", storage);
         RuntimePersistedPluginConfigSourceResolver resolver =
             new RuntimePersistedPluginConfigSourceResolver(provider);
-
+        
         resolver.initialize();
         resolver.initialize();
         resolver.shutdown();
-
+        
         assertFalse(resolver.isAvailable());
         verify(provider, times(1)).createStorage();
         verify(storage, times(1)).initialize();
         verify(storage, times(1)).loadAllConfigs();
         verify(storage, times(1)).shutdown();
     }
-
+    
     private PluginConfigStorageProvider provider(String name, PluginConfigStorage storage) {
         PluginConfigStorageProvider result = mock(PluginConfigStorageProvider.class);
         when(result.getName()).thenReturn(name);
         when(result.createStorage()).thenReturn(storage);
         return result;
     }
-
+    
     private PluginInfo pluginInfo() {
         ConfigItemDefinition definition = new ConfigItemDefinition();
         definition.setKey("endpoint");

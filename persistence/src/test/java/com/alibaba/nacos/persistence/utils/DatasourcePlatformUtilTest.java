@@ -60,20 +60,21 @@ class DatasourcePlatformUtilTest {
         
         assertEquals("postgresql", DatasourcePlatformUtil.getDatasourcePlatform("derby"));
     }
-
+    
     @Test
     void testGetDatasourcePlatformUsesLocalPropertyBeforeLegacyProperty() {
         environment.setProperty("spring.sql.init.platform", "mysql");
         environment.setProperty("db.platform", " PostgreSQL ");
-
+        
         assertEquals("postgresql", DatasourcePlatformUtil.getDatasourcePlatform("derby"));
-        assertEquals("postgresql", DatasourcePlatformUtil.getDatasourcePlatform(environment, "derby"));
+        assertEquals("postgresql",
+            DatasourcePlatformUtil.getDatasourcePlatform(environment, "derby"));
     }
-
+    
     @Test
     void testGetDatasourcePlatformUsesDbTypeCompatibilityProperty() {
         environment.setProperty("DB_TYPE", " MySQL ");
-
+        
         assertEquals("mysql", DatasourcePlatformUtil.getDatasourcePlatform("derby"));
         assertEquals("mysql", DatasourcePlatformUtil.getDatasourcePlatform(environment, "derby"));
     }

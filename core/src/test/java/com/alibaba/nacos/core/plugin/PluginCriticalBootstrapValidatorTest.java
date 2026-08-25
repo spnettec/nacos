@@ -41,7 +41,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class PluginCriticalBootstrapValidatorTest {
-
+    
     @Test
     void testUtilityConstructor() throws Exception {
         Constructor<PluginCriticalBootstrapValidator> constructor =
@@ -49,7 +49,7 @@ class PluginCriticalBootstrapValidatorTest {
         constructor.setAccessible(true);
         assertNotNull(constructor.newInstance());
     }
-
+    
     @Test
     void testValidateWithServiceLoadedDefaults() {
         try (MockedStatic<NacosServiceLoader> loaderMock =
@@ -58,11 +58,11 @@ class PluginCriticalBootstrapValidatorTest {
                 .thenReturn(Collections.emptyList());
             loaderMock.when(() -> NacosServiceLoader.load(PluginProvider.class))
                 .thenReturn(Collections.emptyList());
-
+            
             PluginCriticalBootstrapValidator.validate();
         }
     }
-
+    
     @Test
     @SuppressWarnings("rawtypes")
     void testOnlyActiveCriticalProviderIsDiscovered() {
@@ -79,15 +79,15 @@ class PluginCriticalBootstrapValidatorTest {
             .thenReturn(Collections.singletonMap("nacos", new Object()));
         when(policyRegistry.isPluginEnabledByDefault(PluginType.AUTH, "nacos"))
             .thenReturn(true);
-
+        
         PluginCriticalBootstrapValidator.validate(policyRegistry,
             Arrays.asList(authProvider, traceProvider));
-
+        
         verify(authProvider).getAllPlugins();
         verify(traceProvider, never()).getAllPlugins();
         verify(policyRegistry).isPluginEnabledByDefault(PluginType.AUTH, "nacos");
     }
-
+    
     @Test
     @SuppressWarnings("rawtypes")
     void testActiveCriticalProvidersAreDiscoveredInOrder() {
@@ -110,15 +110,15 @@ class PluginCriticalBootstrapValidatorTest {
             .thenReturn(true);
         when(policyRegistry.isPluginEnabledByDefault(PluginType.AUTH, "other"))
             .thenReturn(true);
-
+        
         PluginCriticalBootstrapValidator.validate(policyRegistry,
             Arrays.asList(lowerPriorityProvider, higherPriorityProvider));
-
+        
         InOrder providerOrder = inOrder(higherPriorityProvider, lowerPriorityProvider);
         providerOrder.verify(higherPriorityProvider).getAllPlugins();
         providerOrder.verify(lowerPriorityProvider).getAllPlugins();
     }
-
+    
     @Test
     @SuppressWarnings("rawtypes")
     void testDeferredCriticalProviderIsNotDiscoveredBeforeRefresh() {
@@ -127,13 +127,13 @@ class PluginCriticalBootstrapValidatorTest {
         when(provider.getPluginType()).thenReturn(PluginType.AUTH);
         when(policyRegistry.isActive(PluginType.AUTH)).thenReturn(true);
         when(policyRegistry.supportsPreRefreshValidation(PluginType.AUTH)).thenReturn(false);
-
+        
         PluginCriticalBootstrapValidator.validate(policyRegistry,
             Collections.singletonList(provider));
-
+        
         verify(provider, never()).getAllPlugins();
     }
-
+    
     @Test
     @SuppressWarnings("rawtypes")
     void testValidationErrorBlocksStartup() {
@@ -143,14 +143,14 @@ class PluginCriticalBootstrapValidatorTest {
         when(policyRegistry.isActive(PluginType.AUTH)).thenReturn(true);
         when(policyRegistry.supportsPreRefreshValidation(PluginType.AUTH)).thenReturn(true);
         when(provider.getAllPlugins()).thenReturn(Collections.emptyMap());
-
+        
         IllegalStateException exception = assertThrows(IllegalStateException.class,
             () -> PluginCriticalBootstrapValidator.validate(policyRegistry,
                 Collections.singletonList(provider)));
-
+        
         assertTrue(exception.getMessage().contains("no discovered implementation"));
     }
-
+    
     @Test
     @SuppressWarnings("rawtypes")
     void testProviderIdentificationFailureIsIgnored() {
@@ -159,14 +159,14 @@ class PluginCriticalBootstrapValidatorTest {
         when(provider.getPluginType()).thenThrow(new IllegalStateException("broken type"));
         when(policyRegistry.isActive(PluginType.AUTH)).thenReturn(true);
         when(policyRegistry.supportsPreRefreshValidation(PluginType.AUTH)).thenReturn(true);
-
+        
         IllegalStateException exception = assertThrows(IllegalStateException.class,
             () -> PluginCriticalBootstrapValidator.validate(policyRegistry,
                 Collections.singletonList(provider)));
-
+        
         assertTrue(exception.getMessage().contains("no discovered implementation"));
     }
-
+    
     @Test
     @SuppressWarnings("rawtypes")
     void testActiveProviderDiscoveryFailureBlocksStartup() {
@@ -176,15 +176,15 @@ class PluginCriticalBootstrapValidatorTest {
         when(policyRegistry.isActive(PluginType.AUTH)).thenReturn(true);
         when(policyRegistry.supportsPreRefreshValidation(PluginType.AUTH)).thenReturn(true);
         when(provider.getAllPlugins()).thenThrow(new IllegalStateException("broken provider"));
-
+        
         IllegalStateException exception = assertThrows(IllegalStateException.class,
             () -> PluginCriticalBootstrapValidator.validate(policyRegistry,
                 Collections.singletonList(provider)));
-
+        
         assertTrue(exception.getMessage().contains("auth"));
         assertTrue(exception.getMessage().contains(provider.getClass().getName()));
     }
-
+    
     @Test
     @SuppressWarnings("rawtypes")
     void testNullPluginMapsAndInstancesAreIgnored() {
@@ -199,11 +199,11 @@ class PluginCriticalBootstrapValidatorTest {
         Map<String, Object> plugins = new LinkedHashMap<>();
         plugins.put("null", null);
         when(nullInstanceProvider.getAllPlugins()).thenReturn(plugins);
-
+        
         IllegalStateException exception = assertThrows(IllegalStateException.class,
             () -> PluginCriticalBootstrapValidator.validate(policyRegistry,
                 Arrays.asList(nullMapProvider, nullInstanceProvider)));
-
+        
         assertTrue(exception.getMessage().contains("no discovered implementation"));
         verify(policyRegistry, never()).isPluginEnabledByDefault(
             org.mockito.ArgumentMatchers.eq(PluginType.AUTH),

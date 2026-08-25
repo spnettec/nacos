@@ -54,60 +54,60 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class AiDistroFilterTest {
-
+    
     private static final String INTERNAL_CLIENT_ID = "HTTP_CLIENT@@client";
-
+    
     private DistroMapper distroMapper;
-
+    
     private AiDistroFilter filter;
-
+    
     @BeforeAll
     static void setUpEnvironment() {
         EnvUtil.setEnvironment(new MockEnvironment());
     }
-
+    
     @BeforeEach
     void setUp() {
         distroMapper = mock(DistroMapper.class);
         filter = new AiDistroFilter(distroMapper);
     }
-
+    
     @Test
     void testRequestWithoutClientIdStaysLocal() throws Exception {
         MockHttpServletRequest request = request("GET");
         MockHttpServletResponse response = new MockHttpServletResponse();
         FilterChain chain = mock(FilterChain.class);
-
+        
         filter.doFilter(request, response, chain);
-
+        
         verify(chain).doFilter(any(ReuseHttpServletRequest.class), same(response));
         verify(distroMapper, never()).responsible(anyString());
     }
-
+    
     @Test
     void testResponsibleRequestStaysLocal() throws Exception {
         MockHttpServletRequest request = statefulRequest("GET");
         MockHttpServletResponse response = new MockHttpServletResponse();
         FilterChain chain = mock(FilterChain.class);
         when(distroMapper.responsible(INTERNAL_CLIENT_ID)).thenReturn(true);
-
+        
         filter.doFilter(request, response, chain);
-
+        
         verify(chain).doFilter(any(ReuseHttpServletRequest.class), same(response));
     }
-
+    
     @Test
     void testPeerRedirectIsRejected() throws Exception {
         MockHttpServletRequest request = statefulRequest("GET");
         request.addHeader(HttpHeaderConsts.USER_AGENT_HEADER, "Nacos-Server:v3");
         MockHttpServletResponse response = new MockHttpServletResponse();
-
+        
         filter.doFilter(request, response, mock(FilterChain.class));
-
+        
         assertEquals(HttpServletResponse.SC_BAD_REQUEST, response.getStatus());
         assertTrue(response.getErrorMessage().contains("receive invalid redirect request"));
     }
-
+    
     @Test
     void testRequestIsProxiedWithOriginalQueryAndBody() throws Exception {
         MockHttpServletRequest request = statefulRequest("POST");
@@ -119,7 +119,7 @@ class AiDistroFilterTest {
         AtomicReference<String> targetUrl = new AtomicReference<>();
         AtomicReference<List<String>> headers = new AtomicReference<>();
         AtomicReference<Map<String, String>> parameters = new AtomicReference<>();
-
+        
         try (MockedStatic<HttpClient> httpClient = mockStatic(HttpClient.class)) {
             httpClient.when(() -> HttpClient.request(anyString(), anyList(), anyMap(), anyString(),
                 anyInt(), anyInt(), anyString(), eq("POST"))).thenAnswer(invocation -> {
@@ -129,10 +129,10 @@ class AiDistroFilterTest {
                     assertEquals("body", invocation.getArgument(3));
                     return new RestResult<>(200, "ok", "proxied");
                 });
-
+            
             filter.doFilter(request, response, mock(FilterChain.class));
         }
-
+        
         assertEquals(HttpServletResponse.SC_OK, response.getStatus());
         assertEquals("proxied", response.getContentAsString());
         assertEquals(
@@ -145,65 +145,65 @@ class AiDistroFilterTest {
         assertTrue(headers.get().contains("value"));
         assertTrue(parameters.get().isEmpty());
     }
-
+    
     @Test
     void testFailedProxyResponseUsesMessage() throws Exception {
         MockHttpServletRequest request = statefulRequest("GET");
         MockHttpServletResponse response = new MockHttpServletResponse();
         when(distroMapper.mapSrv(INTERNAL_CLIENT_ID)).thenReturn("2.2.2.2:8848");
-
+        
         try (MockedStatic<HttpClient> httpClient = mockStatic(HttpClient.class)) {
             httpClient.when(() -> HttpClient.request(anyString(), anyList(), anyMap(), anyString(),
                 anyInt(), anyInt(), anyString(), eq("GET")))
                 .thenReturn(new RestResult<>(503, "unavailable", null));
-
+            
             filter.doFilter(request, response, mock(FilterChain.class));
         }
-
+        
         assertEquals(HttpServletResponse.SC_SERVICE_UNAVAILABLE, response.getStatus());
         assertEquals("unavailable", response.getContentAsString());
     }
-
+    
     @Test
     void testSecurityExceptionReturnsForbidden() throws Exception {
         MockHttpServletRequest request = statefulRequest("GET");
         MockHttpServletResponse response = new MockHttpServletResponse();
         when(distroMapper.mapSrv(INTERNAL_CLIENT_ID)).thenReturn("2.2.2.2:8848");
-
+        
         try (MockedStatic<HttpClient> httpClient = mockStatic(HttpClient.class)) {
             httpClient.when(() -> HttpClient.request(anyString(), anyList(), anyMap(), anyString(),
                 anyInt(), anyInt(), anyString(), eq("GET")))
                 .thenThrow(new SecurityException("denied"));
-
+            
             filter.doFilter(request, response, mock(FilterChain.class));
         }
-
+        
         assertEquals(HttpServletResponse.SC_FORBIDDEN, response.getStatus());
         assertTrue(response.getErrorMessage().contains("access denied: caused: denied;"));
     }
-
+    
     @Test
     void testUnexpectedExceptionReturnsServerError() throws Exception {
         MockHttpServletRequest request = statefulRequest("GET");
         MockHttpServletResponse response = new MockHttpServletResponse();
         when(distroMapper.mapSrv(INTERNAL_CLIENT_ID)).thenReturn("2.2.2.2:8848");
-
+        
         try (MockedStatic<HttpClient> httpClient = mockStatic(HttpClient.class)) {
             httpClient.when(() -> HttpClient.request(anyString(), anyList(), anyMap(), anyString(),
                 anyInt(), anyInt(), anyString(), eq("GET")))
                 .thenThrow(new IllegalStateException("failed"));
-
+            
             filter.doFilter(request, response, mock(FilterChain.class));
         }
-
+        
         assertEquals(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, response.getStatus());
         assertTrue(response.getErrorMessage().contains("Server failed, caused: failed;"));
     }
-
+    
     private MockHttpServletRequest request(String method) {
         return new MockHttpServletRequest(method, "/v3/client/ai/agents/endpoints");
     }
-
+    
     private MockHttpServletRequest statefulRequest(String method) {
         MockHttpServletRequest result = request(method);
         result.addHeader(ClientConstants.HTTP_CLIENT_ID_HEADER, "client");

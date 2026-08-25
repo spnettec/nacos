@@ -28,33 +28,33 @@ import java.util.List;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ArdSearchResponse {
-
+    
     private List<ArdSearchResult> results = new ArrayList<>();
-
+    
     private List<ArdCatalogEntry> referrals = new ArrayList<>();
-
+    
     private String pageToken;
-
+    
     public List<ArdSearchResult> getResults() {
         return results;
     }
-
+    
     public void setResults(List<ArdSearchResult> results) {
         this.results = results;
     }
-
+    
     public List<ArdCatalogEntry> getReferrals() {
         return referrals;
     }
-
+    
     public void setReferrals(List<ArdCatalogEntry> referrals) {
         this.referrals = referrals;
     }
-
+    
     public String getPageToken() {
         return pageToken;
     }
-
+    
     public void setPageToken(String pageToken) {
         this.pageToken = pageToken;
     }

@@ -41,14 +41,14 @@ import org.springframework.stereotype.Component;
 @Component
 public class AgentEndpointDeregisterRpcRequestHandler
     extends RequestHandler<AgentEndpointDeregisterRpcRequest, AgentEndpointOperationResponse> {
-
+    
     private final AgentRuntimeRegistryService runtimeRegistryService;
-
+    
     public AgentEndpointDeregisterRpcRequestHandler(
         AgentRuntimeRegistryService runtimeRegistryService) {
         this.runtimeRegistryService = runtimeRegistryService;
     }
-
+    
     @Override
     @NamespaceValidation
     @ExtractorManager.Extractor(rpcExtractor = AgentClientRpcParamExtractor.class)

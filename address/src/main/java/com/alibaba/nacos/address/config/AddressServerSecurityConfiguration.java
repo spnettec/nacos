@@ -31,7 +31,7 @@ import org.springframework.security.web.SecurityFilterChain;
  */
 @Configuration
 public class AddressServerSecurityConfiguration {
-
+    
     @Bean
     @Order(99)
     public SecurityFilterChain addressServerSecurityFilterChain(HttpSecurity http)

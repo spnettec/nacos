@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class ConstantsTest {
-
+    
     @Test
     void testAgentAdminPath() {
         assertNotNull(new Constants.Agent());

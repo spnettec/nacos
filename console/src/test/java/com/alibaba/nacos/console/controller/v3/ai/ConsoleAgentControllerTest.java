@@ -57,23 +57,23 @@ import static org.mockito.Mockito.when;
  */
 @ExtendWith(MockitoExtension.class)
 class ConsoleAgentControllerTest {
-
+    
     private static final String NAMESPACE_ID = "test_namespace";
-
+    
     private static final String AGENT_NAME = "test-agent";
-
+    
     private static final String VERSION = "1.0.0";
-
+    
     @Mock
     private AgentProxy agentProxy;
-
+    
     private ConsoleAgentController controller;
-
+    
     @BeforeEach
     void setUp() {
         controller = new ConsoleAgentController(agentProxy);
     }
-
+    
     @Test
     void shouldDelegateEveryConsoleOperation() throws Exception {
         AgentOverview overview = new AgentOverview();
@@ -104,7 +104,7 @@ class ConsoleAgentControllerTest {
         when(agentProxy.online(NAMESPACE_ID, AGENT_NAME, VERSION)).thenReturn(versionSummary);
         when(agentProxy.offline(NAMESPACE_ID, AGENT_NAME, VERSION)).thenReturn(versionSummary);
         when(agentProxy.updateLabels(any(), any())).thenReturn(agent);
-
+        
         assertSame(overview, controller.getAgent(agentForm()).getData());
         assertSame(agent, controller.updateAgent(updateForm()).getData());
         assertNull(controller.deleteAgent(agentForm()).getData());
@@ -124,34 +124,34 @@ class ConsoleAgentControllerTest {
         assertSame(versionSummary, controller.online(versionForm()).getData());
         assertSame(versionSummary, controller.offline(versionForm()).getData());
         assertSame(agent, controller.updateLabels(labelsForm()).getData());
-
+        
         verify(agentProxy).deleteAgent(NAMESPACE_ID, AGENT_NAME);
         verify(agentProxy).listAgents(NAMESPACE_ID, AGENT_NAME, "tag", "PRIVATE", "owner",
             "download_count", 1, 10);
         verify(agentProxy).deleteDraft(NAMESPACE_ID, AGENT_NAME, VERSION);
     }
-
+    
     @Test
     void shouldDelegateListWithoutScope() throws Exception {
         Page<AgentSummary> agentPage = new Page<>();
         AiResourceFilterableForm filterableForm = new AiResourceFilterableForm();
         when(agentProxy.listAgents(NAMESPACE_ID, AGENT_NAME, null, null, null,
             "download_count", 1, 10)).thenReturn(agentPage);
-
+        
         assertSame(agentPage,
             controller.listAgents(listForm(), filterableForm, pageForm()).getData());
-
+        
         verify(agentProxy).listAgents(NAMESPACE_ID, AGENT_NAME, null, null, null,
             "download_count", 1, 10);
     }
-
+    
     private AgentAdminForm agentForm() {
         AgentAdminForm result = new AgentAdminForm();
         result.setNamespaceId(NAMESPACE_ID);
         result.setAgentName(AGENT_NAME);
         return result;
     }
-
+    
     private AgentUpdateForm updateForm() {
         AgentUpdateForm result = new AgentUpdateForm();
         result.setNamespaceId(NAMESPACE_ID);
@@ -159,7 +159,7 @@ class ConsoleAgentControllerTest {
         result.setStatus("enable");
         return result;
     }
-
+    
     private AgentListForm listForm() {
         AgentListForm result = new AgentListForm();
         result.setNamespaceId(NAMESPACE_ID);
@@ -167,7 +167,7 @@ class ConsoleAgentControllerTest {
         result.setOrderBy("download_count");
         return result;
     }
-
+    
     private AiResourceFilterableForm filterForm() {
         AiResourceFilterableForm result = new AiResourceFilterableForm();
         result.setBizTag("tag");
@@ -175,14 +175,14 @@ class ConsoleAgentControllerTest {
         result.setOwner("owner");
         return result;
     }
-
+    
     private PageForm pageForm() {
         PageForm result = new PageForm();
         result.setPageNo(1);
         result.setPageSize(10);
         return result;
     }
-
+    
     private AgentVersionListForm versionListForm() {
         AgentVersionListForm result = new AgentVersionListForm();
         result.setNamespaceId(NAMESPACE_ID);
@@ -190,7 +190,7 @@ class ConsoleAgentControllerTest {
         result.setStatus("draft");
         return result;
     }
-
+    
     private AgentVersionForm versionForm() {
         AgentVersionForm result = new AgentVersionForm();
         result.setNamespaceId(NAMESPACE_ID);
@@ -198,7 +198,7 @@ class ConsoleAgentControllerTest {
         result.setVersion(VERSION);
         return result;
     }
-
+    
     private AgentRuntimeEndpointForm runtimeForm() {
         AgentRuntimeEndpointForm result = new AgentRuntimeEndpointForm();
         result.setNamespaceId(NAMESPACE_ID);
@@ -207,7 +207,7 @@ class ConsoleAgentControllerTest {
         result.setVersion(VERSION);
         return result;
     }
-
+    
     private AgentDraftCreateForm createDraftForm() {
         AgentDraftCreateForm result = new AgentDraftCreateForm();
         result.setNamespaceId(NAMESPACE_ID);
@@ -216,7 +216,7 @@ class ConsoleAgentControllerTest {
         result.setCallInterfaces("[]");
         return result;
     }
-
+    
     private AgentDraftUpdateForm updateDraftForm() {
         AgentDraftUpdateForm result = new AgentDraftUpdateForm();
         result.setNamespaceId(NAMESPACE_ID);
@@ -225,7 +225,7 @@ class ConsoleAgentControllerTest {
         result.setCallInterfaces("[]");
         return result;
     }
-
+    
     private AgentLabelsUpdateForm labelsForm() {
         AgentLabelsUpdateForm result = new AgentLabelsUpdateForm();
         result.setNamespaceId(NAMESPACE_ID);

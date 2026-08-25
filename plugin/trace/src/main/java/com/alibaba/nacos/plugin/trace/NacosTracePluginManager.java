@@ -39,13 +39,13 @@ import java.util.stream.Collectors;
  * @author xiweng.yy
  */
 public class NacosTracePluginManager {
-
+    
     private static final Logger LOGGER = LoggerFactory.getLogger(NacosTracePluginManager.class);
-
+    
     private static final NacosTracePluginManager INSTANCE = new NacosTracePluginManager();
-
+    
     private final Map<String, NacosTraceSubscriber> traceSubscribers;
-
+    
     private NacosTracePluginManager() {
         this.traceSubscribers = new ConcurrentHashMap<>();
         Collection<NacosTraceSubscriber> plugins =
@@ -60,11 +60,11 @@ public class NacosTracePluginManager {
             }
         }
     }
-
+    
     public static NacosTracePluginManager getInstance() {
         return INSTANCE;
     }
-
+    
     public Collection<NacosTraceSubscriber> getAllTraceSubscribers() {
         Optional<PluginStateChecker> checker = PluginStateCheckerHolder.getInstance();
         if (checker.isPresent()) {
@@ -82,7 +82,7 @@ public class NacosTracePluginManager {
         }
         return new HashSet<>(traceSubscribers.values());
     }
-
+    
     /**
      * Get all trace subscribers without filtering.
      *

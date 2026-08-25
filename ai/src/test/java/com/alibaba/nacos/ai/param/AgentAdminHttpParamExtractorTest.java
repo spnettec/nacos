@@ -27,15 +27,15 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class AgentAdminHttpParamExtractorTest {
-
+    
     @Test
     void testExtractAgentIdentity() throws Exception {
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getParameter("namespaceId")).thenReturn("public");
         when(request.getParameter("agentName")).thenReturn("Demo Agent");
-
+        
         List<ParamInfo> result = new AgentAdminHttpParamExtractor().extractParam(request);
-
+        
         assertEquals(1, result.size());
         assertEquals("public", result.get(0).getNamespaceId());
         assertEquals("Demo Agent", result.get(0).getAgentName());

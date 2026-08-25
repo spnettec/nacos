@@ -41,17 +41,17 @@ import org.springframework.stereotype.Service;
 @EnabledInnerHandler
 @EnabledAiHandler
 public class McpInnerHandler implements McpHandler {
-
+    
     private final McpServerOperationService mcpServerOperationService;
-
+    
     private final McpLegacyImportAdapter mcpLegacyImportAdapter;
-
+    
     public McpInnerHandler(McpServerOperationService mcpServerOperationService,
         McpLegacyImportAdapter mcpLegacyImportAdapter) {
         this.mcpServerOperationService = mcpServerOperationService;
         this.mcpLegacyImportAdapter = mcpLegacyImportAdapter;
     }
-
+    
     @Override
     public Page<McpServerBasicInfo> listMcpServers(String namespaceId, String mcpName,
         String search, int pageNo,
@@ -59,14 +59,14 @@ public class McpInnerHandler implements McpHandler {
         return mcpServerOperationService.listMcpServerWithPage(namespaceId, mcpName, search, pageNo,
             pageSize);
     }
-
+    
     @Override
     public McpServerDetailInfo getMcpServer(String namespaceId, String mcpName, String mcpServerId,
         String version) throws NacosException {
         return mcpServerOperationService.getMcpServerDetail(namespaceId, mcpServerId, mcpName,
             version);
     }
-
+    
     @Override
     public String createMcpServer(String namespaceId, McpServerBasicInfo serverSpecification,
         McpToolSpecification toolSpecification, McpEndpointSpec endpointSpecification)
@@ -75,7 +75,7 @@ public class McpInnerHandler implements McpHandler {
             toolSpecification,
             endpointSpecification);
     }
-
+    
     @Override
     public void updateMcpServer(String namespaceId, boolean isPublish,
         McpServerBasicInfo serverSpecification,
@@ -85,20 +85,20 @@ public class McpInnerHandler implements McpHandler {
             toolSpecification,
             endpointSpecification, overrideExisting);
     }
-
+    
     @Override
     public void deleteMcpServer(String namespaceId, String mcpName, String mcpServerId,
         String version) throws NacosException {
         mcpServerOperationService.deleteMcpServer(namespaceId, mcpName, mcpServerId, version);
     }
-
+    
     @Deprecated
     @Override
     public McpServerImportValidationResult validateImport(String namespaceId,
         McpServerImportRequest request) throws NacosException {
         return mcpLegacyImportAdapter.validateImport(namespaceId, request);
     }
-
+    
     @Deprecated
     @Override
     public McpServerImportResponse executeImport(String namespaceId, McpServerImportRequest request)

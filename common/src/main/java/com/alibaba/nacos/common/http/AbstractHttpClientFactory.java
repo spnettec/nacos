@@ -95,7 +95,7 @@ public abstract class AbstractHttpClientFactory implements HttpClientFactory {
                 .setIOReactorConfig(ioReactorConfig)
                 // catch all exceptions here instead of in DefaultConnectingIOReactor
                 .setIoReactorExceptionCallback((ex) -> {
-
+                
                 })
                 .setDefaultRequestConfig(defaultConfig)
                 .setUserAgent(originalRequestConfig.getUserAgent())
@@ -107,36 +107,36 @@ public abstract class AbstractHttpClientFactory implements HttpClientFactory {
     private DefaultConnectingIOReactor getIoReactor(String threadName) {
         return new DefaultConnectingIOReactor(
             (session, ojb) -> new IOEventHandler() {
-
+                
                 @Override
                 public void connected(IOSession ioSession) throws IOException {
-
+                    
                 }
-
+                
                 @Override
                 public void inputReady(IOSession ioSession, ByteBuffer byteBuffer)
                     throws IOException {
-
+                    
                 }
-
+                
                 @Override
                 public void outputReady(IOSession ioSession) throws IOException {
-
+                    
                 }
-
+                
                 @Override
                 public void timeout(IOSession ioSession, Timeout timeout) throws IOException {
-
+                    
                 }
-
+                
                 @Override
                 public void exception(IOSession ioSession, Exception e) {
-
+                    
                 }
-
+                
                 @Override
                 public void disconnected(IOSession ioSession) {
-
+                    
                 }
             },
             getIoReactorConfig(),

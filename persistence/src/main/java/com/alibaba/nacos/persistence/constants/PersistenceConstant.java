@@ -22,12 +22,12 @@ package com.alibaba.nacos.persistence.constants;
  * @author xiweng.yy
  */
 public class PersistenceConstant {
-
+    
     public static final String DEFAULT_ENCODE = "UTF-8";
-
+    
     public static final String DATASOURCE_DIALECT_TYPE_PROPERTY =
         "nacos.plugin.datasource-dialect.type";
-
+    
     /**
      * Legacy datasource dialect selection property.
      *
@@ -36,27 +36,27 @@ public class PersistenceConstant {
      */
     @Deprecated
     public static final String DATASOURCE_PLATFORM_PROPERTY = "spring.sql.init.platform";
-
+    
     public static final String DATASOURCE_PLATFORM_PROPERTY_NEW = "db.platform";
-
+    
     public static final String MYSQL = "mysql";
-
+    
     public static final String DERBY = "derby";
-
+    
     public static final String EMPTY_DATASOURCE_PLATFORM = "";
-
+    
     public static final String EMBEDDED_STORAGE = "embeddedStorage";
-
+    
     /**
      * The derby base dir.
      */
     public static final String DERBY_BASE_DIR = "derby-data";
-
+    
     /**
      * Specifies that reads wait without timeout.
      */
     public static final String EXTEND_NEED_READ_UNTIL_HAVE_DATA = "00--0-read-join-0--00";
-
+    
     public static final String CONFIG_MODEL_RAFT_GROUP = "nacos_config";
-
+    
 }

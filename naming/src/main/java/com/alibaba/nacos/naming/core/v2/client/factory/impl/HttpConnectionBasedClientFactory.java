@@ -28,17 +28,17 @@ import com.alibaba.nacos.naming.core.v2.client.impl.HttpConnectionBasedClient;
  */
 public class HttpConnectionBasedClientFactory
     implements ClientFactory<HttpConnectionBasedClient> {
-
+    
     @Override
     public String getType() {
         return ClientConstants.HTTP_CONNECTION_BASED;
     }
-
+    
     @Override
     public HttpConnectionBasedClient newClient(String clientId, ClientAttributes attributes) {
         return new HttpConnectionBasedClient(clientId, attributes);
     }
-
+    
     @Override
     public HttpConnectionBasedClient newSyncedClient(String clientId,
         ClientAttributes attributes) {

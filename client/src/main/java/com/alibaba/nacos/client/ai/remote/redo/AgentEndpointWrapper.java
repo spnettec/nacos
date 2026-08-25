@@ -30,42 +30,42 @@ import java.util.Objects;
  * @author xiweng.yy
  */
 public class AgentEndpointWrapper {
-
+    
     private final Collection<AgentEndpoint> data;
-
+    
     private final boolean isBatch;
-
+    
     private AgentEndpointWrapper(Collection<AgentEndpoint> data, boolean isBatch) {
         this.data = copyEndpoints(data);
         this.isBatch = isBatch;
     }
-
+    
     public static AgentEndpointWrapper wrap(AgentEndpoint data) {
         return new AgentEndpointWrapper(Collections.singletonList(data), false);
     }
-
+    
     public static AgentEndpointWrapper wrap(Collection<AgentEndpoint> data) {
         return new AgentEndpointWrapper(data, true);
     }
-
+    
     public boolean isBatch() {
         return isBatch;
     }
-
+    
     public AgentEndpoint getData() {
         if (isBatch) {
             throw new UnsupportedOperationException("Can't get single data from batched data.");
         }
         return data.iterator().next();
     }
-
+    
     public Collection<AgentEndpoint> getBatchData() {
         if (!isBatch) {
             throw new UnsupportedOperationException("Can't get batched data from single data.");
         }
         return data;
     }
-
+    
     /**
      * Return the exact Agent Version shared by this wrapper's Endpoint payload.
      *
@@ -74,7 +74,7 @@ public class AgentEndpointWrapper {
     public String getVersion() {
         return data.iterator().next().getVersion();
     }
-
+    
     private static Collection<AgentEndpoint> copyEndpoints(Collection<AgentEndpoint> source) {
         List<AgentEndpoint> result = new ArrayList<AgentEndpoint>(source.size());
         for (AgentEndpoint endpoint : source) {
@@ -82,7 +82,7 @@ public class AgentEndpointWrapper {
         }
         return Collections.unmodifiableList(result);
     }
-
+    
     private static AgentEndpoint copyEndpoint(AgentEndpoint source) {
         AgentEndpoint result = new AgentEndpoint();
         result.setTransport(source.getTransport());
@@ -97,7 +97,7 @@ public class AgentEndpointWrapper {
         result.setQuery(source.getQuery());
         return result;
     }
-
+    
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -109,7 +109,7 @@ public class AgentEndpointWrapper {
         AgentEndpointWrapper that = (AgentEndpointWrapper) o;
         return isBatch == that.isBatch && Objects.equals(data, that.data);
     }
-
+    
     @Override
     public int hashCode() {
         return Objects.hash(data, isBatch);

@@ -33,22 +33,22 @@ import java.util.function.Supplier;
  * @since 3.2.0
  */
 public class ControlPluginProvider implements PluginProvider<ControlPluginAdapter> {
-
+    
     private final Supplier<ControlPluginRegistry> registrySupplier;
-
+    
     public ControlPluginProvider() {
         this(ControlPluginRegistry::getInstance);
     }
-
+    
     ControlPluginProvider(Supplier<ControlPluginRegistry> registrySupplier) {
         this.registrySupplier = registrySupplier;
     }
-
+    
     @Override
     public PluginType getPluginType() {
         return PluginType.CONTROL;
     }
-
+    
     @Override
     public Map<String, ControlPluginAdapter> getAllPlugins() {
         Map<String, ControlPluginAdapter> result = registrySupplier.get().getPlugins();

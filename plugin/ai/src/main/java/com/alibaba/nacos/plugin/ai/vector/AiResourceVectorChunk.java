@@ -22,73 +22,73 @@ package com.alibaba.nacos.plugin.ai.vector;
  * @author nacos
  */
 public class AiResourceVectorChunk {
-
+    
     private Long id;
-
+    
     private Long documentId;
-
+    
     private String namespaceId;
-
+    
     private String resourceType;
-
+    
     private String resourceName;
-
+    
     private String resourceVersion;
-
+    
     private String chunkType;
-
+    
     public Long getId() {
         return id;
     }
-
+    
     public void setId(Long id) {
         this.id = id;
     }
-
+    
     public Long getDocumentId() {
         return documentId;
     }
-
+    
     public void setDocumentId(Long documentId) {
         this.documentId = documentId;
     }
-
+    
     public String getNamespaceId() {
         return namespaceId;
     }
-
+    
     public void setNamespaceId(String namespaceId) {
         this.namespaceId = namespaceId;
     }
-
+    
     public String getResourceType() {
         return resourceType;
     }
-
+    
     public void setResourceType(String resourceType) {
         this.resourceType = resourceType;
     }
-
+    
     public String getResourceName() {
         return resourceName;
     }
-
+    
     public void setResourceName(String resourceName) {
         this.resourceName = resourceName;
     }
-
+    
     public String getResourceVersion() {
         return resourceVersion;
     }
-
+    
     public void setResourceVersion(String resourceVersion) {
         this.resourceVersion = resourceVersion;
     }
-
+    
     public String getChunkType() {
         return chunkType;
     }
-
+    
     public void setChunkType(String chunkType) {
         this.chunkType = chunkType;
     }

@@ -46,25 +46,25 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * @Version 1.0
  */
 class EncryptionAesHandlerTest {
-
+    
     private EncryptionPluginService mockEncryptionPluginService;
-
+    
     private EncryptionPluginService previousEncryptionPluginService;
-
+    
     @BeforeEach
     void setUp() throws Exception {
         mockEncryptionPluginService = new EncryptionPluginService() {
-
+            
             private static final String ALGORITHM = "AES";
-
+            
             private static final String AES_PKCS5P = "AES/ECB/PKCS5Padding";
-
+            
             // 随机生成密钥-用来加密数据内容
             private final String contentKey = generateKey();
-
+            
             // 随机生成密钥-用来加密密钥
             private final String theKeyOfContentKey = generateKey();
-
+            
             private String generateKey() {
                 SecureRandom secureRandom = new SecureRandom();
                 KeyGenerator keyGenerator;
@@ -78,12 +78,12 @@ class EncryptionAesHandlerTest {
                 byte[] keyBytes = secretKey.getEncoded();
                 return Base64.encodeBase64String(keyBytes);
             }
-
+            
             @Override
             public String encrypt(String secretKey, String content) {
                 return Base64.encodeBase64String(aes(Cipher.ENCRYPT_MODE, content, secretKey));
             }
-
+            
             @Override
             public String decrypt(String secretKey, String content) {
                 if (StringUtils.isBlank(secretKey)) {
@@ -91,23 +91,23 @@ class EncryptionAesHandlerTest {
                 }
                 return aesDecrypt(content, secretKey);
             }
-
+            
             @Override
             public String generateSecretKey() {
                 return contentKey;
             }
-
+            
             @Override
             public String algorithmName() {
                 return ALGORITHM.toLowerCase();
             }
-
+            
             @Override
             public String encryptSecretKey(String secretKey) {
                 return Base64.encodeBase64String(
                     aes(Cipher.ENCRYPT_MODE, generateSecretKey(), theKeyOfContentKey));
             }
-
+            
             @Override
             public String decryptSecretKey(String secretKey) {
                 if (StringUtils.isBlank(secretKey)) {
@@ -115,7 +115,7 @@ class EncryptionAesHandlerTest {
                 }
                 return aesDecrypt(secretKey, theKeyOfContentKey);
             }
-
+            
             private byte[] aes(int mode, String content, String key) {
                 try {
                     return aesBytes(mode, content.getBytes(StandardCharsets.UTF_8), key);
@@ -123,7 +123,7 @@ class EncryptionAesHandlerTest {
                     throw new RuntimeException(e);
                 }
             }
-
+            
             private byte[] aesBytes(int mode, byte[] content, String key) {
                 SecretKeySpec keySpec =
                     new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), ALGORITHM);
@@ -136,7 +136,7 @@ class EncryptionAesHandlerTest {
                     throw new RuntimeException(e);
                 }
             }
-
+            
             private String aesDecrypt(String content, String key) {
                 byte[] bytes = aesBytes(Cipher.DECRYPT_MODE, Base64.decodeBase64(content), key);
                 return new String(bytes, StandardCharsets.UTF_8);
@@ -146,7 +146,7 @@ class EncryptionAesHandlerTest {
             getPlugins().remove(mockEncryptionPluginService.algorithmName());
         EncryptionPluginManager.join(mockEncryptionPluginService);
     }
-
+    
     @AfterEach
     void tearDown() throws Exception {
         Map<String, EncryptionPluginService> plugins = getPlugins();
@@ -156,7 +156,7 @@ class EncryptionAesHandlerTest {
                 previousEncryptionPluginService);
         }
     }
-
+    
     @Test
     void testEncrypt() {
         String content = "content";
@@ -167,30 +167,30 @@ class EncryptionAesHandlerTest {
         assertEquals(mockEncryptionPluginService.encrypt(contentKey, content), pair.getSecond(),
             "should return the encryption content if algorithm defined.");
     }
-
+    
     @Test
     void testDecrypt() {
         String content = "content";
         String contentKey = mockEncryptionPluginService.generateSecretKey();
         String encryptionSecretKey = mockEncryptionPluginService.encryptSecretKey(contentKey);
         String encryptionContent = mockEncryptionPluginService.encrypt(contentKey, content);
-
+        
         Pair<String, String> pair = EncryptionHandler.decryptHandler("cipher-aes-dataId",
             encryptionSecretKey, encryptionContent);
-
+        
         assertEquals(mockEncryptionPluginService.generateSecretKey(), pair.getFirst(),
             "should return the original secret key if algorithm defined.");
         assertEquals(content, pair.getSecond(),
             "should return the original content if algorithm defined.");
-
+        
     }
-
+    
     @Test
     void testEncryptAndDecrypt() {
         String dataId = "cipher-aes-dataId";
         String content = "content";
         String contentKey = mockEncryptionPluginService.generateSecretKey();
-
+        
         Pair<String, String> encryptPair = EncryptionHandler.encryptHandler(dataId, content);
         String encryptionSecretKey = encryptPair.getFirst();
         String encryptionContent = encryptPair.getSecond();
@@ -199,7 +199,7 @@ class EncryptionAesHandlerTest {
             "should return the encryption secret key if algorithm defined.");
         assertEquals(mockEncryptionPluginService.encrypt(contentKey, content), encryptionContent,
             "should return the encryption content if algorithm defined.");
-
+        
         Pair<String, String> decryptPair =
             EncryptionHandler.decryptHandler(dataId, encryptionSecretKey, encryptionContent);
         assertNotNull(decryptPair);
@@ -208,7 +208,7 @@ class EncryptionAesHandlerTest {
         assertEquals(content, decryptPair.getSecond(),
             "should return the original content if algorithm defined.");
     }
-
+    
     @Test
     void testPrefixNotCipherEncrypt() {
         String content = "content";
@@ -217,7 +217,7 @@ class EncryptionAesHandlerTest {
         assertEquals("", pair.getFirst());
         assertEquals(pair.getSecond(), content);
     }
-
+    
     @Test
     void testPrefixNotCipherDecrypt() {
         String content = "content";
@@ -226,7 +226,7 @@ class EncryptionAesHandlerTest {
         assertEquals("", pair.getFirst());
         assertEquals(pair.getSecond(), content);
     }
-
+    
     @Test
     void testAlgorithmEmpty() {
         String dataId = "cipher-";
@@ -237,7 +237,7 @@ class EncryptionAesHandlerTest {
         assertEquals("", pair.getFirst());
         assertEquals(pair.getSecond(), content);
     }
-
+    
     @Test
     void testUnknownAlgorithmNameEncrypt() {
         String dataId = "cipher-mySM4-application";
@@ -248,7 +248,7 @@ class EncryptionAesHandlerTest {
         assertEquals(content, pair.getSecond(),
             "should return original content if algorithm is not defined.");
     }
-
+    
     @Test
     void testUnknownAlgorithmNameDecrypt() {
         String dataId = "cipher-mySM4-application";
@@ -259,7 +259,7 @@ class EncryptionAesHandlerTest {
         assertEquals(content, pair.getSecond(),
             "should return original content if algorithm is not defined.");
     }
-
+    
     @SuppressWarnings("unchecked")
     private Map<String, EncryptionPluginService> getPlugins() throws Exception {
         Field field = EncryptionPluginManager.class.getDeclaredField("ENCRYPTION_SPI_MAP");

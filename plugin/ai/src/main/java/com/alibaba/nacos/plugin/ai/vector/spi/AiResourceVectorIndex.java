@@ -28,34 +28,34 @@ import java.util.List;
  * @author nacos
  */
 public interface AiResourceVectorIndex extends AutoCloseable {
-
+    
     /**
      * Whether this vector index is usable for current runtime.
      */
     boolean available();
-
+    
     /**
      * Replace embeddings for one resource version.
      */
     void replaceResourceVersion(String namespaceId, String resourceType, String resourceName,
         String resourceVersion, Collection<AiResourceVectorDocument> documents);
-
+    
     /**
      * Add embeddings for newly appended chunks.
      */
     void addDocuments(Collection<AiResourceVectorDocument> documents);
-
+    
     /**
      * Delete embeddings for a resource.
      */
     void deleteByResource(String namespaceId, String resourceType, String resourceName);
-
+    
     /**
      * Delete embeddings for one resource version.
      */
     void deleteByResourceVersion(String namespaceId, String resourceType, String resourceName,
         String resourceVersion);
-
+    
     /**
      * Verify that one resource version contains the expected model and document count.
      *
@@ -67,7 +67,7 @@ public interface AiResourceVectorIndex extends AutoCloseable {
         int expectedDocumentCount) {
         return true;
     }
-
+    
     /**
      * Verify the expected relational document identity in addition to model and count.
      *
@@ -80,13 +80,13 @@ public interface AiResourceVectorIndex extends AutoCloseable {
         return isResourceVersionReady(namespaceId, resourceType, resourceName, resourceVersion,
             embeddingModel, expectedDocumentCount);
     }
-
+    
     /**
      * Vector search over AI resource search chunks.
      */
     List<AiResourceVectorHit> search(String namespaceId, String embeddingModel,
         double[] queryVector, List<String> resourceTypes, int limit);
-
+    
     @Override
     default void close() throws Exception {
     }

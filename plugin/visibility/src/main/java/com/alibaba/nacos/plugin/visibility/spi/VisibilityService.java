@@ -29,7 +29,7 @@ import java.util.Properties;
  * @author xiweng.yy
  */
 public interface VisibilityService extends PluginConfigSpec {
-
+    
     /**
      * Initialize service with external properties.
      *
@@ -45,7 +45,7 @@ public interface VisibilityService extends PluginConfigSpec {
     @Deprecated
     default void init(Properties properties) {
     }
-
+    
     /**
      * Resolve default scope for a newly created resource.
      *
@@ -60,12 +60,12 @@ public interface VisibilityService extends PluginConfigSpec {
         String resourceType) {
         return VisibilityConstants.SCOPE_PRIVATE;
     }
-
+    
     ValidationResult validateVisibility(String identity, String action, String apiType,
         VisibilityResource resource);
-
+    
     QueryAdvisor adviseQuery(String identity, String action, String apiType,
         VisibilityQueryContext context);
-
+    
     String getVisibilityServiceName();
 }

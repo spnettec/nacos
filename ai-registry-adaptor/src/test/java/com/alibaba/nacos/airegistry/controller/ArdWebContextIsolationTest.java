@@ -53,7 +53,7 @@ import static org.mockito.Mockito.when;
  * @author nacos
  */
 class ArdWebContextIsolationTest {
-
+    
     @Test
     void skillArtifactShouldBeServedOnlyByAdaptorContext() throws Exception {
         try (AnnotationConfigServletWebServerApplicationContext mainContext =
@@ -62,10 +62,10 @@ class ArdWebContextIsolationTest {
                 start(AdaptorApplication.class, "")) {
             int mainPort = mainContext.getWebServer().getPort();
             int adaptorPort = adaptorContext.getWebServer().getPort();
-
+            
             assertEquals(200, get(mainPort, "/nacos/v3/client/ai/skills").statusCode());
             assertEquals(404, get(adaptorPort, "/v3/client/ai/skills").statusCode());
-
+            
             String artifactPath = "/v3/ai/ard/artifacts?namespaceId=public"
                 + "&resourceType=skill&resourceName=demo&version=1.0.0";
             HttpResponse<byte[]> artifact = get(adaptorPort, artifactPath);
@@ -77,7 +77,7 @@ class ArdWebContextIsolationTest {
             assertEquals(404, get(mainPort, "/nacos" + artifactPath).statusCode());
         }
     }
-
+    
     private AnnotationConfigServletWebServerApplicationContext start(
         Class<?> application, String contextPath) {
         AnnotationConfigServletWebServerApplicationContext context =
@@ -92,36 +92,36 @@ class ArdWebContextIsolationTest {
         context.refresh();
         return context;
     }
-
+    
     private HttpResponse<byte[]> get(int port, String path) throws Exception {
         HttpRequest request = HttpRequest.newBuilder()
             .uri(URI.create("http://127.0.0.1:" + port + path)).GET().build();
         return HttpClient.newHttpClient()
             .send(request, HttpResponse.BodyHandlers.ofByteArray());
     }
-
+    
     @Configuration(proxyBeanMethods = false)
     @EnableAutoConfiguration(exclude = {DataSourceAutoConfiguration.class,
         SecurityAutoConfiguration.class, ServletWebSecurityAutoConfiguration.class,
         UserDetailsServiceAutoConfiguration.class,
         ManagementWebSecurityAutoConfiguration.class})
     static class MainServerApplication {
-
+        
         @Bean
         MainSkillController mainSkillController() {
             return new MainSkillController();
         }
     }
-
+    
     @RestController
     static class MainSkillController {
-
+        
         @GetMapping("/v3/client/ai/skills")
         byte[] get() {
             return "main-server".getBytes(StandardCharsets.UTF_8);
         }
     }
-
+    
     @Configuration(proxyBeanMethods = false)
     @EnableAutoConfiguration(exclude = {DataSourceAutoConfiguration.class,
         SecurityAutoConfiguration.class, ServletWebSecurityAutoConfiguration.class,
@@ -129,16 +129,16 @@ class ArdWebContextIsolationTest {
         ManagementWebSecurityAutoConfiguration.class})
     @Import({ArdSearchController.class, ArdExceptionHandler.class})
     static class AdaptorApplication {
-
+        
         @Bean
         ArdSearchService ardSearchService() {
             return mock(ArdSearchService.class);
         }
-
+        
         @Bean
         ArdArtifactService ardArtifactService() throws Exception {
             ArdArtifactService service = mock(ArdArtifactService.class);
-            when(service.get(any(), any(), any(), any(), any())).thenReturn(
+            when(service.get(any(), any(), any(), any(), any(), any(), any())).thenReturn(
                 new ArdArtifact(ArdProtocolConstants.MEDIA_TYPE_SKILL_PACKAGE,
                     "skill-zip".getBytes(StandardCharsets.UTF_8)));
             return service;

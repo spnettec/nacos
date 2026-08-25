@@ -26,25 +26,25 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 class MysqlHealthCheckProcessorTest {
-
+    
     @Test
     void testBuildJdbcUrlWithoutConnectionProperties() {
         HealthCheckInstancePublishInfo instance =
             new HealthCheckInstancePublishInfo("127.0.0.1", 3306);
-
+        
         String actual = MysqlHealthCheckProcessor.buildJdbcUrl(instance);
-
+        
         assertEquals("jdbc:mysql://127.0.0.1:3306", actual);
     }
-
+    
     @Test
     void testBuildConnectionProperties() {
         Mysql config = new Mysql();
         config.setUser("nacos");
         config.setPwd("nacos-password");
-
+        
         Properties actual = MysqlHealthCheckProcessor.buildConnectionProperties(config);
-
+        
         assertEquals("nacos", actual.getProperty("user"));
         assertEquals("nacos-password", actual.getProperty("password"));
         assertEquals("500", actual.getProperty("connectTimeout"));
@@ -54,12 +54,12 @@ class MysqlHealthCheckProcessorTest {
         assertEquals("false", actual.getProperty("allowUrlInLocalInfile"));
         assertEquals("false", actual.getProperty("allowMultiQueries"));
     }
-
+    
     @Test
     void testBuildConnectionPropertiesWithoutCredentials() {
         Properties actual =
             MysqlHealthCheckProcessor.buildConnectionProperties(new Mysql());
-
+        
         assertFalse(actual.containsKey("user"));
         assertFalse(actual.containsKey("password"));
     }

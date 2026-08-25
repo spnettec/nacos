@@ -27,7 +27,7 @@ import java.util.Set;
  * @author : huangtianhui
  */
 public interface CustomEnvironmentPluginService extends PluginConfigSpec {
-
+    
     /**
      * customValue interface.
      *
@@ -35,21 +35,21 @@ public interface CustomEnvironmentPluginService extends PluginConfigSpec {
      * @return custom key value
      */
     Map<String, Object> customValue(Map<String, Object> property);
-
+    
     /**
      * propertyKey interface.
      *
      * @return propertyKey property Key
      */
     Set<String> propertyKey();
-
+    
     /**
      * order  The larger the priority, the higher the priority.
      *
      * @return order
      */
     Integer order();
-
+    
     /**
      * pluginName.
      *

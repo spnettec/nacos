@@ -37,10 +37,10 @@ import java.util.Map;
  * {@code EmbeddedAiResourceVersionPersistServiceImpl}.</p>
  */
 public final class AiResourceVersionStorageJsonUtil {
-
+    
     private AiResourceVersionStorageJsonUtil() {
     }
-
+    
     /**
      * Merge a new {@code contentMd5} into the existing {@code storage} JSON while preserving the
      * other entries (provider/scope/files/...). Returns a JSON string suitable for the
@@ -66,7 +66,7 @@ public final class AiResourceVersionStorageJsonUtil {
         map.put(Constants.Skills.STORAGE_KEY_CONTENT_MD5, contentMd5);
         return JacksonUtils.toJson(map);
     }
-
+    
     /**
      * Read the persisted provider from a version storage descriptor.
      *
@@ -81,7 +81,30 @@ public final class AiResourceVersionStorageJsonUtil {
         }
         return ((String) provider).trim();
     }
-
+    
+    /**
+     * Resolve the provider from a version storage descriptor, using the given default for legacy
+     * descriptors that do not contain a provider.
+     *
+     * @param storageJson version storage descriptor
+     * @param defaultProvider provider for legacy descriptors
+     * @return persisted provider, or the default provider when missing
+     * @throws NacosException when the descriptor or provider value is invalid
+     */
+    public static String resolveProvider(String storageJson, String defaultProvider)
+        throws NacosException {
+        Map<String, Object> descriptor = requireDescriptor(storageJson);
+        Object provider = descriptor.get("provider");
+        if (provider == null || provider instanceof String
+            && StringUtils.isBlank((String) provider)) {
+            return defaultProvider;
+        }
+        if (!(provider instanceof String)) {
+            throw invalidDescriptor("provider is invalid");
+        }
+        return ((String) provider).trim();
+    }
+    
     /**
      * Read the persisted file list from a version storage descriptor.
      *
@@ -103,7 +126,7 @@ public final class AiResourceVersionStorageJsonUtil {
         }
         return result;
     }
-
+    
     private static Map<String, Object> requireDescriptor(String storageJson)
         throws NacosException {
         if (StringUtils.isBlank(storageJson)) {
@@ -124,7 +147,7 @@ public final class AiResourceVersionStorageJsonUtil {
                 "AI resource storage descriptor is invalid", e);
         }
     }
-
+    
     private static NacosException invalidDescriptor(String reason) {
         return new NacosException(NacosException.SERVER_ERROR,
             "AI resource storage descriptor is invalid: " + reason);

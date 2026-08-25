@@ -40,7 +40,7 @@ import static org.mockito.Mockito.when;
  * @author nacos
  */
 class OpenAiCompatibleResourceIndexEnhancementServiceTest {
-
+    
     @AfterEach
     void tearDown() {
         System.clearProperty(OpenAiCompatibleResourceIndexEnhancementService.KEY_ENABLED);
@@ -49,11 +49,11 @@ class OpenAiCompatibleResourceIndexEnhancementServiceTest {
         System.clearProperty(OpenAiCompatibleResourceIndexEnhancementService.KEY_MODEL);
         System.clearProperty(OpenAiCompatibleResourceIndexEnhancementService.KEY_MAX_ITEMS);
     }
-
+    
     @Test
     void systemPromptShouldFollowRetrievalEnrichmentContract() {
         String prompt = AiResourceIndexEnhancementPrompt.SYSTEM_PROMPT;
-
+        
         assertTrue(prompt.contains("Generate compact bilingual retrieval-enrichment JSON"));
         assertTrue(prompt.contains("Use only the provided source content"));
         assertTrue(prompt.contains("must not infer"));
@@ -76,7 +76,7 @@ class OpenAiCompatibleResourceIndexEnhancementServiceTest {
         assertFalse(prompt.contains("\"exampleQueries\""));
         assertTrue(prompt.contains("Return strict JSON only"));
     }
-
+    
     @Test
     void parseEnhancementContentShouldConvertJsonToChunks() {
         OpenAiCompatibleResourceIndexEnhancementService service =
@@ -87,10 +87,10 @@ class OpenAiCompatibleResourceIndexEnhancementServiceTest {
             + "\"find a payment reconcile skill\"],"
             + "\"searchTerms\":[\"支付对账\",\"payment reconciliation\"]}"
             + "\n```";
-
+        
         List<AiResourceIndexEnhancementChunk> chunks =
             service.parseEnhancementContent(content, "test-model");
-
+        
         assertTrue(chunks.stream().anyMatch(
             chunk -> AiResourceSearchConstants.CHUNK_TYPE_AI_SUMMARY.equals(chunk.getChunkType())));
         assertTrue(chunks.stream().anyMatch(
@@ -100,7 +100,7 @@ class OpenAiCompatibleResourceIndexEnhancementServiceTest {
             chunk -> AiResourceSearchConstants.CHUNK_TYPE_SEARCH_TERM
                 .equals(chunk.getChunkType())));
     }
-
+    
     @Test
     void resourcePayloadShouldIncludeSourceContentSnippets() {
         OpenAiCompatibleResourceIndexEnhancementService service =
@@ -109,34 +109,34 @@ class OpenAiCompatibleResourceIndexEnhancementServiceTest {
         entry.setResourceType("skill");
         entry.setResourceName("ai-video-avatar");
         String contentText = "Create AI avatar and talking head videos. " + "avatar ".repeat(100);
-
+        
         Map<String, Object> payload = service.resourcePayload(entry, List.of(),
             List.of(new AiResourceIndexEnhancementContent("SKILL.md", contentText)));
-
+        
         List<?> contents = (List<?>) payload.get("contents");
         assertFalse(contents.isEmpty());
         assertEquals(contentText, ((Map<?, ?>) contents.get(0)).get("text"));
         assertTrue(String.valueOf(contents).contains("talking head"));
     }
-
+    
     @Test
     void errorMessageShouldIncludeCompactResponseBody() {
         OpenAiCompatibleResourceIndexEnhancementService service =
             new OpenAiCompatibleResourceIndexEnhancementService();
         String message = service.errorMessage(400, "bad\nrequest\r\n" + "x".repeat(1200));
-
+        
         assertTrue(message.contains("status=400"));
         assertTrue(message.contains("body=bad request"));
         assertFalse(message.contains("\n"));
         assertFalse(message.contains("\r"));
         assertTrue(message.length() < 1100);
     }
-
+    
     @Test
     void chatEndpointShouldAcceptOpenAiBaseUrl() {
         OpenAiCompatibleResourceIndexEnhancementService service =
             new OpenAiCompatibleResourceIndexEnhancementService();
-
+        
         assertEquals("https://example.com/compatible-mode/v1/chat/completions",
             service.chatEndpoint("https://example.com/compatible-mode/v1"));
         assertEquals("https://example.com/compatible-mode/v1/chat/completions",
@@ -146,7 +146,7 @@ class OpenAiCompatibleResourceIndexEnhancementServiceTest {
         assertEquals("https://example.com/custom",
             service.chatEndpoint("https://example.com/custom"));
     }
-
+    
     @Test
     void fingerprintShouldTrackOutputConfigurationButExcludeCredentials() {
         System.setProperty(OpenAiCompatibleResourceIndexEnhancementService.KEY_ENDPOINT,
@@ -155,19 +155,19 @@ class OpenAiCompatibleResourceIndexEnhancementServiceTest {
         System.setProperty(OpenAiCompatibleResourceIndexEnhancementService.KEY_API_KEY, "key-one");
         OpenAiCompatibleResourceIndexEnhancementService service =
             new OpenAiCompatibleResourceIndexEnhancementService();
-
+        
         String initial = service.fingerprint();
         System.setProperty(OpenAiCompatibleResourceIndexEnhancementService.KEY_ENDPOINT,
             "https://example.com/v1");
         assertEquals(initial, service.fingerprint());
-
+        
         System.setProperty(OpenAiCompatibleResourceIndexEnhancementService.KEY_API_KEY, "key-two");
         assertEquals(initial, service.fingerprint());
-
+        
         System.setProperty(OpenAiCompatibleResourceIndexEnhancementService.KEY_MODEL, "model-v2");
         assertFalse(initial.equals(service.fingerprint()));
     }
-
+    
     @Test
     void resultShouldRecordConfigurationUsedByTheRequest() throws Exception {
         System.setProperty(OpenAiCompatibleResourceIndexEnhancementService.KEY_ENABLED, "true");
@@ -188,10 +188,10 @@ class OpenAiCompatibleResourceIndexEnhancementServiceTest {
         OpenAiCompatibleResourceIndexEnhancementService service =
             new OpenAiCompatibleResourceIndexEnhancementService(httpClient);
         String requestedFingerprint = service.fingerprint();
-
+        
         AiResourceIndexEnhancementResult result = service.enhanceWithResult(
             new AiResourceSearchDocument(), List.of(), List.of());
-
+        
         assertEquals(requestedFingerprint, result.getFingerprint());
         assertFalse(requestedFingerprint.equals(service.fingerprint()));
     }

@@ -24,30 +24,30 @@ import com.alibaba.nacos.core.plugin.storage.PluginStatePersistenceService;
  * @author Nacos
  */
 class LocalFilePluginConfigStorageProvider implements PluginConfigStorageProvider {
-
+    
     static final String NAME = "local-file";
-
+    
     private final PluginStatePersistenceService persistence;
-
+    
     LocalFilePluginConfigStorageProvider(PluginStatePersistenceService persistence) {
         this.persistence = persistence;
     }
-
+    
     @Override
     public String getName() {
         return NAME;
     }
-
+    
     @Override
     public int getOrder() {
         return Integer.MAX_VALUE;
     }
-
+    
     @Override
     public boolean isEnabledByDefault() {
         return true;
     }
-
+    
     @Override
     public PluginConfigStorage createStorage() {
         return new LocalFilePluginConfigStorage(persistence);

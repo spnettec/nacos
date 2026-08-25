@@ -25,13 +25,13 @@ import com.alibaba.nacos.api.remote.response.Response;
  * @author Nacos
  */
 public class AgentPublishRpcResponse extends Response {
-
+    
     private AgentVersionDetail versionDetail;
-
+    
     public AgentVersionDetail getVersionDetail() {
         return versionDetail;
     }
-
+    
     public void setVersionDetail(AgentVersionDetail versionDetail) {
         this.versionDetail = versionDetail;
     }

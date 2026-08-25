@@ -26,16 +26,16 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PostgresqlAiVectorSchemaResourceTest {
-
+    
     @Test
     void testPluginOwnsOptionalPgvectorSchema() throws IOException {
         String vectorSchema = readSchema("META-INF/pg-ai-vector-schema.sql");
-
+        
         assertTrue(vectorSchema.contains("CREATE EXTENSION IF NOT EXISTS vector"));
         assertTrue(vectorSchema.contains("CREATE TABLE \"ai_resource_search_embedding_pg\""));
         assertTrue(vectorSchema.contains("\"embedding\" vector NOT NULL"));
     }
-
+    
     private String readSchema(String resource) throws IOException {
         try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(resource)) {
             assertNotNull(inputStream);

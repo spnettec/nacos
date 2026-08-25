@@ -38,21 +38,21 @@ import java.util.Map;
  */
 @Service
 public class AiResourceFileReader {
-
+    
     private static final TypeReference<Map<String, Object>> MAP_TYPE =
         new TypeReference<Map<String, Object>>() {
         };
-
+    
     private final AiResourceStorageRouter storageRouter;
-
+    
     public AiResourceFileReader() {
         this(AiResourceStorageRouter.getInstance());
     }
-
+    
     AiResourceFileReader(AiResourceStorageRouter storageRouter) {
         this.storageRouter = storageRouter;
     }
-
+    
     /**
      * Read one file declared by an AI resource version.
      *
@@ -72,7 +72,7 @@ public class AiResourceFileReader {
             resourceVersion, filePath);
         return storageRouter.route(key).get(key);
     }
-
+    
     private StorageKey buildStorageKey(String provider, String namespaceId, String resourceType,
         String resourceName, String resourceVersion, String filePath) {
         if (AiResourceConstants.RESOURCE_TYPE_SKILL.equals(resourceType)) {
@@ -82,7 +82,7 @@ public class AiResourceFileReader {
         return NacosConfigAiResourceStorage.buildStorageKey(provider, namespaceId, resourceType,
             resourceName, resourceVersion, filePath);
     }
-
+    
     private Map<String, Object> parseStorage(String storageJson) {
         try {
             Map<String, Object> parsed = JacksonUtils.toObj(storageJson, MAP_TYPE);
@@ -91,12 +91,12 @@ public class AiResourceFileReader {
             return Collections.emptyMap();
         }
     }
-
+    
     private String provider(Object provider) {
         String value = provider == null ? null : String.valueOf(provider);
         return StringUtils.isBlank(value) ? NacosConfigAiResourceStorage.TYPE : value;
     }
-
+    
     private boolean containsFile(Object files, String filePath) {
         if (!(files instanceof Collection)) {
             return false;

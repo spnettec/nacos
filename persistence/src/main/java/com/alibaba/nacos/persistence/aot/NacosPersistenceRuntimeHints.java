@@ -27,7 +27,7 @@ import org.springframework.aot.hint.RuntimeHintsRegistrar;
  * @author heyoulin
  */
 public class NacosPersistenceRuntimeHints implements RuntimeHintsRegistrar {
-
+    
     @Override
     public void registerHints(RuntimeHints hints, ClassLoader classLoader) {
         hints.reflection()

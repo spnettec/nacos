@@ -50,121 +50,121 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class SkillListHttpParamExtractorTest {
-
+    
     private MockHttpServletRequest request;
-
+    
     private SkillListHttpParamExtractor httpParamExtractor;
-
+    
     @BeforeEach
     void setUp() {
         EnvUtil.setEnvironment(new StandardEnvironment());
         httpParamExtractor = new SkillListHttpParamExtractor();
         request = new MockHttpServletRequest();
     }
-
+    
     @Test
     void extractParamShouldNotTreatSkillNameAsCanonicalResourceName() throws NacosException {
         request.addParameter("namespaceId", "public");
         request.addParameter("skillName", "test-");
-
+        
         List<ParamInfo> actual = httpParamExtractor.extractParam(request);
-
+        
         assertEquals(1, actual.size());
         assertEquals("public", actual.get(0).getNamespaceId());
         assertNull(actual.get(0).getSkillName());
         assertEquals("test-", actual.get(0).getSkillSearchName());
     }
-
+    
     @Test
     void fuzzySearchTermWithTrailingHyphenShouldPassGlobalParamCheck() throws NacosException {
         request.addParameter("namespaceId", "public");
         request.addParameter("skillName", "test-");
-
+        
         List<ParamInfo> paramInfos = httpParamExtractor.extractParam(request);
         ParamCheckResponse response = new DefaultParamChecker().checkParamInfoList(paramInfos);
-
+        
         assertTrue(response.isSuccess());
     }
-
+    
     @Test
     void fuzzySearchTermWithIllegalCharactersShouldFailGlobalParamCheck() throws NacosException {
         request.addParameter("namespaceId", "public");
         request.addParameter("skillName", "skill@name");
-
+        
         List<ParamInfo> paramInfos = httpParamExtractor.extractParam(request);
         ParamCheckResponse response = new DefaultParamChecker().checkParamInfoList(paramInfos);
-
+        
         assertFalse(response.isSuccess());
         assertEquals("Skill search name may only contain lowercase letters, numbers, and hyphens",
             response.getMessage());
     }
-
+    
     @Test
     void accurateSearchTermShouldBeTreatedAsCanonicalSkillName() throws NacosException {
         request.addParameter("namespaceId", "public");
         request.addParameter("skillName", "test-");
         request.addParameter("search", "accurate");
-
+        
         List<ParamInfo> actual = httpParamExtractor.extractParam(request);
-
+        
         assertEquals(1, actual.size());
         assertEquals("test-", actual.get(0).getSkillName());
         assertNull(actual.get(0).getSkillSearchName());
     }
-
+    
     @Test
     void accurateSearchTermWithTrailingHyphenShouldFailGlobalParamCheck() throws NacosException {
         request.addParameter("namespaceId", "public");
         request.addParameter("skillName", "test-");
         request.addParameter("search", "accurate");
-
+        
         List<ParamInfo> paramInfos = httpParamExtractor.extractParam(request);
         ParamCheckResponse response = new DefaultParamChecker().checkParamInfoList(paramInfos);
-
+        
         assertFalse(response.isSuccess());
         assertEquals("Skill name may only contain lowercase letters, numbers, and hyphens, "
             + "and must not start or end with a hyphen", response.getMessage());
     }
-
+    
     @Test
     void paramCheckerFilterShouldAllowFuzzySearchTermWithTrailingHyphen() throws Exception {
         request.addParameter("namespaceId", "public");
         request.addParameter("skillName", "test-");
         request.addParameter("search", "blur");
-
+        
         FilterChain chain = mock(FilterChain.class);
         MockHttpServletResponse response = doFilterThroughSkillListMethod(request, chain);
-
+        
         assertEquals(200, response.getStatus());
         verify(chain).doFilter(request, response);
     }
-
+    
     @Test
     void paramCheckerFilterShouldRejectFuzzySearchTermWithIllegalCharacters() throws Exception {
         request.addParameter("namespaceId", "public");
         request.addParameter("skillName", "skill@name");
         request.addParameter("search", "blur");
-
+        
         FilterChain chain = mock(FilterChain.class);
         MockHttpServletResponse response = doFilterThroughSkillListMethod(request, chain);
-
+        
         assertEquals(400, response.getStatus());
         verify(chain, never()).doFilter(request, response);
     }
-
+    
     @Test
     void paramCheckerFilterShouldRejectAccurateSearchTermWithTrailingHyphen() throws Exception {
         request.addParameter("namespaceId", "public");
         request.addParameter("skillName", "test-");
         request.addParameter("search", "accurate");
-
+        
         FilterChain chain = mock(FilterChain.class);
         MockHttpServletResponse response = doFilterThroughSkillListMethod(request, chain);
-
+        
         assertEquals(400, response.getStatus());
         verify(chain, never()).doFilter(request, response);
     }
-
+    
     private MockHttpServletResponse doFilterThroughSkillListMethod(MockHttpServletRequest request,
         FilterChain chain)
         throws NoSuchMethodException, ServletException, IOException {

@@ -32,11 +32,11 @@ import java.util.Arrays;
  * @author Nacos
  */
 public final class PreparedAgentVersionWrite {
-
+    
     private final AgentVersionStorageDescriptor descriptor;
-
+    
     private final byte[] bytes;
-
+    
     PreparedAgentVersionWrite(AgentVersionStorageDescriptor descriptor,
         AgentVersionContentSerializer.SerializedContent serializedContent) {
         if (serializedContent == null) {
@@ -54,7 +54,7 @@ public final class PreparedAgentVersionWrite {
         this.descriptor = copyDescriptor(descriptor);
         bytes = serializedContent.getBytes();
     }
-
+    
     /**
      * Return an independent descriptor for persistence in the Agent Version row.
      *
@@ -63,7 +63,7 @@ public final class PreparedAgentVersionWrite {
     public AgentVersionStorageDescriptor getDescriptor() {
         return copyDescriptor(descriptor);
     }
-
+    
     /**
      * Return a defensive copy of the exact bytes prepared for AI Storage.
      *
@@ -72,11 +72,11 @@ public final class PreparedAgentVersionWrite {
     public byte[] getBytes() {
         return Arrays.copyOf(bytes, bytes.length);
     }
-
+    
     StorageKey getStorageKey() {
         return new StorageKey(descriptor.getProvider(), descriptor.getKey());
     }
-
+    
     private static AgentVersionStorageDescriptor copyDescriptor(
         AgentVersionStorageDescriptor source) {
         AgentVersionStorageDescriptor result = new AgentVersionStorageDescriptor();

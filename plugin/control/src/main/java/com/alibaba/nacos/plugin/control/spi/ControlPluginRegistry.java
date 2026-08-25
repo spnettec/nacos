@@ -33,9 +33,9 @@ import java.util.Map;
  * @author Nacos
  */
 public final class ControlPluginRegistry {
-
+    
     private final Map<String, ControlPluginAdapter> plugins;
-
+    
     ControlPluginRegistry(Collection<ControlManagerBuilder> builders) {
         Map<String, ControlPluginAdapter> result = new LinkedHashMap<>();
         Map<String, ControlManagerBuilder> normalizedBuilders = new LinkedHashMap<>();
@@ -46,11 +46,11 @@ public final class ControlPluginRegistry {
         }
         plugins = Collections.unmodifiableMap(result);
     }
-
+    
     public static ControlPluginRegistry getInstance() {
         return RegistryHolder.INSTANCE;
     }
-
+    
     /**
      * Get stable control plugin adapters.
      *
@@ -59,7 +59,7 @@ public final class ControlPluginRegistry {
     public Map<String, ControlPluginAdapter> getPlugins() {
         return plugins;
     }
-
+    
     private void registerBuilder(Map<String, ControlPluginAdapter> result,
         Map<String, ControlManagerBuilder> normalizedBuilders, ControlManagerBuilder builder) {
         if (builder == null) {
@@ -85,9 +85,9 @@ public final class ControlPluginRegistry {
         Loggers.CONTROL.info("Found control manager plugin, name={}, class={}", pluginName,
             builder.getClass().getName());
     }
-
+    
     private static final class RegistryHolder {
-
+        
         private static final ControlPluginRegistry INSTANCE =
             new ControlPluginRegistry(NacosServiceLoader.load(ControlManagerBuilder.class));
     }

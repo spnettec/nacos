@@ -43,17 +43,17 @@ import java.util.Map;
  * @author xiweng.yy
  */
 public class GrpcProtocolAuthService extends AbstractProtocolAuthService<Request> {
-
+    
     private final Map<String, AbstractGrpcResourceParser> resourceParserMap;
-
+    
     private final GrpcIdentityContextBuilder identityContextBuilder;
-
+    
     public GrpcProtocolAuthService(NacosAuthConfig authConfig) {
         super(authConfig);
         resourceParserMap = new HashMap<>(2);
         identityContextBuilder = new GrpcIdentityContextBuilder(authConfig);
     }
-
+    
     @Override
     public void initialize() {
         super.initialize();
@@ -61,7 +61,7 @@ public class GrpcProtocolAuthService extends AbstractProtocolAuthService<Request
         resourceParserMap.put(SignType.CONFIG, new ConfigGrpcResourceParser());
         resourceParserMap.put(SignType.AI, new AiGrpcResourceParser());
     }
-
+    
     @Override
     public Resource parseResource(Request request, Secured secured) {
         if (StringUtils.isNotBlank(secured.resource())) {
@@ -78,12 +78,12 @@ public class GrpcProtocolAuthService extends AbstractProtocolAuthService<Request
         }
         return parser.parse(request, secured);
     }
-
+    
     @Override
     public IdentityContext parseIdentity(Request request) {
         return identityContextBuilder.build(request);
     }
-
+    
     @Override
     public ServerIdentityResult checkServerIdentity(Request request, Secured secured) {
         if (ApiType.INNER_API != secured.apiType()) {
@@ -91,7 +91,7 @@ public class GrpcProtocolAuthService extends AbstractProtocolAuthService<Request
         }
         return super.checkServerIdentity(request, secured);
     }
-
+    
     @Override
     protected ServerIdentity parseServerIdentity(Request request) {
         String serverIdentityKey = authConfig.getServerIdentityKey();

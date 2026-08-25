@@ -43,15 +43,15 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class AgentClientControllerTest {
-
+    
     private AgentDiscoveryApplicationService discoveryService;
-
+    
     private AgentHttpClientLifecycleService lifecycleService;
-
+    
     private AgentPublishApplicationService publishService;
-
+    
     private AgentClientController controller;
-
+    
     @BeforeEach
     void setUp() {
         discoveryService = mock(AgentDiscoveryApplicationService.class);
@@ -60,7 +60,7 @@ class AgentClientControllerTest {
         controller = new AgentClientController(discoveryService, lifecycleService,
             publishService);
     }
-
+    
     @Test
     void testPublish() throws Exception {
         AgentPublishForm form = mock(AgentPublishForm.class);
@@ -71,7 +71,7 @@ class AgentClientControllerTest {
         when(publishService.publish("team", request)).thenReturn(detail);
         assertSame(detail, controller.publish(form).getData());
     }
-
+    
     @Test
     void testSearch() throws Exception {
         AgentSearchForm form = mock(AgentSearchForm.class);
@@ -80,11 +80,11 @@ class AgentClientControllerTest {
         Page<AgentCatalogEntry> page = new Page<AgentCatalogEntry>();
         when(form.toRequest()).thenReturn(request);
         when(discoveryService.search(request)).thenReturn(page);
-
+        
         assertSame(page, controller.search(form, "client").getData());
         verify(lifecycleService).renewForQuery("client", "team");
     }
-
+    
     @Test
     void testDiscover() throws Exception {
         AgentDiscoveryForm form = mock(AgentDiscoveryForm.class);
@@ -93,11 +93,11 @@ class AgentClientControllerTest {
         AgentDiscoveryResult discovery = new AgentDiscoveryResult();
         when(form.toRequest()).thenReturn(request);
         when(discoveryService.discover(request)).thenReturn(discovery);
-
+        
         assertSame(discovery, controller.discover(form, "client").getData());
         verify(lifecycleService).renewForQuery("client", "team");
     }
-
+    
     @Test
     void testRegisterEndpoints() throws Exception {
         AgentEndpointRegistrationForm form = mock(AgentEndpointRegistrationForm.class);
@@ -105,27 +105,27 @@ class AgentClientControllerTest {
         ClientLivenessInfo liveness = new ClientLivenessInfo();
         when(form.toRequest()).thenReturn(batch);
         when(lifecycleService.register("client", "AI", batch)).thenReturn(liveness);
-
+        
         assertSame(liveness, controller.registerEndpoints(form, "client", "AI").getData());
     }
-
+    
     @Test
     void testDeregisterEndpoints() throws Exception {
         AgentEndpointDeregistrationForm form = mock(AgentEndpointDeregistrationForm.class);
         when(form.getNamespaceId()).thenReturn("team");
         when(form.getAgentName()).thenReturn("demo");
         when(form.getProtocol()).thenReturn("a2a");
-
+        
         assertNull(controller.deregisterEndpoints(form, "client", "AI").getData());
         verify(form).validate();
         verify(lifecycleService).deregister("client", "AI", "team", "demo", "a2a");
     }
-
+    
     @Test
     void testHeartbeat() throws Exception {
         ClientLivenessInfo liveness = new ClientLivenessInfo();
         when(lifecycleService.heartbeat("client", "AI")).thenReturn(liveness);
-
+        
         assertSame(liveness, controller.heartbeat("client", "AI").getData());
     }
 }

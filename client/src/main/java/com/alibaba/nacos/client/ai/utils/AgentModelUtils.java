@@ -43,10 +43,10 @@ import java.util.List;
  * @author Nacos
  */
 public final class AgentModelUtils {
-
+    
     private AgentModelUtils() {
     }
-
+    
     /**
      * Deep-copy and validate an Agent definition publication request.
      *
@@ -66,7 +66,7 @@ public final class AgentModelUtils {
             throw invalid("AgentPublishRequest cannot be copied: " + e.getMessage());
         }
         validate(new Validation() {
-
+            
             @Override
             public void run() {
                 result.validate();
@@ -74,7 +74,7 @@ public final class AgentModelUtils {
         });
         return result;
     }
-
+    
     /**
      * Copy, namespace-bind, and validate a Search request.
      *
@@ -96,7 +96,7 @@ public final class AgentModelUtils {
         result.setPageNo(source.getPageNo());
         result.setPageSize(source.getPageSize());
         validate(new Validation() {
-
+            
             @Override
             public void run() {
                 RadModelValidator.validate(result);
@@ -104,7 +104,7 @@ public final class AgentModelUtils {
         });
         return result;
     }
-
+    
     /**
      * Copy, namespace-bind, and validate a Discover request.
      *
@@ -121,7 +121,7 @@ public final class AgentModelUtils {
         result.setReference(copyReference(reference));
         result.setFilter(copyFilter(filter));
         validate(new Validation() {
-
+            
             @Override
             public void run() {
                 RadModelValidator.validate(result);
@@ -129,7 +129,7 @@ public final class AgentModelUtils {
         });
         return result;
     }
-
+    
     /**
      * Copy, namespace-bind, canonicalize, and validate a registration batch.
      *
@@ -155,7 +155,7 @@ public final class AgentModelUtils {
             throw invalid(e.getMessage());
         }
         validate(new Validation() {
-
+            
             @Override
             public void run() {
                 RadModelValidator.validate(result);
@@ -163,7 +163,7 @@ public final class AgentModelUtils {
         });
         return result;
     }
-
+    
     /**
      * Return an isolated complete registration batch.
      *
@@ -174,7 +174,7 @@ public final class AgentModelUtils {
         AgentEndpointRegistrationBatch source) {
         return JsonUtils.toObj(JsonUtils.toJson(source), AgentEndpointRegistrationBatch.class);
     }
-
+    
     /**
      * Copy, namespace-bind, and validate a natural-key deregistration batch.
      *
@@ -194,7 +194,7 @@ public final class AgentModelUtils {
         result.setProtocol(source.getProtocol());
         result.setEndpoints(copyEndpoints(source.getEndpoints()));
         validate(new Validation() {
-
+            
             @Override
             public void run() {
                 RadModelValidator.validate(result);
@@ -202,7 +202,7 @@ public final class AgentModelUtils {
         });
         return result;
     }
-
+    
     /**
      * Return an isolated discovery snapshot.
      *
@@ -213,7 +213,7 @@ public final class AgentModelUtils {
         return source == null ? null
             : JsonUtils.toObj(JsonUtils.toJson(source), AgentDiscoveryResult.class);
     }
-
+    
     private static String bindNamespace(String requestedNamespace, String namespaceId)
         throws NacosException {
         if (StringUtils.isBlank(requestedNamespace)) {
@@ -224,7 +224,7 @@ public final class AgentModelUtils {
         }
         return namespaceId;
     }
-
+    
     private static AgentReference copyReference(AgentReference source) throws NacosException {
         if (source == null) {
             throw invalid("AgentReference must not be null.");
@@ -235,7 +235,7 @@ public final class AgentModelUtils {
         result.setLabel(source.getLabel());
         return result;
     }
-
+    
     private static AgentDiscoveryFilter copyFilter(AgentDiscoveryFilter source) {
         if (source == null) {
             return null;
@@ -250,11 +250,11 @@ public final class AgentModelUtils {
             : new HashMap<>(source.getMetadataSelector()));
         return result;
     }
-
+    
     private static List<String> copyList(List<String> source) {
         return source == null ? null : new ArrayList<>(source);
     }
-
+    
     private static List<Endpoint> canonicalizeEndpoints(List<Endpoint> source) {
         if (source == null) {
             return null;
@@ -265,7 +265,7 @@ public final class AgentModelUtils {
         }
         return result;
     }
-
+    
     private static List<Endpoint> copyEndpoints(List<Endpoint> source) {
         if (source == null) {
             return null;
@@ -276,7 +276,7 @@ public final class AgentModelUtils {
         }
         return result;
     }
-
+    
     private static Endpoint copyEndpoint(Endpoint source) {
         if (source == null) {
             return null;
@@ -291,7 +291,7 @@ public final class AgentModelUtils {
         result.setHealthy(source.getHealthy());
         return result;
     }
-
+    
     private static void validate(Validation validation) throws NacosException {
         try {
             validation.run();
@@ -299,14 +299,14 @@ public final class AgentModelUtils {
             throw invalid(e.getMessage());
         }
     }
-
+    
     private static NacosApiException invalid(String message) {
         return new NacosApiException(NacosException.INVALID_PARAM,
             ErrorCode.PARAMETER_VALIDATE_ERROR, message);
     }
-
+    
     private interface Validation {
-
+        
         void run();
     }
 }

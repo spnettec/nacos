@@ -47,7 +47,7 @@ public class ConfigTagsRelationMapperByMySql extends AbstractMapperByMysql
         final String[] tagArr = (String[]) context.getWhereParameter(FieldConstant.TAG_ARR);
         
         List<Object> paramList = new ArrayList<>();
-
+        
         // 构建内层查询：根据标签条件筛选配置
         StringBuilder innerWhere = new StringBuilder(" WHERE ");
         innerWhere.append(" a.tenant_id=? ");
@@ -78,7 +78,7 @@ public class ConfigTagsRelationMapperByMySql extends AbstractMapperByMysql
             paramList.add(tagArr[i]);
         }
         innerWhere.append(") ");
-
+        
         // 使用子查询分离筛选逻辑和标签聚合逻辑
         final String sql =
             "SELECT c.id,c.data_id,c.group_id,c.tenant_id,c.app_name,c.content,c.md5,c.type,c.encrypted_data_key,c.c_desc,"
@@ -90,7 +90,7 @@ public class ConfigTagsRelationMapperByMySql extends AbstractMapperByMysql
                 + "ORDER BY a.id LIMIT " + context.getStartRow() + "," + context.getPageSize()
                 + ") c LEFT JOIN config_tags_relation d ON c.id=d.id "
                 + "GROUP BY c.id,c.data_id,c.group_id,c.tenant_id,c.app_name,c.content,c.md5,c.type,c.encrypted_data_key,c.c_desc";
-
+        
         return new MapperResult(sql, paramList);
     }
     
@@ -108,7 +108,7 @@ public class ConfigTagsRelationMapperByMySql extends AbstractMapperByMysql
         WhereBuilder innerWhere = new WhereBuilder(
             "SELECT DISTINCT a.id,a.data_id,a.group_id,a.tenant_id,a.app_name,a.content,a.md5,a.encrypted_data_key,a.type,a.c_desc "
                 + "FROM config_info a LEFT JOIN config_tags_relation b ON a.id=b.id");
-
+        
         innerWhere.like("a.tenant_id", tenant);
         
         if (StringUtils.isNotBlank(dataId)) {
@@ -139,7 +139,7 @@ public class ConfigTagsRelationMapperByMySql extends AbstractMapperByMysql
         
         innerWhere.orderBy("a.id").limit(context.getStartRow(), context.getPageSize());
         MapperResult innerResult = innerWhere.build();
-
+        
         // 构建外层查询：获取筛选出的配置的完整标签信息
         final String sql =
             "SELECT c.id,c.data_id,c.group_id,c.tenant_id,c.app_name,c.content,c.md5,c.encrypted_data_key,c.type,c.c_desc,"
@@ -147,7 +147,7 @@ public class ConfigTagsRelationMapperByMySql extends AbstractMapperByMysql
                 + "FROM (" + innerResult.getSql() + ") c "
                 + "LEFT JOIN config_tags_relation d ON c.id=d.id "
                 + "GROUP BY c.id,c.data_id,c.group_id,c.tenant_id,c.app_name,c.content,c.md5,c.encrypted_data_key,c.type,c.c_desc";
-
+        
         return new MapperResult(sql, innerResult.getParamList());
     }
     

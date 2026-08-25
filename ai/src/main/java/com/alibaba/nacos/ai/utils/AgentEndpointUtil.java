@@ -33,7 +33,7 @@ import java.util.Map;
  * @author xiweng.yy
  */
 public class AgentEndpointUtil {
-
+    
     /**
      * Transfer a collection of AgentEndpoint to a list of Instance.
      *
@@ -49,7 +49,7 @@ public class AgentEndpointUtil {
         }
         return result;
     }
-
+    
     /**
      * Transfer a single AgentEndpoint to an Instance.
      *

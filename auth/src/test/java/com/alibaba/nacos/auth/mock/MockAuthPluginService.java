@@ -27,31 +27,31 @@ import java.util.Collection;
 import java.util.Collections;
 
 public class MockAuthPluginService implements AuthPluginService {
-
+    
     public static final String TEST_PLUGIN = "test";
-
+    
     public static final String IDENTITY_TEST_KEY = "identity-test-key";
-
+    
     @Override
     public Collection<String> identityNames() {
         return Collections.singletonList(IDENTITY_TEST_KEY);
     }
-
+    
     @Override
     public boolean enableAuth(ActionTypes action, String type) {
         return true;
     }
-
+    
     @Override
     public String getAuthServiceName() {
         return TEST_PLUGIN;
     }
-
+    
     @Override
     public AuthResult validateAuthority(IdentityContext identityContext, Permission permission) {
         return AuthResult.failureResult(401, "mock auth failed");
     }
-
+    
     @Override
     public AuthResult validateIdentity(IdentityContext identityContext, Resource resource) {
         return AuthResult.failureResult(403, "mock auth failed");

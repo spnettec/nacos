@@ -159,7 +159,7 @@
         <SnakeYaml.version>2.0</SnakeYaml.version>
         <kubernetes.client.version>22.0.0</kubernetes.client.version>
         <junit6.version>6.0.3</junit6.version>
-        <mcp.version>0.18.2</mcp.version>
+        <mcp.version>2.0.0</mcp.version>
         <ojdbc.version>19.7.0.0</ojdbc.version>
         <concurrentlinkedhashmap.version>1.4.2</concurrentlinkedhashmap.version>
 

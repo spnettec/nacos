@@ -32,39 +32,39 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author nacos
  */
 class AiResourcePersistServiceTest {
-
+    
     private AiResourcePersistService persistService;
-
+    
     @BeforeEach
     void setUp() {
         persistService = Mockito.mock(AiResourcePersistService.class, Mockito.CALLS_REAL_METHODS);
     }
-
+    
     @Test
     void testGenerateLikeArgumentReplacesWildcard() {
         assertEquals("%keyword%", persistService.generateLikeArgument("*keyword*"));
     }
-
+    
     @Test
     void testGenerateLikeArgumentEscapesUnderscore() {
         assertEquals("%nacos\\_test%", persistService.generateLikeArgument("*nacos_test*"));
     }
-
+    
     @Test
     void testGenerateLikeArgumentEscapesUnderscoreWithoutWildcard() {
         assertEquals("nacos\\_test", persistService.generateLikeArgument("nacos_test"));
     }
-
+    
     @Test
     void testGenerateLikeArgumentEscapesBackslash() {
         assertEquals("%C:\\\\path%", persistService.generateLikeArgument("*C:\\path*"));
     }
-
+    
     @Test
     void testGenerateLikeArgumentEscapesTrailingBackslash() {
         assertEquals("%trail\\\\%", persistService.generateLikeArgument("*trail\\*"));
     }
-
+    
     @Test
     void testGenerateLikeArgumentEscapesBackslashBeforeUnderscore() {
         assertEquals("%a\\\\\\_b%", persistService.generateLikeArgument("*a\\_b*"));

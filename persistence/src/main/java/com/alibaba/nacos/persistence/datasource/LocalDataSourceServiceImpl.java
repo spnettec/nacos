@@ -50,11 +50,11 @@ import java.util.concurrent.Callable;
  * @author Nacos
  */
 public class LocalDataSourceServiceImpl implements DataSourceService {
-
+    
     private static final Logger LOGGER = LoggerFactory.getLogger(LocalDataSourceServiceImpl.class);
-
+    
     private final String jdbcDriverName = "org.apache.derby.jdbc.EmbeddedDriver";
-
+    
     private final String userName = "nacos";
     
     private final String password = "nacos";
@@ -73,9 +73,9 @@ public class LocalDataSourceServiceImpl implements DataSourceService {
     private boolean jdbcTemplateInit = false;
     
     private String dataSourceType = "derby";
-
+    
     private String healthStatus = "UP";
-
+    
     @Override
     public synchronized void init() throws Exception {
         if (DatasourceConfiguration.isUseExternalDb()) {

@@ -67,30 +67,30 @@ import static org.mockito.Mockito.when;
  */
 @ExtendWith(MockitoExtension.class)
 class AgentMaintainerServiceImplTest {
-
+    
     private static final String NAMESPACE_ID = "test-namespace";
-
+    
     private static final String AGENT_NAME = "test-agent";
-
+    
     private static final String VERSION = "1.0.0";
-
+    
     @Mock
     private ClientHttpProxy clientHttpProxy;
-
+    
     private AgentMaintainerService service;
-
+    
     @BeforeEach
     void setUp() {
         service = new AgentMaintainerServiceImpl(new AiMaintainerHttpContext(clientHttpProxy));
     }
-
+    
     @Test
     void testCreateDraftAndGetAgent() throws NacosException {
         AgentOverview overview = new AgentOverview();
         overview.setAgent(agent());
         when(clientHttpProxy.executeSyncHttpRequest(any(HttpRequest.class)))
             .thenReturn(response(versionDetail()), response(overview));
-
+        
         AgentDraftCreateRequest createRequest = new AgentDraftCreateRequest();
         createRequest.setAgentName(AGENT_NAME);
         createRequest.setVersion(VERSION);
@@ -102,7 +102,7 @@ class AgentMaintainerServiceImplTest {
         createRequest.setExtensions(Collections.<String, Object>singletonMap("region", "east"));
         AgentVersionDetail created = service.createDraft(NAMESPACE_ID, createRequest);
         AgentOverview queried = service.getAgent(NAMESPACE_ID, AGENT_NAME);
-
+        
         assertEquals(AGENT_NAME, created.getAgentName());
         assertEquals(AGENT_NAME, queried.getAgent().getAgentName());
         List<HttpRequest> requests = captureRequests(2);
@@ -119,7 +119,7 @@ class AgentMaintainerServiceImplTest {
         assertRequest(requests.get(1), HttpMethod.GET, rootPath());
         assertEquals(NAMESPACE_ID, requests.get(1).getParamValues().get("namespaceId"));
     }
-
+    
     @Test
     void testUpdateAndDeleteAgent() throws NacosException {
         when(clientHttpProxy.executeSyncHttpRequest(any(HttpRequest.class)))
@@ -127,10 +127,10 @@ class AgentMaintainerServiceImplTest {
         AgentUpdateRequest updateRequest = new AgentUpdateRequest();
         updateRequest.setAgentName(AGENT_NAME);
         updateRequest.setDisplayName("Demo");
-
+        
         Agent updated = service.updateAgent(NAMESPACE_ID, updateRequest);
         service.deleteAgent(NAMESPACE_ID, AGENT_NAME);
-
+        
         assertEquals(AGENT_NAME, updated.getAgentName());
         List<HttpRequest> requests = captureRequests(2);
         assertRequest(requests.get(0), HttpMethod.PUT, rootPath());
@@ -139,13 +139,13 @@ class AgentMaintainerServiceImplTest {
         assertRequest(requests.get(1), HttpMethod.DELETE, rootPath());
         assertEquals(AGENT_NAME, requests.get(1).getParamValues().get("agentName"));
     }
-
+    
     @Test
     void testNullRequestIsRejectedLocally() {
         assertThrows(IllegalArgumentException.class,
             () -> service.createDraft(NAMESPACE_ID, null));
     }
-
+    
     @Test
     void testListAgents() throws NacosException {
         Page<AgentSummary> expected = new Page<>();
@@ -153,10 +153,10 @@ class AgentMaintainerServiceImplTest {
         expected.setPageItems(Collections.singletonList(new AgentSummary()));
         when(clientHttpProxy.executeSyncHttpRequest(any(HttpRequest.class)))
             .thenReturn(response(expected));
-
+        
         Page<AgentSummary> actual = service.listAgents(NAMESPACE_ID, "agent", "east", "PUBLIC",
             "owner", "download_count", 2, 20);
-
+        
         assertEquals(1, actual.getTotalCount());
         HttpRequest request = captureRequests(1).get(0);
         assertRequest(request, HttpMethod.GET, rootPath() + "/list");
@@ -165,7 +165,7 @@ class AgentMaintainerServiceImplTest {
         assertEquals("20", request.getParamValues().get("pageSize"));
         assertEquals("download_count", request.getParamValues().get("orderBy"));
     }
-
+    
     @Test
     void testVersionAndRuntimeReads() throws NacosException {
         Page<AgentVersionSummary> versionPage = new Page<>();
@@ -174,12 +174,12 @@ class AgentMaintainerServiceImplTest {
         snapshot.setItems(Collections.emptyList());
         when(clientHttpProxy.executeSyncHttpRequest(any(HttpRequest.class)))
             .thenReturn(response(versionPage), response(versionDetail()), response(snapshot));
-
+        
         service.listAgentVersions(NAMESPACE_ID, AGENT_NAME, "draft", 1, 10);
         service.getAgentVersion(NAMESPACE_ID, AGENT_NAME, VERSION);
         RuntimeEndpointSnapshot actual =
             service.getRuntimeEndpoints(NAMESPACE_ID, AGENT_NAME, "A2A", VERSION);
-
+        
         assertNotNull(actual.getItems());
         List<HttpRequest> requests = captureRequests(3);
         assertRequest(requests.get(0), HttpMethod.GET, rootPath() + "/versions");
@@ -189,7 +189,7 @@ class AgentMaintainerServiceImplTest {
         assertRequest(requests.get(2), HttpMethod.GET, rootPath() + "/runtime-endpoints");
         assertEquals("A2A", requests.get(2).getParamValues().get("protocol"));
     }
-
+    
     @Test
     void testDraftOperations() throws NacosException {
         when(clientHttpProxy.executeSyncHttpRequest(any(HttpRequest.class)))
@@ -202,11 +202,11 @@ class AgentMaintainerServiceImplTest {
         updateRequest.setAgentName(AGENT_NAME);
         updateRequest.setVersion(VERSION);
         updateRequest.setCallInterfaces(Collections.<AgentCallInterface>emptyList());
-
+        
         service.createDraft(NAMESPACE_ID, createRequest);
         service.updateDraft(NAMESPACE_ID, updateRequest);
         service.deleteDraft(NAMESPACE_ID, AGENT_NAME, VERSION);
-
+        
         List<HttpRequest> requests = captureRequests(3);
         assertRequest(requests.get(0), HttpMethod.POST, rootPath() + "/draft");
         assertEquals(Collections.emptyList(),
@@ -217,7 +217,7 @@ class AgentMaintainerServiceImplTest {
         assertRequest(requests.get(2), HttpMethod.DELETE, rootPath() + "/draft");
         assertEquals(VERSION, requests.get(2).getParamValues().get("version"));
     }
-
+    
     @Test
     void testLifecycleOperations() throws NacosException {
         AgentVersionSummary summary = new AgentVersionSummary();
@@ -226,14 +226,14 @@ class AgentMaintainerServiceImplTest {
             .thenReturn(response(summary), response(summary), response(summary), response(summary),
                 response(summary), response(summary));
         final AgentVersionCommand command = versionCommand();
-
+        
         service.submit(NAMESPACE_ID, command);
         service.publish(NAMESPACE_ID, command);
         service.forcePublish(NAMESPACE_ID, command);
         service.redraft(NAMESPACE_ID, command);
         service.online(NAMESPACE_ID, command);
         service.offline(NAMESPACE_ID, command);
-
+        
         List<HttpRequest> requests = captureRequests(6);
         List<String> paths = Arrays.asList("/submit", "/publish", "/force-publish", "/redraft",
             "/online", "/offline");
@@ -244,7 +244,7 @@ class AgentMaintainerServiceImplTest {
             assertEquals(VERSION, requests.get(i).getParamValues().get("version"));
         }
     }
-
+    
     @Test
     void testUpdateLabels() throws NacosException {
         when(clientHttpProxy.executeSyncHttpRequest(any(HttpRequest.class)))
@@ -252,9 +252,9 @@ class AgentMaintainerServiceImplTest {
         AgentLabelsUpdateRequest request = new AgentLabelsUpdateRequest();
         request.setAgentName(AGENT_NAME);
         request.setLabels(Collections.singletonMap("stable", VERSION));
-
+        
         Agent result = service.updateLabels(NAMESPACE_ID, request);
-
+        
         assertEquals(AGENT_NAME, result.getAgentName());
         HttpRequest httpRequest = captureRequests(1).get(0);
         assertRequest(httpRequest, HttpMethod.PUT, rootPath() + "/labels");
@@ -262,7 +262,7 @@ class AgentMaintainerServiceImplTest {
         assertEquals(VERSION,
             JsonUtils.toObj(httpRequest.getParamValues().get("labels"), Map.class).get("stable"));
     }
-
+    
     @Test
     void testDefaultNamespaceOverloads() throws NacosException {
         AgentOverview overview = new AgentOverview();
@@ -270,12 +270,12 @@ class AgentMaintainerServiceImplTest {
         AgentVersionSummary summary = new AgentVersionSummary();
         when(clientHttpProxy.executeSyncHttpRequest(any(HttpRequest.class)))
             .thenReturn(response(overview), response(summary), response(summary));
-
+        
         service.getAgent(AGENT_NAME);
         service.submit(versionCommand());
         AgentVersionCommand explicitCommand = versionCommand();
         service.submit(NAMESPACE_ID, explicitCommand);
-
+        
         List<HttpRequest> requests = captureRequests(3);
         assertEquals(com.alibaba.nacos.api.common.Constants.DEFAULT_NAMESPACE_ID,
             requests.get(0).getParamValues().get("namespaceId"));
@@ -283,7 +283,7 @@ class AgentMaintainerServiceImplTest {
             requests.get(1).getParamValues().get("namespaceId"));
         assertEquals(NAMESPACE_ID, requests.get(2).getParamValues().get("namespaceId"));
     }
-
+    
     @Test
     void testEveryConvenienceOverloadDefaultsMissingNamespaceToPublic() throws NacosException {
         when(clientHttpProxy.executeSyncHttpRequest(any(HttpRequest.class)))
@@ -301,7 +301,7 @@ class AgentMaintainerServiceImplTest {
         final AgentVersionCommand command = versionCommand();
         AgentLabelsUpdateRequest labelsRequest = new AgentLabelsUpdateRequest();
         labelsRequest.setAgentName(AGENT_NAME);
-
+        
         service.getAgent(AGENT_NAME);
         service.updateAgent(updateRequest);
         service.deleteAgent(AGENT_NAME);
@@ -319,63 +319,63 @@ class AgentMaintainerServiceImplTest {
         service.online(command);
         service.offline(command);
         service.updateLabels(labelsRequest);
-
+        
         for (HttpRequest request : captureRequests(17)) {
             assertEquals(com.alibaba.nacos.api.common.Constants.DEFAULT_NAMESPACE_ID,
                 request.getParamValues().get("namespaceId"));
         }
     }
-
+    
     @Test
     void testOptionalQueryParametersAreOmitted() throws NacosException {
         Page<AgentSummary> page = new Page<>();
         when(clientHttpProxy.executeSyncHttpRequest(any(HttpRequest.class)))
             .thenReturn(response(page));
-
+        
         service.listAgents(NAMESPACE_ID, null, null, null, null, null, 1, 100);
-
+        
         HttpRequest request = captureRequests(1).get(0);
         assertFalse(request.getParamValues().containsKey("agentName"));
         assertFalse(request.getParamValues().containsKey("bizTag"));
         assertFalse(request.getParamValues().containsKey("orderBy"));
     }
-
+    
     private List<HttpRequest> captureRequests(int count) throws NacosException {
         ArgumentCaptor<HttpRequest> captor = ArgumentCaptor.forClass(HttpRequest.class);
         verify(clientHttpProxy, times(count)).executeSyncHttpRequest(captor.capture());
         return captor.getAllValues();
     }
-
+    
     private void assertRequest(HttpRequest request, String method, String path) {
         assertEquals(method, request.getHttpMethod());
         assertEquals(path, request.getPath());
         assertNull(request.getBody());
     }
-
+    
     private String rootPath() {
         return Constants.AdminApiPath.AI_AGENTS_ADMIN_PATH;
     }
-
+    
     private Agent agent() {
         Agent result = new Agent();
         result.setAgentName(AGENT_NAME);
         return result;
     }
-
+    
     private AgentVersionDetail versionDetail() {
         AgentVersionDetail result = new AgentVersionDetail();
         result.setAgentName(AGENT_NAME);
         result.setVersion(VERSION);
         return result;
     }
-
+    
     private AgentVersionCommand versionCommand() {
         AgentVersionCommand result = new AgentVersionCommand();
         result.setAgentName(AGENT_NAME);
         result.setVersion(VERSION);
         return result;
     }
-
+    
     private HttpRestResult<String> response(Object data) {
         HttpRestResult<String> result = new HttpRestResult<>();
         result.setData(JsonUtils.toJson(Result.success(data)));

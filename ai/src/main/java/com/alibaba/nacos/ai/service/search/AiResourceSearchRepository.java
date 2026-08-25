@@ -29,7 +29,7 @@ import java.util.List;
  * @author nacos
  */
 public interface AiResourceSearchRepository {
-
+    
     /**
      * Replace one resource-version entry and all derived chunks.
      *
@@ -39,7 +39,7 @@ public interface AiResourceSearchRepository {
      */
     List<AiResourceSearchChunk> replaceEntry(AiResourceSearchDocument entry,
         List<AiResourceSearchChunk> chunks);
-
+    
     /**
      * Append derived chunks to an existing entry.
      *
@@ -49,64 +49,64 @@ public interface AiResourceSearchRepository {
      */
     List<AiResourceSearchChunk> appendChunks(AiResourceSearchDocument entry,
         List<AiResourceSearchChunk> chunks);
-
+    
     /**
      * Replace AI-generated chunks and return the complete current chunk set.
      */
     List<AiResourceSearchChunk> replaceEnhancementChunks(AiResourceSearchDocument entry,
         List<AiResourceSearchChunk> chunks);
-
+    
     /**
      * List all chunks for one persisted document.
      */
     List<AiResourceSearchChunk> listChunks(long documentId);
-
+    
     /**
      * Update one persisted entry status.
      */
     void updateEntryStatus(long documentId, String status);
-
+    
     /**
      * Delete all AI resource index rows for a resource.
      */
     void deleteByResource(String namespaceId, String resourceType, String resourceName);
-
+    
     /**
      * Delete all AI resource index rows for one resource version.
      */
     void deleteByResourceVersion(String namespaceId, String resourceType, String resourceName,
         String resourceVersion);
-
+    
     /**
      * Find the current entry for a resource.
      */
     AiResourceSearchDocument findEntry(String namespaceId, String resourceType,
         String resourceName);
-
+    
     /**
      * Find entries by generated entry ids.
      */
     List<AiResourceSearchDocument> findEntriesByIds(Collection<Long> documentIds);
-
+    
     /**
      * Keyword search over persisted chunks.
      */
     List<AiResourceSearchHit> searchChunks(String namespaceId, String text,
         List<String> resourceTypes,
         int limit);
-
+    
     /**
      * List enabled entries for rebuild or tests.
      */
     List<AiResourceSearchDocument> listEnabledEntries(String namespaceId,
         List<String> resourceTypes, int limit);
-
+    
     /**
      * List entries of any status for reconciliation.
      */
     List<AiResourceSearchDocument> listEntries(String namespaceId, List<String> resourceTypes,
         int limit);
-
+    
     /**
      * Scan enabled entries by generated id.
      *
@@ -118,7 +118,22 @@ public interface AiResourceSearchRepository {
      */
     List<AiResourceSearchDocument> scanEnabledEntries(String namespaceId,
         List<String> resourceTypes, long afterId, int limit);
-
+    
+    /**
+     * Scan enabled entries by the stable resource key and immutable row id.
+     *
+     * @param namespaceId namespace id
+     * @param resourceTypes resource types
+     * @param afterResourceType exclusive anchor resource type, or {@code null} to start
+     * @param afterResourceName anchor resource name, or {@code null} to start
+     * @param afterId anchor document id
+     * @param limit maximum rows returned
+     * @return the next resource-key-ordered batch
+     */
+    List<AiResourceSearchDocument> scanEnabledEntriesByResourceKey(String namespaceId,
+        List<String> resourceTypes, String afterResourceType, String afterResourceName,
+        long afterId, int limit);
+    
     /**
      * Scan entries of any status by generated id.
      *
@@ -130,7 +145,7 @@ public interface AiResourceSearchRepository {
      */
     List<AiResourceSearchDocument> scanEntries(String namespaceId, List<String> resourceTypes,
         long afterId, int limit);
-
+    
     /**
      * Count relational chunks for vector completeness checks.
      */

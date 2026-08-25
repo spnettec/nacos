@@ -80,11 +80,11 @@ public class YamlParserUtil {
     }
     
     public static class CustomRepresenter extends Representer {
-
+        
         public CustomRepresenter() {
             super(new DumperOptions());
         }
-
+        
         @Override
         protected NodeTuple representJavaBeanProperty(Object javaBean, Property property,
             Object propertyValue,

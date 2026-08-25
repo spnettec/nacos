@@ -41,16 +41,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author lixiaoshuang
  */
 class EncryptionPluginManagerTest {
-
+    
     private Map<String, EncryptionPluginService> pluginSnapshot;
-
+    
     @BeforeEach
     void setUp() throws Exception {
         Map<String, EncryptionPluginService> plugins = getPlugins();
         pluginSnapshot = new HashMap<>(plugins);
         plugins.clear();
     }
-
+    
     @AfterEach
     void tearDown() throws Exception {
         PluginStateCheckerHolder.setInstance(null);
@@ -58,25 +58,25 @@ class EncryptionPluginManagerTest {
         plugins.clear();
         plugins.putAll(pluginSnapshot);
     }
-
+    
     @Test
     void testInstance() {
         EncryptionPluginManager instance = EncryptionPluginManager.instance();
         assertNotNull(instance);
     }
-
+    
     @Test
     void testJoin() {
         EncryptionPluginService first = new TestEncryptionPluginService("test-replace");
         EncryptionPluginService replacement = new TestEncryptionPluginService("test-replace");
-
+        
         EncryptionPluginManager.join(first);
         EncryptionPluginManager.join(replacement);
-
+        
         assertSame(first,
             EncryptionPluginManager.instance().findEncryptionService("test-replace").get());
     }
-
+    
     @Test
     void testFindEncryptionService() {
         EncryptionPluginManager.join(new TestEncryptionPluginService("aes"));
@@ -84,24 +84,24 @@ class EncryptionPluginManagerTest {
         Optional<EncryptionPluginService> optional = instance.findEncryptionService("aes");
         assertTrue(optional.isPresent());
     }
-
+    
     @Test
     void testDisabledNullJoinAndGetAllPlugins() {
         EncryptionPluginManager.join(null);
         PluginStateCheckerHolder.setInstance((pluginType, pluginName) -> false);
-
+        
         Optional<EncryptionPluginService> optional =
             EncryptionPluginManager.instance().findEncryptionService("aes");
-
+        
         assertFalse(optional.isPresent());
         assertThrows(UnsupportedOperationException.class,
             () -> EncryptionPluginManager.instance().getAllPlugins().clear());
     }
-
+    
     @Test
     void testEncryptionPluginServiceMethods() {
         EncryptionPluginService service = new TestEncryptionPluginService("aes");
-
+        
         assertEquals("content", service.encrypt("secretKey", "content"));
         assertEquals("content", service.decrypt("secretKey", "content"));
         assertEquals("12345678", service.generateSecretKey());
@@ -109,60 +109,60 @@ class EncryptionPluginManagerTest {
         assertEquals("secretKey", service.encryptSecretKey("secretKey"));
         assertEquals("secretKey", service.decryptSecretKey("secretKey"));
     }
-
+    
     @Test
     void testLoadInitialFromSpiSkipsBlankAlgorithmName() throws Exception {
         Map<String, EncryptionPluginService> plugins = getPlugins();
         Method method = EncryptionPluginManager.class.getDeclaredMethod("loadInitial");
         method.setAccessible(true);
-
+        
         method.invoke(EncryptionPluginManager.instance());
-
+        
         assertTrue(EncryptionPluginManager.instance().findEncryptionService("spi-aes")
             .isPresent());
         assertFalse(EncryptionPluginManager.instance().findEncryptionService("").isPresent());
     }
-
+    
     @SuppressWarnings("unchecked")
     private Map<String, EncryptionPluginService> getPlugins() throws Exception {
         Field field = EncryptionPluginManager.class.getDeclaredField("ENCRYPTION_SPI_MAP");
         field.setAccessible(true);
         return (Map<String, EncryptionPluginService>) field.get(null);
     }
-
+    
     private static class TestEncryptionPluginService implements EncryptionPluginService {
-
+        
         private final String algorithmName;
-
+        
         private TestEncryptionPluginService(String algorithmName) {
             this.algorithmName = algorithmName;
         }
-
+        
         @Override
         public String encrypt(String secretKey, String content) {
             return content;
         }
-
+        
         @Override
         public String decrypt(String secretKey, String content) {
             return content;
         }
-
+        
         @Override
         public String generateSecretKey() {
             return "12345678";
         }
-
+        
         @Override
         public String algorithmName() {
             return algorithmName;
         }
-
+        
         @Override
         public String encryptSecretKey(String secretKey) {
             return secretKey;
         }
-
+        
         @Override
         public String decryptSecretKey(String secretKey) {
             return secretKey;

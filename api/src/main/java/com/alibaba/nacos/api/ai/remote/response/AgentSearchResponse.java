@@ -26,13 +26,13 @@ import com.alibaba.nacos.api.remote.response.Response;
  * @author Nacos
  */
 public class AgentSearchResponse extends Response {
-
+    
     private Page<AgentCatalogEntry> page;
-
+    
     public Page<AgentCatalogEntry> getPage() {
         return page;
     }
-
+    
     public void setPage(Page<AgentCatalogEntry> page) {
         this.page = page;
     }

@@ -25,45 +25,45 @@ import java.util.regex.Pattern;
  * @author Nacos
  */
 public final class AgentValidationUtils {
-
+    
     private static final int MAX_NAMESPACE_LENGTH = 128;
-
+    
     private static final int MAX_AGENT_NAME_LENGTH = 64;
-
+    
     private static final int MAX_PROTOCOL_LENGTH = 32;
-
+    
     private static final int MAX_PROTOCOL_VERSION_LENGTH = 64;
-
+    
     private static final int MAX_LABEL_LENGTH = 64;
-
+    
     private static final int MAX_TRANSPORT_LENGTH = 64;
-
+    
     private static final int MAX_MEDIA_TYPE_LENGTH = 128;
-
+    
     private static final int MAX_METADATA_SIZE = 32;
-
+    
     private static final int MAX_METADATA_KEY_LENGTH = 64;
-
+    
     private static final int MAX_METADATA_VALUE_LENGTH = 256;
-
+    
     private static final Pattern NAMESPACE_PATTERN = Pattern.compile("[A-Za-z0-9_-]+");
-
+    
     private static final Pattern PROTOCOL_PATTERN =
         Pattern.compile("[A-Za-z0-9][A-Za-z0-9-]{0,31}");
-
+    
     private static final Pattern LABEL_PATTERN = Pattern.compile("[A-Za-z0-9][A-Za-z0-9._-]{0,63}");
-
+    
     private static final Pattern TRANSPORT_PATTERN = Pattern.compile("[0-9A-Za-z+-]{1,64}");
-
+    
     private static final Pattern CONTENT_DIGEST_PATTERN = Pattern.compile("sha256:[0-9a-f]{64}");
-
+    
     private static final Pattern MEDIA_TYPE_PATTERN = Pattern.compile("[!-~]+/[!-~]+");
-
+    
     private static final String INTERNAL_ENDPOINT_METADATA_PREFIX = "__nacos.agent.endpoint.";
-
+    
     private AgentValidationUtils() {
     }
-
+    
     /**
      * Validate a namespace identifier.
      *
@@ -76,7 +76,7 @@ public final class AgentValidationUtils {
             throw new IllegalArgumentException("Invalid namespaceId: " + namespaceId);
         }
     }
-
+    
     /**
      * Validate an Agent name without rewriting it.
      *
@@ -102,7 +102,7 @@ public final class AgentValidationUtils {
             throw new IllegalArgumentException("Invalid agentName: " + agentName);
         }
     }
-
+    
     /**
      * Validate an Agent version.
      *
@@ -112,7 +112,7 @@ public final class AgentValidationUtils {
     public static void validateVersion(String version) {
         AgentVersion.parse(version);
     }
-
+    
     /**
      * Validate an Agent version range.
      *
@@ -122,7 +122,7 @@ public final class AgentValidationUtils {
     public static void validateVersionRange(String versionRange) {
         AgentVersionRange.parse(versionRange);
     }
-
+    
     /**
      * Validate a protocol token.
      *
@@ -135,7 +135,7 @@ public final class AgentValidationUtils {
             throw new IllegalArgumentException("Invalid protocol: " + protocol);
         }
     }
-
+    
     /**
      * Validate an optional protocol-version value when present.
      *
@@ -149,7 +149,7 @@ public final class AgentValidationUtils {
         }
         validatePrintableAscii(protocolVersion, "protocolVersion");
     }
-
+    
     /**
      * Validate a version label, including the server-managed {@code latest} label.
      *
@@ -162,7 +162,7 @@ public final class AgentValidationUtils {
             throw new IllegalArgumentException("Invalid label: " + label);
         }
     }
-
+    
     /**
      * Validate a client-writable version label.
      *
@@ -175,7 +175,7 @@ public final class AgentValidationUtils {
             throw new IllegalArgumentException("The latest label is server-managed");
         }
     }
-
+    
     /**
      * Validate a transport token without changing its case.
      *
@@ -188,7 +188,7 @@ public final class AgentValidationUtils {
             throw new IllegalArgumentException("Invalid transport: " + transport);
         }
     }
-
+    
     /**
      * Validate a Version content digest.
      *
@@ -200,7 +200,7 @@ public final class AgentValidationUtils {
             throw new IllegalArgumentException("Invalid contentDigest: " + contentDigest);
         }
     }
-
+    
     /**
      * Validate a descriptor media type.
      *
@@ -213,7 +213,7 @@ public final class AgentValidationUtils {
             throw new IllegalArgumentException("Invalid descriptorMediaType: " + mediaType);
         }
     }
-
+    
     /**
      * Validate a required JSON-compatible value after request binding.
      *
@@ -226,7 +226,7 @@ public final class AgentValidationUtils {
             throw new IllegalArgumentException(fieldName + " must not be JSON null");
         }
     }
-
+    
     /**
      * Validate optional public Endpoint metadata.
      *
@@ -254,18 +254,18 @@ public final class AgentValidationUtils {
             }
         }
     }
-
+    
     private static boolean isReservedMetadataKey(String key) {
         return "preserved.heart.beat.interval".equals(key)
             || "preserved.heart.beat.timeout".equals(key)
             || "preserved.ip.delete.timeout".equals(key)
             || key.startsWith(INTERNAL_ENDPOINT_METADATA_PREFIX);
     }
-
+    
     private static int codePointLength(String value) {
         return value.codePointCount(0, value.length());
     }
-
+    
     private static void validatePrintableAscii(String value, String fieldName) {
         for (int i = 0; i < value.length(); i++) {
             char current = value.charAt(i);

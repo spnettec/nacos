@@ -22,20 +22,20 @@ package com.alibaba.nacos.ai.service.search;
  * @author nacos
  */
 public class AiResourceIndexEnhancementContent {
-
+    
     private final String path;
-
+    
     private final String text;
-
+    
     public AiResourceIndexEnhancementContent(String path, String text) {
         this.path = path;
         this.text = text;
     }
-
+    
     public String getPath() {
         return path;
     }
-
+    
     public String getText() {
         return text;
     }

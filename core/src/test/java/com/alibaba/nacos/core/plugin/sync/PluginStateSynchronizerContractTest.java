@@ -24,38 +24,38 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PluginStateSynchronizerContractTest {
-
+    
     @Test
     void defaultLifecycleIsNoOpAndProviderCreatesSynchronizer() {
         PluginStateSynchronizer synchronizer = new NoOpSynchronizer();
         PluginStateSynchronizerProvider provider = new PluginStateSynchronizerProvider() {
-
+            
             @Override
             public String getName() {
                 return "test";
             }
-
+            
             @Override
             public PluginStateSynchronizer createSynchronizer(
                 PluginStateSynchronizationContext context) {
                 return synchronizer;
             }
         };
-
+        
         synchronizer.initialize();
         synchronizer.shutdown();
-
+        
         assertTrue(synchronizer.isAvailable());
         assertEquals("test", provider.getName());
         assertEquals(synchronizer, provider.createSynchronizer(null));
     }
-
+    
     private static class NoOpSynchronizer implements PluginStateSynchronizer {
-
+        
         @Override
         public void syncStateChange(String pluginId, boolean enabled) {
         }
-
+        
         @Override
         public void syncConfigChange(String pluginId, Map<String, String> config) {
         }

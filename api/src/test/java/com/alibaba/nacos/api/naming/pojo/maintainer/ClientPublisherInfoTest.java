@@ -37,8 +37,8 @@ class ClientPublisherInfoTest {
     @BeforeEach
     void setUp() throws Exception {
         mapper = JsonMapper.builder()
-                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-                .build();
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .build();
         clientPublisherInfo = new ClientPublisherInfo();
         clientPublisherInfo.setClientId("clientId");
         clientPublisherInfo.setIp("1.1.1.1");

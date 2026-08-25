@@ -24,33 +24,33 @@ import com.alibaba.nacos.api.ai.model.agent.AgentPublishRequest;
  * @author Nacos
  */
 public class AgentPublishRpcRequest extends AbstractAgentClientRpcRequest {
-
+    
     private String namespaceId;
-
+    
     private AgentPublishRequest publishRequest;
-
+    
     @Override
     public String extractNamespaceId() {
         return namespaceId;
     }
-
+    
     @Override
     public String extractAgentName() {
         return publishRequest == null ? null : publishRequest.getAgentName();
     }
-
+    
     public String getNamespaceId() {
         return namespaceId;
     }
-
+    
     public void setNamespaceId(String namespaceId) {
         this.namespaceId = namespaceId;
     }
-
+    
     public AgentPublishRequest getPublishRequest() {
         return publishRequest;
     }
-
+    
     public void setPublishRequest(AgentPublishRequest publishRequest) {
         this.publishRequest = publishRequest;
     }

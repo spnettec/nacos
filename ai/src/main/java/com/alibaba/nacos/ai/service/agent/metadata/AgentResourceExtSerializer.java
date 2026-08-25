@@ -46,37 +46,37 @@ import java.util.Set;
  * @author Nacos
  */
 public final class AgentResourceExtSerializer {
-
+    
     public static final int MAX_EXTENSIONS_SIZE = 16 * 1024;
-
+    
     private static final int MAX_DISPLAY_NAME_LENGTH = 128;
-
+    
     private static final int MAX_URI_LENGTH = 2048;
-
+    
     private static final int MAX_PROVIDER_NAME_LENGTH = 128;
-
+    
     private static final int MAX_EXTENSIONS = 32;
-
+    
     private static final int MAX_EXTENSION_KEY_LENGTH = 128;
-
+    
     private static final JsonFactory STRICT_JSON_FACTORY = JsonFactory.builder()
         .enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION)
         .build();
-
+    
     private static final Set<String> ROOT_FIELDS = unmodifiableSet("schemaVersion",
         "displayName", "iconUrl", "provider", "extensions", "versionCatalog");
-
+    
     private static final Set<String> PROVIDER_FIELDS = unmodifiableSet("name", "url");
-
+    
     private static final Set<String> CATALOG_FIELDS =
         unmodifiableSet("latestVersion", "onlineVersions");
-
+    
     private static final Set<String> CATALOG_ENTRY_FIELDS =
         unmodifiableSet("version", "labels", "protocols");
-
+    
     private AgentResourceExtSerializer() {
     }
-
+    
     /**
      * Validate and serialize Agent resource extension data.
      *
@@ -91,7 +91,7 @@ public final class AgentResourceExtSerializer {
             throw new IllegalArgumentException("Unable to serialize AgentResourceExt", e);
         }
     }
-
+    
     /**
      * Deserialize and validate Agent resource extension data.
      *
@@ -109,7 +109,7 @@ public final class AgentResourceExtSerializer {
         validate(result);
         return result;
     }
-
+    
     /**
      * Validate Agent resource extension data against schema version 1.
      *
@@ -131,7 +131,7 @@ public final class AgentResourceExtSerializer {
         validateExtensions(resourceExt.getExtensions());
         validateCatalog(resourceExt.getVersionCatalog());
     }
-
+    
     private static void validateProvider(AgentProvider provider) {
         if (provider == null) {
             return;
@@ -140,7 +140,7 @@ public final class AgentResourceExtSerializer {
             "provider.name");
         validateOptionalAbsoluteUri(provider.getUrl(), "provider.url");
     }
-
+    
     private static void validateExtensions(Map<String, Object> extensions) {
         if (extensions == null) {
             return;
@@ -169,7 +169,7 @@ public final class AgentResourceExtSerializer {
                 "Agent extensions exceeds " + MAX_EXTENSIONS_SIZE + " bytes");
         }
     }
-
+    
     private static void validateJsonValue(Object value, String fieldName) {
         if (value == null || value instanceof String || value instanceof Boolean
             || value instanceof Byte || value instanceof Short || value instanceof Integer
@@ -209,7 +209,7 @@ public final class AgentResourceExtSerializer {
         }
         throw new IllegalArgumentException(fieldName + " is not a JSON value");
     }
-
+    
     private static void validateCatalog(AgentVersionCatalog catalog) {
         AgentModelValidator.validateVersionCatalog(catalog);
         List<AgentVersionCatalogEntry> versions = catalog.getOnlineVersions();
@@ -222,7 +222,7 @@ public final class AgentResourceExtSerializer {
             }
         }
     }
-
+    
     private static void validateOptionalAbsoluteUri(String value, String fieldName) {
         if (value == null) {
             return;
@@ -239,7 +239,7 @@ public final class AgentResourceExtSerializer {
             throw new IllegalArgumentException("Invalid " + fieldName, e);
         }
     }
-
+    
     private static void validateOptionalCodePointLength(String value, int maxLength,
         String fieldName) {
         if (value != null && value.codePointCount(0, value.length()) > maxLength) {
@@ -247,7 +247,7 @@ public final class AgentResourceExtSerializer {
                 + " Unicode code points");
         }
     }
-
+    
     private static void validateRequiredCodePointLength(String value, int maxLength,
         String fieldName) {
         if (value == null || value.isEmpty()
@@ -255,7 +255,7 @@ public final class AgentResourceExtSerializer {
             throw new IllegalArgumentException("Invalid " + fieldName);
         }
     }
-
+    
     private static Map<String, Object> toStorageProjection(AgentResourceExt resourceExt) {
         Map<String, Object> result = new LinkedHashMap<String, Object>();
         result.put("schemaVersion", AgentResourceExt.SCHEMA_VERSION);
@@ -271,7 +271,7 @@ public final class AgentResourceExtSerializer {
         result.put("versionCatalog", toStorageProjection(resourceExt.getVersionCatalog()));
         return result;
     }
-
+    
     private static Map<String, Object> toStorageProjection(AgentVersionCatalog catalog) {
         Map<String, Object> result = new LinkedHashMap<String, Object>();
         putIfPresent(result, "latestVersion", catalog.getLatestVersion());
@@ -286,13 +286,13 @@ public final class AgentResourceExtSerializer {
         result.put("onlineVersions", versions);
         return result;
     }
-
+    
     private static void putIfPresent(Map<String, Object> target, String field, Object value) {
         if (value != null) {
             target.put(field, value);
         }
     }
-
+    
     private static void validateJsonShape(String json) {
         if (json == null || json.isEmpty()) {
             throw new IllegalArgumentException("AgentResourceExt JSON must not be empty");
@@ -315,7 +315,7 @@ public final class AgentResourceExtSerializer {
         validateExtensionsShape(root);
         validateCatalogShape(root);
     }
-
+    
     private static void validateProviderShape(Map<?, ?> root) {
         if (!root.containsKey("provider")) {
             return;
@@ -325,13 +325,13 @@ public final class AgentResourceExtSerializer {
         validateRequiredJsonText(provider, "name");
         validateOptionalJsonText(provider, "url");
     }
-
+    
     private static void validateExtensionsShape(Map<?, ?> root) {
         if (root.containsKey("extensions")) {
             requireJsonObject(root.get("extensions"), "extensions");
         }
     }
-
+    
     private static void validateCatalogShape(Map<?, ?> root) {
         if (!root.containsKey("versionCatalog")) {
             throw new IllegalArgumentException("Missing AgentResourceExt field: versionCatalog");
@@ -352,7 +352,7 @@ public final class AgentResourceExtSerializer {
             validateStringArray(entry, "protocols");
         }
     }
-
+    
     private static void validateStringArray(Map<?, ?> object, String field) {
         Object value = object.get(field);
         if (!(value instanceof List)) {
@@ -364,26 +364,26 @@ public final class AgentResourceExtSerializer {
             }
         }
     }
-
+    
     private static Map<?, ?> requireJsonObject(Object value, String fieldName) {
         if (!(value instanceof Map)) {
             throw new IllegalArgumentException(fieldName + " must be a JSON object");
         }
         return (Map<?, ?>) value;
     }
-
+    
     private static void validateRequiredJsonText(Map<?, ?> object, String field) {
         if (!(object.get(field) instanceof String)) {
             throw new IllegalArgumentException(field + " must be a string");
         }
     }
-
+    
     private static void validateOptionalJsonText(Map<?, ?> object, String field) {
         if (object.containsKey(field) && !(object.get(field) instanceof String)) {
             throw new IllegalArgumentException(field + " must be a string");
         }
     }
-
+    
     private static void validateJsonInteger(Map<?, ?> object, String field) {
         Object value = object.get(field);
         if (!(value instanceof Byte || value instanceof Short || value instanceof Integer
@@ -391,7 +391,7 @@ public final class AgentResourceExtSerializer {
             throw new IllegalArgumentException(field + " must be an integer");
         }
     }
-
+    
     private static void rejectUnknownFields(Map<?, ?> object, Set<String> allowedFields,
         String objectName) {
         for (Object field : object.keySet()) {
@@ -401,7 +401,7 @@ public final class AgentResourceExtSerializer {
             }
         }
     }
-
+    
     private static void validateSingleJsonValue(String json) {
         try (JsonParser parser = STRICT_JSON_FACTORY.createParser(json)) {
             if (parser.nextToken() == null) {
@@ -416,7 +416,7 @@ public final class AgentResourceExtSerializer {
             throw new IllegalArgumentException("Invalid AgentResourceExt", e);
         }
     }
-
+    
     private static Set<String> unmodifiableSet(String... fields) {
         return Collections.unmodifiableSet(new HashSet<String>(Arrays.asList(fields)));
     }

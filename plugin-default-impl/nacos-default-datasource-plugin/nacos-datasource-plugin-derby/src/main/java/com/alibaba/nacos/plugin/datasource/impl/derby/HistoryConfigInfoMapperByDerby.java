@@ -35,7 +35,7 @@ import java.util.Objects;
 
 public class HistoryConfigInfoMapperByDerby extends AbstractMapperByDerby
     implements HistoryConfigInfoMapper {
-
+    
     @Override
     public MapperResult removeConfigHistory(MapperContext context) {
         String sql = "DELETE FROM his_config_info WHERE nid IN( "
@@ -44,7 +44,7 @@ public class HistoryConfigInfoMapperByDerby extends AbstractMapperByDerby
             CollectionUtils.list(context.getWhereParameter(FieldConstant.START_TIME),
                 context.getWhereParameter(FieldConstant.LIMIT_SIZE)));
     }
-
+    
     @Override
     public MapperResult pageFindConfigHistoryFetchRows(MapperContext context) {
         String sql =
@@ -58,12 +58,12 @@ public class HistoryConfigInfoMapperByDerby extends AbstractMapperByDerby
                 context.getWhereParameter(FieldConstant.GROUP_ID),
                 context.getWhereParameter(FieldConstant.TENANT_ID)));
     }
-
+    
     @Override
     public String getDataSource() {
         return DataSourceConstant.DERBY;
     }
-
+    
     @Override
     public MapperResult getNextHistoryInfo(MapperContext context) {
         Object grayName = context.getWhereParameter(FieldConstant.GRAY_NAME);
@@ -74,7 +74,7 @@ public class HistoryConfigInfoMapperByDerby extends AbstractMapperByDerby
                 + "WHERE data_id = ? AND group_id = ? AND tenant_id = ? AND publish_type = ? "
                 + (filterByGrayName ? "AND gray_name = ? " : "")
                 + "AND nid > ? ORDER BY nid FETCH FIRST 1 ROWS ONLY";
-
+        
         List<Object> paramList = CollectionUtils.list(
             context.getWhereParameter(FieldConstant.DATA_ID),
             context.getWhereParameter(FieldConstant.GROUP_ID),
@@ -84,10 +84,10 @@ public class HistoryConfigInfoMapperByDerby extends AbstractMapperByDerby
         if (filterByGrayName) {
             paramList.add(4, grayName);
         }
-
+        
         return new MapperResult(sql, paramList);
     }
-
+    
     @Override
     public MapperResult findDeletedConfig(MapperContext context) {
         return new MapperResult(

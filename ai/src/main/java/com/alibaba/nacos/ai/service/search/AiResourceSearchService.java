@@ -17,24 +17,21 @@
 package com.alibaba.nacos.ai.service.search;
 
 import com.alibaba.nacos.ai.config.ConditionalOnAiResourceSearchEnabled;
-import com.alibaba.nacos.ai.constant.AiResourceConstants;
-import com.alibaba.nacos.ai.model.AiResource;
-import com.alibaba.nacos.ai.model.AiResourceVersion;
 import com.alibaba.nacos.ai.model.search.AiResourceSearchDocument;
 import com.alibaba.nacos.ai.model.search.AiResourceSearchHit;
 import com.alibaba.nacos.ai.model.search.AiResourceSearchResult;
 import com.alibaba.nacos.ai.service.McpServerOperationService;
 import com.alibaba.nacos.ai.service.resource.AiResourceManager;
-import com.alibaba.nacos.api.ai.constant.AiConstants;
-import com.alibaba.nacos.api.ai.model.mcp.McpServerDetailInfo;
-import com.alibaba.nacos.api.ai.model.mcp.registry.ServerVersionDetail;
 import com.alibaba.nacos.api.exception.NacosException;
+import com.alibaba.nacos.api.exception.api.NacosApiException;
+import com.alibaba.nacos.api.model.v2.ErrorCode;
 import com.alibaba.nacos.common.utils.JacksonUtils;
 import com.alibaba.nacos.common.utils.StringUtils;
 import com.alibaba.nacos.plugin.ai.vector.AiResourceVectorHit;
 import com.alibaba.nacos.plugin.ai.vector.spi.AiResourceVectorIndex;
 import com.alibaba.nacos.sys.env.EnvUtil;
 import tools.jackson.core.type.TypeReference;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
@@ -65,59 +62,80 @@ import java.util.Set;
 @Service
 @ConditionalOnAiResourceSearchEnabled
 public class AiResourceSearchService {
-
+    
     private static final int RRF_K = 60;
-
+    
     private static final double RRF_SCORE_SCALE = 100.0D;
-
+    
     private static final double KEYWORD_RRF_WEIGHT = 1.0D;
-
+    
     private static final double VECTOR_RRF_WEIGHT = 0.6D;
-
+    
     private static final int DOCUMENT_LOOKUP_BATCH_SIZE = 500;
-
+    
     private static final int ENTRY_SCAN_BATCH_SIZE = 500;
-
+    
     private static final int DEFAULT_MAX_RECALL_CANDIDATES = 10000;
-
+    
+    private static final int DEFAULT_NUMBERED_PAGE_SIZE = 20;
+    
     private static final String CURSOR_DOCUMENT_ID = "documentId";
-
+    
     private static final String KEY_RANKING_ENHANCED_ENABLED =
         "nacos.ai.resource.search.ranking.enhanced.enabled";
-
+    
     private static final String KEY_MAX_RECALL_CANDIDATES =
         "nacos.ai.resource.search.max-recall-candidates";
-
+    
     private static final TypeReference<List<String>> STRING_LIST_TYPE =
         new TypeReference<List<String>>() {
         };
-
+    
     private static final TypeReference<Map<String, Object>> MAP_TYPE =
         new TypeReference<Map<String, Object>>() {
         };
-
+    
     private static final Map<String, Double> CHUNK_TYPE_WEIGHTS = chunkTypeWeights();
-
-    private final AiResourceManager resourceManager;
-
-    private final McpServerOperationService mcpServerOperationService;
-
+    
+    private final AiResourceSearchTypeHandlerRegistry typeHandlerRegistry;
+    
     private final AiResourceSearchRepository repository;
-
+    
     private final AiResourceEmbeddingService embeddingService;
-
+    
     private final AiResourceVectorIndex vectorIndex;
-
-    public AiResourceSearchService(AiResourceManager resourceManager,
-        McpServerOperationService mcpServerOperationService, AiResourceSearchRepository repository,
-        AiResourceEmbeddingService embeddingService, AiResourceVectorIndex vectorIndex) {
-        this.resourceManager = resourceManager;
-        this.mcpServerOperationService = mcpServerOperationService;
+    
+    private final AiResourceSearchReadinessObserver readinessObserver;
+    
+    @Autowired
+    public AiResourceSearchService(AiResourceSearchTypeHandlerRegistry typeHandlerRegistry,
+        AiResourceSearchRepository repository,
+        AiResourceEmbeddingService embeddingService, AiResourceVectorIndex vectorIndex,
+        AiResourceSearchReadinessObserver readinessObserver) {
+        this.typeHandlerRegistry = typeHandlerRegistry;
         this.repository = repository;
         this.embeddingService = embeddingService;
         this.vectorIndex = vectorIndex;
+        this.readinessObserver = readinessObserver;
     }
-
+    
+    public AiResourceSearchService(AiResourceSearchTypeHandlerRegistry typeHandlerRegistry,
+        AiResourceSearchRepository repository,
+        AiResourceEmbeddingService embeddingService, AiResourceVectorIndex vectorIndex) {
+        this(typeHandlerRegistry, repository, embeddingService, vectorIndex,
+            AiResourceSearchReadinessObserver.NOOP);
+    }
+    
+    public AiResourceSearchService(AiResourceManager resourceManager,
+        McpServerOperationService mcpServerOperationService, AiResourceSearchRepository repository,
+        AiResourceEmbeddingService embeddingService, AiResourceVectorIndex vectorIndex) {
+        this(new AiResourceSearchTypeHandlerRegistry(List.of(
+            new StoredAiResourceSearchTypeHandler(resourceManager,
+                AiResourceIndexContentLoader.NOOP),
+            new McpAiResourceSearchTypeHandler(mcpServerOperationService))), repository,
+            embeddingService, vectorIndex);
+    }
+    
     /**
      * Search and relevance-rank current visible resources.
      *
@@ -126,9 +144,10 @@ public class AiResourceSearchService {
      * @throws NacosException when canonical resource lookup fails
      */
     public Page search(Query query) throws NacosException {
+        observeReadiness(query);
         return page(searchCandidates(query), query);
     }
-
+    
     private List<RankedEntry> searchCandidates(Query query) throws NacosException {
         Map<Long, SearchScore> scores = recall(query);
         List<RankedEntry> candidates = new ArrayList<>();
@@ -147,7 +166,7 @@ public class AiResourceSearchService {
         normalizeScores(candidates);
         return candidates;
     }
-
+    
     /**
      * List current visible resources using canonical filtering and ordering.
      *
@@ -156,6 +175,7 @@ public class AiResourceSearchService {
      * @throws NacosException when canonical resource lookup fails
      */
     public Page list(Query query) throws NacosException {
+        observeReadiness(query);
         Comparator<RankedEntry> comparator = listComparator(query);
         RankedEntry cursor = listCursor(query);
         PriorityQueue<RankedEntry> selected =
@@ -187,7 +207,84 @@ public class AiResourceSearchService {
         candidates.sort(listComparator(query));
         return boundedPage(candidates, query);
     }
-
+    
+    /**
+     * List one numbered page in stable resource-key order.
+     *
+     * <p>Eligibility checks happen before the total and offset are calculated. The scan retains
+     * only the requested page and a total counter.</p>
+     *
+     * @param query canonical discovery query with numbered-page settings
+     * @return numbered page over the complete eligible result set
+     * @throws NacosException when canonical resource lookup fails
+     */
+    public NumberedPage numberedList(Query query) throws NacosException {
+        observeReadiness(query);
+        long offset = (long) (query.getPageNumber() - 1) * query.getPageSize();
+        long totalCount = 0L;
+        List<AiResourceSearchResult> items =
+            new ArrayList<>(Math.min(query.getPageSize(), ENTRY_SCAN_BATCH_SIZE));
+        String afterResourceType = null;
+        String afterResourceName = null;
+        long afterId = 0L;
+        while (true) {
+            List<AiResourceSearchDocument> batch = repository.scanEnabledEntriesByResourceKey(
+                query.getNamespaceId(), query.getResourceTypes(), afterResourceType,
+                afterResourceName, afterId, ENTRY_SCAN_BATCH_SIZE);
+            if (batch == null || batch.isEmpty()) {
+                break;
+            }
+            for (AiResourceSearchDocument document : batch) {
+                if (!matches(query, document) || !validateCurrentResource(document)) {
+                    continue;
+                }
+                if (totalCount >= offset && items.size() < query.getPageSize()) {
+                    items.add(toResult(new RankedEntry(document, 0D)));
+                }
+                totalCount++;
+            }
+            AiResourceSearchDocument last = batch.get(batch.size() - 1);
+            validateResourceKeyScanAdvance(last, afterResourceType, afterResourceName, afterId);
+            afterResourceType = last.getResourceType();
+            afterResourceName = last.getResourceName();
+            afterId = last.getId();
+            if (batch.size() < ENTRY_SCAN_BATCH_SIZE) {
+                break;
+            }
+        }
+        long pageCount = totalCount / query.getPageSize()
+            + (totalCount % query.getPageSize() == 0 ? 0 : 1);
+        int pagesAvailable = (int) Math.min(Integer.MAX_VALUE, pageCount);
+        return new NumberedPage(items, totalCount, query.getPageNumber(), pagesAvailable);
+    }
+    
+    /**
+     * Search and relevance-rank one numbered page.
+     *
+     * <p>This adapter preserves the resource-specific numbered-page contract while using the
+     * same recall, filtering, visibility, and currentness pipeline as cursor Search.</p>
+     *
+     * @param query canonical discovery query with text and numbered-page settings
+     * @return numbered page over the complete recalled eligible result set
+     * @throws NacosException when recall or canonical resource lookup fails
+     */
+    public NumberedPage numberedSearch(Query query) throws NacosException {
+        observeReadiness(query);
+        List<RankedEntry> candidates = searchCandidates(query);
+        long offset = (long) (query.getPageNumber() - 1) * query.getPageSize();
+        int fromIndex = (int) Math.min(offset, candidates.size());
+        int toIndex = (int) Math.min((long) fromIndex + query.getPageSize(), candidates.size());
+        List<AiResourceSearchResult> items = new ArrayList<>(toIndex - fromIndex);
+        for (RankedEntry candidate : candidates.subList(fromIndex, toIndex)) {
+            items.add(toResult(candidate));
+        }
+        long totalCount = candidates.size();
+        long pageCount = totalCount / query.getPageSize()
+            + (totalCount % query.getPageSize() == 0 ? 0 : 1);
+        int pagesAvailable = (int) Math.min(Integer.MAX_VALUE, pageCount);
+        return new NumberedPage(items, totalCount, query.getPageNumber(), pagesAvailable);
+    }
+    
     /**
      * Aggregate canonical fields over the complete eligible result set.
      *
@@ -198,6 +295,7 @@ public class AiResourceSearchService {
      */
     public AggregationResult aggregate(Query query, List<AggregationRequest> requests)
         throws NacosException {
+        observeReadiness(query);
         if (StringUtils.isBlank(query.getText())) {
             return aggregateList(query, requests);
         }
@@ -210,7 +308,11 @@ public class AiResourceSearchService {
         }
         return new AggregationResult(candidates.size(), aggregations);
     }
-
+    
+    private void observeReadiness(Query query) {
+        readinessObserver.observe(query == null ? null : query.getResourceTypes());
+    }
+    
     private AggregationResult aggregateList(Query query, List<AggregationRequest> requests)
         throws NacosException {
         Map<String, Map<String, Integer>> counts = new LinkedHashMap<>();
@@ -253,7 +355,7 @@ public class AiResourceSearchService {
         }
         return new AggregationResult(total, aggregations);
     }
-
+    
     private Aggregation aggregateCandidates(List<RankedEntry> candidates,
         AggregationRequest request) {
         Map<String, Integer> counts = new LinkedHashMap<>();
@@ -262,7 +364,7 @@ public class AiResourceSearchService {
         }
         return buildAggregation(counts, request);
     }
-
+    
     private void recordAggregationValues(Map<String, Integer> counts,
         AiResourceSearchDocument document, String field) {
         Set<String> values = new LinkedHashSet<>(fieldValues(document, field));
@@ -270,7 +372,7 @@ public class AiResourceSearchService {
             counts.put(value, counts.getOrDefault(value, 0) + 1);
         }
     }
-
+    
     private Aggregation buildAggregation(Map<String, Integer> counts,
         AggregationRequest request) {
         List<Map.Entry<String, Integer>> sorted = new ArrayList<>();
@@ -293,7 +395,7 @@ public class AiResourceSearchService {
         }
         return new Aggregation(buckets, otherCount);
     }
-
+    
     private Map<Long, SearchScore> recall(Query query) throws NacosException {
         int maxCandidates = maxRecallCandidates();
         if (!enhancedRankingEnabled()) {
@@ -314,7 +416,7 @@ public class AiResourceSearchService {
         recordRrfScores(scores, sortHitsByScore(keywordHits, true), KEYWORD_RRF_WEIGHT, true);
         return scores;
     }
-
+    
     private Map<Long, SearchScore> recallWithMaxScore(Query query, int maxCandidates)
         throws NacosException {
         Map<Long, SearchScore> scores = new LinkedHashMap<>();
@@ -337,7 +439,7 @@ public class AiResourceSearchService {
         }
         return scores;
     }
-
+    
     private void ensureWithinRecallLimit(List<AiResourceSearchHit> hits, int limit, String channel)
         throws NacosException {
         if (hits != null && hits.size() > limit) {
@@ -346,7 +448,7 @@ public class AiResourceSearchService {
                     + limit);
         }
     }
-
+    
     private List<AiResourceSearchDocument> findDocumentsByIds(Collection<Long> documentIds) {
         if (documentIds == null || documentIds.isEmpty()) {
             return Collections.emptyList();
@@ -359,7 +461,7 @@ public class AiResourceSearchService {
         }
         return result;
     }
-
+    
     private List<AiResourceSearchHit> sortHitsByScore(List<AiResourceSearchHit> hits,
         boolean useChunkWeight) {
         if (hits == null || hits.isEmpty()) {
@@ -372,7 +474,7 @@ public class AiResourceSearchService {
             .thenComparing(AiResourceSearchHit::getChunkId, Comparator.nullsLast(Long::compareTo)));
         return result;
     }
-
+    
     private double hitScore(AiResourceSearchHit hit, boolean useChunkWeight) {
         if (hit == null) {
             return 0D;
@@ -380,7 +482,7 @@ public class AiResourceSearchService {
         return useChunkWeight ? hit.getScore() * chunkTypeWeight(hit.getChunkType())
             : hit.getScore();
     }
-
+    
     private List<AiResourceSearchHit> toSearchHits(List<AiResourceVectorHit> hits) {
         if (hits == null || hits.isEmpty()) {
             return Collections.emptyList();
@@ -402,7 +504,7 @@ public class AiResourceSearchService {
         }
         return result;
     }
-
+    
     private void recordRrfScores(Map<Long, SearchScore> scores, List<AiResourceSearchHit> hits,
         double channelWeight, boolean useChunkWeight) {
         Set<Long> seenEntries = new LinkedHashSet<>();
@@ -418,14 +520,14 @@ public class AiResourceSearchService {
             scores.computeIfAbsent(hit.getDocumentId(), key -> new SearchScore()).add(score);
         }
     }
-
+    
     private void recordMaxScore(Map<Long, SearchScore> scores, AiResourceSearchHit hit) {
         if (hit != null && hit.getDocumentId() != null) {
             scores.computeIfAbsent(hit.getDocumentId(), key -> new SearchScore())
                 .max(hit.getScore());
         }
     }
-
+    
     private double exactMatchBoost(AiResourceSearchDocument entry, String query) {
         String normalizedQuery = normalize(query);
         String compactQuery = compact(query);
@@ -446,7 +548,7 @@ public class AiResourceSearchService {
             normalizedQuery) ? 0.8D : 0D;
         return identityBoost + listBoost + queryBoost;
     }
-
+    
     private double identityBoost(String value, String normalizedQuery, String compactQuery) {
         String normalizedValue = normalize(value);
         if (StringUtils.isBlank(normalizedValue) || StringUtils.isBlank(normalizedQuery)) {
@@ -460,7 +562,7 @@ public class AiResourceSearchService {
         }
         return normalizedValue.contains(normalizedQuery) ? 1.5D : 0D;
     }
-
+    
     private boolean containsNormalized(List<String> values, String normalizedQuery) {
         if (values == null || StringUtils.isBlank(normalizedQuery)) {
             return false;
@@ -473,7 +575,7 @@ public class AiResourceSearchService {
         }
         return false;
     }
-
+    
     private boolean matches(Query query, AiResourceSearchDocument entry) {
         if (!AiResourceSearchConstants.STATUS_ENABLED.equals(entry.getStatus())) {
             return false;
@@ -492,12 +594,24 @@ public class AiResourceSearchService {
                 return false;
             }
         }
+        for (Predicate predicate : query.getPredicates()) {
+            if (predicate != null && predicate.appliesTo(entry.getResourceType())
+                && !matchesPredicate(predicate, fieldValues(entry, predicate.getField()))) {
+                return false;
+            }
+        }
         return true;
     }
-
+    
     private List<String> fieldValues(AiResourceSearchDocument entry, String field) {
+        if (field == null) {
+            return Collections.emptyList();
+        }
         if ("displayName".equals(field)) {
             return singleton(entry.getDisplayName());
+        }
+        if ("resourceName".equals(field)) {
+            return singleton(entry.getResourceName());
         }
         if ("resourceType".equals(field)) {
             return singleton(entry.getResourceType());
@@ -519,7 +633,7 @@ public class AiResourceSearchService {
         }
         return Collections.emptyList();
     }
-
+    
     private boolean matchesAny(List<String> expected, List<String> actual, boolean contains) {
         if (expected == null || expected.isEmpty()) {
             return true;
@@ -535,53 +649,53 @@ public class AiResourceSearchService {
         }
         return false;
     }
-
+    
+    private boolean matchesPredicate(Predicate predicate, List<String> actual) {
+        if (predicate.getValues().isEmpty()) {
+            return true;
+        }
+        if (actual.isEmpty()) {
+            return false;
+        }
+        if (PredicateOperator.EXACT_ALL == predicate.getOperator()) {
+            for (String expected : predicate.getValues()) {
+                if (!matchesExpected(actual, expected, PredicateOperator.EXACT_ANY,
+                    predicate.isCaseSensitive())) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        for (String expected : predicate.getValues()) {
+            if (matchesExpected(actual, expected, predicate.getOperator(),
+                predicate.isCaseSensitive())) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    private boolean matchesExpected(List<String> actual, String expected,
+        PredicateOperator operator, boolean caseSensitive) {
+        for (String value : actual) {
+            if (value == null || expected == null) {
+                continue;
+            }
+            String comparedValue = caseSensitive ? value : normalize(value);
+            String comparedExpected = caseSensitive ? expected : normalize(expected);
+            if (PredicateOperator.LITERAL_CONTAINS == operator
+                ? comparedValue.contains(comparedExpected)
+                : comparedValue.equals(comparedExpected)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
     private boolean validateCurrentResource(AiResourceSearchDocument entry) throws NacosException {
-        return AiResourceConstants.RESOURCE_TYPE_MCP.equals(entry.getResourceType())
-            ? validateMcp(entry) : validateAiResource(entry);
+        return typeHandlerRegistry.isCurrent(entry);
     }
-
-    private boolean validateAiResource(AiResourceSearchDocument entry) throws NacosException {
-        AiResource meta = resourceManager.findMeta(entry.getNamespaceId(),
-            entry.getResourceName(), entry.getResourceType());
-        if (meta == null
-            || !AiResourceConstants.META_STATUS_ENABLE.equalsIgnoreCase(meta.getStatus())) {
-            return false;
-        }
-        try {
-            resourceManager.ensureReadableOrNotFound(meta,
-                entry.getResourceType() + " not found: " + entry.getResourceName());
-        } catch (NacosException e) {
-            return false;
-        }
-        String latestVersion = AiResourceManager.resolveVersion(meta, null,
-            AiResourceConstants.LABEL_LATEST);
-        if (!entry.getResourceVersion().equals(latestVersion)) {
-            return false;
-        }
-        AiResourceVersion version = resourceManager.findVersion(entry.getNamespaceId(),
-            entry.getResourceName(), entry.getResourceType(), entry.getResourceVersion());
-        return version != null
-            && AiResourceConstants.VERSION_STATUS_ONLINE.equalsIgnoreCase(version.getStatus());
-    }
-
-    private boolean validateMcp(AiResourceSearchDocument entry) {
-        Map<String, Object> metadata = parseMap(entry.getMetadata());
-        String mcpServerId = firstNotBlank(stringValue(metadata.get("mcpServerId")),
-            entry.getResourceName());
-        String mcpName = stringValue(metadata.get("mcpName"));
-        try {
-            McpServerDetailInfo detail = mcpServerOperationService.getMcpServerDetail(
-                entry.getNamespaceId(), mcpServerId, mcpName, entry.getResourceVersion());
-            ServerVersionDetail versionDetail = detail.getVersionDetail();
-            return detail.isEnabled()
-                && AiConstants.Mcp.MCP_STATUS_ACTIVE.equalsIgnoreCase(detail.getStatus())
-                && versionDetail != null && Boolean.TRUE.equals(versionDetail.getIs_latest());
-        } catch (NacosException e) {
-            return false;
-        }
-    }
-
+    
     private Comparator<RankedEntry> relevanceComparator() {
         return Comparator.comparingDouble(RankedEntry::getRankScore).reversed()
             .thenComparing(result -> result.getDocument().getGmtModified(),
@@ -589,7 +703,7 @@ public class AiResourceSearchService {
             .thenComparing(result -> result.getDocument().getId(),
                 Comparator.nullsLast(Long::compareTo));
     }
-
+    
     private Comparator<RankedEntry> listComparator(Query query) {
         Comparator<RankedEntry> comparator;
         if (Sort.DISPLAY_NAME == query.getSort()) {
@@ -611,7 +725,7 @@ public class AiResourceSearchService {
         return comparator.thenComparing(result -> result.getDocument().getId(),
             Comparator.nullsLast(Long::compareTo));
     }
-
+    
     private void normalizeScores(List<RankedEntry> candidates) {
         double maxScore = 0D;
         for (RankedEntry candidate : candidates) {
@@ -621,14 +735,14 @@ public class AiResourceSearchService {
             candidate.setScore(normalizeScore(candidate.getRankScore(), maxScore));
         }
     }
-
+    
     private int normalizeScore(double score, double maxScore) {
         if (score <= 0D || maxScore <= 0D) {
             return 0;
         }
         return (int) Math.min(100L, Math.round(score * 100D / maxScore));
     }
-
+    
     private Page page(List<RankedEntry> candidates, Query query) throws NacosException {
         int fromIndex = cursorIndex(candidates, query.getCursor());
         int toIndex = Math.min(fromIndex + query.getLimit(), candidates.size());
@@ -640,7 +754,7 @@ public class AiResourceSearchService {
             ? encodeCursor(candidates.get(toIndex - 1).getDocument().getId()) : null;
         return new Page(items, nextCursor);
     }
-
+    
     private Page boundedPage(List<RankedEntry> candidates, Query query) {
         int toIndex = Math.min(query.getLimit(), candidates.size());
         List<AiResourceSearchResult> items = new ArrayList<>();
@@ -651,7 +765,7 @@ public class AiResourceSearchService {
             ? encodeCursor(candidates.get(toIndex - 1).getDocument().getId()) : null;
         return new Page(items, nextCursor);
     }
-
+    
     private RankedEntry listCursor(Query query) throws NacosException {
         if (StringUtils.isBlank(query.getCursor())) {
             return null;
@@ -671,7 +785,7 @@ public class AiResourceSearchService {
         }
         return new RankedEntry(document, 0D);
     }
-
+    
     private long lastDocumentId(List<AiResourceSearchDocument> batch, long previousId) {
         AiResourceSearchDocument last = batch.get(batch.size() - 1);
         if (last.getId() == null || last.getId() <= previousId) {
@@ -679,7 +793,25 @@ public class AiResourceSearchService {
         }
         return last.getId();
     }
-
+    
+    private void validateResourceKeyScanAdvance(AiResourceSearchDocument last,
+        String previousResourceType, String previousResourceName, long previousId) {
+        if (last.getId() == null || last.getResourceType() == null
+            || last.getResourceName() == null) {
+            throw new IllegalStateException("AI resource key scan returned an incomplete anchor");
+        }
+        if (previousResourceType == null) {
+            return;
+        }
+        int typeComparison = last.getResourceType().compareTo(previousResourceType);
+        int nameComparison = typeComparison == 0
+            ? last.getResourceName().compareTo(previousResourceName) : 0;
+        if (typeComparison < 0 || typeComparison == 0 && nameComparison < 0
+            || typeComparison == 0 && nameComparison == 0 && last.getId() <= previousId) {
+            throw new IllegalStateException("AI resource key scan did not advance");
+        }
+    }
+    
     private AiResourceSearchResult toResult(RankedEntry candidate) {
         AiResourceSearchDocument document = candidate.getDocument();
         AiResourceSearchResult result = new AiResourceSearchResult();
@@ -698,7 +830,7 @@ public class AiResourceSearchService {
         result.setScore(candidate.getScore());
         return result;
     }
-
+    
     private int cursorIndex(List<RankedEntry> candidates, String cursor)
         throws NacosException {
         if (StringUtils.isBlank(cursor)) {
@@ -712,14 +844,14 @@ public class AiResourceSearchService {
         }
         throw invalidCursor();
     }
-
+    
     private String encodeCursor(Long documentId) {
         Map<String, Object> cursor = new LinkedHashMap<>();
         cursor.put(CURSOR_DOCUMENT_ID, documentId);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(
             JacksonUtils.toJson(cursor).getBytes(StandardCharsets.UTF_8));
     }
-
+    
     private Long decodeCursor(String cursor) throws NacosException {
         try {
             byte[] decoded = Base64.getUrlDecoder().decode(cursor);
@@ -737,11 +869,12 @@ public class AiResourceSearchService {
         }
         throw invalidCursor();
     }
-
+    
     private NacosException invalidCursor() {
-        return new NacosException(NacosException.INVALID_PARAM, "Invalid discovery cursor");
+        return new NacosApiException(NacosException.INVALID_PARAM,
+            ErrorCode.PARAMETER_VALIDATE_ERROR, "Invalid discovery cursor");
     }
-
+    
     private boolean enhancedRankingEnabled() {
         String value = System.getProperty(KEY_RANKING_ENHANCED_ENABLED);
         if (StringUtils.isBlank(value)) {
@@ -753,7 +886,7 @@ public class AiResourceSearchService {
         }
         return Boolean.parseBoolean(value);
     }
-
+    
     private int maxRecallCandidates() {
         String value = System.getProperty(KEY_MAX_RECALL_CANDIDATES);
         if (StringUtils.isBlank(value)) {
@@ -772,12 +905,12 @@ public class AiResourceSearchService {
             return DEFAULT_MAX_RECALL_CANDIDATES;
         }
     }
-
+    
     private double chunkTypeWeight(String chunkType) {
         Double weight = CHUNK_TYPE_WEIGHTS.get(chunkType);
         return weight == null ? 1.0D : weight;
     }
-
+    
     private List<String> parseStringList(String value) {
         if (StringUtils.isBlank(value)) {
             return Collections.emptyList();
@@ -789,7 +922,7 @@ public class AiResourceSearchService {
             return Collections.singletonList(value);
         }
     }
-
+    
     private Map<String, Object> parseMap(String value) {
         if (StringUtils.isBlank(value)) {
             return Collections.emptyMap();
@@ -801,7 +934,7 @@ public class AiResourceSearchService {
             return Collections.emptyMap();
         }
     }
-
+    
     private List<String> toStringList(Object value) {
         if (value == null) {
             return Collections.emptyList();
@@ -817,12 +950,12 @@ public class AiResourceSearchService {
         }
         return Collections.singletonList(String.valueOf(value));
     }
-
+    
     private List<String> singleton(String value) {
         return StringUtils.isBlank(value) ? Collections.emptyList()
             : Collections.singletonList(value);
     }
-
+    
     private boolean equalsIgnoreCase(List<String> values, String expected) {
         if (values == null || StringUtils.isBlank(expected)) {
             return false;
@@ -835,7 +968,7 @@ public class AiResourceSearchService {
         }
         return false;
     }
-
+    
     private boolean containsIgnoreCase(List<String> values, String expected) {
         if (values == null || StringUtils.isBlank(expected)) {
             return false;
@@ -848,11 +981,11 @@ public class AiResourceSearchService {
         }
         return false;
     }
-
+    
     private String normalize(String value) {
         return value == null ? "" : value.toLowerCase(Locale.ROOT);
     }
-
+    
     private String compact(String value) {
         if (value == null) {
             return "";
@@ -866,19 +999,11 @@ public class AiResourceSearchService {
         }
         return result.toString();
     }
-
+    
     private boolean isAfter(Timestamp value, Instant threshold) {
         return value != null && threshold != null && value.toInstant().isAfter(threshold);
     }
-
-    private String stringValue(Object value) {
-        return value == null ? null : String.valueOf(value);
-    }
-
-    private String firstNotBlank(String first, String second) {
-        return StringUtils.isNotBlank(first) ? first : second;
-    }
-
+    
     private static Map<String, Double> chunkTypeWeights() {
         Map<String, Double> weights = new LinkedHashMap<>();
         weights.put(AiResourceSearchConstants.CHUNK_TYPE_SEARCH_INTENT, 1.8D);
@@ -891,119 +1016,239 @@ public class AiResourceSearchService {
         weights.put(AiResourceSearchConstants.CHUNK_TYPE_SKILL_CONTENT, 0.7D);
         weights.put(AiResourceSearchConstants.CHUNK_TYPE_PROMPT_CONTENT, 0.7D);
         weights.put(AiResourceSearchConstants.CHUNK_TYPE_MCP_CONTENT, 0.7D);
+        weights.put(AiResourceSearchConstants.CHUNK_TYPE_AGENT_CONTENT, 0.7D);
+        weights.put(AiResourceSearchConstants.CHUNK_TYPE_AGENTSPEC_CONTENT, 0.7D);
         weights.put(AiResourceSearchConstants.CHUNK_TYPE_METADATA_IO, 0.6D);
         weights.put(AiResourceSearchConstants.CHUNK_TYPE_METADATA_RISK, 0.5D);
         weights.put(AiResourceSearchConstants.CHUNK_TYPE_NOT_FOR, 0.4D);
         return Collections.unmodifiableMap(weights);
     }
-
+    
     /**
      * Canonical resource discovery query.
      */
     public static class Query {
-
+        
         private String namespaceId;
-
+        
         private String text;
-
+        
         private List<String> resourceTypes = Collections.emptyList();
-
+        
         private Map<String, List<String>> filters = Collections.emptyMap();
-
+        
+        private List<Predicate> predicates = Collections.emptyList();
+        
         private String cursor;
-
+        
         private int limit;
-
+        
         private Sort sort = Sort.UPDATED_AT;
-
+        
         private boolean descending = true;
-
+        
         private Instant createdAfter;
-
+        
         private Instant updatedAfter;
-
+        
+        private int pageNumber = 1;
+        
+        private int pageSize = DEFAULT_NUMBERED_PAGE_SIZE;
+        
         public String getNamespaceId() {
             return namespaceId;
         }
-
+        
         public void setNamespaceId(String namespaceId) {
             this.namespaceId = namespaceId;
         }
-
+        
         public String getText() {
             return text;
         }
-
+        
         public void setText(String text) {
             this.text = text;
         }
-
+        
         public List<String> getResourceTypes() {
             return resourceTypes;
         }
-
+        
         public void setResourceTypes(List<String> resourceTypes) {
             this.resourceTypes = resourceTypes == null ? Collections.emptyList()
                 : resourceTypes;
         }
-
+        
         public Map<String, List<String>> getFilters() {
             return filters;
         }
-
+        
         public void setFilters(Map<String, List<String>> filters) {
             this.filters = filters == null ? Collections.emptyMap() : filters;
         }
-
+        
+        public List<Predicate> getPredicates() {
+            return predicates;
+        }
+        
+        public void setPredicates(List<Predicate> predicates) {
+            this.predicates = predicates == null ? Collections.emptyList() : predicates;
+        }
+        
         public String getCursor() {
             return cursor;
         }
-
+        
         public void setCursor(String cursor) {
             this.cursor = cursor;
         }
-
+        
         public int getLimit() {
             return limit;
         }
-
+        
         public void setLimit(int limit) {
             this.limit = Math.max(1, limit);
         }
-
+        
         public Sort getSort() {
             return sort;
         }
-
+        
         public void setSort(Sort sort) {
             this.sort = sort == null ? Sort.UPDATED_AT : sort;
         }
-
+        
         public boolean isDescending() {
             return descending;
         }
-
+        
         public void setDescending(boolean descending) {
             this.descending = descending;
         }
-
+        
         public Instant getCreatedAfter() {
             return createdAfter;
         }
-
+        
         public void setCreatedAfter(Instant createdAfter) {
             this.createdAfter = createdAfter;
         }
-
+        
         public Instant getUpdatedAfter() {
             return updatedAfter;
         }
-
+        
         public void setUpdatedAfter(Instant updatedAfter) {
             this.updatedAfter = updatedAfter;
         }
+        
+        public int getPageNumber() {
+            return pageNumber;
+        }
+        
+        public void setPageNumber(int pageNumber) {
+            this.pageNumber = Math.max(1, pageNumber);
+        }
+        
+        public int getPageSize() {
+            return pageSize;
+        }
+        
+        public void setPageSize(int pageSize) {
+            this.pageSize = Math.max(1, pageSize);
+        }
     }
-
+    
+    /**
+     * Protocol-neutral structured predicate.
+     */
+    public static class Predicate {
+        
+        private String field;
+        
+        private PredicateOperator operator = PredicateOperator.EXACT_ANY;
+        
+        private List<String> values = Collections.emptyList();
+        
+        private boolean caseSensitive;
+        
+        private List<String> applicableResourceTypes = Collections.emptyList();
+        
+        public Predicate() {
+        }
+        
+        public Predicate(String field, PredicateOperator operator, List<String> values,
+            boolean caseSensitive) {
+            this(field, operator, values, caseSensitive, Collections.emptyList());
+        }
+        
+        public Predicate(String field, PredicateOperator operator, List<String> values,
+            boolean caseSensitive, List<String> applicableResourceTypes) {
+            this.field = field;
+            setOperator(operator);
+            setValues(values);
+            this.caseSensitive = caseSensitive;
+            setApplicableResourceTypes(applicableResourceTypes);
+        }
+        
+        public String getField() {
+            return field;
+        }
+        
+        public void setField(String field) {
+            this.field = field;
+        }
+        
+        public PredicateOperator getOperator() {
+            return operator;
+        }
+        
+        public void setOperator(PredicateOperator operator) {
+            this.operator = operator == null ? PredicateOperator.EXACT_ANY : operator;
+        }
+        
+        public List<String> getValues() {
+            return values;
+        }
+        
+        public void setValues(List<String> values) {
+            this.values = values == null ? Collections.emptyList() : values;
+        }
+        
+        public boolean isCaseSensitive() {
+            return caseSensitive;
+        }
+        
+        public void setCaseSensitive(boolean caseSensitive) {
+            this.caseSensitive = caseSensitive;
+        }
+        
+        public List<String> getApplicableResourceTypes() {
+            return applicableResourceTypes;
+        }
+        
+        public void setApplicableResourceTypes(List<String> applicableResourceTypes) {
+            this.applicableResourceTypes = applicableResourceTypes == null
+                ? Collections.emptyList() : applicableResourceTypes;
+        }
+        
+        private boolean appliesTo(String resourceType) {
+            return applicableResourceTypes.isEmpty()
+                || applicableResourceTypes.contains(resourceType);
+        }
+    }
+    
+    /**
+     * Supported structured predicate operators.
+     */
+    public enum PredicateOperator {
+        EXACT_ANY,
+        EXACT_ALL,
+        LITERAL_CONTAINS
+    }
+    
     /**
      * Canonical discovery ordering.
      */
@@ -1012,182 +1257,220 @@ public class AiResourceSearchService {
         DISPLAY_NAME,
         RESOURCE_KEY
     }
-
+    
     /**
      * Canonical discovery page.
      */
     public static class Page {
-
+        
         private final List<AiResourceSearchResult> items;
-
+        
         private final String nextCursor;
-
+        
         public Page(List<AiResourceSearchResult> items, String nextCursor) {
             this.items = items;
             this.nextCursor = nextCursor;
         }
-
+        
         public List<AiResourceSearchResult> getItems() {
             return items;
         }
-
+        
         public String getNextCursor() {
             return nextCursor;
         }
     }
-
+    
+    /**
+     * Canonical numbered discovery page.
+     */
+    public static class NumberedPage {
+        
+        private final List<AiResourceSearchResult> items;
+        
+        private final long totalCount;
+        
+        private final int pageNumber;
+        
+        private final int pagesAvailable;
+        
+        public NumberedPage(List<AiResourceSearchResult> items, long totalCount, int pageNumber,
+            int pagesAvailable) {
+            this.items = items;
+            this.totalCount = totalCount;
+            this.pageNumber = pageNumber;
+            this.pagesAvailable = pagesAvailable;
+        }
+        
+        public List<AiResourceSearchResult> getItems() {
+            return items;
+        }
+        
+        public long getTotalCount() {
+            return totalCount;
+        }
+        
+        public int getPageNumber() {
+            return pageNumber;
+        }
+        
+        public int getPagesAvailable() {
+            return pagesAvailable;
+        }
+    }
+    
     /**
      * Canonical aggregation request.
      */
     public static class AggregationRequest {
-
+        
         private final String name;
-
+        
         private final String field;
-
+        
         private final int limit;
-
+        
         private final int minCount;
-
+        
         public AggregationRequest(String field, int limit, int minCount) {
             this(field, field, limit, minCount);
         }
-
+        
         public AggregationRequest(String name, String field, int limit, int minCount) {
             this.name = name;
             this.field = field;
             this.limit = Math.max(1, limit);
             this.minCount = Math.max(1, minCount);
         }
-
+        
         public String getName() {
             return name;
         }
-
+        
         public String getField() {
             return field;
         }
-
+        
         public int getLimit() {
             return limit;
         }
-
+        
         public int getMinCount() {
             return minCount;
         }
     }
-
+    
     /**
      * One canonical aggregation bucket.
      */
     public static class AggregationBucket {
-
+        
         private final String value;
-
+        
         private final int count;
-
+        
         public AggregationBucket(String value, int count) {
             this.value = value;
             this.count = count;
         }
-
+        
         public String getValue() {
             return value;
         }
-
+        
         public int getCount() {
             return count;
         }
     }
-
+    
     /**
      * Canonical aggregation for one field.
      */
     public static class Aggregation {
-
+        
         private final List<AggregationBucket> buckets;
-
+        
         private final int otherCount;
-
+        
         public Aggregation(List<AggregationBucket> buckets, int otherCount) {
             this.buckets = buckets;
             this.otherCount = otherCount;
         }
-
+        
         public List<AggregationBucket> getBuckets() {
             return buckets;
         }
-
+        
         public int getOtherCount() {
             return otherCount;
         }
     }
-
+    
     /**
      * Canonical aggregation result.
      */
     public static class AggregationResult {
-
+        
         private final int totalMatched;
-
+        
         private final Map<String, Aggregation> aggregations;
-
+        
         public AggregationResult(int totalMatched, Map<String, Aggregation> aggregations) {
             this.totalMatched = totalMatched;
             this.aggregations = aggregations;
         }
-
+        
         public int getTotalMatched() {
             return totalMatched;
         }
-
+        
         public Map<String, Aggregation> getAggregations() {
             return aggregations;
         }
     }
-
+    
     private static class SearchScore {
-
+        
         private double score;
-
+        
         private void add(double value) {
             score += value;
         }
-
+        
         private void max(double value) {
             score = Math.max(score, value);
         }
-
+        
         private double getScore() {
             return score;
         }
     }
-
+    
     private static class RankedEntry {
-
+        
         private final AiResourceSearchDocument document;
-
+        
         private final double rankScore;
-
+        
         private Integer score;
-
+        
         RankedEntry(AiResourceSearchDocument document, double rankScore) {
             this.document = document;
             this.rankScore = rankScore;
         }
-
+        
         AiResourceSearchDocument getDocument() {
             return document;
         }
-
+        
         double getRankScore() {
             return rankScore;
         }
-
+        
         Integer getScore() {
             return score;
         }
-
+        
         void setScore(Integer score) {
             this.score = score;
         }

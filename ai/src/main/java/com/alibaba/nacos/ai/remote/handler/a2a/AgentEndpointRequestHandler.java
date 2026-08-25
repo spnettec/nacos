@@ -62,17 +62,17 @@ import java.util.Collections;
 @Component
 public class AgentEndpointRequestHandler
     extends RequestHandler<AgentEndpointRequest, AgentEndpointResponse> {
-
+    
     private static final Logger LOGGER = LoggerFactory.getLogger(AgentEndpointRequestHandler.class);
-
+    
     private final EphemeralClientOperationServiceImpl clientOperationService;
-
+    
     private final AgentIdCodecHolder agentIdCodecHolder;
-
+    
     private final A2aCompatibilityModeResolver compatibilityModeResolver;
-
+    
     private final CanonicalA2aEndpointOperationService canonicalEndpointOperationService;
-
+    
     public AgentEndpointRequestHandler(EphemeralClientOperationServiceImpl clientOperationService,
         AgentIdCodecHolder agentIdCodecHolder,
         A2aCompatibilityModeResolver compatibilityModeResolver,
@@ -82,7 +82,7 @@ public class AgentEndpointRequestHandler
         this.compatibilityModeResolver = compatibilityModeResolver;
         this.canonicalEndpointOperationService = canonicalEndpointOperationService;
     }
-
+    
     @Override
     @NamespaceValidation
     @ExtractorManager.Extractor(rpcExtractor = AgentRequestParamExtractor.class)
@@ -127,7 +127,7 @@ public class AgentEndpointRequestHandler
         }
         return response;
     }
-
+    
     private void handleCanonical(AgentEndpointRequest request, RequestMeta meta)
         throws NacosException {
         switch (request.getType()) {
@@ -145,7 +145,7 @@ public class AgentEndpointRequestHandler
                 throw invalidType(request.getType());
         }
     }
-
+    
     private NacosApiException invalidType(String type) {
         return new NacosApiException(NacosException.INVALID_PARAM,
             ErrorCode.PARAMETER_VALIDATE_ERROR,
@@ -153,11 +153,11 @@ public class AgentEndpointRequestHandler
                 AiRemoteConstants.REGISTER_ENDPOINT, AiRemoteConstants.DE_REGISTER_ENDPOINT,
                 type));
     }
-
+    
     private Instance transferInstance(AgentEndpointRequest request) throws NacosApiException {
         return AgentEndpointUtil.transferToInstance(request.getEndpoint());
     }
-
+    
     private void validateRequest(AgentEndpointRequest request) throws NacosApiException {
         if (StringUtils.isBlank(request.getAgentName())) {
             throw new NacosApiException(NacosException.INVALID_PARAM, ErrorCode.PARAMETER_MISSING,
@@ -172,7 +172,7 @@ public class AgentEndpointRequestHandler
                 "Required parameter `endpoint.version` can't be empty or null");
         }
     }
-
+    
     private void doRegisterEndpoint(Service service, Instance instance, RequestMeta meta)
         throws NacosException {
         clientOperationService.registerInstance(service, instance, meta.getConnectionId());
@@ -180,9 +180,9 @@ public class AgentEndpointRequestHandler
             NamingRequestUtil.getSourceIpForGrpcRequest(meta), true, service.getNamespace(),
             service.getGroup(),
             service.getName(), instance.getIp(), instance.getPort()));
-
+        
     }
-
+    
     private void doDeregisterEndpoint(Service service, Instance instance, RequestMeta meta) {
         clientOperationService.deregisterInstance(service, instance, meta.getConnectionId());
         NotifyCenter.publishEvent(new DeregisterInstanceTraceEvent(System.currentTimeMillis(),

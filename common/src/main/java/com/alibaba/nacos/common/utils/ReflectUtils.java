@@ -31,7 +31,7 @@ public class ReflectUtils {
     
     private ReflectUtils() {
     }
-
+    
     /**
      * get filed value of  obj.
      *
@@ -48,7 +48,7 @@ public class ReflectUtils {
             throw new RuntimeException(e);
         }
     }
-
+    
     /**
      * get filed value of  obj.
      *
@@ -65,7 +65,7 @@ public class ReflectUtils {
             return defaultValue;
         }
     }
-
+    
     /**
      * Get the field represented by the supplied {@link Field field object} on the specified {@link Object target
      * object}. In accordance with {@link Field#get(Object)} semantics, the returned value is automatically wrapped if
@@ -85,7 +85,7 @@ public class ReflectUtils {
         }
         throw new IllegalStateException("Should never get here");
     }
-
+    
     /**
      * Handle the given reflection exception.
      *
@@ -113,7 +113,7 @@ public class ReflectUtils {
         }
         throw new UndeclaredThrowableException(ex);
     }
-
+    
     /**
      * Handle the given invocation target exception. Should only be called if no checked exception is expected to be
      * thrown by the target method.
@@ -126,7 +126,7 @@ public class ReflectUtils {
     public static void handleInvocationTargetException(InvocationTargetException ex) {
         rethrowRuntimeException(ex.getTargetException());
     }
-
+    
     /**
      * Rethrow the given {@link Throwable exception}, which is presumably the
      * <em>target exception</em> of an {@link InvocationTargetException}.
@@ -147,7 +147,7 @@ public class ReflectUtils {
         }
         throw new UndeclaredThrowableException(ex);
     }
-
+    
     /**
      * Invoke the specified {@link Method} against the supplied target object with the supplied arguments. The target
      * object can be {@code null} when invoking a static {@link Method}.
@@ -167,5 +167,5 @@ public class ReflectUtils {
         }
         throw new IllegalStateException("Should never get here");
     }
-
+    
 }

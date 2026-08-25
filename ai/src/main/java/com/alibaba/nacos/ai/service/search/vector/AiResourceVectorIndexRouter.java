@@ -43,21 +43,21 @@ import java.util.Map;
 @Service
 @ConditionalOnAiResourceSearchEnabled
 public class AiResourceVectorIndexRouter implements AiResourceVectorIndex, DisposableBean {
-
+    
     public static final String KEY_VECTOR_PROVIDER = "nacos.ai.resource.search.vector.provider";
-
+    
     public static final String DEFAULT_VECTOR_PROVIDER = "postgresql";
-
+    
     private static final Logger LOGGER = LoggerFactory.getLogger(AiResourceVectorIndexRouter.class);
-
+    
     private final Map<String, AiResourceVectorIndex> indexes;
-
+    
     private final String provider;
-
+    
     public AiResourceVectorIndexRouter() {
         this(AiResourceVectorIndexRegistry.getInstance().getAllIndexes(), null);
     }
-
+    
     AiResourceVectorIndexRouter(Map<String, AiResourceVectorIndex> indexes,
         String providerOverride) {
         this.indexes = indexes;
@@ -70,12 +70,12 @@ public class AiResourceVectorIndexRouter implements AiResourceVectorIndex, Dispo
                 provider);
         }
     }
-
+    
     @Override
     public boolean available() {
         return delegate().available();
     }
-
+    
     @Override
     public void replaceResourceVersion(String namespaceId, String resourceType,
         String resourceName, String resourceVersion,
@@ -83,24 +83,24 @@ public class AiResourceVectorIndexRouter implements AiResourceVectorIndex, Dispo
         delegate().replaceResourceVersion(namespaceId, resourceType, resourceName,
             resourceVersion, documents);
     }
-
+    
     @Override
     public void addDocuments(Collection<AiResourceVectorDocument> documents) {
         delegate().addDocuments(documents);
     }
-
+    
     @Override
     public void deleteByResource(String namespaceId, String resourceType, String resourceName) {
         delegate().deleteByResource(namespaceId, resourceType, resourceName);
     }
-
+    
     @Override
     public void deleteByResourceVersion(String namespaceId, String resourceType,
         String resourceName, String resourceVersion) {
         delegate().deleteByResourceVersion(namespaceId, resourceType, resourceName,
             resourceVersion);
     }
-
+    
     @Override
     public boolean isResourceVersionReady(String namespaceId, String resourceType,
         String resourceName, String resourceVersion, String embeddingModel,
@@ -108,7 +108,7 @@ public class AiResourceVectorIndexRouter implements AiResourceVectorIndex, Dispo
         return delegate().isResourceVersionReady(namespaceId, resourceType, resourceName,
             resourceVersion, embeddingModel, expectedDocumentCount);
     }
-
+    
     @Override
     public boolean isResourceVersionReady(String namespaceId, String resourceType,
         String resourceName, String resourceVersion, String embeddingModel,
@@ -116,27 +116,27 @@ public class AiResourceVectorIndexRouter implements AiResourceVectorIndex, Dispo
         return delegate().isResourceVersionReady(namespaceId, resourceType, resourceName,
             resourceVersion, embeddingModel, expectedDocumentId, expectedDocumentCount);
     }
-
+    
     @Override
     public List<AiResourceVectorHit> search(String namespaceId, String embeddingModel,
         double[] queryVector, List<String> resourceTypes, int limit) {
         return delegate().search(namespaceId, embeddingModel, queryVector, resourceTypes, limit);
     }
-
+    
     @Override
     public void destroy() throws Exception {
         for (AiResourceVectorIndex index : indexes.values()) {
             index.close();
         }
     }
-
+    
     AiResourceVectorIndex delegate() {
         if (!PluginStateCheckerHolder.isPluginEnabled(PluginType.AI_VECTOR.getType(), provider)) {
             return NoopAiResourceVectorIndex.INSTANCE;
         }
         return indexes.getOrDefault(provider, NoopAiResourceVectorIndex.INSTANCE);
     }
-
+    
     private String resolveProvider(String providerOverride) {
         if (StringUtils.isNotBlank(providerOverride)) {
             return providerOverride;
@@ -151,36 +151,36 @@ public class AiResourceVectorIndexRouter implements AiResourceVectorIndex, Dispo
             return DEFAULT_VECTOR_PROVIDER;
         }
     }
-
+    
     private static class NoopAiResourceVectorIndex implements AiResourceVectorIndex {
-
+        
         private static final NoopAiResourceVectorIndex INSTANCE = new NoopAiResourceVectorIndex();
-
+        
         @Override
         public boolean available() {
             return false;
         }
-
+        
         @Override
         public void replaceResourceVersion(String namespaceId, String resourceType,
             String resourceName, String resourceVersion,
             Collection<AiResourceVectorDocument> documents) {
         }
-
+        
         @Override
         public void addDocuments(Collection<AiResourceVectorDocument> documents) {
         }
-
+        
         @Override
         public void deleteByResource(String namespaceId, String resourceType,
             String resourceName) {
         }
-
+        
         @Override
         public void deleteByResourceVersion(String namespaceId, String resourceType,
             String resourceName, String resourceVersion) {
         }
-
+        
         @Override
         public List<AiResourceVectorHit> search(String namespaceId, String embeddingModel,
             double[] queryVector, List<String> resourceTypes, int limit) {

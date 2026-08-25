@@ -54,36 +54,36 @@ import java.util.function.Supplier;
 @Component
 @Conditional(ConditionOnClusterMode.class)
 public class DelegatingPluginStateSynchronizer implements PluginStateSynchronizer {
-
+    
     static final String TYPE_PROPERTY = "nacos.plugin.state.synchronizer.type";
-
+    
     private static final Logger LOGGER =
         LoggerFactory.getLogger(DelegatingPluginStateSynchronizer.class);
-
+    
     private static final ExecutorService INITIALIZATION_EXECUTOR =
         ExecutorFactory.Managed.newSingleExecutorService(
             ClassUtils.getCanonicalName(DelegatingPluginStateSynchronizer.class),
             new NameThreadFactory("nacos-plugin-synchronizer"));
-
+    
     private final Supplier<String> typeSupplier;
-
+    
     private final Supplier<Collection<PluginStateSynchronizerProvider>> providerSupplier;
-
+    
     private final PluginStateSynchronizerProvider builtInProvider;
-
+    
     private final PluginStateSynchronizationContext context;
-
+    
     private final Executor executor;
-
+    
     private final AtomicReference<InitializationState> state =
         new AtomicReference<>(InitializationState.NEW);
-
+    
     private volatile PluginStateSynchronizer delegate;
-
+    
     private volatile String selectedName = "unresolved";
-
+    
     private volatile Throwable failure;
-
+    
     @Autowired
     public DelegatingPluginStateSynchronizer(PluginStatePersistenceService persistence,
         ObjectProvider<PluginStateApplier> applierProvider,
@@ -95,7 +95,7 @@ public class DelegatingPluginStateSynchronizer implements PluginStateSynchronize
                 applierProvider::getIfAvailable),
             INITIALIZATION_EXECUTOR);
     }
-
+    
     DelegatingPluginStateSynchronizer(Supplier<String> typeSupplier,
         Supplier<Collection<PluginStateSynchronizerProvider>> providerSupplier,
         PluginStateSynchronizerProvider builtInProvider,
@@ -106,7 +106,7 @@ public class DelegatingPluginStateSynchronizer implements PluginStateSynchronize
         this.context = context;
         this.executor = executor;
     }
-
+    
     @Override
     public void initialize() {
         if (!state.compareAndSet(InitializationState.NEW,
@@ -119,7 +119,7 @@ public class DelegatingPluginStateSynchronizer implements PluginStateSynchronize
             markUnavailable(e);
         }
     }
-
+    
     @Override
     public boolean isAvailable() {
         PluginStateSynchronizer current = delegate;
@@ -132,7 +132,7 @@ public class DelegatingPluginStateSynchronizer implements PluginStateSynchronize
             return false;
         }
     }
-
+    
     @Override
     public void syncStateChange(String pluginId, boolean enabled) throws NacosApiException {
         PluginStateSynchronizer current = getAvailableSynchronizer();
@@ -144,7 +144,7 @@ public class DelegatingPluginStateSynchronizer implements PluginStateSynchronize
             throw synchronizationFailure(e);
         }
     }
-
+    
     @Override
     public void syncConfigChange(String pluginId, Map<String, String> config)
         throws NacosApiException {
@@ -157,22 +157,22 @@ public class DelegatingPluginStateSynchronizer implements PluginStateSynchronize
             throw synchronizationFailure(e);
         }
     }
-
+    
     @Override
     @PreDestroy
     public void shutdown() {
         state.set(InitializationState.UNAVAILABLE);
         shutdownDelegate();
     }
-
+    
     InitializationState getState() {
         return state.get();
     }
-
+    
     String getSelectedName() {
         return selectedName;
     }
-
+    
     private void initializeSelectedSynchronizer() {
         try {
             Selection selection = select(typeSupplier, providerSupplier, builtInProvider);
@@ -201,14 +201,14 @@ public class DelegatingPluginStateSynchronizer implements PluginStateSynchronize
             markUnavailable(e);
         }
     }
-
+    
     private PluginStateSynchronizer getAvailableSynchronizer() throws NacosApiException {
         if (!isAvailable()) {
             throw synchronizationFailure(failure);
         }
         return delegate;
     }
-
+    
     private NacosApiException synchronizationFailure(Throwable cause) {
         String message = "Plugin state synchronizer '" + selectedName
             + "' is unavailable";
@@ -219,7 +219,7 @@ public class DelegatingPluginStateSynchronizer implements PluginStateSynchronize
         return new NacosApiException(NacosException.SERVER_ERROR, ErrorCode.SERVER_ERROR, cause,
             message);
     }
-
+    
     private void markUnavailable(Throwable cause) {
         failure = cause;
         state.set(InitializationState.UNAVAILABLE);
@@ -228,7 +228,7 @@ public class DelegatingPluginStateSynchronizer implements PluginStateSynchronize
             + "Nacos startup continues with cluster plugin writes unavailable.", selectedName,
             cause);
     }
-
+    
     private void shutdownDelegate() {
         PluginStateSynchronizer current = delegate;
         delegate = null;
@@ -242,7 +242,7 @@ public class DelegatingPluginStateSynchronizer implements PluginStateSynchronize
                 + "'{}'.", selectedName, e);
         }
     }
-
+    
     private Selection select(Supplier<String> typeSupplier,
         Supplier<Collection<PluginStateSynchronizerProvider>> providerSupplier,
         PluginStateSynchronizerProvider builtInProvider) {
@@ -264,7 +264,7 @@ public class DelegatingPluginStateSynchronizer implements PluginStateSynchronize
             return Selection.failure("unknown", e);
         }
     }
-
+    
     private Selection selectExternalProvider(String selectedType,
         Supplier<Collection<PluginStateSynchronizerProvider>> providerSupplier) {
         Collection<PluginStateSynchronizerProvider> providers = providerSupplier.get();
@@ -300,68 +300,68 @@ public class DelegatingPluginStateSynchronizer implements PluginStateSynchronize
             selectedType);
         return Selection.success(selectedType, selected.getProvider());
     }
-
+    
     enum InitializationState {
-
+        
         NEW,
-
+        
         INITIALIZING,
-
+        
         INITIALIZED,
-
+        
         UNAVAILABLE
     }
-
+    
     private static class ProviderCandidate {
-
+        
         private final PluginStateSynchronizerProvider provider;
-
+        
         private final String className;
-
+        
         ProviderCandidate(PluginStateSynchronizerProvider provider, String className) {
             this.provider = provider;
             this.className = className;
         }
-
+        
         PluginStateSynchronizerProvider getProvider() {
             return provider;
         }
-
+        
         String getClassName() {
             return className;
         }
     }
-
+    
     private static class Selection {
-
+        
         private final String name;
-
+        
         private final PluginStateSynchronizerProvider provider;
-
+        
         private final Throwable failure;
-
+        
         Selection(String name, PluginStateSynchronizerProvider provider, Throwable failure) {
             this.name = name;
             this.provider = provider;
             this.failure = failure;
         }
-
+        
         static Selection success(String name, PluginStateSynchronizerProvider provider) {
             return new Selection(name, provider, null);
         }
-
+        
         static Selection failure(String name, Throwable failure) {
             return new Selection(name, null, failure);
         }
-
+        
         String getName() {
             return name;
         }
-
+        
         PluginStateSynchronizerProvider getProvider() {
             return provider;
         }
-
+        
         Throwable getFailure() {
             return failure;
         }

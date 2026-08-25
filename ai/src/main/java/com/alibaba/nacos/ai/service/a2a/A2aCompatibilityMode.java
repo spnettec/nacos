@@ -22,10 +22,10 @@ package com.alibaba.nacos.ai.service.a2a;
  * @author Nacos
  */
 public enum A2aCompatibilityMode {
-
+    
     CANONICAL,
-
+    
     LEGACY,
-
+    
     AUTO
 }

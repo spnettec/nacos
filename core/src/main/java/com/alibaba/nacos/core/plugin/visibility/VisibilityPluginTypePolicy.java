@@ -28,10 +28,10 @@ import org.slf4j.LoggerFactory;
  * @author Nacos
  */
 public class VisibilityPluginTypePolicy implements PluginTypePolicy {
-
+    
     private static final Logger LOGGER =
         LoggerFactory.getLogger(VisibilityPluginTypePolicy.class);
-
+    
     /**
      * Legacy visibility implementation selector.
      *
@@ -40,21 +40,21 @@ public class VisibilityPluginTypePolicy implements PluginTypePolicy {
      */
     @Deprecated
     private static final String VISIBILITY_TYPE_PROPERTY = "nacos.plugin.visibility.type";
-
+    
     static final String VISIBILITY_ENABLED_PROPERTY = "nacos.plugin.visibility.enabled";
-
+    
     private static final String DEFAULT_VISIBILITY_PLUGIN = "nacos";
-
+    
     @Override
     public PluginType getPluginType() {
         return PluginType.VISIBILITY;
     }
-
+    
     @Override
     public boolean isLoadingEnabled(PluginTypeConfiguration configuration) {
         return configuration.getBooleanProperty(VISIBILITY_ENABLED_PROPERTY, true);
     }
-
+    
     @Override
     public boolean isPluginEnabledByDefault(String pluginName,
         PluginTypeConfiguration configuration) {

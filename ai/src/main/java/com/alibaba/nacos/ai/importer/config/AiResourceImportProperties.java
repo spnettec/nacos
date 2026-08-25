@@ -28,9 +28,9 @@ import java.util.Properties;
  * @since 3.2.1
  */
 public class AiResourceImportProperties {
-
+    
     public static final String ENABLED_PROPERTY = "nacos.plugin.ai-resource-import.enabled";
-
+    
     /**
      * Legacy AI resource import module switch.
      *
@@ -38,17 +38,7 @@ public class AiResourceImportProperties {
      */
     @Deprecated
     public static final String LEGACY_ENABLED_PROPERTY = "nacos.ai.resource.import.enabled";
-
-    /**
-     * Compatibility switch for the legacy MCP import API.
-     *
-     * @deprecated migrate to the unified {@code /v3/{admin|console}/ai/import/*} APIs. Planned
-     *     for removal in Nacos 3.4.0.
-     */
-    @Deprecated
-    public static final String LEGACY_MCP_API_ENABLED_PROPERTY =
-        "nacos.ai.resource.import.legacy-mcp-api-enabled";
-
+    
     /**
      * Compatibility switch allowing user URLs through the legacy MCP import API.
      *
@@ -58,13 +48,11 @@ public class AiResourceImportProperties {
     @Deprecated
     public static final String ALLOW_USER_URL_PROPERTY =
         "nacos.ai.resource.import.allow-user-url";
-
+    
     private boolean enabled = true;
-
-    private boolean legacyMcpImportApiEnabled;
-
+    
     private boolean allowUserUrl;
-
+    
     /**
      * Load import module properties from the current Nacos environment.
      *
@@ -73,7 +61,7 @@ public class AiResourceImportProperties {
     public static AiResourceImportProperties loadFromEnvironment() {
         return load(EnvUtil.getProperties());
     }
-
+    
     /**
      * Load import module properties from raw properties.
      *
@@ -84,12 +72,10 @@ public class AiResourceImportProperties {
         Properties values = properties == null ? new Properties() : properties;
         AiResourceImportProperties result = new AiResourceImportProperties();
         result.setEnabled(resolveEnabled(values));
-        result.setLegacyMcpImportApiEnabled(getBoolean(values,
-            LEGACY_MCP_API_ENABLED_PROPERTY, false));
         result.setAllowUserUrl(getBoolean(values, ALLOW_USER_URL_PROPERTY, false));
         return result;
     }
-
+    
     /**
      * Resolve the module switch with the standard key taking precedence over the legacy alias.
      *
@@ -105,48 +91,24 @@ public class AiResourceImportProperties {
         }
         return !isExplicitlyFalse(properties.getProperty(LEGACY_ENABLED_PROPERTY));
     }
-
+    
     private static boolean isExplicitlyFalse(String value) {
         return value != null && Boolean.FALSE.toString().equalsIgnoreCase(value.trim());
     }
-
+    
     private static boolean getBoolean(Properties properties, String key, boolean defaultValue) {
         String value = properties.getProperty(key);
         return StringUtils.isBlank(value) ? defaultValue : Boolean.parseBoolean(value.trim());
     }
-
+    
     public boolean isEnabled() {
         return enabled;
     }
-
+    
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
     }
-
-    /**
-     * Whether the legacy MCP import API is enabled.
-     *
-     * @return whether the legacy API is enabled
-     * @deprecated migrate clients to the unified AI resource import APIs. Planned for removal in
-     *     Nacos 3.4.0.
-     */
-    @Deprecated
-    public boolean isLegacyMcpImportApiEnabled() {
-        return legacyMcpImportApiEnabled;
-    }
-
-    /**
-     * Set whether the legacy MCP import API is enabled.
-     *
-     * @param legacyMcpImportApiEnabled whether the legacy API is enabled
-     * @deprecated migrate clients to the unified AI resource import APIs. Planned for removal in
-     *     Nacos 3.4.0.
-     */
-    @Deprecated
-    public void setLegacyMcpImportApiEnabled(boolean legacyMcpImportApiEnabled) {
-        this.legacyMcpImportApiEnabled = legacyMcpImportApiEnabled;
-    }
-
+    
     /**
      * Whether user-provided URLs are allowed by the legacy MCP import API.
      *
@@ -158,7 +120,7 @@ public class AiResourceImportProperties {
     public boolean isAllowUserUrl() {
         return allowUserUrl;
     }
-
+    
     /**
      * Set whether user-provided URLs are allowed by the legacy MCP import API.
      *

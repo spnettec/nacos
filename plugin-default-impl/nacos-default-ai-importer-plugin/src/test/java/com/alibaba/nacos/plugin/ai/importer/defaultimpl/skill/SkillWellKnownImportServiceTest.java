@@ -70,25 +70,25 @@ import static org.mockito.Mockito.when;
  */
 @ExtendWith(MockitoExtension.class)
 class SkillWellKnownImportServiceTest {
-
+    
     private static final String ENDPOINT = "https://registry.example.com/registry/public";
-
+    
     private static final String LEGACY_ENDPOINT = "https://registry.example.com/legacy";
-
+    
     private static final String VERSION_020_ENDPOINT = "https://registry.example.com/v2";
-
+    
     private static final String BAD_VERSION_020_ENDPOINT = "https://registry.example.com/bad-v2";
-
+    
     private static final String SCHEMA_0_2 =
         "https://schemas.agentskills.io/discovery/0.2.0/schema.json";
-
+    
     @Mock
     private HttpClient httpClient;
-
+    
     private SkillWellKnownImportService importService;
-
+    
     private byte[] version020ArchiveBytes;
-
+    
     @BeforeEach
     void setUp() throws Exception {
         version020ArchiveBytes = tarGzSkillArchive();
@@ -97,15 +97,15 @@ class SkillWellKnownImportServiceTest {
             .thenAnswer(invocation -> responseFor(invocation.getArgument(0)));
         importService = newService(ENDPOINT);
     }
-
+    
     @Test
     void testSearchReturnsFilteredSkillCandidates() throws Exception {
         AiResourceImportContext context = newContext();
         context.setQuery("demo");
         context.setLimit(10);
-
+        
         AiResourceImportCandidatePage result = importService.search(context);
-
+        
         assertEquals(1, result.getItems().size());
         assertEquals("demo-skill", result.getItems().get(0).getExternalId());
         assertEquals(SkillWellKnownImportService.RESOURCE_TYPE_SKILL,
@@ -114,11 +114,11 @@ class SkillWellKnownImportServiceTest {
         assertEquals("2", result.getItems().get(0).getMetadata().get("fileCount"));
         assertFalse(result.isHasMore());
     }
-
+    
     @Test
     void testFetchReturnsSkillZipArtifact() throws Exception {
         AiResourceImportArtifact result = importService.fetch(newContext(), item("demo-skill"));
-
+        
         assertEquals(SkillWellKnownImportService.RESOURCE_TYPE_SKILL, result.getResourceType());
         assertEquals(AiResourceImportPayloadKind.SKILL_ZIP, result.getPayloadKind());
         assertEquals("demo-skill", result.getName());
@@ -126,50 +126,50 @@ class SkillWellKnownImportServiceTest {
         assertZipEntryContains(result.getPayload(), "demo-skill/SKILL.md", "name: demo-skill");
         assertZipEntryContains(result.getPayload(), "demo-skill/docs/guide.md", "# Guide");
     }
-
+    
     @Test
     void testSearchFallsBackToLegacyWellKnownSkillsPath() throws Exception {
         AiResourceImportContext context = newContext();
-
+        
         AiResourceImportCandidatePage result = newService(LEGACY_ENDPOINT).search(context);
-
+        
         assertEquals(1, result.getItems().size());
         assertEquals("legacy-skill", result.getItems().get(0).getExternalId());
         assertEquals("https://registry.example.com/legacy/.well-known/skills",
             result.getItems().get(0).getMetadata().get("source"));
     }
-
+    
     @Test
     void testFetchVersion020SkillMdReturnsSkillZipArtifact() throws Exception {
         AiResourceImportArtifact result = newService(VERSION_020_ENDPOINT)
             .fetch(newContext(), item("md-skill"));
-
+        
         assertEquals(SkillWellKnownImportService.RESOURCE_TYPE_SKILL, result.getResourceType());
         assertEquals(AiResourceImportPayloadKind.SKILL_ZIP, result.getPayloadKind());
         assertEquals("md-skill", result.getName());
         assertEquals("skill-md", result.getSourceMetadata().get("distributionType"));
         assertZipEntryContains(result.getPayload(), "md-skill/SKILL.md", "name: md-skill");
     }
-
+    
     @Test
     void testFetchVersion020TarGzArchiveReturnsSkillZipArtifact() throws Exception {
         AiResourceImportArtifact result = newService(VERSION_020_ENDPOINT)
             .fetch(newContext(), item("archive-skill"));
-
+        
         assertEquals("archive-skill", result.getName());
         assertEquals("archive", result.getSourceMetadata().get("distributionType"));
         assertZipEntryContains(result.getPayload(), "archive-skill/SKILL.md",
             "name: archive-skill");
         assertZipEntryContains(result.getPayload(), "archive-skill/docs/guide.md", "# Guide");
     }
-
+    
     @Test
     void testFetchVersion020RejectsDigestMismatch() {
         assertThrows(NacosException.class,
             () -> newService(BAD_VERSION_020_ENDPOINT)
                 .fetch(newContext(), item("md-skill")));
     }
-
+    
     @Test
     void testSearchHandlesCursorAndUnsupportedEntries() throws Exception {
         SkillWellKnownImportService service = serviceWithResponses(
@@ -183,16 +183,16 @@ class SkillWellKnownImportServiceTest {
         context.setQuery("matched");
         context.setCursor("abc");
         context.setLimit(1);
-
+        
         AiResourceImportCandidatePage result = service.search(context);
-
+        
         assertEquals(1, result.getItems().size());
         assertEquals("matched", result.getItems().get(0).getExternalId());
-
+        
         context.setCursor("0");
         assertEquals(1, service.search(context).getItems().size());
     }
-
+    
     @Test
     void testSearchReturnsEmptyForEmptyIndexAndWrapsFailures() throws Exception {
         SkillWellKnownImportService emptyService = serviceWithResponses(
@@ -200,27 +200,27 @@ class SkillWellKnownImportServiceTest {
                 importResponse(200, "{\"skills\":[]}")));
         assertTrue(emptyService.search(newContext()).getItems()
             .isEmpty());
-
+        
         SkillWellKnownImportService nullIndexService = serviceWithResponses(
             responseMap("https://registry.example.com/.well-known/agent-skills/index.json",
                 importResponse(200, "null")));
         assertThrows(NacosException.class,
             () -> nullIndexService.search(newContext()));
-
+        
         SkillWellKnownImportService badSchemaService = serviceWithResponses(
             responseMap("https://registry.example.com/.well-known/agent-skills/index.json",
                 importResponse(200,
                     "{\"$schema\":\"https://example.com/unsupported\",\"skills\":[]}")));
         assertThrows(NacosException.class,
             () -> badSchemaService.search(newContext()));
-
+        
         DefaultImportHttpClient client = Mockito.mock(DefaultImportHttpClient.class);
         when(client.get(any(String.class), eq(20), eq("*/*")))
             .thenThrow(new IllegalStateException("boom"));
         assertThrows(NacosException.class,
             () -> new SkillWellKnownImportService("https://registry.example.com", 500,
                 10L * 1024L * 1024L, client).search(newContext()));
-
+        
         SkillWellKnownImportService allFailService = serviceWithResponses(responseMap(
             "https://registry.example.com/.well-known/agent-skills/index.json",
             importResponse(404, ""),
@@ -229,21 +229,21 @@ class SkillWellKnownImportServiceTest {
         assertThrows(NacosException.class,
             () -> allFailService.search(newContext()));
     }
-
+    
     @Test
     void testFetchRejectsInvalidItemsAndEndpoint() {
         assertThrows(NacosException.class, () -> importService.fetch(newContext(), null));
         assertThrows(NacosException.class, () -> importService.fetch(newContext(), item(" ")));
         assertNotNull(new SkillWellKnownImportService("https://registry.example.com", 500,
             10L * 1024L * 1024L, httpClient));
-
+        
         SkillWellKnownImportService blankEndpointService =
             new SkillWellKnownImportService(" ", 500, 10L * 1024L * 1024L,
                 Mockito.mock(DefaultImportHttpClient.class));
         assertThrows(NacosException.class,
             () -> blankEndpointService.search(newContext()));
     }
-
+    
     @Test
     void testFetchVersion020RejectsBlankUrlAndUnsupportedType() throws Exception {
         SkillWellKnownImportService blankUrlService = serviceWithResponses(
@@ -254,7 +254,7 @@ class SkillWellKnownImportServiceTest {
         assertThrows(NacosException.class,
             () -> blankUrlService.fetch(newContext(),
                 item("blank-url")));
-
+        
         byte[] markdown = skillMarkdown("unknown-type").getBytes(StandardCharsets.UTF_8);
         SkillWellKnownImportService unsupportedTypeService = serviceWithResponses(responseMap(
             "https://registry.example.com/.well-known/agent-skills/index.json",
@@ -268,7 +268,7 @@ class SkillWellKnownImportServiceTest {
             () -> unsupportedTypeService.fetch(newContext(),
                 item("unknown-type")));
     }
-
+    
     @Test
     void testFetchVersion020RejectsArtifactHttpErrorAndDigest() throws Exception {
         SkillWellKnownImportService httpErrorService = serviceWithResponses(responseMap(
@@ -281,7 +281,7 @@ class SkillWellKnownImportServiceTest {
         assertThrows(NacosException.class,
             () -> httpErrorService.fetch(newContext(),
                 item("md-skill")));
-
+        
         SkillWellKnownImportService blankDigestService = serviceWithResponses(responseMap(
             "https://registry.example.com/.well-known/agent-skills/index.json",
             importResponse(200, "{\"$schema\":\"" + SCHEMA_0_2 + "\",\"skills\":["
@@ -293,7 +293,7 @@ class SkillWellKnownImportServiceTest {
         assertThrows(NacosException.class,
             () -> blankDigestService.fetch(newContext(),
                 item("md-skill")));
-
+        
         SkillWellKnownImportService invalidDigestService = serviceWithResponses(responseMap(
             "https://registry.example.com/.well-known/agent-skills/index.json",
             importResponse(200, "{\"$schema\":\"" + SCHEMA_0_2 + "\",\"skills\":["
@@ -306,7 +306,7 @@ class SkillWellKnownImportServiceTest {
             () -> invalidDigestService.fetch(newContext(),
                 item("md-skill")));
     }
-
+    
     @Test
     void testFetchVersion020ZipAndTarArchives() throws Exception {
         byte[] zip = zipBytes("zip-skill/SKILL.md", skillMarkdown("zip-skill"));
@@ -322,13 +322,13 @@ class SkillWellKnownImportServiceTest {
             importResponse(200, zip, "application/zip"),
             "https://registry.example.com/.well-known/agent-skills/tar-skill.tar",
             importResponse(200, tar, "application/x-tar")));
-
+        
         assertZipEntryContains(service.fetch(newContext(),
             item("zip-skill")).getPayload(), "zip-skill/SKILL.md", "name: zip-skill");
         assertZipEntryContains(service.fetch(newContext(),
             item("tar-skill")).getPayload(), "tar-skill/SKILL.md", "name: tar-skill");
     }
-
+    
     @Test
     void testFetchVersion020RejectsUnsupportedArchiveAndOversizedArtifact() throws Exception {
         byte[] bytes = skillMarkdown("archive-skill").getBytes(StandardCharsets.UTF_8);
@@ -342,7 +342,7 @@ class SkillWellKnownImportServiceTest {
         assertThrows(NacosException.class,
             () -> service.fetch(newContext(),
                 item("archive-skill")));
-
+        
         SkillWellKnownImportService smallService =
             serviceWithResponses("https://registry.example.com", 1L, responseMap(
                 "https://registry.example.com/.well-known/agent-skills/index.json",
@@ -355,7 +355,7 @@ class SkillWellKnownImportServiceTest {
         assertThrows(NacosException.class,
             () -> smallService.fetch(newContext(), item("archive-skill")));
     }
-
+    
     @Test
     void testArchiveConversionBoundaryBranches() throws Exception {
         Method convert = SkillWellKnownImportService.class.getDeclaredMethod("convertTarToZip",
@@ -363,7 +363,7 @@ class SkillWellKnownImportServiceTest {
         convert.setAccessible(true);
         byte[] zip = (byte[]) convert.invoke(importService, tarWithDirectoryAndDuplicate(), false);
         assertZipEntryContains(zip, "archive-skill/SKILL.md", "name: archive-skill");
-
+        
         assertThrows(Exception.class, () -> convert.invoke(importService, tarWithManyEntries(),
             false));
         assertThrows(Exception.class, () -> convert.invoke(importService, tarWithLargeEntry(),
@@ -371,13 +371,13 @@ class SkillWellKnownImportServiceTest {
         byte[] blankNameZip = (byte[]) convert.invoke(importService, tarWithBlankEntryName(),
             false);
         assertEquals(0, countZipEntries(blankNameZip));
-
+        
         Method normalize = SkillWellKnownImportService.class.getDeclaredMethod(
             "normalizeArchiveEntryName", String.class);
         normalize.setAccessible(true);
         assertNull(normalize.invoke(importService, " "));
     }
-
+    
     @Test
     void testFetchVersion010DefaultFilesAndEndpointVariants() throws Exception {
         Map<String, ImportHttpResponse> responses = responseMap(
@@ -389,7 +389,7 @@ class SkillWellKnownImportServiceTest {
             "https://registry.example.com/.well-known/skills/", responses);
         assertZipEntryContains(wellKnownService.fetch(newContext(), item("default-file"))
             .getPayload(), "default-file/SKILL.md", "name: default-file");
-
+        
         Map<String, ImportHttpResponse> indexResponses = responseMap(
             "https://registry.example.com/index.json",
             importResponse(200, "{\"skills\":[{\"name\":\"index-file\"}]}"),
@@ -398,12 +398,12 @@ class SkillWellKnownImportServiceTest {
         assertZipEntryContains(serviceWithResponses("https://registry.example.com/index.json",
             indexResponses).fetch(newContext(), item("index-file"))
             .getPayload(), "index-file/SKILL.md", "name: index-file");
-
+        
         Method trim = SkillWellKnownImportService.class.getDeclaredMethod("trimTrailingSlash",
             String.class);
         trim.setAccessible(true);
         assertThrows(Exception.class, () -> trim.invoke(importService, " "));
-
+        
         Method base = SkillWellKnownImportService.class.getDeclaredMethod("wellKnownBase",
             String.class);
         base.setAccessible(true);
@@ -411,7 +411,7 @@ class SkillWellKnownImportServiceTest {
             base.invoke(importService, "https://registry.example.com/custom-index.json"));
         assertEquals("https://registry.example.com/plain",
             base.invoke(importService, "https://registry.example.com/plain"));
-
+        
         SkillWellKnownImportService missingFileService = serviceWithResponses(responseMap(
             "https://registry.example.com/.well-known/agent-skills/index.json",
             importResponse(200, "{\"skills\":[{\"name\":\"missing-file\"}]}"),
@@ -421,26 +421,26 @@ class SkillWellKnownImportServiceTest {
             () -> missingFileService.fetch(newContext(),
                 item("missing-file")));
     }
-
+    
     @Test
     void testFetchRejectsMissingSkill() {
         assertThrows(NacosException.class,
             () -> importService.fetch(newContext(), item("missing-skill")));
     }
-
+    
     private AiResourceImportContext newContext() {
         AiResourceImportContext context = new AiResourceImportContext();
         context.setNamespaceId("public");
         return context;
     }
-
+    
     private AiResourceImportItem item(String skillName) {
         AiResourceImportItem item = new AiResourceImportItem();
         item.setExternalId(skillName);
         item.setName(skillName);
         return item;
     }
-
+    
     private String indexJson() {
         return "{\"skills\":["
             + "{\"name\":\"demo-skill\",\"description\":\"Demo skill\","
@@ -449,14 +449,14 @@ class SkillWellKnownImportServiceTest {
             + "\"files\":[\"SKILL.md\"]}"
             + "]}";
     }
-
+    
     private String legacyIndexJson() {
         return "{\"skills\":["
             + "{\"name\":\"legacy-skill\",\"description\":\"Legacy skill\","
             + "\"files\":[\"SKILL.md\"]}"
             + "]}";
     }
-
+    
     private String version020IndexJson() throws Exception {
         byte[] markdown = skillMarkdown("md-skill").getBytes(StandardCharsets.UTF_8);
         return "{\"$schema\":\"" + SCHEMA_0_2 + "\",\"skills\":["
@@ -470,7 +470,7 @@ class SkillWellKnownImportServiceTest {
             + "\"digest\":\"sha256:" + sha256Hex(version020ArchiveBytes) + "\"}"
             + "]}";
     }
-
+    
     private String badVersion020IndexJson() {
         return "{\"$schema\":\"" + SCHEMA_0_2 + "\",\"skills\":["
             + "{\"name\":\"md-skill\",\"type\":\"skill-md\","
@@ -479,7 +479,7 @@ class SkillWellKnownImportServiceTest {
             + "\"digest\":\"sha256:0000000000000000000000000000000000000000000000000000000000000000\"}"
             + "]}";
     }
-
+    
     private String skillMarkdown(String name) {
         String description = "Demo skill";
         if ("other-skill".equals(name)) {
@@ -494,7 +494,7 @@ class SkillWellKnownImportServiceTest {
         return "---\nname: " + name + "\ndescription: " + description
             + "\nversion: 1.2.3\n---\n\nUse this skill.";
     }
-
+    
     private HttpResponse<byte[]> responseFor(HttpRequest request) throws Exception {
         String path = request.uri().getPath();
         if ("/registry/public/.well-known/agent-skills/index.json".equals(path)) {
@@ -536,58 +536,58 @@ class SkillWellKnownImportServiceTest {
         }
         return response(404, "");
     }
-
+    
     private HttpResponse<byte[]> response(int status, String body) {
         return response(status, body.getBytes(StandardCharsets.UTF_8), "application/json");
     }
-
+    
     private HttpResponse<byte[]> response(int status, byte[] bytes, String contentType) {
         Map<String, java.util.List<String>> headers = new HashMap<>(1);
         headers.put("Content-Type", Collections.singletonList(contentType));
         return new HttpResponse<>() {
-
+            
             @Override
             public int statusCode() {
                 return status;
             }
-
+            
             @Override
             public HttpRequest request() {
                 return null;
             }
-
+            
             @Override
             public Optional<HttpResponse<byte[]>> previousResponse() {
                 return Optional.empty();
             }
-
+            
             @Override
             public HttpHeaders headers() {
                 return HttpHeaders.of(headers, (key, value) -> true);
             }
-
+            
             @Override
             public byte[] body() {
                 return bytes;
             }
-
+            
             @Override
             public Optional<SSLSession> sslSession() {
                 return Optional.empty();
             }
-
+            
             @Override
             public java.net.URI uri() {
                 return null;
             }
-
+            
             @Override
             public HttpClient.Version version() {
                 return HttpClient.Version.HTTP_1_1;
             }
         };
     }
-
+    
     private Map<String, ImportHttpResponse> responseMap(Object... keyValues) {
         Map<String, ImportHttpResponse> result = new LinkedHashMap<>();
         for (int i = 0; i < keyValues.length; i += 2) {
@@ -595,18 +595,18 @@ class SkillWellKnownImportServiceTest {
         }
         return result;
     }
-
+    
     private SkillWellKnownImportService serviceWithResponses(
         Map<String, ImportHttpResponse> responses) throws Exception {
         return serviceWithResponses("https://registry.example.com",
             10L * 1024L * 1024L, responses);
     }
-
+    
     private SkillWellKnownImportService serviceWithResponses(String endpoint,
         Map<String, ImportHttpResponse> responses) throws Exception {
         return serviceWithResponses(endpoint, 10L * 1024L * 1024L, responses);
     }
-
+    
     private SkillWellKnownImportService serviceWithResponses(String endpoint,
         long maxArtifactSize, Map<String, ImportHttpResponse> responses) throws Exception {
         DefaultImportHttpClient client = Mockito.mock(DefaultImportHttpClient.class);
@@ -621,29 +621,29 @@ class SkillWellKnownImportServiceTest {
             });
         return new SkillWellKnownImportService(endpoint, 500, maxArtifactSize, client);
     }
-
+    
     private SkillWellKnownImportService newService(String endpoint) throws Exception {
         DefaultImportHttpClient client = new DefaultImportHttpClient(httpClient,
             host -> new InetAddress[] {InetAddress.getByName("93.184.216.34")});
         return new SkillWellKnownImportService(endpoint, 500,
             10L * 1024L * 1024L, client);
     }
-
+    
     private ImportHttpResponse importResponse(int status, byte[] bytes, String contentType) {
         Map<String, java.util.List<String>> headers = new HashMap<>(1);
         headers.put("Content-Type", Collections.singletonList(contentType));
         return new ImportHttpResponse("https://registry.example.com/artifact", status,
             HttpHeaders.of(headers, (key, value) -> true), bytes);
     }
-
+    
     private ImportHttpResponse importResponse(int status, String body) {
         return importResponse(status, body.getBytes(StandardCharsets.UTF_8), "application/json");
     }
-
+    
     private ImportHttpResponse importResponse(int status, String body, String contentType) {
         return importResponse(status, body.getBytes(StandardCharsets.UTF_8), contentType);
     }
-
+    
     private byte[] zipBytes(String name, String content) throws Exception {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         try (java.util.zip.ZipOutputStream zip =
@@ -654,7 +654,7 @@ class SkillWellKnownImportServiceTest {
         }
         return output.toByteArray();
     }
-
+    
     private byte[] tarGzSkillArchive() throws Exception {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         try (GzipCompressorOutputStream gzip = new GzipCompressorOutputStream(output);
@@ -666,7 +666,7 @@ class SkillWellKnownImportServiceTest {
         }
         return output.toByteArray();
     }
-
+    
     private byte[] tarSkillArchive() throws Exception {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         try (TarArchiveOutputStream tar = new TarArchiveOutputStream(output)) {
@@ -675,7 +675,7 @@ class SkillWellKnownImportServiceTest {
         }
         return output.toByteArray();
     }
-
+    
     private byte[] tarWithDirectoryAndDuplicate() throws Exception {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         try (TarArchiveOutputStream tar = new TarArchiveOutputStream(output)) {
@@ -690,7 +690,7 @@ class SkillWellKnownImportServiceTest {
         }
         return output.toByteArray();
     }
-
+    
     private byte[] tarWithManyEntries() throws Exception {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         try (TarArchiveOutputStream tar = new TarArchiveOutputStream(output)) {
@@ -701,7 +701,7 @@ class SkillWellKnownImportServiceTest {
         }
         return output.toByteArray();
     }
-
+    
     private byte[] tarWithLargeEntry() throws Exception {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         try (TarArchiveOutputStream tar = new TarArchiveOutputStream(output)) {
@@ -710,7 +710,7 @@ class SkillWellKnownImportServiceTest {
         }
         return output.toByteArray();
     }
-
+    
     private byte[] tarWithBlankEntryName() throws Exception {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         try (TarArchiveOutputStream tar = new TarArchiveOutputStream(output)) {
@@ -718,7 +718,7 @@ class SkillWellKnownImportServiceTest {
         }
         return output.toByteArray();
     }
-
+    
     private void addTarEntry(TarArchiveOutputStream tar, String name, byte[] bytes)
         throws Exception {
         TarArchiveEntry entry = new TarArchiveEntry(name);
@@ -729,7 +729,7 @@ class SkillWellKnownImportServiceTest {
         }
         tar.closeArchiveEntry();
     }
-
+    
     private String sha256Hex(byte[] bytes) throws Exception {
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
         byte[] hash = digest.digest(bytes);
@@ -739,7 +739,7 @@ class SkillWellKnownImportServiceTest {
         }
         return result.toString();
     }
-
+    
     private void assertZipEntryContains(byte[] zipBytes, String entryName, String expected)
         throws Exception {
         try (ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(zipBytes),
@@ -756,7 +756,7 @@ class SkillWellKnownImportServiceTest {
         }
         throw new AssertionError("Zip entry not found: " + entryName);
     }
-
+    
     private int countZipEntries(byte[] zipBytes) throws Exception {
         int count = 0;
         try (ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(zipBytes),

@@ -22,17 +22,17 @@ package com.alibaba.nacos.ai.service.search;
  * @author nacos
  */
 public interface AiResourceEmbeddingService {
-
+    
     /**
      * Embedding model identifier persisted with vector rows.
      */
     String model();
-
+    
     /**
      * Embedding vector dimension.
      */
     int dimension();
-
+    
     /**
      * Embed text into a normalized vector.
      */

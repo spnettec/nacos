@@ -28,27 +28,27 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ConfigTagsRelationMapperByOracleTest {
-
+    
     int startRow = 0;
-
+    
     int pageSize = 5;
-
+    
     String tenantId = "tenantId";
-
+    
     String dataId = "dataId";
-
+    
     String groupId = "groupId";
-
+    
     String appName = "appName";
-
+    
     String content = "content";
-
+    
     String[] tagArr = new String[] {"tag1", "tag2"};
-
+    
     MapperContext context;
-
+    
     private ConfigTagsRelationMapperByOracle configTagsRelationMapperByOracle;
-
+    
     @BeforeEach
     void setUp() throws Exception {
         configTagsRelationMapperByOracle = new ConfigTagsRelationMapperByOracle();
@@ -60,7 +60,7 @@ class ConfigTagsRelationMapperByOracleTest {
         context.putWhereParameter(FieldConstant.CONTENT, content);
         context.putWhereParameter(FieldConstant.TAG_ARR, tagArr);
     }
-
+    
     @Test
     void testFindConfigInfo4PageFetchRows() {
         MapperResult mapperResult =
@@ -77,7 +77,7 @@ class ConfigTagsRelationMapperByOracleTest {
         assertTrue(mapperResult.getParamList().contains(groupId));
         assertTrue(mapperResult.getParamList().contains(appName));
     }
-
+    
     @Test
     void testFindConfigInfoLike4PageFetchRows() {
         MapperResult mapperResult =
@@ -90,7 +90,7 @@ class ConfigTagsRelationMapperByOracleTest {
         assertTrue(sql.contains("ORDER BY a.id"));
         assertTrue(mapperResult.getParamList().contains(tenantId));
     }
-
+    
     @Test
     void testFindConfigInfoLike4PageCountRowsDeclaresLikeEscape() {
         MapperResult mapperResult =
@@ -102,7 +102,7 @@ class ConfigTagsRelationMapperByOracleTest {
         assertTrue(sql.contains("a.content LIKE ? ESCAPE '\\'"));
         assertTrue(sql.contains("b.tag_name LIKE ? ESCAPE '\\'"));
     }
-
+    
     @Test
     void testFindConfigInfoLike4PageFetchRowsDeclaresLikeEscape() {
         MapperResult mapperResult =
@@ -114,13 +114,13 @@ class ConfigTagsRelationMapperByOracleTest {
         assertTrue(sql.contains("a.content LIKE ? ESCAPE '\\'"));
         assertTrue(sql.contains("b.tag_name LIKE ? ESCAPE '\\'"));
     }
-
+    
     @Test
     void testGetTableName() {
         String tableName = configTagsRelationMapperByOracle.getTableName();
         assertEquals(TableConstant.CONFIG_TAGS_RELATION, tableName);
     }
-
+    
     @Test
     void testGetDataSource() {
         String dataSource = configTagsRelationMapperByOracle.getDataSource();

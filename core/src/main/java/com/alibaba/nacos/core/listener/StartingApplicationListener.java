@@ -37,14 +37,14 @@ import java.nio.file.Paths;
  * @since 0.5.0
  */
 public class StartingApplicationListener implements NacosApplicationListener {
-
+    
     private static final Logger LOGGER = LoggerFactory.getLogger(StartingApplicationListener.class);
-
+    
     @Override
     public void starting() {
         NacosStartUpManager.getCurrentStartUp().starting();
     }
-
+    
     @Override
     public void environmentPrepared(ConfigurableEnvironment environment) {
         NacosStartUp currentStartUp = NacosStartUpManager.getCurrentStartUp();
@@ -53,12 +53,12 @@ public class StartingApplicationListener implements NacosApplicationListener {
         currentStartUp.loadPreProperties(environment);
         currentStartUp.initSystemProperty();
     }
-
+    
     @Override
     public void contextPrepared(ConfigurableApplicationContext context) {
         NacosStartUpManager.getCurrentStartUp().logStartingInfo(LOGGER);
     }
-
+    
     @Override
     public void contextLoaded(ConfigurableApplicationContext context) {
         NacosStartUp currentStartUp = NacosStartUpManager.getCurrentStartUp();
@@ -71,7 +71,7 @@ public class StartingApplicationListener implements NacosApplicationListener {
         }
         currentStartUp.customEnvironment();
     }
-
+    
     @Override
     public void started(ConfigurableApplicationContext context) {
         NacosStartUp currentStartUp = NacosStartUpManager.getCurrentStartUp();
@@ -84,7 +84,7 @@ public class StartingApplicationListener implements NacosApplicationListener {
         currentStartUp.started();
         currentStartUp.logStarted(LOGGER);
     }
-
+    
     @Override
     public void failed(ConfigurableApplicationContext context, Throwable exception) {
         for (NacosStartUp each : NacosStartUpManager.getReverseStartedList()) {

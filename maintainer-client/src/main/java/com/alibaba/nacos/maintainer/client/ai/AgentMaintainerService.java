@@ -38,7 +38,7 @@ import com.alibaba.nacos.api.model.Page;
  * @author Nacos
  */
 public interface AgentMaintainerService {
-
+    
     /**
      * Get an Agent overview.
      *
@@ -49,7 +49,7 @@ public interface AgentMaintainerService {
      */
     @Since("3.3.0")
     AgentOverview getAgent(String namespaceId, String agentName) throws NacosException;
-
+    
     /**
      * Get an Agent overview from the default namespace.
      *
@@ -61,7 +61,7 @@ public interface AgentMaintainerService {
     default AgentOverview getAgent(String agentName) throws NacosException {
         return getAgent(Constants.DEFAULT_NAMESPACE_ID, agentName);
     }
-
+    
     /**
      * Update writable Agent metadata.
      *
@@ -72,7 +72,7 @@ public interface AgentMaintainerService {
      */
     @Since("3.3.0")
     Agent updateAgent(String namespaceId, AgentUpdateRequest request) throws NacosException;
-
+    
     /**
      * Update Agent metadata in the default namespace.
      *
@@ -84,7 +84,7 @@ public interface AgentMaintainerService {
     default Agent updateAgent(AgentUpdateRequest request) throws NacosException {
         return updateAgent(Constants.DEFAULT_NAMESPACE_ID, request);
     }
-
+    
     /**
      * Delete an Agent definition and all of its Version content.
      *
@@ -94,7 +94,7 @@ public interface AgentMaintainerService {
      */
     @Since("3.3.0")
     void deleteAgent(String namespaceId, String agentName) throws NacosException;
-
+    
     /**
      * Delete an Agent from the default namespace.
      *
@@ -105,7 +105,7 @@ public interface AgentMaintainerService {
     default void deleteAgent(String agentName) throws NacosException {
         deleteAgent(Constants.DEFAULT_NAMESPACE_ID, agentName);
     }
-
+    
     /**
      * List Agent summaries.
      *
@@ -123,7 +123,7 @@ public interface AgentMaintainerService {
     @Since("3.3.0")
     Page<AgentSummary> listAgents(String namespaceId, String agentName, String bizTag,
         String scope, String owner, String orderBy, int pageNo, int pageSize) throws NacosException;
-
+    
     /**
      * List Agent summaries in the default namespace.
      *
@@ -144,7 +144,7 @@ public interface AgentMaintainerService {
         return listAgents(Constants.DEFAULT_NAMESPACE_ID, agentName, bizTag, scope, owner, orderBy,
             pageNo, pageSize);
     }
-
+    
     /**
      * List Agent Version summaries.
      *
@@ -159,7 +159,7 @@ public interface AgentMaintainerService {
     @Since("3.3.0")
     Page<AgentVersionSummary> listAgentVersions(String namespaceId, String agentName,
         String status, int pageNo, int pageSize) throws NacosException;
-
+    
     /**
      * List Agent Version summaries in the default namespace.
      *
@@ -176,7 +176,7 @@ public interface AgentMaintainerService {
         return listAgentVersions(Constants.DEFAULT_NAMESPACE_ID, agentName, status, pageNo,
             pageSize);
     }
-
+    
     /**
      * Get one exact Agent Version.
      *
@@ -189,7 +189,7 @@ public interface AgentMaintainerService {
     @Since("3.3.0")
     AgentVersionDetail getAgentVersion(String namespaceId, String agentName, String version)
         throws NacosException;
-
+    
     /**
      * Get one exact Agent Version from the default namespace.
      *
@@ -203,7 +203,7 @@ public interface AgentMaintainerService {
         throws NacosException {
         return getAgentVersion(Constants.DEFAULT_NAMESPACE_ID, agentName, version);
     }
-
+    
     /**
      * Get one protocol's complete Runtime Endpoint snapshot.
      *
@@ -217,7 +217,7 @@ public interface AgentMaintainerService {
     @Since("3.3.0")
     RuntimeEndpointSnapshot getRuntimeEndpoints(String namespaceId, String agentName,
         String protocol, String version) throws NacosException;
-
+    
     /**
      * Get a Runtime Endpoint snapshot from the default namespace.
      *
@@ -232,7 +232,7 @@ public interface AgentMaintainerService {
         String version) throws NacosException {
         return getRuntimeEndpoints(Constants.DEFAULT_NAMESPACE_ID, agentName, protocol, version);
     }
-
+    
     /**
      * Create an initial or subsequent Agent draft.
      *
@@ -244,7 +244,7 @@ public interface AgentMaintainerService {
     @Since("3.3.0")
     AgentVersionDetail createDraft(String namespaceId, AgentDraftCreateRequest request)
         throws NacosException;
-
+    
     /**
      * Create an initial or subsequent draft in the default namespace.
      *
@@ -256,7 +256,7 @@ public interface AgentMaintainerService {
     default AgentVersionDetail createDraft(AgentDraftCreateRequest request) throws NacosException {
         return createDraft(Constants.DEFAULT_NAMESPACE_ID, request);
     }
-
+    
     /**
      * Update one exact Agent draft.
      *
@@ -268,7 +268,7 @@ public interface AgentMaintainerService {
     @Since("3.3.0")
     AgentVersionDetail updateDraft(String namespaceId, AgentDraftUpdateRequest request)
         throws NacosException;
-
+    
     /**
      * Update a draft in the default namespace.
      *
@@ -280,7 +280,7 @@ public interface AgentMaintainerService {
     default AgentVersionDetail updateDraft(AgentDraftUpdateRequest request) throws NacosException {
         return updateDraft(Constants.DEFAULT_NAMESPACE_ID, request);
     }
-
+    
     /**
      * Delete one exact Agent draft.
      *
@@ -291,7 +291,7 @@ public interface AgentMaintainerService {
      */
     @Since("3.3.0")
     void deleteDraft(String namespaceId, String agentName, String version) throws NacosException;
-
+    
     /**
      * Delete a draft from the default namespace.
      *
@@ -303,7 +303,7 @@ public interface AgentMaintainerService {
     default void deleteDraft(String agentName, String version) throws NacosException {
         deleteDraft(Constants.DEFAULT_NAMESPACE_ID, agentName, version);
     }
-
+    
     /**
      * Submit one exact Agent Version.
      *
@@ -315,7 +315,7 @@ public interface AgentMaintainerService {
     @Since("3.3.0")
     AgentVersionSummary submit(String namespaceId, AgentVersionCommand command)
         throws NacosException;
-
+    
     /**
      * Submit one exact Agent Version in the default namespace.
      *
@@ -327,7 +327,7 @@ public interface AgentMaintainerService {
     default AgentVersionSummary submit(AgentVersionCommand command) throws NacosException {
         return submit(Constants.DEFAULT_NAMESPACE_ID, command);
     }
-
+    
     /**
      * Publish one exact reviewed Agent Version.
      *
@@ -339,7 +339,7 @@ public interface AgentMaintainerService {
     @Since("3.3.0")
     AgentVersionSummary publish(String namespaceId, AgentVersionCommand command)
         throws NacosException;
-
+    
     /**
      * Publish one exact reviewed Agent Version in the default namespace.
      *
@@ -351,7 +351,7 @@ public interface AgentMaintainerService {
     default AgentVersionSummary publish(AgentVersionCommand command) throws NacosException {
         return publish(Constants.DEFAULT_NAMESPACE_ID, command);
     }
-
+    
     /**
      * Force-publish one exact Agent Version.
      *
@@ -363,7 +363,7 @@ public interface AgentMaintainerService {
     @Since("3.3.0")
     AgentVersionSummary forcePublish(String namespaceId, AgentVersionCommand command)
         throws NacosException;
-
+    
     /**
      * Force-publish one exact Agent Version in the default namespace.
      *
@@ -375,7 +375,7 @@ public interface AgentMaintainerService {
     default AgentVersionSummary forcePublish(AgentVersionCommand command) throws NacosException {
         return forcePublish(Constants.DEFAULT_NAMESPACE_ID, command);
     }
-
+    
     /**
      * Move one reviewed Agent Version back to draft.
      *
@@ -387,7 +387,7 @@ public interface AgentMaintainerService {
     @Since("3.3.0")
     AgentVersionSummary redraft(String namespaceId, AgentVersionCommand command)
         throws NacosException;
-
+    
     /**
      * Move one reviewed Agent Version back to draft in the default namespace.
      *
@@ -399,7 +399,7 @@ public interface AgentMaintainerService {
     default AgentVersionSummary redraft(AgentVersionCommand command) throws NacosException {
         return redraft(Constants.DEFAULT_NAMESPACE_ID, command);
     }
-
+    
     /**
      * Bring one offline Agent Version online.
      *
@@ -411,7 +411,7 @@ public interface AgentMaintainerService {
     @Since("3.3.0")
     AgentVersionSummary online(String namespaceId, AgentVersionCommand command)
         throws NacosException;
-
+    
     /**
      * Bring one offline Agent Version online in the default namespace.
      *
@@ -423,7 +423,7 @@ public interface AgentMaintainerService {
     default AgentVersionSummary online(AgentVersionCommand command) throws NacosException {
         return online(Constants.DEFAULT_NAMESPACE_ID, command);
     }
-
+    
     /**
      * Take one online Agent Version offline.
      *
@@ -435,7 +435,7 @@ public interface AgentMaintainerService {
     @Since("3.3.0")
     AgentVersionSummary offline(String namespaceId, AgentVersionCommand command)
         throws NacosException;
-
+    
     /**
      * Take one online Agent Version offline in the default namespace.
      *
@@ -447,7 +447,7 @@ public interface AgentMaintainerService {
     default AgentVersionSummary offline(AgentVersionCommand command) throws NacosException {
         return offline(Constants.DEFAULT_NAMESPACE_ID, command);
     }
-
+    
     /**
      * Replace custom Agent labels.
      *
@@ -459,7 +459,7 @@ public interface AgentMaintainerService {
     @Since("3.3.0")
     Agent updateLabels(String namespaceId, AgentLabelsUpdateRequest request)
         throws NacosException;
-
+    
     /**
      * Replace custom Agent labels in the default namespace.
      *

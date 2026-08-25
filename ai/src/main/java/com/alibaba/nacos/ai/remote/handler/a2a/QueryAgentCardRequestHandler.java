@@ -45,17 +45,17 @@ import org.springframework.stereotype.Component;
 @Component
 public class QueryAgentCardRequestHandler
     extends RequestHandler<QueryAgentCardRequest, QueryAgentCardResponse> {
-
+    
     private static final Logger LOGGER =
         LoggerFactory.getLogger(QueryAgentCardRequestHandler.class);
-
+    
     private final A2aCompatibilityOperationService a2aServerOperationService;
-
+    
     public QueryAgentCardRequestHandler(
         A2aCompatibilityOperationService a2aServerOperationService) {
         this.a2aServerOperationService = a2aServerOperationService;
     }
-
+    
     @Override
     @NamespaceValidation
     @ExtractorManager.Extractor(rpcExtractor = AgentRequestParamExtractor.class)
@@ -71,7 +71,7 @@ public class QueryAgentCardRequestHandler
         }
         return doHandler(request);
     }
-
+    
     private QueryAgentCardResponse doHandler(QueryAgentCardRequest request) {
         QueryAgentCardResponse response = new QueryAgentCardResponse();
         try {

@@ -69,7 +69,8 @@ public class ClusterProtocolNegotiatorBuilderSingleton
      */
     @Override
     protected Pair<String, ProtocolNegotiatorBuilder> defaultBuilderPair() {
-        ClusterDefaultTlsProtocolNegotiatorBuilder builder = new ClusterDefaultTlsProtocolNegotiatorBuilder();
+        ClusterDefaultTlsProtocolNegotiatorBuilder builder =
+            new ClusterDefaultTlsProtocolNegotiatorBuilder();
         return Pair.with(builder.type(), builder);
     }
     

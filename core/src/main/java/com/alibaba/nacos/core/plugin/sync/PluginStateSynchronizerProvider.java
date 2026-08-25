@@ -26,14 +26,14 @@ package com.alibaba.nacos.core.plugin.sync;
  * @author Nacos
  */
 public interface PluginStateSynchronizerProvider {
-
+    
     /**
      * Get the stable synchronizer identity used by static selection.
      *
      * @return synchronizer name
      */
     String getName();
-
+    
     /**
      * Create a synchronizer with the Core-owned local apply context.
      *

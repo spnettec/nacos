@@ -44,29 +44,29 @@ import java.util.zip.Checksum;
  * @since 3.2.0
  */
 public class PluginStateSnapshotOperation implements SnapshotOperation {
-
+    
     private static final Logger LOGGER =
         LoggerFactory.getLogger(PluginStateSnapshotOperation.class);
-
+    
     private static final String SNAPSHOT_ARCHIVE = "plugin_state.zip";
-
+    
     private static final String SNAPSHOT_CHILD_NAME = "plugin";
-
+    
     private static final String CHECK_SUM_KEY = "checksum";
-
+    
     private final PluginManager pluginManager;
-
+    
     private final Serializer serializer;
-
+    
     private final ReentrantReadWriteLock lock;
-
+    
     public PluginStateSnapshotOperation(PluginManager pluginManager,
         ReentrantReadWriteLock lock) {
         this.pluginManager = pluginManager;
         this.serializer = SerializeFactory.getDefault();
         this.lock = lock;
     }
-
+    
     @Override
     public void onSnapshotSave(Writer writer, BiConsumer<Boolean, Throwable> callFinally) {
         lock.writeLock().lock();
@@ -75,34 +75,34 @@ public class PluginStateSnapshotOperation implements SnapshotOperation {
             Map<String, Boolean> states = pluginManager.getPersistedPluginStates();
             Map<String, Map<String, String>> configs =
                 pluginManager.getRuntimePersistedConfigs();
-
+            
             // Create snapshot
             PluginStateSnapshot snapshot = new PluginStateSnapshot();
             snapshot.setStates(states);
             snapshot.setConfigs(configs);
-
+            
             // Serialize
             byte[] data = serializer.serialize(snapshot);
-
+            
             // Write to snapshot with compression and checksum
             final String writePath = writer.getPath();
             final String outputFile = Paths.get(writePath, SNAPSHOT_ARCHIVE).toString();
             final Checksum checksum = new CRC64();
-
+            
             try (ByteArrayInputStream inputStream = new ByteArrayInputStream(data)) {
                 DiskUtils.compressIntoZipFile(SNAPSHOT_CHILD_NAME, inputStream, outputFile,
                     checksum);
             }
-
+            
             final LocalFileMeta meta = new LocalFileMeta();
             meta.append(CHECK_SUM_KEY, Long.toHexString(checksum.getValue()));
-
+            
             boolean success = writer.addFile(SNAPSHOT_ARCHIVE, meta);
-
+            
             LOGGER.info(
                 "[PluginStateSnapshotOperation] Snapshot saved: {} states, {} configs, success={}",
                 states.size(), configs.size(), success);
-
+            
             callFinally.accept(success, null);
         } catch (Exception e) {
             LOGGER.error("[PluginStateSnapshotOperation] Failed to save snapshot", e);
@@ -111,7 +111,7 @@ public class PluginStateSnapshotOperation implements SnapshotOperation {
             lock.writeLock().unlock();
         }
     }
-
+    
     @Override
     public boolean onSnapshotLoad(Reader reader) {
         lock.writeLock().lock();
@@ -120,9 +120,9 @@ public class PluginStateSnapshotOperation implements SnapshotOperation {
             final String readerPath = reader.getPath();
             final String sourceFile = Paths.get(readerPath, SNAPSHOT_ARCHIVE).toString();
             final Checksum checksum = new CRC64();
-
+            
             byte[] snapshotBytes = DiskUtils.decompress(sourceFile, checksum);
-
+            
             // Verify checksum
             LocalFileMeta fileMeta = reader.getFileMeta(SNAPSHOT_ARCHIVE);
             if (fileMeta.getFileMeta().containsKey(CHECK_SUM_KEY)) {
@@ -134,26 +134,26 @@ public class PluginStateSnapshotOperation implements SnapshotOperation {
                 LOGGER.warn(
                     "[PluginStateSnapshotOperation] Snapshot has no checksum metadata, data integrity not verified");
             }
-
+            
             // Deserialize
             PluginStateSnapshot snapshot =
                 serializer.deserialize(snapshotBytes, PluginStateSnapshot.class);
-
+            
             // Restore states
             Map<String, Boolean> states = snapshot.getStates();
             if (states != null) {
                 pluginManager.restorePluginStates(states);
             }
-
+            
             // Restore configs
             Map<String, Map<String, String>> configs = snapshot.getConfigs();
             if (configs != null) {
                 pluginManager.restorePluginConfigs(configs);
             }
-
+            
             LOGGER.info("[PluginStateSnapshotOperation] Snapshot loaded: {} states, {} configs",
                 states != null ? states.size() : 0, configs != null ? configs.size() : 0);
-
+            
             return true;
         } catch (Exception e) {
             LOGGER.error("[PluginStateSnapshotOperation] Failed to load snapshot", e);

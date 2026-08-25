@@ -33,17 +33,17 @@ import org.springframework.context.annotation.Conditional;
  */
 @Conditional(ConditionOnRemoteDatasource.class)
 public class NacosAuthPluginRemoteServiceConfig {
-
+    
     @Bean
     public NacosRoleService nacosRoleService() {
         return new NacosRoleServiceRemoteImpl();
     }
-
+    
     @Bean
     public NacosUserService nacosUserService() {
         return new NacosUserServiceRemoteImpl();
     }
-
+    
     @Bean
     public VisibilityGrantService visibilityGrantService() {
         return new RemoteVisibilityGrantService();

@@ -43,15 +43,15 @@ import java.util.Map;
  * @author nacos
  */
 public class AiPipelinePluginProvider implements PluginProvider<PublishPipelineService> {
-
+    
     private static final Logger LOGGER =
         LoggerFactory.getLogger(AiPipelinePluginProvider.class);
-
+    
     @Override
     public PluginType getPluginType() {
         return PluginType.AI_PIPELINE;
     }
-
+    
     @Override
     public Map<String, PublishPipelineService> getAllPlugins() {
         if (ApplicationUtils.getApplicationContext() == null) {

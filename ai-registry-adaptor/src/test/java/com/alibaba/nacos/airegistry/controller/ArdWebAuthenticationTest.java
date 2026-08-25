@@ -75,7 +75,7 @@ import static org.mockito.Mockito.when;
  * @author nacos
  */
 class ArdWebAuthenticationTest {
-
+    
     @Test
     void adaptorContextShouldRejectInvalidCredentialsAndPropagateValidIdentity() throws Exception {
         ConfigurableEnvironment previousEnvironment = EnvUtil.getEnvironment();
@@ -100,7 +100,7 @@ class ArdWebAuthenticationTest {
         ReflectionTestUtils.setField(authConfig, "nacosAuthSystemType", "test");
         ReflectionTestUtils.setField(authConfig, "serverIdentityKey", "nacos");
         ReflectionTestUtils.setField(authConfig, "serverIdentityValue", "nacos");
-
+        
         try (AnnotationConfigServletWebServerApplicationContext context =
             start(environment)) {
             AuthFilter authFilter = context.getBean(AuthFilter.class);
@@ -112,15 +112,15 @@ class ArdWebAuthenticationTest {
                 .thenReturn(rejectedIdentity);
             when(protocolAuthService.validateIdentity(eq(rejectedIdentity), any(Resource.class)))
                 .thenReturn(AuthResult.failureResult(401, "invalid token"));
-
+            
             int port = context.getWebServer().getPort();
             HttpResponse<String> rejected = get(port,
                 "/v3/ai/ard/agents?namespaceId=public&pageSize=1&accessToken=invalid");
-
+            
             assertEquals(401, rejected.statusCode());
             assertEquals("{\"errorCode\":\"UNAUTHENTICATED\","
                 + "\"message\":\"Code: 401, Message: invalid token.\"}", rejected.body());
-
+            
             reset(protocolAuthService);
             prepareProtocolAuth(protocolAuthService);
             IdentityContext acceptedIdentity = new IdentityContext();
@@ -137,10 +137,10 @@ class ArdWebAuthenticationTest {
                     .getIdentityContext() == acceptedIdentity);
                 return new ArdListResponse();
             });
-
+            
             HttpResponse<String> accepted = get(port,
                 "/v3/ai/ard/agents?namespaceId=public&pageSize=1&accessToken=valid");
-
+            
             assertEquals(200, accepted.statusCode());
             assertTrue(identityObserved.get());
             verify(protocolAuthService).validateAuthority(eq(acceptedIdentity),
@@ -156,7 +156,7 @@ class ArdWebAuthenticationTest {
             EnvUtil.setEnvironment(previousEnvironment);
         }
     }
-
+    
     private AnnotationConfigServletWebServerApplicationContext start(
         ConfigurableEnvironment environment) {
         AnnotationConfigServletWebServerApplicationContext context =
@@ -166,7 +166,7 @@ class ArdWebAuthenticationTest {
         context.refresh();
         return context;
     }
-
+    
     private void prepareProtocolAuth(HttpProtocolAuthService protocolAuthService)
         throws Exception {
         when(protocolAuthService.checkServerIdentity(any(HttpServletRequest.class),
@@ -175,13 +175,13 @@ class ArdWebAuthenticationTest {
         when(protocolAuthService.parseResource(any(HttpServletRequest.class),
             any(Secured.class))).thenReturn(Resource.EMPTY_RESOURCE);
     }
-
+    
     private HttpResponse<String> get(int port, String path) throws Exception {
         HttpRequest request = HttpRequest.newBuilder()
             .uri(URI.create("http://127.0.0.1:" + port + path)).GET().build();
         return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
     }
-
+    
     @Configuration(proxyBeanMethods = false)
     @EnableAutoConfiguration(exclude = {DataSourceAutoConfiguration.class,
         SecurityAutoConfiguration.class, ServletWebSecurityAutoConfiguration.class,
@@ -189,22 +189,22 @@ class ArdWebAuthenticationTest {
         ManagementWebSecurityAutoConfiguration.class})
     @Import({ArdSearchController.class, ArdExceptionHandler.class, ArdWebConfiguration.class})
     static class AdaptorApplication {
-
+        
         @Bean
         ControllerMethodsCache controllerMethodsCache() {
             return new ControllerMethodsCache();
         }
-
+        
         @Bean
         InnerApiAuthEnabled innerApiAuthEnabled() {
             return mock(InnerApiAuthEnabled.class);
         }
-
+        
         @Bean
         ArdSearchService ardSearchService() {
             return mock(ArdSearchService.class);
         }
-
+        
         @Bean
         ArdArtifactService ardArtifactService() {
             return mock(ArdArtifactService.class);

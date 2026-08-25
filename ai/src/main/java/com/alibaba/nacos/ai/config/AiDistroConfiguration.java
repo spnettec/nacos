@@ -31,14 +31,14 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @NacosWebBean
 public class AiDistroConfiguration {
-
+    
     private static final String AGENT_CLIENT_URL_PATTERN = "/v3/client/ai/agents/*";
-
+    
     @Bean
     public AiDistroFilter aiDistroFilter(DistroMapper distroMapper) {
         return new AiDistroFilter(distroMapper);
     }
-
+    
     @Bean
     public FilterRegistrationBean<AiDistroFilter> aiDistroFilterRegistration(
         AiDistroFilter filter) {

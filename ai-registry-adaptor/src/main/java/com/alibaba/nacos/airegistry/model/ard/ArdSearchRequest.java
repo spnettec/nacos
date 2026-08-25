@@ -22,53 +22,53 @@ package com.alibaba.nacos.airegistry.model.ard;
  * @author nacos
  */
 public class ArdSearchRequest {
-
+    
     private ArdSearchQuery query;
-
+    
     private String federation;
-
+    
     private Integer pageSize;
-
+    
     private String pageToken;
-
+    
     private String namespaceId;
-
+    
     public ArdSearchQuery getQuery() {
         return query;
     }
-
+    
     public void setQuery(ArdSearchQuery query) {
         this.query = query;
     }
-
+    
     public String getFederation() {
         return federation;
     }
-
+    
     public void setFederation(String federation) {
         this.federation = federation;
     }
-
+    
     public Integer getPageSize() {
         return pageSize;
     }
-
+    
     public void setPageSize(Integer pageSize) {
         this.pageSize = pageSize;
     }
-
+    
     public String getPageToken() {
         return pageToken;
     }
-
+    
     public void setPageToken(String pageToken) {
         this.pageToken = pageToken;
     }
-
+    
     public String getNamespaceId() {
         return namespaceId;
     }
-
+    
     public void setNamespaceId(String namespaceId) {
         this.namespaceId = namespaceId;
     }

@@ -24,153 +24,153 @@ import java.sql.Timestamp;
  * @author nacos
  */
 public class AiResourceSearchChunk {
-
+    
     private Long id;
-
+    
     private Timestamp gmtCreate;
-
+    
     private Timestamp gmtModified;
-
+    
     private Long documentId;
-
+    
     private String namespaceId;
-
+    
     private String resourceType;
-
+    
     private String resourceName;
-
+    
     private String resourceVersion;
-
+    
     private String chunkType;
-
+    
     private String chunkText;
-
+    
     private String canonicalText;
-
+    
     private String language;
-
+    
     private String chunkHash;
-
+    
     private String metadata;
-
+    
     private String status;
-
+    
     public Long getId() {
         return id;
     }
-
+    
     public void setId(Long id) {
         this.id = id;
     }
-
+    
     public Timestamp getGmtCreate() {
         return gmtCreate;
     }
-
+    
     public void setGmtCreate(Timestamp gmtCreate) {
         this.gmtCreate = gmtCreate;
     }
-
+    
     public Timestamp getGmtModified() {
         return gmtModified;
     }
-
+    
     public void setGmtModified(Timestamp gmtModified) {
         this.gmtModified = gmtModified;
     }
-
+    
     public Long getDocumentId() {
         return documentId;
     }
-
+    
     public void setDocumentId(Long documentId) {
         this.documentId = documentId;
     }
-
+    
     public String getNamespaceId() {
         return namespaceId;
     }
-
+    
     public void setNamespaceId(String namespaceId) {
         this.namespaceId = namespaceId;
     }
-
+    
     public String getResourceType() {
         return resourceType;
     }
-
+    
     public void setResourceType(String resourceType) {
         this.resourceType = resourceType;
     }
-
+    
     public String getResourceName() {
         return resourceName;
     }
-
+    
     public void setResourceName(String resourceName) {
         this.resourceName = resourceName;
     }
-
+    
     public String getResourceVersion() {
         return resourceVersion;
     }
-
+    
     public void setResourceVersion(String resourceVersion) {
         this.resourceVersion = resourceVersion;
     }
-
+    
     public String getChunkType() {
         return chunkType;
     }
-
+    
     public void setChunkType(String chunkType) {
         this.chunkType = chunkType;
     }
-
+    
     public String getChunkText() {
         return chunkText;
     }
-
+    
     public void setChunkText(String chunkText) {
         this.chunkText = chunkText;
     }
-
+    
     public String getCanonicalText() {
         return canonicalText;
     }
-
+    
     public void setCanonicalText(String canonicalText) {
         this.canonicalText = canonicalText;
     }
-
+    
     public String getLanguage() {
         return language;
     }
-
+    
     public void setLanguage(String language) {
         this.language = language;
     }
-
+    
     public String getChunkHash() {
         return chunkHash;
     }
-
+    
     public void setChunkHash(String chunkHash) {
         this.chunkHash = chunkHash;
     }
-
+    
     public String getMetadata() {
         return metadata;
     }
-
+    
     public void setMetadata(String metadata) {
         this.metadata = metadata;
     }
-
+    
     public String getStatus() {
         return status;
     }
-
+    
     public void setStatus(String status) {
         this.status = status;
     }

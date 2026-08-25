@@ -36,24 +36,24 @@ import java.io.IOException;
  * @author Nacos
  */
 public class FormalHandler extends AbstractConfigQueryHandler {
-
+    
     private static final Logger LOGGER = LoggerFactory.getLogger(FormalHandler.class);
-
+    
     private static final String FORMAL_HANDLER = "formalHandler";
-
+    
     @Override
     public String getName() {
         return FORMAL_HANDLER;
     }
-
+    
     @Override
     public ConfigQueryChainResponse handle(ConfigQueryChainRequest request) throws IOException {
         ConfigQueryChainResponse response = new ConfigQueryChainResponse();
-
+        
         String dataId = request.getDataId();
         String group = request.getGroup();
         String tenant = request.getTenant();
-
+        
         CacheItem cacheItem = ConfigChainEntryHandler.getThreadLocalCacheItem();
         String md5 = cacheItem.getConfigCache().getMd5();
         String content = ConfigDiskServiceFactory.getInstance().getContent(dataId, group, tenant);
@@ -76,23 +76,25 @@ public class FormalHandler extends AbstractConfigQueryHandler {
         response.setEncryptedDataKey(encryptedDataKey);
         response.setConfigType(configType);
         response.setStatus(ConfigQueryChainResponse.ConfigQueryStatus.CONFIG_FOUND_FORMAL);
-
+        
         return response;
     }
-
+    
     private String loadContentFromRepository(String dataId, String group, String tenant) {
         ConfigInfoPersistService configInfoPersistService =
-                ApplicationUtils.getBean(ConfigInfoPersistService.class);
-        ConfigInfoWrapper configInfo = configInfoPersistService.findConfigInfo(dataId, group, tenant);
+            ApplicationUtils.getBean(ConfigInfoPersistService.class);
+        ConfigInfoWrapper configInfo =
+            configInfoPersistService.findConfigInfo(dataId, group, tenant);
         return configInfo == null ? null : configInfo.getContent();
     }
-
+    
     private void saveContentToDisk(String dataId, String group, String tenant, String content) {
         try {
             ConfigDiskServiceFactory.getInstance().saveToDisk(dataId, group, tenant, content);
         } catch (IOException e) {
-            LOGGER.warn("Failed to save config content to disk, dataId={}, group={}, tenant={}", dataId, group,
-                    tenant, e);
+            LOGGER.warn("Failed to save config content to disk, dataId={}, group={}, tenant={}",
+                dataId, group,
+                tenant, e);
         }
     }
 }

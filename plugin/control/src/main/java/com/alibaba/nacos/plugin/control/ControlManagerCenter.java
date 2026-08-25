@@ -46,25 +46,25 @@ import java.util.concurrent.atomic.AtomicReference;
  * @author shiyiyue
  */
 public class ControlManagerCenter {
-
+    
     static volatile ControlManagerCenter instance = null;
-
+    
     private final RuleStorageProxy ruleStorageProxy;
-
+    
     private final Object installationMonitor = new Object();
-
+    
     private final Set<String> registeredTpsPoints = new LinkedHashSet<>();
-
+    
     private final ConnectionControlManager bootstrapConnectionControlManager;
-
+    
     private final TpsControlManager bootstrapTpsControlManager;
-
+    
     private final AtomicReference<ControlManagerBundle> managerBundle;
-
+    
     private final TpsControlManager tpsControlManagerFacade;
-
+    
     private final ConnectionControlManager connectionControlManagerFacade;
-
+    
     ControlManagerCenter() {
         ruleStorageProxy = RuleStorageProxy.getInstance();
         bootstrapConnectionControlManager = new BootstrapConnectionControlManager();
@@ -73,19 +73,19 @@ public class ControlManagerCenter {
         tpsControlManagerFacade = new DelegatingTpsControlManager();
         connectionControlManagerFacade = new DelegatingConnectionControlManager();
     }
-
+    
     public RuleStorageProxy getRuleStorageProxy() {
         return ruleStorageProxy;
     }
-
+    
     public TpsControlManager getTpsControlManager() {
         return tpsControlManagerFacade;
     }
-
+    
     public ConnectionControlManager getConnectionControlManager() {
         return connectionControlManagerFacade;
     }
-
+    
     public static ControlManagerCenter getInstance() {
         if (instance == null) {
             synchronized (ControlManagerCenter.class) {
@@ -96,7 +96,7 @@ public class ControlManagerCenter {
         }
         return instance;
     }
-
+    
     /**
      * Install the selected startup manager bundle.
      *
@@ -119,33 +119,33 @@ public class ControlManagerCenter {
                 targetManagerBundle.getTpsControlManager().getName());
         }
     }
-
+    
     public void reloadTpsControlRule(String pointName, boolean external) {
         NotifyCenter.publishEvent(new TpsControlRuleChangeEvent(pointName, external));
     }
-
+    
     public void reloadConnectionControlRule(boolean external) {
         NotifyCenter.publishEvent(new ConnectionLimitRuleChangeEvent(external));
     }
-
+    
     private TpsControlManager currentTpsControlManager() {
         ControlManagerBundle current = managerBundle.get();
         return current == null ? bootstrapTpsControlManager : current.getTpsControlManager();
     }
-
+    
     private ConnectionControlManager currentConnectionControlManager() {
         ControlManagerBundle current = managerBundle.get();
         return current == null ? bootstrapConnectionControlManager
             : current.getConnectionControlManager();
     }
-
+    
     private final class DelegatingTpsControlManager extends TpsControlManager {
-
+        
         @Override
         public TpsControlRuleParser getTpsControlRuleParser() {
             return currentTpsControlManager().getTpsControlRuleParser();
         }
-
+        
         @Override
         public void registerTpsPoint(String pointName) {
             synchronized (installationMonitor) {
@@ -156,71 +156,71 @@ public class ControlManagerCenter {
                 }
             }
         }
-
+        
         @Override
         public Map<String, TpsBarrier> getPoints() {
             return currentTpsControlManager().getPoints();
         }
-
+        
         @Override
         public Map<String, TpsControlRule> getRules() {
             return currentTpsControlManager().getRules();
         }
-
+        
         @Override
         public void applyTpsRule(String pointName, TpsControlRule rule) {
             currentTpsControlManager().applyTpsRule(pointName, rule);
         }
-
+        
         @Override
         public TpsCheckResponse check(TpsCheckRequest tpsRequest) {
             return currentTpsControlManager().check(tpsRequest);
         }
-
+        
         @Override
         public String getName() {
             return currentTpsControlManager().getName();
         }
     }
-
+    
     private final class DelegatingConnectionControlManager extends ConnectionControlManager {
-
+        
         private DelegatingConnectionControlManager() {
             super(false);
         }
-
+        
         @Override
         public String getName() {
             return currentConnectionControlManager().getName();
         }
-
+        
         @Override
         public ConnectionControlRuleParser getConnectionControlRuleParser() {
             return currentConnectionControlManager().getConnectionControlRuleParser();
         }
-
+        
         @Override
         public ConnectionControlRule getConnectionLimitRule() {
             return currentConnectionControlManager().getConnectionLimitRule();
         }
-
+        
         @Override
         public void applyConnectionLimitRule(ConnectionControlRule connectionControlRule) {
             currentConnectionControlManager().applyConnectionLimitRule(connectionControlRule);
         }
-
+        
         @Override
         public ConnectionCheckResponse check(ConnectionCheckRequest connectionCheckRequest) {
             return currentConnectionControlManager().check(connectionCheckRequest);
         }
     }
-
+    
     private static final class BootstrapConnectionControlManager
         extends DefaultConnectionControlManager {
-
+        
         private BootstrapConnectionControlManager() {
             super(false);
         }
     }
-
+    
 }

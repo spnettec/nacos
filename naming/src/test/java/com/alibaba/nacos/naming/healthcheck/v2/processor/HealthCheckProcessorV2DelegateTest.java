@@ -47,39 +47,39 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class HealthCheckProcessorV2DelegateTest {
-
+    
     @Mock
     private HealthCheckExtendProvider healthCheckExtendProvider;
-
+    
     @Mock
     private HealthCheckProcessorExtendV2 healthCheckProcessorExtendV2;
-
+    
     @Mock
     private HealthCheckCommonV2 healthCheckCommonV2;
-
+    
     @Mock
     private HealthCheckTaskV2 healthCheckTaskV2;
-
+    
     @Mock
     private Service service;
-
+    
     @Mock
     private ClusterMetadata clusterMetadata;
-
+    
     @Mock
     private HealthCheckProcessorV2 noneHealthCheckProcessor;
-
+    
     @Mock
     private HealthCheckProcessorV2 activeHealthCheckProcessor;
-
+    
     @Mock
     private IpPortBasedClient client;
-
+    
     @Mock
     private InstancePublishInfo instance;
-
+    
     private HealthCheckProcessorV2Delegate healthCheckProcessorV2Delegate;
-
+    
     @BeforeEach
     void setUp() {
         healthCheckProcessorV2Delegate = new HealthCheckProcessorV2Delegate(
@@ -87,13 +87,13 @@ class HealthCheckProcessorV2DelegateTest {
         verify(healthCheckExtendProvider).init();
         EnvUtil.setEnvironment(new MockEnvironment());
     }
-
+    
     @Test
     void testAddProcessor() throws NoSuchFieldException, IllegalAccessException {
         List<HealthCheckProcessorV2> list = new ArrayList<>();
         list.add(new TcpHealthCheckProcessor(null, null));
         healthCheckProcessorV2Delegate.addProcessor(list);
-
+        
         Class<HealthCheckProcessorV2Delegate> healthCheckProcessorV2DelegateClass =
             HealthCheckProcessorV2Delegate.class;
         Field field =
@@ -104,60 +104,60 @@ class HealthCheckProcessorV2DelegateTest {
         HealthCheckProcessorV2 healthCheckProcessorV2 = map.get(HealthCheckType.TCP.name());
         assertNotNull(healthCheckProcessorV2);
     }
-
+    
     @Test
     void testProcess() throws NoSuchFieldException, IllegalAccessException {
         testAddProcessor();
         when(clusterMetadata.getHealthyCheckType()).thenReturn(HealthCheckType.TCP.name());
         when(healthCheckTaskV2.getClient())
             .thenReturn(new IpPortBasedClient("127.0.0.1:80#true", true));
-
+        
         healthCheckProcessorV2Delegate.process(healthCheckTaskV2, service, clusterMetadata);
-
+        
         verify(clusterMetadata).getHealthyCheckType();
         verify(healthCheckTaskV2, times(2)).getClient();
     }
-
+    
     @Test
     void testProcessValidAddress() {
         mockActiveHealthCheck("127.0.0.1");
-
+        
         healthCheckProcessorV2Delegate.process(healthCheckTaskV2, service, clusterMetadata);
-
+        
         verify(activeHealthCheckProcessor).process(healthCheckTaskV2, service, clusterMetadata);
         verify(healthCheckCommonV2, never()).checkFailNow(healthCheckTaskV2, service,
             HealthCheckProcessorV2Delegate.INVALID_ADDRESS_MESSAGE);
     }
-
+    
     @Test
     void testProcessInvalidAddress() {
         mockActiveHealthCheck("rogue-mysql:3306?allowLoadLocalInfile=true#");
-
+        
         healthCheckProcessorV2Delegate.process(healthCheckTaskV2, service, clusterMetadata);
-
+        
         verify(activeHealthCheckProcessor, never()).process(healthCheckTaskV2, service,
             clusterMetadata);
         verify(healthCheckCommonV2).checkFailNow(healthCheckTaskV2, service,
             HealthCheckProcessorV2Delegate.INVALID_ADDRESS_MESSAGE);
     }
-
+    
     @Test
     void testProcessFallbackToNoneProcessor() {
         when(noneHealthCheckProcessor.getType()).thenReturn(NoneHealthCheckProcessor.TYPE);
         when(clusterMetadata.getHealthyCheckType()).thenReturn("UNKNOWN");
         healthCheckProcessorV2Delegate.addProcessor(
             Collections.singletonList(noneHealthCheckProcessor));
-
+        
         healthCheckProcessorV2Delegate.process(healthCheckTaskV2, service, clusterMetadata);
-
+        
         verify(noneHealthCheckProcessor).process(healthCheckTaskV2, service, clusterMetadata);
     }
-
+    
     @Test
     void testGetType() {
         assertNull(healthCheckProcessorV2Delegate.getType());
     }
-
+    
     private void mockActiveHealthCheck(String address) {
         when(activeHealthCheckProcessor.getType()).thenReturn(HealthCheckType.TCP.name());
         when(clusterMetadata.getHealthyCheckType()).thenReturn(HealthCheckType.TCP.name());

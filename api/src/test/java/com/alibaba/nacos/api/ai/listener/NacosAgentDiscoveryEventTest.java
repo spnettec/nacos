@@ -22,12 +22,12 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
 class NacosAgentDiscoveryEventTest {
-
+    
     @Test
     void exposeCompleteReplacementSnapshot() {
         AgentDiscoveryResult result = new AgentDiscoveryResult();
         NacosAgentDiscoveryEvent event = new NacosAgentDiscoveryEvent(result);
-
+        
         assertSame(result, event.getAgentDiscoveryResult());
     }
 }

@@ -63,23 +63,23 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  */
 @ExtendWith(MockitoExtension.class)
 class NacosSkillsRegistryServiceTest {
-
+    
     @Mock
     private SkillOperationService skillOperationService;
-
+    
     @Mock
     private SkillIndexManifestService skillIndexManifestService;
-
+    
     private static final String SCHEMA_0_2 =
         "https://schemas.agentskills.io/discovery/0.2.0/schema.json";
-
+    
     private NacosSkillsRegistryService service;
-
+    
     @BeforeEach
     void setUp() {
         service = new NacosSkillsRegistryService(skillOperationService, skillIndexManifestService);
     }
-
+    
     @Test
     void testBuildLegacyIndexFiltersBinarySkill() throws Exception {
         Page<SkillSummary> page = new Page<>();
@@ -98,16 +98,16 @@ class NacosSkillsRegistryServiceTest {
         when(skillOperationService.getSkillVersionDetail("public", "binary-skill", "v1"))
             .thenReturn(
                 buildBinarySkill("binary-skill"));
-
+        
         WellKnownSkillsIndex result = service.buildLegacySkillsIndex("public");
-
+        
         assertNotNull(result);
         assertNull(result.getSchema());
         assertEquals(1, result.getSkills().size());
         assertEquals("text-skill", result.getSkills().get(0).getName());
         assertEquals(List.of("SKILL.md", "docs/guide.md"), result.getSkills().get(0).getFiles());
     }
-
+    
     @Test
     void testBuildAgentSkillsIndexUsesVersion020Shape() throws Exception {
         Page<SkillSummary> page = new Page<>();
@@ -124,9 +124,9 @@ class NacosSkillsRegistryServiceTest {
             .thenReturn(buildSimpleSkill("a-simple-skill"));
         when(skillOperationService.getSkillVersionDetail("public", "z-archive-skill", "1.2.0"))
             .thenReturn(buildTextSkill("z-archive-skill"));
-
+        
         WellKnownSkillsIndex result = service.buildAgentSkillsIndex("public");
-
+        
         assertEquals(SCHEMA_0_2, result.getSchema());
         assertEquals(2, result.getSkills().size());
         assertEquals("a-simple-skill", result.getSkills().get(0).getName());
@@ -142,7 +142,7 @@ class NacosSkillsRegistryServiceTest {
         assertTrue(result.getSkills().get(1).getDigest().startsWith("sha256:"));
         assertNull(result.getSkills().get(1).getFiles());
     }
-
+    
     @Test
     void testSearchBuildsCliShape() throws Exception {
         Page<SkillSummary> page = new Page<>();
@@ -157,16 +157,16 @@ class NacosSkillsRegistryServiceTest {
             buildTextSkill("a-skill"));
         when(skillOperationService.getSkillVersionDetail("public", "b-skill", "v1")).thenReturn(
             buildTextSkill("b-skill"));
-
+        
         SkillsSearchResponse result =
             service.search("public", "demo", 10, "http://localhost/registry/public");
-
+        
         assertEquals(2, result.getSkills().size());
         assertEquals("a-skill", result.getSkills().get(0).getName());
         assertEquals(9L, result.getSkills().get(0).getInstalls());
         assertEquals("http://localhost/registry/public", result.getSkills().get(0).getSource());
     }
-
+    
     @Test
     void testSearchSortsTiedDownloadCountByName() throws Exception {
         Page<SkillSummary> page = new Page<>();
@@ -180,13 +180,13 @@ class NacosSkillsRegistryServiceTest {
             .thenReturn(buildSimpleSkill("a-skill"));
         when(skillOperationService.getSkillVersionDetail("public", "z-skill", "v1"))
             .thenReturn(buildSimpleSkill("z-skill"));
-
+        
         SkillsSearchResponse result = service.search("public", "tie", 10, "source");
-
+        
         assertEquals("a-skill", result.getSkills().get(0).getName());
         assertEquals("z-skill", result.getSkills().get(1).getName());
     }
-
+    
     @Test
     void testGetSkillFileContent() throws Exception {
         Page<SkillSummary> page = new Page<>();
@@ -199,16 +199,16 @@ class NacosSkillsRegistryServiceTest {
             .thenReturn(buildManifest("v1"));
         when(skillOperationService.getSkillVersionDetail("public", "demo-skill", "v1")).thenReturn(
             buildTextSkill("demo-skill"));
-
+        
         String markdown = service.getSkillFileContent("public", "demo-skill", "SKILL.md");
         String file = service.getSkillFileContent("public", "demo-skill", "docs/guide.md");
         String missing = service.getSkillFileContent("public", "demo-skill", "docs/missing.md");
-
+        
         assertTrue(markdown.contains("name: demo-skill"));
         assertEquals("guide", file);
         assertNull(missing);
     }
-
+    
     @Test
     void testGetSkillArchiveContentUsesDownloadAndRootArchive() throws Exception {
         Page<SkillSummary> page = new Page<>();
@@ -220,14 +220,14 @@ class NacosSkillsRegistryServiceTest {
             .thenReturn(buildManifest("v1"));
         when(skillOperationService.downloadSkillVersion("public", "demo-skill", "v1"))
             .thenReturn(buildTextSkill("demo-skill"));
-
+        
         byte[] zipBytes = service.getSkillArchiveContent("public", "demo-skill");
-
+        
         assertZipEntryContains(zipBytes, "SKILL.md", "name: demo-skill");
         assertZipEntryContains(zipBytes, "docs/guide.md", "guide");
         verify(skillOperationService).downloadSkillVersion("public", "demo-skill", "v1");
     }
-
+    
     @Test
     void testSearchStopsAtLimitAndDefaultsDownloadCount() throws Exception {
         Page<SkillSummary> page = new Page<>();
@@ -238,13 +238,13 @@ class NacosSkillsRegistryServiceTest {
         when(skillIndexManifestService.query("public", "first")).thenReturn(buildManifest("v1"));
         when(skillOperationService.getSkillVersionDetail("public", "first", "v1")).thenReturn(
             buildSimpleSkill("first"));
-
+        
         SkillsSearchResponse result = service.search("public", "q", 1, "source");
-
+        
         assertEquals(1, result.getSkills().size());
         assertEquals(0L, result.getSkills().get(0).getInstalls());
     }
-
+    
     @Test
     void testBuildIndexStopsOnEmptyPageAndSkipsIneligibleSummaries() throws Exception {
         Page<SkillSummary> page = new Page<>();
@@ -259,9 +259,9 @@ class NacosSkillsRegistryServiceTest {
         page.setPageItems(Arrays.asList(null, disabled, privateSkill, offline, blank));
         when(skillOperationService.listSkills(eq("public"), eq((String) null), eq(SEARCH_BLUR),
             eq("download_count"), eq(1), eq(100))).thenReturn(page);
-
+        
         assertTrue(service.buildAgentSkillsIndex("public").getSkills().isEmpty());
-
+        
         Page<SkillSummary> emptyPage = new Page<>();
         emptyPage.setPagesAvailable(1);
         emptyPage.setPageItems(List.of());
@@ -269,7 +269,7 @@ class NacosSkillsRegistryServiceTest {
             eq("download_count"), eq(1), eq(100))).thenReturn(emptyPage);
         assertTrue(service.search("public", "empty", 10, "source").getSkills().isEmpty());
     }
-
+    
     @Test
     void testLoadSkillReturnsNullForMissingManifestVersionAndDeniedDetail() throws Exception {
         Page<SkillSummary> page = new Page<>();
@@ -287,10 +287,10 @@ class NacosSkillsRegistryServiceTest {
             .thenReturn(buildManifest("v1"));
         when(skillOperationService.getSkillVersionDetail("public", "empty-skill", "v1"))
             .thenReturn(new Skill());
-
+        
         assertTrue(service.buildAgentSkillsIndex("public").getSkills().isEmpty());
     }
-
+    
     @Test
     void testLoadSkillRethrowsUnexpectedDetailException() throws Exception {
         Page<SkillSummary> page = new Page<>();
@@ -301,10 +301,10 @@ class NacosSkillsRegistryServiceTest {
         when(skillIndexManifestService.query("public", "boom")).thenReturn(buildManifest("v1"));
         when(skillOperationService.getSkillVersionDetail("public", "boom", "v1"))
             .thenThrow(new NacosException(NacosException.SERVER_ERROR, "boom"));
-
+        
         assertThrows(NacosException.class, () -> service.buildAgentSkillsIndex("public"));
     }
-
+    
     @Test
     void testGetSkillFileContentNullCases() throws Exception {
         Page<SkillSummary> empty = new Page<>();
@@ -312,7 +312,7 @@ class NacosSkillsRegistryServiceTest {
         when(skillOperationService.listSkills(eq("public"), eq("missing"), eq(SEARCH_ACCURATE),
             eq("download_count"), eq(1), eq(1))).thenReturn(empty);
         assertNull(service.getSkillFileContent("public", "missing", "SKILL.md"));
-
+        
         Page<SkillSummary> page = new Page<>();
         page.setPageItems(List.of(buildSummary("no-resource", 1L)));
         when(skillOperationService.listSkills(eq("public"), eq("no-resource"), eq(SEARCH_ACCURATE),
@@ -322,7 +322,7 @@ class NacosSkillsRegistryServiceTest {
         when(skillOperationService.getSkillVersionDetail("public", "no-resource", "v1"))
             .thenReturn(buildSimpleSkill("no-resource"));
         assertNull(service.getSkillFileContent("public", "no-resource", "docs/guide.md"));
-
+        
         Page<SkillSummary> nullEntryPage = new Page<>();
         nullEntryPage.setPageItems(List.of(buildSummary("null-entry", 1L)));
         when(skillOperationService.listSkills(eq("public"), eq("null-entry"), eq(SEARCH_ACCURATE),
@@ -337,7 +337,7 @@ class NacosSkillsRegistryServiceTest {
             .thenReturn(nullEntry);
         assertNull(service.getSkillFileContent("public", "null-entry", "docs/guide.md"));
     }
-
+    
     @Test
     void testBuildFilesSkipsNullAndBlankResourcesAndRejectsBinaryExtension() throws Exception {
         Page<SkillSummary> page = new Page<>();
@@ -351,20 +351,20 @@ class NacosSkillsRegistryServiceTest {
             .thenReturn(buildMixedResourceSkill("mixed"));
         when(skillOperationService.getSkillVersionDetail("public", "font", "v1"))
             .thenReturn(buildExtensionBinarySkill("font"));
-
+        
         WellKnownSkillsIndex result = service.buildLegacySkillsIndex("public");
-
+        
         assertEquals(1, result.getSkills().size());
         assertEquals(List.of("SKILL.md", "guide.md"), result.getSkills().get(0).getFiles());
     }
-
+    
     @Test
     void testLoadSkillNullAndIneligibleCases() throws Exception {
         Page<SkillSummary> nullPage = null;
         when(skillOperationService.listSkills(eq("public"), eq("null-page"), eq(SEARCH_ACCURATE),
             eq("download_count"), eq(1), eq(1))).thenReturn(nullPage);
         assertNull(service.getSkillFileContent("public", "null-page", "SKILL.md"));
-
+        
         Page<SkillSummary> disabledPage = new Page<>();
         SkillSummary disabled = buildSummary("disabled", 1L);
         disabled.setEnable(false);
@@ -372,7 +372,7 @@ class NacosSkillsRegistryServiceTest {
         when(skillOperationService.listSkills(eq("public"), eq("disabled"), eq(SEARCH_ACCURATE),
             eq("download_count"), eq(1), eq(1))).thenReturn(disabledPage);
         assertNull(service.getSkillArchiveContent("public", "disabled"));
-
+        
         Page<SkillSummary> noDescriptionPage = new Page<>();
         noDescriptionPage.setPageItems(List.of(buildSummary("no-description", 1L)));
         when(skillOperationService.listSkills(eq("public"), eq("no-description"),
@@ -386,7 +386,7 @@ class NacosSkillsRegistryServiceTest {
             .thenReturn(noDescription);
         assertNull(service.getSkillArchiveContent("public", "no-description"));
     }
-
+    
     @Test
     void testBuildIndexSkipsNullExportableAndMultiplePages() throws Exception {
         Page<SkillSummary> firstPage = new Page<>();
@@ -407,13 +407,13 @@ class NacosSkillsRegistryServiceTest {
             .thenReturn(buildManifest("v1"));
         when(skillOperationService.getSkillVersionDetail("public", "second-page", "v1"))
             .thenReturn(buildSimpleSkill("second-page"));
-
+        
         WellKnownSkillsIndex result = service.buildAgentSkillsIndex("public");
-
+        
         assertEquals(1, result.getSkills().size());
         assertEquals("second-page", result.getSkills().get(0).getName());
     }
-
+    
     @Test
     void testArchiveCreationFailureForUnsafeResourcePath() throws Exception {
         Page<SkillSummary> page = new Page<>();
@@ -424,13 +424,13 @@ class NacosSkillsRegistryServiceTest {
             .thenReturn(buildManifest("v1"));
         when(skillOperationService.downloadSkillVersion("public", "unsafe", "v1"))
             .thenReturn(buildUnsafeResourceSkill("unsafe"));
-
+        
         NacosException exception = assertThrows(NacosException.class,
             () -> service.getSkillArchiveContent("public", "unsafe"));
-
+        
         assertEquals(NacosException.SERVER_ERROR, exception.getErrCode());
     }
-
+    
     @Test
     void testArchiveWritesEmptyResourceForNullContent() throws Exception {
         Page<SkillSummary> page = new Page<>();
@@ -441,12 +441,12 @@ class NacosSkillsRegistryServiceTest {
             .thenReturn(buildManifest("v1"));
         when(skillOperationService.downloadSkillVersion("public", "empty-file", "v1"))
             .thenReturn(buildMixedResourceSkill("empty-file"));
-
+        
         byte[] zipBytes = service.getSkillArchiveContent("public", "empty-file");
-
+        
         assertZipEntryContains(zipBytes, "guide.md", "");
     }
-
+    
     @Test
     void testPrivateResourceHelpers() throws Exception {
         Method isBinaryResource =
@@ -462,7 +462,7 @@ class NacosSkillsRegistryServiceTest {
         SkillResource trailingDot = new SkillResource();
         trailingDot.setName("README.");
         assertEquals(false, isBinaryResource.invoke(service, trailingDot));
-
+        
         Method buildRelativePath =
             NacosSkillsRegistryService.class.getDeclaredMethod("buildRelativePath",
                 SkillResource.class);
@@ -470,18 +470,18 @@ class NacosSkillsRegistryServiceTest {
         SkillResource rootFile = new SkillResource();
         rootFile.setName("guide.md");
         assertEquals("guide.md", buildRelativePath.invoke(service, rootFile));
-
+        
         Method encodePath =
             NacosSkillsRegistryService.class.getDeclaredMethod("encodePath", String.class);
         encodePath.setAccessible(true);
         assertEquals("docs/a%20b.md", encodePath.invoke(service, "docs/a b.md"));
-
+        
         Method buildFiles =
             NacosSkillsRegistryService.class.getDeclaredMethod("buildFiles", Skill.class);
         buildFiles.setAccessible(true);
         assertEquals(List.of("SKILL.md"), buildFiles.invoke(service, buildEmptyResourceSkill()));
     }
-
+    
     private SkillSummary buildSummary(String name, Long downloadCount) {
         SkillSummary result = new SkillSummary();
         result.setNamespaceId("public");
@@ -493,14 +493,14 @@ class NacosSkillsRegistryServiceTest {
         result.setDownloadCount(downloadCount);
         return result;
     }
-
+    
     private SkillIndexManifest buildManifest(String version) {
         SkillIndexManifest manifest = new SkillIndexManifest();
         manifest.setLabels(Map.of(SkillIndexManifest.LABEL_LATEST, version));
         manifest.setVersions(Map.of(version, List.of("ignored")));
         return manifest;
     }
-
+    
     private Skill buildTextSkill(String name) {
         Skill result = new Skill();
         result.setNamespaceId("public");
@@ -515,7 +515,7 @@ class NacosSkillsRegistryServiceTest {
         result.setResource(Map.of("docs::guide.md", resource));
         return result;
     }
-
+    
     private Skill buildSimpleSkill(String name) {
         Skill result = new Skill();
         result.setNamespaceId("public");
@@ -525,7 +525,7 @@ class NacosSkillsRegistryServiceTest {
             "---\nname: " + name + "\ndescription: " + name + " description\n---\n\n# " + name);
         return result;
     }
-
+    
     private Skill buildBinarySkill(String name) {
         Skill result = buildTextSkill(name);
         SkillResource binary = new SkillResource();
@@ -538,7 +538,7 @@ class NacosSkillsRegistryServiceTest {
         result.setResource(Map.of("assets::logo.png", binary));
         return result;
     }
-
+    
     private Skill buildMixedResourceSkill(String name) {
         Skill result = buildSimpleSkill(name);
         SkillResource blankName = new SkillResource();
@@ -552,7 +552,7 @@ class NacosSkillsRegistryServiceTest {
         result.getResource().put("guide", guide);
         return result;
     }
-
+    
     private Skill buildExtensionBinarySkill(String name) {
         Skill result = buildSimpleSkill(name);
         SkillResource binary = new SkillResource();
@@ -561,13 +561,13 @@ class NacosSkillsRegistryServiceTest {
         result.setResource(Map.of("font", binary));
         return result;
     }
-
+    
     private Skill buildEmptyResourceSkill() {
         Skill result = buildSimpleSkill("empty-resource");
         result.setResource(Collections.emptyMap());
         return result;
     }
-
+    
     private Skill buildUnsafeResourceSkill(String name) {
         Skill result = buildSimpleSkill(name);
         SkillResource unsafe = new SkillResource();
@@ -576,7 +576,7 @@ class NacosSkillsRegistryServiceTest {
         result.setResource(Map.of("unsafe", unsafe));
         return result;
     }
-
+    
     private String sha256(String skillName) throws Exception {
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
         byte[] hash = digest.digest(buildSimpleSkill(skillName).getSkillMd()
@@ -587,7 +587,7 @@ class NacosSkillsRegistryServiceTest {
         }
         return result.toString();
     }
-
+    
     private void assertZipEntryContains(byte[] zipBytes, String entryName, String expected)
         throws Exception {
         try (ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(zipBytes),

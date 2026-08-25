@@ -31,7 +31,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class AiVisibilityResourceLocatorTest {
-
+    
     @Test
     void findResourceShouldUseDefaultNamespaceAndReturnVisibilityResource() {
         AiResourcePersistService persistService = mock(AiResourcePersistService.class);
@@ -42,23 +42,23 @@ class AiVisibilityResourceLocatorTest {
         when(persistService.find(DEFAULT_NAMESPACE_ID, "demo-skill", "skill"))
             .thenReturn(resource);
         AiVisibilityResourceLocator locator = new AiVisibilityResourceLocator(persistService);
-
+        
         Optional<VisibilityResource> result = locator.findResource("", "skill", "demo-skill");
-
+        
         assertTrue(result.isPresent());
         assertSame(resource, result.get());
         verify(persistService).find(DEFAULT_NAMESPACE_ID, "demo-skill", "skill");
     }
-
+    
     @Test
     void findResourceShouldReturnEmptyWhenResourceDoesNotExist() {
         AiResourcePersistService persistService = mock(AiResourcePersistService.class);
         when(persistService.find("public", "missing-skill", "skill")).thenReturn(null);
         AiVisibilityResourceLocator locator = new AiVisibilityResourceLocator(persistService);
-
+        
         Optional<VisibilityResource> result =
             locator.findResource("public", "skill", "missing-skill");
-
+        
         assertTrue(result.isEmpty());
         verify(persistService).find("public", "missing-skill", "skill");
     }

@@ -30,25 +30,25 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class AgentGrpcResponseErrorMapperTest {
-
+    
     @Test
     void testMapsSupportedExceptionCategories() throws Exception {
         assertError(new NacosApiException(404, ErrorCode.RESOURCE_NOT_FOUND, "missing"),
             ErrorCode.RESOURCE_NOT_FOUND.getCode(), "missing");
         assertError(new IllegalArgumentException("invalid"),
             ErrorCode.PARAMETER_VALIDATE_ERROR.getCode(), "invalid");
-
+        
         NacosRuntimeException runtimeException = new NacosRuntimeException(12345, "runtime");
         assertError(runtimeException, 12345, runtimeException.getMessage());
         assertError(new NacosException(409, "conflict"), 409, "conflict");
         assertError(new Exception("unexpected"), ErrorCode.SERVER_ERROR.getCode(), "unexpected");
-
+        
         Constructor<AgentGrpcResponseErrorMapper> constructor =
             AgentGrpcResponseErrorMapper.class.getDeclaredConstructor();
         constructor.setAccessible(true);
         assertNotNull(constructor.newInstance());
     }
-
+    
     private void assertError(Exception exception, int errorCode, String message) {
         Response response = new AgentEndpointOperationResponse();
         AgentGrpcResponseErrorMapper.apply(response, exception);

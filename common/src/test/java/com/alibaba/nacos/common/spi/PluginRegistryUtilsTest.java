@@ -28,20 +28,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
 class PluginRegistryUtilsTest {
-
+    
     @Test
     void testRegisterFirst() {
         Logger logger = mock(Logger.class);
         Map<String, Object> plugins = new LinkedHashMap<>();
         Object first = new Object();
         Object duplicate = new Object();
-
+        
         assertFalse(PluginRegistryUtils.registerFirst(plugins, "test", " ", first, logger));
         assertFalse(PluginRegistryUtils.registerFirst(plugins, "test", "null", null, logger));
         assertTrue(PluginRegistryUtils.registerFirst(plugins, "test", "same", first, logger));
         assertFalse(
             PluginRegistryUtils.registerFirst(plugins, "test", "same", duplicate, logger));
-
+        
         assertSame(first, plugins.get("same"));
     }
 }

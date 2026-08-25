@@ -41,17 +41,17 @@ import static org.mockito.Mockito.when;
  */
 @ExtendWith(MockitoExtension.class)
 class AiResourceRowMappersTest {
-
+    
     @Mock
     private ResultSet resultSet;
-
+    
     @Test
     void testAiResourceRowMappersAreRegistered() {
         String resourceMapperName =
             AiResourceRowMappers.AI_RESOURCE_ROW_MAPPER.getClass().getCanonicalName();
         String versionMapperName =
             AiResourceRowMappers.AI_RESOURCE_VERSION_ROW_MAPPER.getClass().getCanonicalName();
-
+        
         assertNotNull(resourceMapperName);
         assertNotNull(versionMapperName);
         assertSame(AiResourceRowMappers.AI_RESOURCE_ROW_MAPPER,
@@ -59,7 +59,7 @@ class AiResourceRowMappersTest {
         assertSame(AiResourceRowMappers.AI_RESOURCE_VERSION_ROW_MAPPER,
             RowMapperManager.getRowMapper(versionMapperName));
     }
-
+    
     @Test
     void testAiResourceRowMapperIncludesScopeAndOwner() throws SQLException {
         Timestamp now = new Timestamp(System.currentTimeMillis());
@@ -78,9 +78,9 @@ class AiResourceRowMappersTest {
         when(resultSet.getLong("meta_version")).thenReturn(1L);
         when(resultSet.getString("scope")).thenReturn("PUBLIC");
         when(resultSet.getString("owner")).thenReturn("alice");
-
+        
         AiResource resource = AiResourceRowMappers.AI_RESOURCE_ROW_MAPPER.mapRow(resultSet, 0);
-
+        
         assertNotNull(resource);
         assertEquals(1L, resource.getId());
         assertEquals("test-skill", resource.getName());
@@ -88,7 +88,7 @@ class AiResourceRowMappersTest {
         assertEquals("PUBLIC", resource.getScope());
         assertEquals("alice", resource.getOwner());
     }
-
+    
     @Test
     void testAiResourceRowMapperWithPrivateScope() throws SQLException {
         Timestamp now = new Timestamp(System.currentTimeMillis());
@@ -107,15 +107,15 @@ class AiResourceRowMappersTest {
         when(resultSet.getLong("meta_version")).thenReturn(1L);
         when(resultSet.getString("scope")).thenReturn("PRIVATE");
         when(resultSet.getString("owner")).thenReturn("bob");
-
+        
         AiResource resource = AiResourceRowMappers.AI_RESOURCE_ROW_MAPPER.mapRow(resultSet, 0);
-
+        
         assertNotNull(resource);
         assertEquals("local", resource.getFrom());
         assertEquals("PRIVATE", resource.getScope());
         assertEquals("bob", resource.getOwner());
     }
-
+    
     @Test
     void testAiResourceVersionRowMapper() throws SQLException {
         when(resultSet.getString(anyString())).thenAnswer(invocation -> {
@@ -131,10 +131,10 @@ class AiResourceRowMappersTest {
             }
             return null;
         });
-
+        
         AiResourceVersion version =
             AiResourceRowMappers.AI_RESOURCE_VERSION_ROW_MAPPER.mapRow(resultSet, 0);
-
+        
         assertNotNull(version);
         assertEquals("test-skill", version.getName());
         assertEquals("1.0.0", version.getVersion());

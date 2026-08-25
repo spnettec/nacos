@@ -59,29 +59,29 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class CanonicalA2aEndpointOperationServiceTest {
-
+    
     private static final String PARENT_CLIENT_ID = "parent-client";
-
+    
     @Mock
     private AiConnectionBasedClientManager clientManager;
-
+    
     @Mock
     private EphemeralClientOperationServiceImpl clientOperationService;
-
+    
     @Mock
     private Connection connection;
-
+    
     @Mock
     private ConnectionMeta connectionMeta;
-
+    
     private CanonicalA2aEndpointOperationService service;
-
+    
     @BeforeEach
     void setUp() {
         service =
             new CanonicalA2aEndpointOperationService(clientManager, clientOperationService);
     }
-
+    
     @Test
     void shouldRegisterIndependentExactVersionPublishers() throws NacosException {
         AtomicBoolean childExists = connectedClientState();
@@ -90,13 +90,13 @@ class CanonicalA2aEndpointOperationServiceTest {
         first.setProtocolVersion("0.3");
         first.setTenant("tenant-a");
         AgentEndpoint second = endpoint("2.0.0", "127.0.0.2", 8081, "/rpc", false);
-
+        
         service.register(PARENT_CLIENT_ID, "public", "demo-agent",
             Collections.singletonList(first));
         childExists.set(false);
         service.register(PARENT_CLIENT_ID, "public", "demo-agent",
             Collections.singletonList(second));
-
+        
         ArgumentCaptor<Service> serviceCaptor = ArgumentCaptor.forClass(Service.class);
         ArgumentCaptor<List<Instance>> instancesCaptor = ArgumentCaptor.forClass(List.class);
         ArgumentCaptor<String> clientCaptor = ArgumentCaptor.forClass(String.class);
@@ -122,7 +122,7 @@ class CanonicalA2aEndpointOperationServiceTest {
         assertEquals("[1.0.0]", firstInstance.getMetadata().get(
             Constants.Agent.AGENT_ENDPOINT_VERSION_RANGE_KEY));
     }
-
+    
     @Test
     void shouldReuseChildPublisherAndDeregisterIt() throws NacosException {
         AtomicBoolean childExists = connectedClientState();
@@ -132,12 +132,12 @@ class CanonicalA2aEndpointOperationServiceTest {
         childExists.set(true);
         service.register(PARENT_CLIENT_ID, "public", "demo-agent",
             Collections.singletonList(endpoint));
-
+        
         ArgumentCaptor<String> childCaptor = ArgumentCaptor.forClass(String.class);
         verify(clientManager).clientConnected(childCaptor.capture(), any(ClientAttributes.class));
         verify(clientOperationService, times(2)).batchRegisterInstance(any(Service.class),
             anyList(), eq(childCaptor.getValue()));
-
+        
         service.deregister(PARENT_CLIENT_ID, "public", "demo-agent", "1.0.0");
         verify(clientOperationService).deregisterInstance(any(Service.class), any(Instance.class),
             eq(childCaptor.getValue()));
@@ -147,7 +147,7 @@ class CanonicalA2aEndpointOperationServiceTest {
         verify(clientOperationService).deregisterInstance(any(Service.class), any(Instance.class),
             eq(childCaptor.getValue()));
     }
-
+    
     @Test
     void shouldValidateBatchAndParentConnection() {
         assertThrows(NacosApiException.class,
@@ -173,43 +173,43 @@ class CanonicalA2aEndpointOperationServiceTest {
         assertThrows(NacosApiException.class,
             () -> service.register(PARENT_CLIENT_ID, "public", "demo-agent",
                 Collections.singletonList(invalid)));
-
+        
         when(clientManager.contains(anyString())).thenReturn(false);
         assertThrows(NacosRuntimeException.class,
             () -> service.register(PARENT_CLIENT_ID, "public", "demo-agent",
                 Collections.singletonList(
                     endpoint("1.0.0", "127.0.0.1", 8080, "/rpc", false))));
     }
-
+    
     @Test
     void shouldCleanNewChildWhenRegistrationFails() {
         connectedClientState();
         doThrow(new IllegalStateException("failed")).when(clientOperationService)
             .batchRegisterInstance(any(Service.class), anyList(), anyString());
-
+        
         assertThrows(IllegalStateException.class,
             () -> service.register(PARENT_CLIENT_ID, "public", "demo-agent",
                 Collections.singletonList(
                     endpoint("1.0.0", "127.0.0.1", 8080, "/rpc", false))));
-
+        
         verify(clientManager).clientDisconnected(anyString());
     }
-
+    
     @Test
     void shouldKeepExistingChildWhenReplacementFails() {
         when(clientManager.contains(anyString())).thenReturn(true);
         doThrow(new IllegalStateException("failed")).when(clientOperationService)
             .batchRegisterInstance(any(Service.class), anyList(), anyString());
-
+        
         assertThrows(IllegalStateException.class,
             () -> service.register(PARENT_CLIENT_ID, "public", "demo-agent",
                 Collections.singletonList(
                     endpoint("1.0.0", "127.0.0.1", 8080, "/rpc", false))));
-
+        
         verify(clientManager, never()).clientConnected(anyString(), any(ClientAttributes.class));
         verify(clientManager, never()).clientDisconnected(anyString());
     }
-
+    
     @Test
     void shouldCleanChildWhenParentDisconnectsDuringCreation() {
         AtomicBoolean firstParentCheck = new AtomicBoolean(true);
@@ -217,18 +217,18 @@ class CanonicalA2aEndpointOperationServiceTest {
             String clientId = invocation.getArgument(0);
             return PARENT_CLIENT_ID.equals(clientId) && firstParentCheck.getAndSet(false);
         });
-
+        
         assertThrows(NacosRuntimeException.class,
             () -> service.register(PARENT_CLIENT_ID, "public", "demo-agent",
                 Collections.singletonList(
                     endpoint("1.0.0", "127.0.0.1", 8080, "/rpc", false))));
-
+        
         verify(clientManager).clientConnected(anyString(), any(ClientAttributes.class));
         verify(clientManager).clientDisconnected(anyString());
         verify(clientOperationService, never()).batchRegisterInstance(any(Service.class),
             anyList(), anyString());
     }
-
+    
     @Test
     void shouldReleaseChildrenOnlyForDisconnectedAiConnections() throws NacosException {
         connectedClientState();
@@ -238,12 +238,12 @@ class CanonicalA2aEndpointOperationServiceTest {
         when(connectionMeta.getLabel(RemoteConstants.LABEL_MODULE)).thenReturn("naming");
         service.clientDisConnected(connection);
         verify(clientManager, never()).clientDisconnected(anyString());
-
+        
         when(connectionMeta.getLabel(RemoteConstants.LABEL_MODULE))
             .thenReturn(RemoteConstants.LABEL_MODULE_AI);
         service.clientDisConnected(connection);
         verify(clientManager, never()).clientDisconnected(anyString());
-
+        
         service.register(PARENT_CLIENT_ID, "public", "demo-agent",
             Collections.singletonList(
                 endpoint("1.0.0", "127.0.0.1", 8080, "/rpc", false)));
@@ -252,7 +252,7 @@ class CanonicalA2aEndpointOperationServiceTest {
         service.clientDisConnected(connection);
         verify(clientManager).clientDisconnected(anyString());
     }
-
+    
     private AtomicBoolean connectedClientState() {
         AtomicBoolean childExists = new AtomicBoolean(false);
         when(clientManager.contains(anyString())).thenAnswer(invocation -> {
@@ -265,7 +265,7 @@ class CanonicalA2aEndpointOperationServiceTest {
         }).when(clientManager).clientConnected(anyString(), any(ClientAttributes.class));
         return childExists;
     }
-
+    
     private AgentEndpoint endpoint(String version, String address, int port, String path,
         boolean tls) {
         AgentEndpoint result = new AgentEndpoint();

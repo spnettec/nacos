@@ -28,34 +28,34 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class EnvironmentPluginTypePolicyTest {
-
+    
     private final EnvironmentPluginTypePolicy policy = new EnvironmentPluginTypePolicy();
-
+    
     @Test
     void testTypeAndLoadingSwitch() {
         MapConfiguration configuration = new MapConfiguration();
-
+        
         assertEquals(PluginType.ENVIRONMENT, policy.getPluginType());
         assertFalse(policy.isLoadingEnabled(configuration));
-
+        
         configuration.setProperty(
             EnvironmentPluginTypePolicy.ENVIRONMENT_ENABLED_PROPERTY, "true");
         assertTrue(policy.isLoadingEnabled(configuration));
     }
-
+    
     private static class MapConfiguration implements PluginTypeConfiguration {
-
+        
         private final Map<String, String> properties = new HashMap<>();
-
+        
         void setProperty(String key, String value) {
             properties.put(key, value);
         }
-
+        
         @Override
         public String getProperty(String key) {
             return properties.get(key);
         }
-
+        
         @Override
         public boolean containsProperty(String key) {
             return properties.containsKey(key);

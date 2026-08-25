@@ -28,33 +28,33 @@ import java.util.List;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ArdCatalog {
-
+    
     private String specVersion;
-
+    
     private ArdHostInfo host;
-
+    
     private List<ArdCatalogEntry> entries = new ArrayList<>();
-
+    
     public String getSpecVersion() {
         return specVersion;
     }
-
+    
     public void setSpecVersion(String specVersion) {
         this.specVersion = specVersion;
     }
-
+    
     public ArdHostInfo getHost() {
         return host;
     }
-
+    
     public void setHost(ArdHostInfo host) {
         this.host = host;
     }
-
+    
     public List<ArdCatalogEntry> getEntries() {
         return entries;
     }
-
+    
     public void setEntries(List<ArdCatalogEntry> entries) {
         this.entries = entries;
     }

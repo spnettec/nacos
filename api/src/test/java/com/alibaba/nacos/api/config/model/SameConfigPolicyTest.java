@@ -32,8 +32,8 @@ class SameConfigPolicyTest {
     @BeforeEach
     void setUp() {
         mapper = JsonMapper.builder()
-                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-                .build();
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .build();
     }
     
     @Test

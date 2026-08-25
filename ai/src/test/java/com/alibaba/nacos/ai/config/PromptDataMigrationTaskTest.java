@@ -86,48 +86,48 @@ import static org.mockito.Mockito.when;
  */
 @ExtendWith(MockitoExtension.class)
 class PromptDataMigrationTaskTest {
-
+    
     private static final String NS = "public";
-
+    
     private static final String PROMPT_KEY = "test-prompt";
-
+    
     private static final String PROMPT_GROUP = "nacos-ai-prompt";
-
+    
     private static final String RESOURCE_TYPE_PROMPT = "prompt";
-
+    
     private static final long ASYNC_TIMEOUT = 2000L;
-
+    
     @Mock
     private AiResourcePersistService aiResourcePersistService;
-
+    
     @Mock
     private AiResourceVersionPersistService aiResourceVersionPersistService;
-
+    
     @Mock
     private PromptOperationService promptOperationService;
-
+    
     @Mock
     private ConfigInfoPersistService configInfoPersistService;
-
+    
     @Mock
     private ConfigQueryChainService configQueryChainService;
-
+    
     @Mock
     private ConfigOperationService configOperationService;
-
+    
     @Mock
     private AiResourceStorage storage;
-
+    
     @Mock
     private NamespaceOperationService namespaceOperationService;
-
+    
     private PromptDataMigrationTask task;
-
+    
     private NacosPromptLegacyDataReader nacosReader;
-
+    
     private static final org.springframework.core.env.ConfigurableEnvironment CACHED_ENVIRONMENT =
         EnvUtil.getEnvironment();
-
+    
     @BeforeEach
     void setUp() {
         EnvUtil.setEnvironment(new StandardEnvironment());
@@ -136,7 +136,7 @@ class PromptDataMigrationTaskTest {
         AiResourceStorageRouter.join(storage);
         initTaskWithDefaultNamespace();
     }
-
+    
     /**
      * Initialize nacosReader and task with default single-namespace setup.
      * Tests that need a different namespace list should call {@link #initTaskWithNamespaces} instead.
@@ -147,7 +147,7 @@ class PromptDataMigrationTaskTest {
             .thenReturn(Collections.singletonList(defaultNs));
         initTaskWithCurrentStubs();
     }
-
+    
     /**
      * Re-initialize nacosReader and task using whatever stubs are currently set on namespaceOperationService.
      */
@@ -160,7 +160,7 @@ class PromptDataMigrationTaskTest {
             new PromptDataMigrationTask(aiResourcePersistService, aiResourceVersionPersistService,
                 promptOperationService, configQueryChainService, configOperationService, readers);
     }
-
+    
     @AfterEach
     void tearDown() {
         shutdownMigrationExecutor();
@@ -169,7 +169,7 @@ class PromptDataMigrationTaskTest {
         System.clearProperty("nacos.ai.prompt.migration.provider");
         AiResourceStorageRouter.reset();
     }
-
+    
     private void shutdownMigrationExecutor() {
         if (task == null) {
             return;
@@ -191,48 +191,48 @@ class PromptDataMigrationTaskTest {
             throw new IllegalStateException("Failed to access migration executor", e);
         }
     }
-
+    
     // ========== onApplicationEvent guard conditions ==========
-
+    
     @Test
     void testShouldSkipWhenNotRootContext() {
         ApplicationReadyEvent event = mock(ApplicationReadyEvent.class);
         ConfigurableApplicationContext ctx = mock(ConfigurableApplicationContext.class);
         when(event.getApplicationContext()).thenReturn(ctx);
         when(ctx.getParent()).thenReturn(mock(ConfigurableApplicationContext.class));
-
+        
         task.onApplicationEvent(event);
-
+        
         verify(configInfoPersistService, after(500).never())
             .findConfigInfo4Page(anyInt(), anyInt(), any(), any(), any(), any());
     }
-
+    
     @Test
     void testShouldSkipWhenDisabled() {
         System.setProperty("nacos.ai.prompt.migration.enabled", "false");
         EnvUtil.setEnvironment(new StandardEnvironment());
         initTaskWithCurrentStubs();
-
+        
         task.onApplicationEvent(createRootContextEvent());
-
+        
         verify(configInfoPersistService, after(500).never())
             .findConfigInfo4Page(anyInt(), anyInt(), any(), any(), any(), any());
     }
-
+    
     // ========== scan / filter / migration flow ==========
-
+    
     @Test
     void testShouldSkipWhenNoLegacyData() {
         when(configInfoPersistService.findConfigInfo4Page(eq(1), eq(100), any(), eq(PROMPT_GROUP),
             eq(NS), any()))
             .thenReturn(null);
-
+        
         task.onApplicationEvent(createRootContextEvent());
-
+        
         verify(aiResourcePersistService, after(ASYNC_TIMEOUT).never())
             .insert(any(AiResource.class));
     }
-
+    
     @Test
     void testShouldSkipWhenAllAlreadyMigrated() throws Exception {
         Page<ConfigInfo> scanPage = buildScanPage(PROMPT_KEY);
@@ -256,13 +256,13 @@ class PromptDataMigrationTaskTest {
         versionPage.setPageItems(Collections.singletonList(existingVersion));
         when(aiResourceVersionPersistService.list(eq(NS), eq(PROMPT_KEY), eq(RESOURCE_TYPE_PROMPT),
             any(), anyInt(), anyInt())).thenReturn(versionPage);
-
+        
         task.onApplicationEvent(createRootContextEvent());
-
+        
         verify(aiResourcePersistService, after(ASYNC_TIMEOUT).never())
             .insert(any(AiResource.class));
     }
-
+    
     @Test
     void testShouldAcquireMarkerAndMigratePromptSuccessfully() throws Exception {
         // 1. Scan returns one descriptor dataId
@@ -270,18 +270,18 @@ class PromptDataMigrationTaskTest {
         when(configInfoPersistService.findConfigInfo4Page(eq(1), eq(100), any(), eq(PROMPT_GROUP),
             eq(NS), any()))
             .thenReturn(scanPage);
-
+        
         // 2. Not yet migrated
         when(aiResourcePersistService.find(NS, PROMPT_KEY, RESOURCE_TYPE_PROMPT)).thenReturn(null);
-
+        
         // 3. Marker creation succeeds (no exception from publishConfig)
-
+        
         // 4. Config reads: descriptor + mapping + version content
         LegacyDescriptor descriptor = new LegacyDescriptor();
         descriptor.promptKey = PROMPT_KEY;
         descriptor.description = "test desc";
         descriptor.bizTags = Arrays.asList("tag1");
-
+        
         LegacyLabelVersionMapping mapping = new LegacyLabelVersionMapping();
         mapping.promptKey = PROMPT_KEY;
         mapping.versions = Collections.singletonList("0.0.1");
@@ -289,12 +289,12 @@ class PromptDataMigrationTaskTest {
         Map<String, String> labels = new HashMap<>();
         labels.put("latest", "0.0.1");
         mapping.labels = labels;
-
+        
         PromptVersionInfo versionContent = new PromptVersionInfo();
         versionContent.setPromptKey(PROMPT_KEY);
         versionContent.setVersion("0.0.1");
         versionContent.setTemplate("Hello {{name}}");
-
+        
         when(configQueryChainService.handle(any())).thenAnswer(invocation -> {
             Object arg = invocation.getArgument(0);
             if (arg instanceof com.alibaba.nacos.config.server.service.query.model.ConfigQueryChainRequest) {
@@ -314,19 +314,19 @@ class PromptDataMigrationTaskTest {
             }
             return new ConfigQueryChainResponse();
         });
-
+        
         // 5. Version not yet in DB
         when(aiResourceVersionPersistService.find(NS, PROMPT_KEY, RESOURCE_TYPE_PROMPT, "0.0.1"))
             .thenReturn(null);
-
+        
         // 6. readVersionContent uses configInfoPersistService.findConfigAllInfo, not configQueryChainService
         ConfigAllInfo versionConfigAllInfo = new ConfigAllInfo();
         versionConfigAllInfo.setContent(JacksonUtils.toJson(versionContent));
         when(configInfoPersistService.findConfigAllInfo(any(), eq(PROMPT_GROUP), eq(NS)))
             .thenReturn(versionConfigAllInfo);
-
+        
         task.onApplicationEvent(createRootContextEvent());
-
+        
         // Verify: meta record inserted
         verify(aiResourcePersistService, timeout(ASYNC_TIMEOUT)).insert(any(AiResource.class));
         // Verify: version record inserted
@@ -342,7 +342,7 @@ class PromptDataMigrationTaskTest {
                 any(),
                 eq("nacos"), any());
     }
-
+    
     @Test
     void testShouldSkipWhenMarkerAcquireFails() throws Exception {
         Page<ConfigInfo> scanPage = buildScanPage(PROMPT_KEY);
@@ -350,11 +350,11 @@ class PromptDataMigrationTaskTest {
             eq(NS), any()))
             .thenReturn(scanPage);
         when(aiResourcePersistService.find(NS, PROMPT_KEY, RESOURCE_TYPE_PROMPT)).thenReturn(null);
-
+        
         // Marker creation fails: another node holds it
         when(configOperationService.publishConfig(any(), any(), any()))
             .thenThrow(new ConfigAlreadyExistsException("marker exists"));
-
+        
         // Answer-based mock: return proper data for scan reads, timestamp for marker staleness check
         when(configQueryChainService.handle(any())).thenAnswer(invocation -> {
             com.alibaba.nacos.config.server.service.query.model.ConfigQueryChainRequest req =
@@ -377,14 +377,14 @@ class PromptDataMigrationTaskTest {
             }
             return resp;
         });
-
+        
         task.onApplicationEvent(createRootContextEvent());
-
+        
         // Should NOT proceed with migration
         verify(aiResourcePersistService, after(ASYNC_TIMEOUT).never())
             .insert(any(AiResource.class));
     }
-
+    
     @Test
     void testMigrateOneVersionShouldSkipDbInsertWhenAlreadyExists() throws Exception {
         Page<ConfigInfo> scanPage = buildScanPage(PROMPT_KEY);
@@ -394,12 +394,12 @@ class PromptDataMigrationTaskTest {
         // First call: ai_resource not found (needs migration); after insert: found
         when(aiResourcePersistService.find(NS, PROMPT_KEY, RESOURCE_TYPE_PROMPT))
             .thenReturn(null);
-
+        
         LegacyLabelVersionMapping mapping = new LegacyLabelVersionMapping();
         mapping.promptKey = PROMPT_KEY;
         mapping.versions = Collections.singletonList("0.0.1");
         mapping.latestVersion = "0.0.1";
-
+        
         when(configQueryChainService.handle(any())).thenAnswer(invocation -> {
             com.alibaba.nacos.config.server.service.query.model.ConfigQueryChainRequest req =
                 invocation.getArgument(0);
@@ -417,15 +417,15 @@ class PromptDataMigrationTaskTest {
             }
             return resp;
         });
-
+        
         // Version already exists in DB — both storage write and DB insert should be skipped
         AiResourceVersion existingVersion = new AiResourceVersion();
         existingVersion.setVersion("0.0.1");
         when(aiResourceVersionPersistService.find(NS, PROMPT_KEY, RESOURCE_TYPE_PROMPT, "0.0.1"))
             .thenReturn(existingVersion);
-
+        
         task.onApplicationEvent(createRootContextEvent());
-
+        
         // Meta should still be inserted
         verify(aiResourcePersistService, timeout(ASYNC_TIMEOUT)).insert(any(AiResource.class));
         // Existing version storage must not be redirected or overwritten by the current provider
@@ -435,7 +435,7 @@ class PromptDataMigrationTaskTest {
         verify(aiResourceVersionPersistService, after(ASYNC_TIMEOUT).never())
             .insert(any(AiResourceVersion.class));
     }
-
+    
     @Test
     void testShouldReleaseMigrationMarkerEvenOnFailure() throws Exception {
         Page<ConfigInfo> scanPage = buildScanPage(PROMPT_KEY);
@@ -443,7 +443,7 @@ class PromptDataMigrationTaskTest {
             eq(NS), any()))
             .thenReturn(scanPage);
         when(aiResourcePersistService.find(NS, PROMPT_KEY, RESOURCE_TYPE_PROMPT)).thenReturn(null);
-
+        
         // Proper scan mock for descriptor + mapping reads
         when(configQueryChainService.handle(any())).thenAnswer(invocation -> {
             com.alibaba.nacos.config.server.service.query.model.ConfigQueryChainRequest req =
@@ -463,32 +463,32 @@ class PromptDataMigrationTaskTest {
             }
             return resp;
         });
-
+        
         // Migration fails during ai_resource insert
         when(aiResourcePersistService.insert(any(AiResource.class)))
             .thenThrow(new RuntimeException("DB failure"));
-
+        
         task.onApplicationEvent(createRootContextEvent());
-
+        
         // Marker should still be released in finally block
         verify(configOperationService, timeout(ASYNC_TIMEOUT))
             .deleteConfig(eq("nacos.ai.prompt.migration"), eq("nacos_internal"), eq(NS), any(),
                 any(),
                 eq("nacos"), any());
     }
-
+    
     @Test
     void testShouldSkipPromptWhenMappingHasNoVersions() throws Exception {
         Page<ConfigInfo> scanPage = buildScanPage(PROMPT_KEY);
         when(configInfoPersistService.findConfigInfo4Page(eq(1), eq(100), any(), eq(PROMPT_GROUP),
             eq(NS), any()))
             .thenReturn(scanPage);
-
+        
         // Mapping with no versions — buildLegacyPromptData returns null, so scan yields empty list
         LegacyLabelVersionMapping mapping = new LegacyLabelVersionMapping();
         mapping.promptKey = PROMPT_KEY;
         mapping.versions = new ArrayList<>();
-
+        
         when(configQueryChainService.handle(any())).thenAnswer(invocation -> {
             com.alibaba.nacos.config.server.service.query.model.ConfigQueryChainRequest req =
                 invocation.getArgument(0);
@@ -504,27 +504,27 @@ class PromptDataMigrationTaskTest {
             }
             return resp;
         });
-
+        
         task.onApplicationEvent(createRootContextEvent());
-
+        
         // Should not insert anything when mapping has no versions
         verify(aiResourcePersistService, after(ASYNC_TIMEOUT).never())
             .insert(any(AiResource.class));
     }
-
+    
     // ========== Multi-namespace tests ==========
-
+    
     @Test
     void testShouldMigratePromptsFromMultipleNamespaces() throws Exception {
         String ns2 = "dev-namespace";
-
+        
         // Two namespaces
         Namespace defaultNs = new Namespace(NS, "public");
         Namespace devNs = new Namespace(ns2, "dev");
         when(namespaceOperationService.getNamespaceList())
             .thenReturn(Arrays.asList(defaultNs, devNs));
         initTaskWithCurrentStubs();
-
+        
         // Scan: one prompt in each namespace
         String prompt2 = "dev-prompt";
         Page<ConfigInfo> scanPageNs1 = buildScanPage(PROMPT_KEY);
@@ -535,13 +535,13 @@ class PromptDataMigrationTaskTest {
         when(configInfoPersistService.findConfigInfo4Page(eq(1), eq(100), any(), eq(PROMPT_GROUP),
             eq(ns2), any()))
             .thenReturn(scanPageNs2);
-
+        
         // Neither migrated yet
         when(aiResourcePersistService.find(eq(NS), eq(PROMPT_KEY), eq(RESOURCE_TYPE_PROMPT)))
             .thenReturn(null);
         when(aiResourcePersistService.find(eq(ns2), eq(prompt2), eq(RESOURCE_TYPE_PROMPT)))
             .thenReturn(null);
-
+        
         // Version not in DB
         when(aiResourceVersionPersistService.find(eq(NS), eq(PROMPT_KEY), eq(RESOURCE_TYPE_PROMPT),
             eq("0.0.1")))
@@ -549,7 +549,7 @@ class PromptDataMigrationTaskTest {
         when(aiResourceVersionPersistService.find(eq(ns2), eq(prompt2), eq(RESOURCE_TYPE_PROMPT),
             eq("0.0.1")))
             .thenReturn(null);
-
+        
         // Config reads
         when(configQueryChainService.handle(any())).thenAnswer(invocation -> {
             com.alibaba.nacos.config.server.service.query.model.ConfigQueryChainRequest req =
@@ -571,7 +571,7 @@ class PromptDataMigrationTaskTest {
             }
             return resp;
         });
-
+        
         // readVersionContent
         PromptVersionInfo versionContent = new PromptVersionInfo();
         versionContent.setTemplate("Hello");
@@ -579,9 +579,9 @@ class PromptDataMigrationTaskTest {
         versionConfigAllInfo.setContent(JacksonUtils.toJson(versionContent));
         when(configInfoPersistService.findConfigAllInfo(any(), eq(PROMPT_GROUP), any()))
             .thenReturn(versionConfigAllInfo);
-
+        
         task.onApplicationEvent(createRootContextEvent());
-
+        
         // Both prompts should be migrated: 2 meta inserts
         verify(aiResourcePersistService, timeout(ASYNC_TIMEOUT).times(2))
             .insert(any(AiResource.class));
@@ -589,25 +589,25 @@ class PromptDataMigrationTaskTest {
         verify(aiResourceVersionPersistService, timeout(ASYNC_TIMEOUT).times(2))
             .insert(any(AiResourceVersion.class));
     }
-
+    
     @Test
     void testShouldFallbackToDefaultNamespaceWhenNamespaceListFails() throws Exception {
         // Namespace service throws exception
         when(namespaceOperationService.getNamespaceList())
             .thenThrow(new RuntimeException("connection refused"));
         initTaskWithCurrentStubs();
-
+        
         // Default namespace has a prompt
         Page<ConfigInfo> scanPage = buildScanPage(PROMPT_KEY);
         when(configInfoPersistService.findConfigInfo4Page(eq(1), eq(100), any(), eq(PROMPT_GROUP),
             eq(com.alibaba.nacos.api.common.Constants.DEFAULT_NAMESPACE_ID), any()))
             .thenReturn(scanPage);
-
+        
         // Not yet migrated
         when(aiResourcePersistService.find(
             eq(com.alibaba.nacos.api.common.Constants.DEFAULT_NAMESPACE_ID),
             eq(PROMPT_KEY), eq(RESOURCE_TYPE_PROMPT))).thenReturn(null);
-
+        
         when(configQueryChainService.handle(any())).thenAnswer(invocation -> {
             com.alibaba.nacos.config.server.service.query.model.ConfigQueryChainRequest req =
                 invocation.getArgument(0);
@@ -628,7 +628,7 @@ class PromptDataMigrationTaskTest {
             }
             return resp;
         });
-
+        
         PromptVersionInfo versionContent = new PromptVersionInfo();
         versionContent.setTemplate("Hello");
         ConfigAllInfo versionConfigAllInfo = new ConfigAllInfo();
@@ -636,21 +636,21 @@ class PromptDataMigrationTaskTest {
         when(configInfoPersistService.findConfigAllInfo(any(), eq(PROMPT_GROUP),
             eq(com.alibaba.nacos.api.common.Constants.DEFAULT_NAMESPACE_ID)))
             .thenReturn(versionConfigAllInfo);
-
+        
         task.onApplicationEvent(createRootContextEvent());
-
+        
         // Should still migrate the default namespace prompt
         verify(aiResourcePersistService, timeout(ASYNC_TIMEOUT)).insert(any(AiResource.class));
     }
-
+    
     // ========== cleanupLegacyConfig tests ==========
-
+    
     @Test
     void testCleanupLegacyConfigShouldDeleteDescriptorMappingAndVersionConfigs() throws Exception {
         List<String> versions = Arrays.asList("0.0.1", "0.0.2");
-
+        
         nacosReader.cleanupLegacyData(NS, PROMPT_KEY, versions);
-
+        
         // descriptor
         verify(configOperationService).deleteConfig(
             eq(PromptDataIdUtils.buildDescriptorDataId(PROMPT_KEY)),
@@ -670,16 +670,16 @@ class PromptDataMigrationTaskTest {
         verify(configOperationService, times(4)).deleteConfig(any(), any(), any(), any(), any(),
             any(), any());
     }
-
+    
     @Test
     void testCleanupLegacyConfigShouldHandleNullVersions() throws Exception {
         nacosReader.cleanupLegacyData(NS, PROMPT_KEY, null);
-
+        
         // Only descriptor + mapping deleted, no version deletes
         verify(configOperationService, times(2)).deleteConfig(any(), any(), any(), any(), any(),
             any(), any());
     }
-
+    
     @Test
     void testCleanupLegacyConfigShouldReportDeleteExceptionsAfterTryingAllEntries()
         throws Exception {
@@ -688,11 +688,11 @@ class PromptDataMigrationTaskTest {
             eq(PromptDataIdUtils.buildDescriptorDataId(PROMPT_KEY)),
             eq(PROMPT_GROUP), eq(NS), any(), any(), eq("nacos"), any()))
             .thenThrow(new RuntimeException("delete failed"));
-
+        
         assertThrows(NacosException.class,
             () -> nacosReader.cleanupLegacyData(NS, PROMPT_KEY,
                 Collections.singletonList("0.0.1")));
-
+        
         // mapping delete should still be called despite descriptor delete failure
         verify(configOperationService).deleteConfig(
             eq(PromptDataIdUtils.buildLabelVersionMappingDataId(PROMPT_KEY)),
@@ -702,16 +702,16 @@ class PromptDataMigrationTaskTest {
             eq(PromptDataIdUtils.buildVersionDataId(PROMPT_KEY, "0.0.1")),
             eq(PROMPT_GROUP), eq(NS), any(), any(), eq("nacos"), any());
     }
-
+    
     @Test
     void testCleanupLegacyConfigViaTaskShouldDelegateToReader() throws NacosException {
         task.cleanupLegacyConfig(NS, PROMPT_KEY, Arrays.asList("0.0.1"));
-
+        
         // Should delegate to nacosReader which calls deleteConfig
         verify(configOperationService, atLeastOnce()).deleteConfig(any(), any(), any(), any(),
             any(), any(), any());
     }
-
+    
     @Test
     void testCleanupLegacyConfigViaTaskShouldNoopWhenNoReaderFound() throws NacosException {
         // Use a provider type that doesn't match any reader
@@ -721,16 +721,16 @@ class PromptDataMigrationTaskTest {
             new PromptDataMigrationTask(aiResourcePersistService, aiResourceVersionPersistService,
                 promptOperationService, configQueryChainService, configOperationService,
                 Collections.singletonList(nacosReader));
-
+        
         task.cleanupLegacyConfig(NS, PROMPT_KEY, Arrays.asList("0.0.1"));
-
+        
         // No deleteConfig calls since reader not found
         verify(configOperationService, never()).deleteConfig(any(), any(), any(), any(), any(),
             any(), any());
     }
-
+    
     // ========== hasUnmigratedVersions / filterNeedsMigration edge cases ==========
-
+    
     @Test
     void testShouldDetectPartiallyMigratedPrompt() throws Exception {
         // Prompt exists in DB but only 1 of 2 versions migrated
@@ -738,16 +738,16 @@ class PromptDataMigrationTaskTest {
         when(configInfoPersistService.findConfigInfo4Page(eq(1), eq(100), any(), eq(PROMPT_GROUP),
             eq(NS), any()))
             .thenReturn(scanPage);
-
+        
         when(aiResourcePersistService.find(NS, PROMPT_KEY, RESOURCE_TYPE_PROMPT))
             .thenReturn(new AiResource());
-
+        
         // Legacy has 2 versions
         LegacyLabelVersionMapping mapping = new LegacyLabelVersionMapping();
         mapping.promptKey = PROMPT_KEY;
         mapping.versions = Arrays.asList("0.0.1", "0.0.2");
         mapping.latestVersion = "0.0.2";
-
+        
         when(configQueryChainService.handle(any())).thenAnswer(invocation -> {
             com.alibaba.nacos.config.server.service.query.model.ConfigQueryChainRequest req =
                 invocation.getArgument(0);
@@ -765,7 +765,7 @@ class PromptDataMigrationTaskTest {
             }
             return resp;
         });
-
+        
         // Only version 0.0.1 is in DB; 0.0.2 is not
         Page<AiResourceVersion> versionPage = new Page<>();
         AiResourceVersion v1 = new AiResourceVersion();
@@ -773,13 +773,13 @@ class PromptDataMigrationTaskTest {
         versionPage.setPageItems(Collections.singletonList(v1));
         when(aiResourceVersionPersistService.list(eq(NS), eq(PROMPT_KEY), eq(RESOURCE_TYPE_PROMPT),
             any(), anyInt(), anyInt())).thenReturn(versionPage);
-
+        
         // Version 0.0.1 already exists, 0.0.2 does not
         when(aiResourceVersionPersistService.find(NS, PROMPT_KEY, RESOURCE_TYPE_PROMPT, "0.0.1"))
             .thenReturn(v1);
         when(aiResourceVersionPersistService.find(NS, PROMPT_KEY, RESOURCE_TYPE_PROMPT, "0.0.2"))
             .thenReturn(null);
-
+        
         // readVersionContent
         PromptVersionInfo versionContent = new PromptVersionInfo();
         versionContent.setTemplate("Hello");
@@ -787,29 +787,29 @@ class PromptDataMigrationTaskTest {
         versionConfigAllInfo.setContent(JacksonUtils.toJson(versionContent));
         when(configInfoPersistService.findConfigAllInfo(any(), eq(PROMPT_GROUP), eq(NS)))
             .thenReturn(versionConfigAllInfo);
-
+        
         task.onApplicationEvent(createRootContextEvent());
-
+        
         // Meta insert will be attempted (may throw duplicate, that's fine — existing check handles it)
         // At least one version insert should happen (for 0.0.2)
         verify(aiResourceVersionPersistService, timeout(ASYNC_TIMEOUT).atLeastOnce())
             .insert(any(AiResourceVersion.class));
     }
-
+    
     @Test
     void testShouldSkipWhenAllVersionsAlreadyMigratedViaListCheck() throws Exception {
         Page<ConfigInfo> scanPage = buildScanPage(PROMPT_KEY);
         when(configInfoPersistService.findConfigInfo4Page(eq(1), eq(100), any(), eq(PROMPT_GROUP),
             eq(NS), any()))
             .thenReturn(scanPage);
-
+        
         when(aiResourcePersistService.find(NS, PROMPT_KEY, RESOURCE_TYPE_PROMPT))
             .thenReturn(new AiResource());
-
+        
         LegacyLabelVersionMapping mapping = new LegacyLabelVersionMapping();
         mapping.promptKey = PROMPT_KEY;
         mapping.versions = Arrays.asList("0.0.1", "0.0.2");
-
+        
         when(configQueryChainService.handle(any())).thenAnswer(invocation -> {
             com.alibaba.nacos.config.server.service.query.model.ConfigQueryChainRequest req =
                 invocation.getArgument(0);
@@ -824,7 +824,7 @@ class PromptDataMigrationTaskTest {
             }
             return resp;
         });
-
+        
         // Both versions already in DB
         Page<AiResourceVersion> versionPage = new Page<>();
         AiResourceVersion v1 = new AiResourceVersion();
@@ -834,16 +834,16 @@ class PromptDataMigrationTaskTest {
         versionPage.setPageItems(Arrays.asList(v1, v2));
         when(aiResourceVersionPersistService.list(eq(NS), eq(PROMPT_KEY), eq(RESOURCE_TYPE_PROMPT),
             any(), anyInt(), anyInt())).thenReturn(versionPage);
-
+        
         task.onApplicationEvent(createRootContextEvent());
-
+        
         // All migrated — no inserts
         verify(aiResourcePersistService, after(ASYNC_TIMEOUT).never())
             .insert(any(AiResource.class));
     }
-
+    
     // ========== latestVersion label auto-fill test ==========
-
+    
     @Test
     void testShouldAutoFillLatestLabelWhenMissing() throws Exception {
         Page<ConfigInfo> scanPage = buildScanPage(PROMPT_KEY);
@@ -851,18 +851,18 @@ class PromptDataMigrationTaskTest {
             eq(NS), any()))
             .thenReturn(scanPage);
         when(aiResourcePersistService.find(NS, PROMPT_KEY, RESOURCE_TYPE_PROMPT)).thenReturn(null);
-
+        
         // Mapping has latestVersion but labels does NOT contain "latest" key
         LegacyLabelVersionMapping mapping = new LegacyLabelVersionMapping();
         mapping.promptKey = PROMPT_KEY;
         mapping.versions = Collections.singletonList("0.0.1");
         mapping.latestVersion = "0.0.1";
         mapping.labels = new HashMap<>(); // no "latest" key
-
+        
         LegacyDescriptor descriptor = new LegacyDescriptor();
         descriptor.promptKey = PROMPT_KEY;
         descriptor.description = "test";
-
+        
         when(configQueryChainService.handle(any())).thenAnswer(invocation -> {
             com.alibaba.nacos.config.server.service.query.model.ConfigQueryChainRequest req =
                 invocation.getArgument(0);
@@ -878,29 +878,29 @@ class PromptDataMigrationTaskTest {
             }
             return resp;
         });
-
+        
         PromptVersionInfo versionContent = new PromptVersionInfo();
         versionContent.setTemplate("Hello");
         ConfigAllInfo versionConfigAllInfo = new ConfigAllInfo();
         versionConfigAllInfo.setContent(JacksonUtils.toJson(versionContent));
         when(configInfoPersistService.findConfigAllInfo(any(), eq(PROMPT_GROUP), eq(NS)))
             .thenReturn(versionConfigAllInfo);
-
+        
         // Capture the inserted AiResource to verify versionInfo contains "latest" label
         org.mockito.ArgumentCaptor<AiResource> resourceCaptor =
             org.mockito.ArgumentCaptor.forClass(AiResource.class);
-
+        
         task.onApplicationEvent(createRootContextEvent());
-
+        
         verify(aiResourcePersistService, timeout(ASYNC_TIMEOUT)).insert(resourceCaptor.capture());
         AiResource inserted = resourceCaptor.getValue();
         assertNotNull(inserted.getVersionInfo());
         assertTrue(inserted.getVersionInfo().contains("\"latest\""));
         assertTrue(inserted.getVersionInfo().contains("0.0.1"));
     }
-
+    
     // ========== NacosPromptLegacyDataReader scan edge cases ==========
-
+    
     @Test
     void testScanShouldPaginateCorrectly() {
         // First page: full (100 items), second page: partial (1 item), third page: null
@@ -918,7 +918,7 @@ class PromptDataMigrationTaskTest {
         }
         Page<ConfigInfo> page1 = new Page<>();
         page1.setPageItems(page1Items);
-
+        
         List<ConfigInfo> page2Items = new ArrayList<>();
         ConfigInfo lastItem = new ConfigInfo();
         lastItem.setDataId(PromptDataIdUtils.buildDescriptorDataId("prompt-last"));
@@ -926,14 +926,14 @@ class PromptDataMigrationTaskTest {
         page2Items.add(lastItem);
         Page<ConfigInfo> page2 = new Page<>();
         page2.setPageItems(page2Items);
-
+        
         when(configInfoPersistService.findConfigInfo4Page(eq(1), eq(100), any(), eq(PROMPT_GROUP),
             eq(NS), any()))
             .thenReturn(page1);
         when(configInfoPersistService.findConfigInfo4Page(eq(2), eq(100), any(), eq(PROMPT_GROUP),
             eq(NS), any()))
             .thenReturn(page2);
-
+        
         // Mapping returns empty versions so buildLegacyPromptData returns null — that's fine,
         // we just want to verify pagination works
         when(configQueryChainService.handle(any())).thenAnswer(invocation -> {
@@ -944,9 +944,9 @@ class PromptDataMigrationTaskTest {
             resp.setContent(JacksonUtils.toJson(mapping));
             return resp;
         });
-
+        
         List<LegacyPromptData> result = nacosReader.scanLegacyPrompts();
-
+        
         // All 4 descriptor dataIds found, but all skipped because no versions
         assertTrue(result.isEmpty());
         // Verify both pages were queried
@@ -955,7 +955,7 @@ class PromptDataMigrationTaskTest {
         verify(configInfoPersistService).findConfigInfo4Page(eq(2), eq(100), any(),
             eq(PROMPT_GROUP), eq(NS), any());
     }
-
+    
     @Test
     void testReadVersionContentShouldFallbackToRawTemplateOnParseFailure() {
         String versionDataId = PromptDataIdUtils.buildVersionDataId(PROMPT_KEY, "0.0.1");
@@ -966,9 +966,9 @@ class PromptDataMigrationTaskTest {
         when(
             configInfoPersistService.findConfigAllInfo(eq(versionDataId), eq(PROMPT_GROUP), eq(NS)))
             .thenReturn(configAllInfo);
-
+        
         PromptVersionInfo result = nacosReader.readVersionContent(NS, PROMPT_KEY, "0.0.1");
-
+        
         assertNotNull(result);
         assertEquals("This is plain text, not JSON", result.getTemplate());
         assertEquals(PROMPT_KEY, result.getPromptKey());
@@ -976,19 +976,19 @@ class PromptDataMigrationTaskTest {
         assertEquals("abc123", result.getMd5());
         assertEquals("testUser", result.getSrcUser());
     }
-
+    
     @Test
     void testReadVersionContentShouldReturnNullWhenConfigNotFound() {
         String versionDataId = PromptDataIdUtils.buildVersionDataId(PROMPT_KEY, "0.0.1");
         when(
             configInfoPersistService.findConfigAllInfo(eq(versionDataId), eq(PROMPT_GROUP), eq(NS)))
             .thenReturn(null);
-
+        
         PromptVersionInfo result = nacosReader.readVersionContent(NS, PROMPT_KEY, "0.0.1");
-
+        
         assertNull(result);
     }
-
+    
     @Test
     void testReadVersionContentShouldReturnNullWhenContentIsBlank() {
         String versionDataId = PromptDataIdUtils.buildVersionDataId(PROMPT_KEY, "0.0.1");
@@ -997,14 +997,14 @@ class PromptDataMigrationTaskTest {
         when(
             configInfoPersistService.findConfigAllInfo(eq(versionDataId), eq(PROMPT_GROUP), eq(NS)))
             .thenReturn(configAllInfo);
-
+        
         PromptVersionInfo result = nacosReader.readVersionContent(NS, PROMPT_KEY, "0.0.1");
-
+        
         assertNull(result);
     }
-
+    
     // ========== Stale marker recovery test ==========
-
+    
     @Test
     void testShouldRecoverFromStaleMarkerAndMigrate() throws Exception {
         Page<ConfigInfo> scanPage = buildScanPage(PROMPT_KEY);
@@ -1014,12 +1014,12 @@ class PromptDataMigrationTaskTest {
         when(aiResourcePersistService.find(NS, PROMPT_KEY, RESOURCE_TYPE_PROMPT)).thenReturn(null);
         when(aiResourceVersionPersistService.find(NS, PROMPT_KEY, RESOURCE_TYPE_PROMPT, "0.0.1"))
             .thenReturn(null);
-
+        
         // First publishConfig: marker already exists (stale); after delete+retry: succeeds
         when(configOperationService.publishConfig(any(), any(), any()))
             .thenThrow(new ConfigAlreadyExistsException("marker exists"))
             .thenReturn(true);
-
+        
         // configQueryChainService: return stale timestamp for marker check, proper data for scan
         when(configQueryChainService.handle(any())).thenAnswer(invocation -> {
             com.alibaba.nacos.config.server.service.query.model.ConfigQueryChainRequest req =
@@ -1044,22 +1044,22 @@ class PromptDataMigrationTaskTest {
             }
             return resp;
         });
-
+        
         PromptVersionInfo versionContent = new PromptVersionInfo();
         versionContent.setTemplate("Hello");
         ConfigAllInfo versionConfigAllInfo = new ConfigAllInfo();
         versionConfigAllInfo.setContent(JacksonUtils.toJson(versionContent));
         when(configInfoPersistService.findConfigAllInfo(any(), eq(PROMPT_GROUP), eq(NS)))
             .thenReturn(versionConfigAllInfo);
-
+        
         task.onApplicationEvent(createRootContextEvent());
-
+        
         // Should recover from stale marker and proceed with migration
         verify(aiResourcePersistService, timeout(ASYNC_TIMEOUT)).insert(any(AiResource.class));
     }
-
+    
     // ========== Helper methods ==========
-
+    
     private ApplicationReadyEvent createRootContextEvent() {
         ApplicationReadyEvent event = mock(ApplicationReadyEvent.class);
         ConfigurableApplicationContext ctx = mock(ConfigurableApplicationContext.class);
@@ -1067,7 +1067,7 @@ class PromptDataMigrationTaskTest {
         when(ctx.getParent()).thenReturn(null);
         return event;
     }
-
+    
     private Page<ConfigInfo> buildScanPage(String... promptKeys) {
         Page<ConfigInfo> page = new Page<>();
         List<ConfigInfo> items = new ArrayList<>();

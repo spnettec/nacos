@@ -41,9 +41,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @ControllerAdvice(annotations = ArdApi.class)
 @ResponseBody
 public class ArdExceptionHandler {
-
+    
     private static final Logger LOGGER = LoggerFactory.getLogger(ArdExceptionHandler.class);
-
+    
     /**
      * Handle an ARD request validation failure.
      */
@@ -53,7 +53,7 @@ public class ArdExceptionHandler {
         LOGGER.warn("ARD request failed: {}", exception.getErrMsg());
         return response(status, exception.getErrMsg());
     }
-
+    
     /**
      * Handle a Nacos service failure exposed through ARD.
      */
@@ -63,7 +63,7 @@ public class ArdExceptionHandler {
         LOGGER.warn("ARD operation failed: {}", exception.getErrMsg());
         return response(status, exception.getErrMsg());
     }
-
+    
     /**
      * Handle malformed ARD request bodies and parameters.
      */
@@ -75,7 +75,7 @@ public class ArdExceptionHandler {
         LOGGER.warn("Invalid ARD request: {}", exception.getMessage());
         return response(HttpStatus.BAD_REQUEST, exception.getMessage());
     }
-
+    
     /**
      * Handle access failures.
      */
@@ -84,7 +84,7 @@ public class ArdExceptionHandler {
         LOGGER.warn("ARD access denied: {}", exception.getErrMsg());
         return response(HttpStatus.UNAUTHORIZED, exception.getErrMsg());
     }
-
+    
     /**
      * Handle unexpected ARD failures.
      */
@@ -93,19 +93,19 @@ public class ArdExceptionHandler {
         LOGGER.error("Unexpected ARD operation failure", exception);
         return response(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
     }
-
+    
     private ResponseEntity<ArdErrorResponse> response(HttpStatus status, String message) {
         String responseMessage = message == null || message.isBlank()
             ? status.getReasonPhrase() : message;
         return ResponseEntity.status(status)
             .body(new ArdErrorResponse(errorCode(status), responseMessage));
     }
-
+    
     private HttpStatus resolveStatus(int statusCode) {
         HttpStatus status = HttpStatus.resolve(statusCode);
         return status == null ? HttpStatus.INTERNAL_SERVER_ERROR : status;
     }
-
+    
     private String errorCode(HttpStatus status) {
         switch (status) {
             case BAD_REQUEST:

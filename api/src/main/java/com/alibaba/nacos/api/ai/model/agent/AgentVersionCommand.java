@@ -27,13 +27,13 @@ import java.io.Serializable;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AgentVersionCommand implements Serializable {
-
+    
     private static final long serialVersionUID = 1L;
-
+    
     private String agentName;
-
+    
     private String version;
-
+    
     /**
      * Validate the exact Version identity.
      */
@@ -41,19 +41,19 @@ public class AgentVersionCommand implements Serializable {
         AgentAdminRequestUtils.validateIdentity(agentName);
         AgentAdminRequestUtils.validateVersion(version);
     }
-
+    
     public String getAgentName() {
         return agentName;
     }
-
+    
     public void setAgentName(String agentName) {
         this.agentName = agentName;
     }
-
+    
     public String getVersion() {
         return version;
     }
-
+    
     public void setVersion(String version) {
         this.version = version;
     }

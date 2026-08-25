@@ -25,11 +25,11 @@ import java.sql.Timestamp;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class JacksonSerializationCompatibilityTest {
-
+    
     private static final long LARGE_ID = 9007199254740993L;
-
+    
     private final JsonMapper jackson3Mapper = new JsonMapper();
-
+    
     @Test
     void shouldSerializeConfigHistoryInfoIdAsString() throws Exception {
         ConfigHistoryInfo model = new ConfigHistoryInfo();
@@ -38,21 +38,21 @@ class JacksonSerializationCompatibilityTest {
         model.setLastModifiedTime(new Timestamp(0L));
         assertIdIsString(model);
     }
-
+    
     @Test
     void shouldSerializeConfigInfoBaseIdAsString() throws Exception {
         ConfigInfoBase model = new ConfigInfoBase();
         model.setId(LARGE_ID);
         assertIdIsString(model);
     }
-
+    
     @Test
     void shouldSerializeCapacityIdAsString() throws Exception {
         Capacity model = new Capacity();
         model.setId(LARGE_ID);
         assertIdIsString(model);
     }
-
+    
     private void assertIdIsString(Object model) throws Exception {
         String expected = "\"id\":\"" + LARGE_ID + "\"";
         String jackson3Json = jackson3Mapper.writeValueAsString(model);

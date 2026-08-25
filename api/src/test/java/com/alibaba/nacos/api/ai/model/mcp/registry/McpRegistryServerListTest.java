@@ -43,7 +43,7 @@ class McpRegistryServerListTest extends BasicRequestTest {
         assertTrue(json.contains("\"nextCursor\":\"next\""));
         assertTrue(json.contains("\"count\":1"));
     }
-
+    
     @Test
     void testDeserialize() throws JacksonException {
         // Test with new camelCase format (primary)

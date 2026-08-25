@@ -40,22 +40,22 @@ import io.grpc.Status;
  */
 @Secured(resource = "jraft", signType = SignType.SPECIFIED, apiType = ApiType.INNER_API)
 public class NacosJRaftServerInterceptor implements ServerInterceptor {
-
+    
     private static final Secured JRAFT_SECURED =
         NacosJRaftServerInterceptor.class.getAnnotation(Secured.class);
-
+    
     private final JRaftAuthUpgradeCoordinator upgradeCoordinator;
-
+    
     private final NacosAuthConfig authConfig;
-
+    
     private final ServerIdentityChecker identityChecker;
-
+    
     public NacosJRaftServerInterceptor(JRaftAuthUpgradeCoordinator upgradeCoordinator) {
         this(upgradeCoordinator, NacosAuthConfigHolder.getInstance()
             .getNacosAuthConfigByScope(NacosServerAuthConfig.NACOS_SERVER_AUTH_SCOPE),
             ServerIdentityCheckerHolder.getInstance().newChecker());
     }
-
+    
     NacosJRaftServerInterceptor(JRaftAuthUpgradeCoordinator upgradeCoordinator,
         NacosAuthConfig authConfig, ServerIdentityChecker identityChecker) {
         this.upgradeCoordinator = upgradeCoordinator;
@@ -63,7 +63,7 @@ public class NacosJRaftServerInterceptor implements ServerInterceptor {
         this.identityChecker = identityChecker;
         this.identityChecker.init(authConfig);
     }
-
+    
     @Override
     public <T, R> ServerCall.Listener<T> interceptCall(
         ServerCall<T, R> call, Metadata headers,
@@ -76,7 +76,7 @@ public class NacosJRaftServerInterceptor implements ServerInterceptor {
         return new ServerCall.Listener<T>() {
         };
     }
-
+    
     private boolean isCredentialValid(Metadata headers) {
         if (authConfig == null || StringUtils.isBlank(authConfig.getServerIdentityKey())
             || StringUtils.isBlank(authConfig.getServerIdentityValue())) {

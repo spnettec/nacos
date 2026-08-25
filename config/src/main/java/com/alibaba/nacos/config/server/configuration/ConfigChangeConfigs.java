@@ -44,20 +44,20 @@ import java.util.concurrent.ConcurrentHashMap;
 @Deprecated
 @Configuration
 public class ConfigChangeConfigs extends Subscriber<ServerConfigChangeEvent> {
-
+    
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfigChangeConfigs.class);
-
+    
     private static final String PREFIX = ConfigChangeConstants.NACOS_CORE_CONFIG_PLUGIN_PREFIX;
-
+    
     private volatile Map<String, Properties> configPluginProperties = new HashMap<>();
-
+    
     private final Set<String> legacyUsageWarnedPlugins = ConcurrentHashMap.newKeySet();
-
+    
     public ConfigChangeConfigs() {
         NotifyCenter.registerSubscriber(this);
         refreshPluginProperties();
     }
-
+    
     private void refreshPluginProperties() {
         try {
             Map<String, Properties> newProperties = new HashMap<>(3);
@@ -80,7 +80,7 @@ public class ConfigChangeConfigs extends Subscriber<ServerConfigChangeEvent> {
             LOGGER.warn("[ConfigChangeConfigs]Refresh config plugin properties failed ", e);
         }
     }
-
+    
     public Properties getPluginProperties(String configPluginType) {
         if (legacyUsageWarnedPlugins.add(configPluginType)) {
             LOGGER.warn("[ConfigChangeConfigs] Applying deprecated legacy configuration with "
@@ -97,12 +97,12 @@ public class ConfigChangeConfigs extends Subscriber<ServerConfigChangeEvent> {
         }
         return properties;
     }
-
+    
     @Override
     public void onEvent(ServerConfigChangeEvent event) {
         refreshPluginProperties();
     }
-
+    
     @Override
     public Class<? extends Event> subscribeType() {
         return ServerConfigChangeEvent.class;

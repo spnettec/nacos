@@ -33,14 +33,14 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class DatasourceConfigurationTest {
-
+    
     @Mock
     ConfigurableApplicationContext context;
-
+    
     DatasourceConfiguration datasourceConfiguration;
-
+    
     MockEnvironment environment;
-
+    
     @BeforeEach
     void setUp() {
         environment = new MockEnvironment();
@@ -50,7 +50,7 @@ class DatasourceConfigurationTest {
         DatasourceConfiguration.useExternalDb = false;
         DatasourceConfiguration.embeddedStorage = true;
     }
-
+    
     @AfterEach
     void tearDown() {
         DatasourceConfiguration.useExternalDb = false;
@@ -59,14 +59,14 @@ class DatasourceConfigurationTest {
         EnvUtil.setEnvironment(null);
         System.clearProperty(PersistenceConstant.EMBEDDED_STORAGE);
     }
-
+    
     @Test
     void testInitializeForEmptyDatasourceForStandaloneMode() {
         datasourceConfiguration.initialize(context);
         assertTrue(DatasourceConfiguration.isEmbeddedStorage());
         assertFalse(DatasourceConfiguration.isUseExternalDb());
     }
-
+    
     @Test
     void testInitializeForEmptyDatasourceForClusterMode() {
         EnvUtil.setIsStandalone(false);
@@ -75,7 +75,7 @@ class DatasourceConfigurationTest {
         assertFalse(DatasourceConfiguration.isEmbeddedStorage());
         assertTrue(DatasourceConfiguration.isUseExternalDb());
     }
-
+    
     @Test
     void testInitializeForDerbyForStandaloneMode() {
         environment.setProperty(PersistenceConstant.DATASOURCE_PLATFORM_PROPERTY,
@@ -85,7 +85,7 @@ class DatasourceConfigurationTest {
         assertTrue(DatasourceConfiguration.isEmbeddedStorage());
         assertFalse(DatasourceConfiguration.isUseExternalDb());
     }
-
+    
     @Test
     void testInitializeForDerbyForClusterMode() {
         EnvUtil.setIsStandalone(false);
@@ -97,7 +97,7 @@ class DatasourceConfigurationTest {
         assertTrue(DatasourceConfiguration.isEmbeddedStorage());
         assertFalse(DatasourceConfiguration.isUseExternalDb());
     }
-
+    
     @Test
     void testInitializeForMySqlForStandaloneMode() {
         environment.setProperty(PersistenceConstant.DATASOURCE_PLATFORM_PROPERTY,
@@ -105,9 +105,9 @@ class DatasourceConfigurationTest {
         datasourceConfiguration.initialize(context);
         assertFalse(DatasourceConfiguration.isEmbeddedStorage());
         assertTrue(DatasourceConfiguration.isUseExternalDb());
-
+        
     }
-
+    
     @Test
     void testInitializeForMySqlForClusterMode() {
         EnvUtil.setIsStandalone(false);
@@ -118,7 +118,7 @@ class DatasourceConfigurationTest {
         assertFalse(DatasourceConfiguration.isEmbeddedStorage());
         assertTrue(DatasourceConfiguration.isUseExternalDb());
     }
-
+    
     @Test
     void testInitializeForPgSqlForStandaloneMode() {
         environment.setProperty(PersistenceConstant.DATASOURCE_PLATFORM_PROPERTY, "postgresql");
@@ -126,7 +126,7 @@ class DatasourceConfigurationTest {
         assertFalse(DatasourceConfiguration.isEmbeddedStorage());
         assertTrue(DatasourceConfiguration.isUseExternalDb());
     }
-
+    
     @Test
     void testInitializeForPgSqlForClusterMode() {
         EnvUtil.setIsStandalone(false);

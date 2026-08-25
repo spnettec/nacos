@@ -63,7 +63,8 @@ class JacksonUtilsTest {
                 .toJson(Collections.singletonList(Collections.singletonMap("key", "value"))));
         assertEquals("{\"aLong\":0,\"aInteger\":1,\"aBoolean\":false}",
             JacksonUtils.toJson(new TestOfAtomicObject()));
-        assertEquals("{\"date\":\"2021-07-13T16:00:00.000Z\"}", JacksonUtils.toJson(new TestOfDate()));
+        assertEquals("{\"date\":\"2021-07-13T16:00:00.000Z\"}",
+            JacksonUtils.toJson(new TestOfDate()));
         // only public
         assertEquals("{\"publicAccessModifier\":\"public\"}",
             JacksonUtils.toJson(new TestOfAccessModifier()));

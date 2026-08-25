@@ -49,10 +49,10 @@ public class RequestLogAspect {
     
     private static final String PUBLISH_CONFIG =
         "execution(* com.alibaba.nacos.config.server.service.ConfigOperationService.publishConfig(..))";
-
+    
     private static final String GET_CONFIG =
         "execution(* com.alibaba.nacos.config.server.service.query.ConfigQueryChainService.handle(..))";
-
+    
     private static final String DELETE_CONFIG =
         "execution(* com.alibaba.nacos.config.server.service.ConfigOperationService.deleteConfig(..))";
     

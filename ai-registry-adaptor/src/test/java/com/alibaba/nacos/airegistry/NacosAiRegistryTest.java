@@ -29,12 +29,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * @author nacos
  */
 class NacosAiRegistryTest {
-
+    
     @Test
     void testConstruct() {
         assertNotNull(new NacosAiRegistry());
     }
-
+    
     @Test
     void testMainDelegatesToSpringApplication() {
         String[] args = {"--server.port=0"};

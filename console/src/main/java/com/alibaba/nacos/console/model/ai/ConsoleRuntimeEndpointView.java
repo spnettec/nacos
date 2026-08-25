@@ -24,52 +24,52 @@ import com.alibaba.nacos.api.ai.model.agent.RuntimeEndpointSnapshot;
  * @author Nacos
  */
 public class ConsoleRuntimeEndpointView {
-
+    
     private final RuntimeEndpointSnapshot runtimeEndpointSnapshot;
-
+    
     private final NamingServiceRef namingServiceRef;
-
+    
     public ConsoleRuntimeEndpointView(RuntimeEndpointSnapshot runtimeEndpointSnapshot,
         NamingServiceRef namingServiceRef) {
         this.runtimeEndpointSnapshot = runtimeEndpointSnapshot;
         this.namingServiceRef = namingServiceRef;
     }
-
+    
     public RuntimeEndpointSnapshot getRuntimeEndpointSnapshot() {
         return runtimeEndpointSnapshot;
     }
-
+    
     public NamingServiceRef getNamingServiceRef() {
         return namingServiceRef;
     }
-
+    
     /**
      * Physical Naming service coordinates for one Agent and protocol.
      *
      * @author Nacos
      */
     public static class NamingServiceRef {
-
+        
         private final String namespaceId;
-
+        
         private final String groupName;
-
+        
         private final String serviceName;
-
+        
         public NamingServiceRef(String namespaceId, String groupName, String serviceName) {
             this.namespaceId = namespaceId;
             this.groupName = groupName;
             this.serviceName = serviceName;
         }
-
+        
         public String getNamespaceId() {
             return namespaceId;
         }
-
+        
         public String getGroupName() {
             return groupName;
         }
-
+        
         public String getServiceName() {
             return serviceName;
         }

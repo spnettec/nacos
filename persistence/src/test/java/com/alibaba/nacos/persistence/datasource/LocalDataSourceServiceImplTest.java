@@ -53,21 +53,21 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class LocalDataSourceServiceImplTest {
-
+    
     @InjectMocks
     private LocalDataSourceServiceImpl service;
-
+    
     @Mock
     private JdbcTemplate jt;
-
+    
     @Mock
     private TransactionTemplate tjt;
-
+    
     @TempDir
     private Path tempDir;
-
+    
     private LocalDataSourceServiceImpl serviceToClose;
-
+    
     @BeforeEach
     void setUp() {
         DerbyTestUtils.resetDynamicDataSource();
@@ -79,14 +79,14 @@ class LocalDataSourceServiceImplTest {
         ReflectionTestUtils.setField(service, "jt", jt);
         ReflectionTestUtils.setField(service, "tjt", tjt);
     }
-
+    
     @AfterEach
     void tearDown() {
         DerbyTestUtils.closeLocalDataSource(serviceToClose);
         serviceToClose = null;
         DerbyTestUtils.resetDerbyState(tempDir);
     }
-
+    
     @Test
     void testInitWhenUseExternalDB() throws Exception {
         try {
@@ -99,7 +99,7 @@ class LocalDataSourceServiceImplTest {
             DatasourceConfiguration.setUseExternalDb(false);
         }
     }
-
+    
     @Test
     void testInit() throws Exception {
         try {
@@ -114,7 +114,7 @@ class LocalDataSourceServiceImplTest {
             EnvUtil.setEnvironment(null);
         }
     }
-
+    
     @Test
     void testAiResourceDescriptionCapacity() throws Exception {
         try {
@@ -127,7 +127,7 @@ class LocalDataSourceServiceImplTest {
             service1.init();
             JdbcTemplate jdbcTemplate = service1.getJdbcTemplate();
             String description = "d".repeat(2048);
-
+            
             jdbcTemplate.update(
                 "INSERT INTO ai_resource (name, type, c_desc, namespace_id) VALUES (?, ?, ?, ?)",
                 "agent", "agent", description, "public");
@@ -136,7 +136,7 @@ class LocalDataSourceServiceImplTest {
                     + "(type, name, c_desc, status, version, namespace_id) "
                     + "VALUES (?, ?, ?, ?, ?, ?)",
                 "agent", "agent", description, "draft", "1.0.0", "public");
-
+            
             assertEquals(description, jdbcTemplate.queryForObject(
                 "SELECT c_desc FROM ai_resource WHERE name = ?", String.class, "agent"));
             assertEquals(description, jdbcTemplate.queryForObject(
@@ -145,12 +145,12 @@ class LocalDataSourceServiceImplTest {
             EnvUtil.setEnvironment(null);
         }
     }
-
+    
     @Test
     void testReloadWithNullDatasource() {
         assertThrowsExactly(RuntimeException.class, service::reload, "datasource is null");
     }
-
+    
     @Test
     void testReloadWithException() throws SQLException {
         DataSource ds = mock(DataSource.class);
@@ -158,7 +158,7 @@ class LocalDataSourceServiceImplTest {
         when(ds.getConnection()).thenThrow(new SQLException());
         assertThrows(NacosRuntimeException.class, service::reload);
     }
-
+    
     @Test
     void testCleanAndReopen() throws Exception {
         try {
@@ -171,7 +171,7 @@ class LocalDataSourceServiceImplTest {
             EnvUtil.setEnvironment(null);
         }
     }
-
+    
     @Test
     void testRestoreDerby() throws Exception {
         try {
@@ -189,7 +189,7 @@ class LocalDataSourceServiceImplTest {
             EnvUtil.setEnvironment(null);
         }
     }
-
+    
     @Test
     void testGetDataSource() {
         HikariDataSource dataSource = new HikariDataSource();
@@ -202,10 +202,10 @@ class LocalDataSourceServiceImplTest {
             dataSource.close();
         }
     }
-
+    
     @Test
     void testCheckMasterWritable() {
         assertTrue(service.checkMasterWritable());
     }
-
+    
 }

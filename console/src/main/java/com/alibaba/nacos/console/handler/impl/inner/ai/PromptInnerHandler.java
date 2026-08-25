@@ -52,7 +52,7 @@ public class PromptInnerHandler implements PromptHandler {
     }
     
     // ========== Common APIs ==========
-
+    
     @Override
     public boolean deletePrompt(PromptForm form, String srcUser, String srcIp)
         throws NacosException {
@@ -73,9 +73,9 @@ public class PromptInnerHandler implements PromptHandler {
         return promptOperationService.listPromptVersions(form.getNamespaceId(), form.getPromptKey(),
             form.getPageNo(), form.getPageSize());
     }
-
+    
     // ========== Lifecycle APIs ==========
-
+    
     @Override
     public PromptMetaInfo getPromptGovernanceDetail(String namespaceId, String promptKey)
         throws NacosException {
@@ -117,27 +117,27 @@ public class PromptInnerHandler implements PromptHandler {
     public void deleteDraft(String namespaceId, String promptKey) throws NacosException {
         promptOperationService.deleteDraft(namespaceId, promptKey);
     }
-
+    
     @Override
     public String submit(String namespaceId, String promptKey, String version)
         throws NacosException {
         return promptOperationService.submit(namespaceId, promptKey, version);
     }
-
+    
     @Override
     public void publish(String namespaceId, String promptKey, String version,
         boolean updateLatestLabel)
         throws NacosException {
         promptOperationService.publish(namespaceId, promptKey, version, true);
     }
-
+    
     @Override
     public void forcePublish(String namespaceId, String promptKey, String version,
         boolean updateLatestLabel)
         throws NacosException {
         promptOperationService.forcePublish(namespaceId, promptKey, version, true);
     }
-
+    
     @Override
     public void redraft(String namespaceId, String promptKey, String version)
         throws NacosException {

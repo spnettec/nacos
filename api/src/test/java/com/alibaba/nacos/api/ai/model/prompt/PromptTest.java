@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PromptTest extends BasicRequestTest {
-
+    
     @Test
     @DisplayName("test constructor with all args")
     void testConstructorWithAllArgs() {
@@ -39,7 +39,7 @@ class PromptTest extends BasicRequestTest {
         assertEquals("1.0.0", prompt.getVersion());
         assertEquals("Hello {{name}}!", prompt.getTemplate());
     }
-
+    
     @Test
     @DisplayName("test default constructor")
     void testDefaultConstructor() {
@@ -48,7 +48,7 @@ class PromptTest extends BasicRequestTest {
         assertNull(prompt.getVersion());
         assertNull(prompt.getTemplate());
     }
-
+    
     @Test
     @DisplayName("test getter and setter for promptKey")
     void testGetterAndSetterForPromptKey() {
@@ -56,7 +56,7 @@ class PromptTest extends BasicRequestTest {
         prompt.setPromptKey("myPrompt");
         assertEquals("myPrompt", prompt.getPromptKey());
     }
-
+    
     @Test
     @DisplayName("test getter and setter for version")
     void testGetterAndSetterForVersion() {
@@ -64,7 +64,7 @@ class PromptTest extends BasicRequestTest {
         prompt.setVersion("2.0.0");
         assertEquals("2.0.0", prompt.getVersion());
     }
-
+    
     @Test
     @DisplayName("test getter and setter for template")
     void testGetterAndSetterForTemplate() {
@@ -72,7 +72,7 @@ class PromptTest extends BasicRequestTest {
         prompt.setTemplate("Template content");
         assertEquals("Template content", prompt.getTemplate());
     }
-
+    
     @Test
     @DisplayName("test getter and setter for md5")
     void testGetterAndSetterForMd5() {
@@ -80,7 +80,7 @@ class PromptTest extends BasicRequestTest {
         prompt.setMd5("abc123def456");
         assertEquals("abc123def456", prompt.getMd5());
     }
-
+    
     @Test
     @DisplayName("test getter and setter for variables")
     void testGetterAndSetterForVariables() {
@@ -92,7 +92,7 @@ class PromptTest extends BasicRequestTest {
         assertEquals(1, prompt.getVariables().size());
         assertEquals("name", prompt.getVariables().get(0).getName());
     }
-
+    
     @Test
     @DisplayName("test toString method")
     void testToStringMethod() {
@@ -102,7 +102,7 @@ class PromptTest extends BasicRequestTest {
         assertTrue(str.contains("1.0.0"));
         assertTrue(str.contains("Prompt"));
     }
-
+    
     @Test
     @DisplayName("test serialize prompt to json")
     void testSerializePromptToJson() throws JacksonException {
@@ -111,7 +111,7 @@ class PromptTest extends BasicRequestTest {
         List<PromptVariable> variables = new ArrayList<>();
         variables.add(new PromptVariable("name", "Guest", "desc"));
         prompt.setVariables(variables);
-
+        
         String json = mapper.writeValueAsString(prompt);
         assertNotNull(json);
         assertTrue(json.contains("\"promptKey\":\"testKey\""));
@@ -120,13 +120,13 @@ class PromptTest extends BasicRequestTest {
         assertTrue(json.contains("\"md5\":\"abc123\""));
         assertTrue(json.contains("\"variables\""));
     }
-
+    
     @Test
     @DisplayName("test deserialize prompt from json")
     void testDeserializePromptFromJson() throws JacksonException {
         String json =
             "{\"promptKey\":\"testKey\",\"version\":\"1.0.0\",\"template\":\"Hello {{name}}!\",\"md5\":\"abc123\"}";
-
+        
         Prompt prompt = mapper.readValue(json, Prompt.class);
         assertNotNull(prompt);
         assertEquals("testKey", prompt.getPromptKey());

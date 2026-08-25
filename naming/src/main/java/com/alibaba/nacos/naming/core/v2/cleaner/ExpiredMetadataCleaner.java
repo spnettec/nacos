@@ -38,17 +38,17 @@ import java.util.concurrent.TimeUnit;
  */
 @Component
 public class ExpiredMetadataCleaner extends AbstractNamingCleaner {
-
+    
     private static final String EXPIRED_METADATA = "expiredMetadata";
-
+    
     private static final int INITIAL_DELAY = 5000;
-
+    
     private final NamingMetadataManager metadataManager;
-
+    
     private final NamingMetadataOperateService metadataOperateService;
-
+    
     private final ServiceStorage serviceStorage;
-
+    
     public ExpiredMetadataCleaner(NamingMetadataManager metadataManager,
         NamingMetadataOperateService metadataOperateService, ServiceStorage serviceStorage) {
         this.metadataManager = metadataManager;
@@ -58,12 +58,12 @@ public class ExpiredMetadataCleaner extends AbstractNamingCleaner {
             GlobalConfig.getExpiredMetadataCleanInterval(),
             TimeUnit.MILLISECONDS);
     }
-
+    
     @Override
     public String getType() {
         return EXPIRED_METADATA;
     }
-
+    
     @Override
     public void doClean() {
         long currentTime = System.currentTimeMillis();
@@ -73,7 +73,7 @@ public class ExpiredMetadataCleaner extends AbstractNamingCleaner {
             }
         }
     }
-
+    
     private void removeExpiredMetadata(ExpiredMetadataInfo expiredInfo) {
         if (null == expiredInfo.getMetadataId()) {
             Loggers.SRV_LOG.info("Remove expired metadata {}", expiredInfo);
@@ -98,7 +98,7 @@ public class ExpiredMetadataCleaner extends AbstractNamingCleaner {
             }
         }
     }
-
+    
     /**
      * Check whether the instance owning the expired metadata is still registered in its service.
      *

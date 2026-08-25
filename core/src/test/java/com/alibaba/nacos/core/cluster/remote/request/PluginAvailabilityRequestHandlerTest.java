@@ -51,85 +51,85 @@ import static org.mockito.Mockito.when;
  */
 @ExtendWith(MockitoExtension.class)
 class PluginAvailabilityRequestHandlerTest {
-
+    
     @Mock
     private PluginManager pluginManager;
-
+    
     private PluginAvailabilityRequestHandler handler;
-
+    
     @BeforeEach
     void setUp() {
         handler = new PluginAvailabilityRequestHandler(pluginManager);
     }
-
+    
     @Test
     void handleQueryAllTest() throws NacosException {
         PluginAvailabilityRequest request = new PluginAvailabilityRequest();
         request.setQueryAll(true);
-
+        
         PluginInfo plugin1 = createPluginInfo("trace:otel", PluginType.TRACE, "otel", true);
         PluginInfo plugin2 = createPluginInfo("auth:nacos", PluginType.AUTH, "nacos", false);
-
+        
         when(pluginManager.listAllPlugins()).thenReturn(Arrays.asList(plugin1, plugin2));
-
+        
         PluginAvailabilityResponse response = handler.handle(request, null);
-
+        
         assertNotNull(response);
         assertEquals(ResponseCode.SUCCESS.getCode(), response.getResultCode());
-
+        
         Map<String, Boolean> availabilityMap = response.getPluginAvailabilityMap();
         assertNotNull(availabilityMap);
         assertEquals(2, availabilityMap.size());
         assertTrue(availabilityMap.get("trace:otel"));
         assertFalse(availabilityMap.get("auth:nacos"));
     }
-
+    
     @Test
     void handleSinglePluginAvailableTest() throws NacosException {
         PluginAvailabilityRequest request = new PluginAvailabilityRequest();
         request.setQueryAll(false);
         request.setPluginId("trace:otel");
-
+        
         when(pluginManager.isPluginAvailable("trace:otel")).thenReturn(true);
-
+        
         PluginAvailabilityResponse response = handler.handle(request, null);
-
+        
         assertNotNull(response);
         assertEquals(ResponseCode.SUCCESS.getCode(), response.getResultCode());
         assertEquals("trace:otel", response.getPluginId());
         assertTrue(response.isAvailable());
     }
-
+    
     @Test
     void handleSinglePluginNotAvailableTest() throws NacosException {
         PluginAvailabilityRequest request = new PluginAvailabilityRequest();
         request.setQueryAll(false);
         request.setPluginId("auth:custom");
-
+        
         when(pluginManager.isPluginAvailable("auth:custom")).thenReturn(false);
-
+        
         PluginAvailabilityResponse response = handler.handle(request, null);
-
+        
         assertNotNull(response);
         assertEquals(ResponseCode.SUCCESS.getCode(), response.getResultCode());
         assertEquals("auth:custom", response.getPluginId());
         assertFalse(response.isAvailable());
     }
-
+    
     @Test
     void handleNullPluginIdTest() throws NacosException {
         PluginAvailabilityRequest request = new PluginAvailabilityRequest();
         request.setQueryAll(false);
         request.setPluginId(null);
-
+        
         PluginAvailabilityResponse response = handler.handle(request, null);
-
+        
         assertNotNull(response);
         assertEquals(ResponseCode.FAIL.getCode(), response.getResultCode());
         assertEquals("Either queryAll must be true or pluginId must be provided",
             response.getMessage());
     }
-
+    
     @Test
     void securedMetadataTest() throws NoSuchMethodException {
         InvokeSource invokeSource =
@@ -137,7 +137,7 @@ class PluginAvailabilityRequestHandlerTest {
         assertNotNull(invokeSource);
         assertArrayEquals(new String[] {RemoteConstants.LABEL_SOURCE_CLUSTER},
             invokeSource.source());
-
+        
         Secured secured = PluginAvailabilityRequestHandler.class
             .getDeclaredMethod("handle", PluginAvailabilityRequest.class,
                 RequestMeta.class)
@@ -147,7 +147,7 @@ class PluginAvailabilityRequestHandlerTest {
         assertEquals(SignType.SPECIFIED, secured.signType());
         assertEquals(ApiType.INNER_API, secured.apiType());
     }
-
+    
     private PluginInfo createPluginInfo(String pluginId, PluginType pluginType, String pluginName,
         boolean enabled) {
         PluginInfo info = new PluginInfo();

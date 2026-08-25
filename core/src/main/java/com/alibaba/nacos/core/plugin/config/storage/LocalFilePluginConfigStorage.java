@@ -27,23 +27,23 @@ import java.util.Objects;
  * @author Nacos
  */
 class LocalFilePluginConfigStorage implements PluginConfigStorage {
-
+    
     private final PluginStatePersistenceService persistence;
-
+    
     LocalFilePluginConfigStorage(PluginStatePersistenceService persistence) {
         this.persistence = Objects.requireNonNull(persistence, "persistence");
     }
-
+    
     @Override
     public Map<String, Map<String, String>> loadAllConfigs() {
         return persistence.loadAllConfigs();
     }
-
+    
     @Override
     public void saveConfig(String pluginId, Map<String, String> config) {
         persistence.saveConfig(pluginId, config);
     }
-
+    
     @Override
     public void replaceAllConfigs(Map<String, Map<String, String>> configs) {
         persistence.replaceAllConfigs(configs);

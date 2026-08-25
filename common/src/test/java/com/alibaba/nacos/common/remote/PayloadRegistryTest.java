@@ -28,25 +28,25 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class PayloadRegistryTest {
-
+    
     @BeforeAll
     static void setUpBefore() {
         PayloadRegistry.init();
     }
-
+    
     @Test
     void testRegisterInvalidClass() {
         PayloadRegistry.register("test", Request.class);
         assertNull(PayloadRegistry.getClassByType("test"));
     }
-
+    
     @Test
     void testRegisterDuplicated() {
         assertThrows(RuntimeException.class, () -> {
             PayloadRegistry.register("ErrorResponse", ErrorResponse.class);
         });
     }
-
+    
     @Test
     void testAgentPublishPayloadsRegistered() {
         assertSame(AgentPublishRpcRequest.class,

@@ -42,43 +42,43 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class AgentProxy {
-
+    
     private final AgentHandler agentHandler;
-
+    
     public AgentProxy(AgentHandler agentHandler) {
         this.agentHandler = agentHandler;
     }
-
+    
     public AgentOverview getAgent(String namespaceId, String agentName) throws NacosException {
         return agentHandler.getAgent(namespaceId, agentName);
     }
-
+    
     public Agent updateAgent(String namespaceId, AgentUpdateRequest request)
         throws NacosException {
         return agentHandler.updateAgent(namespaceId, request);
     }
-
+    
     public void deleteAgent(String namespaceId, String agentName) throws NacosException {
         agentHandler.deleteAgent(namespaceId, agentName);
     }
-
+    
     public Page<AgentSummary> listAgents(String namespaceId, String agentName, String bizTag,
         String scope, String owner, String orderBy, int pageNo, int pageSize)
         throws NacosException {
         return agentHandler.listAgents(namespaceId, agentName, bizTag, scope, owner, orderBy,
             pageNo, pageSize);
     }
-
+    
     public Page<AgentVersionSummary> listVersions(String namespaceId, String agentName,
         String status, int pageNo, int pageSize) throws NacosException {
         return agentHandler.listVersions(namespaceId, agentName, status, pageNo, pageSize);
     }
-
+    
     public AgentVersionDetail getVersion(String namespaceId, String agentName, String version)
         throws NacosException {
         return agentHandler.getVersion(namespaceId, agentName, version);
     }
-
+    
     public ConsoleRuntimeEndpointView getRuntimeEndpoints(String namespaceId, String agentName,
         String protocol, String version) throws NacosException {
         RuntimeEndpointSnapshot snapshot =
@@ -88,52 +88,52 @@ public class AgentProxy {
             RadServiceNameComposer.compose(agentName, protocol));
         return new ConsoleRuntimeEndpointView(snapshot, serviceRef);
     }
-
+    
     public AgentVersionDetail createDraft(String namespaceId, AgentDraftCreateRequest request)
         throws NacosException {
         return agentHandler.createDraft(namespaceId, request);
     }
-
+    
     public AgentVersionDetail updateDraft(String namespaceId, AgentDraftUpdateRequest request)
         throws NacosException {
         return agentHandler.updateDraft(namespaceId, request);
     }
-
+    
     public void deleteDraft(String namespaceId, String agentName, String version)
         throws NacosException {
         agentHandler.deleteDraft(namespaceId, agentName, version);
     }
-
+    
     public AgentVersionSummary submit(String namespaceId, String agentName, String version)
         throws NacosException {
         return agentHandler.submit(namespaceId, agentName, version);
     }
-
+    
     public AgentVersionSummary publish(String namespaceId, String agentName, String version)
         throws NacosException {
         return agentHandler.publish(namespaceId, agentName, version);
     }
-
+    
     public AgentVersionSummary forcePublish(String namespaceId, String agentName, String version)
         throws NacosException {
         return agentHandler.forcePublish(namespaceId, agentName, version);
     }
-
+    
     public AgentVersionSummary redraft(String namespaceId, String agentName, String version)
         throws NacosException {
         return agentHandler.redraft(namespaceId, agentName, version);
     }
-
+    
     public AgentVersionSummary online(String namespaceId, String agentName, String version)
         throws NacosException {
         return agentHandler.online(namespaceId, agentName, version);
     }
-
+    
     public AgentVersionSummary offline(String namespaceId, String agentName, String version)
         throws NacosException {
         return agentHandler.offline(namespaceId, agentName, version);
     }
-
+    
     public Agent updateLabels(String namespaceId, AgentLabelsUpdateRequest request)
         throws NacosException {
         return agentHandler.updateLabels(namespaceId, request);

@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ConfigQueryResultTest extends BasicRequestTest {
-
+    
     @Test
     @DisplayName("test default constructor")
     void testDefaultConstructor() {
@@ -37,7 +37,7 @@ class ConfigQueryResultTest extends BasicRequestTest {
         assertNull(result.getConfigType());
         assertNull(result.getEncryptedDataKey());
     }
-
+    
     @Test
     @DisplayName("test constructor with content and md5")
     void testConstructorWithContentAndMd5() {
@@ -45,7 +45,7 @@ class ConfigQueryResultTest extends BasicRequestTest {
         assertEquals("test content", result.getContent());
         assertEquals("abc123", result.getMd5());
     }
-
+    
     @Test
     @DisplayName("test getter and setter for content")
     void testGetterAndSetterForContent() {
@@ -53,7 +53,7 @@ class ConfigQueryResultTest extends BasicRequestTest {
         result.setContent("configuration content");
         assertEquals("configuration content", result.getContent());
     }
-
+    
     @Test
     @DisplayName("test getter and setter for md5")
     void testGetterAndSetterForMd5() {
@@ -61,7 +61,7 @@ class ConfigQueryResultTest extends BasicRequestTest {
         result.setMd5("def456");
         assertEquals("def456", result.getMd5());
     }
-
+    
     @Test
     @DisplayName("test getter and setter for configType")
     void testGetterAndSetterForConfigType() {
@@ -69,7 +69,7 @@ class ConfigQueryResultTest extends BasicRequestTest {
         result.setConfigType("yaml");
         assertEquals("yaml", result.getConfigType());
     }
-
+    
     @Test
     @DisplayName("test getter and setter for encryptedDataKey")
     void testGetterAndSetterForEncryptedDataKey() {
@@ -77,7 +77,7 @@ class ConfigQueryResultTest extends BasicRequestTest {
         result.setEncryptedDataKey("encrypted-key-123");
         assertEquals("encrypted-key-123", result.getEncryptedDataKey());
     }
-
+    
     @Test
     @DisplayName("test toString with null content")
     void testToStringWithNullContent() {
@@ -89,7 +89,7 @@ class ConfigQueryResultTest extends BasicRequestTest {
         assertTrue(str.contains("null"));
         assertTrue(str.contains("abc123"));
     }
-
+    
     @Test
     @DisplayName("test toString with short content")
     void testToStringWithShortContent() {
@@ -99,7 +99,7 @@ class ConfigQueryResultTest extends BasicRequestTest {
         assertTrue(str.contains("ConfigQueryResult"));
         assertTrue(str.contains("short"));
     }
-
+    
     @Test
     @DisplayName("test toString with long content truncates")
     void testToStringWithLongContentTruncates() {
@@ -113,7 +113,7 @@ class ConfigQueryResultTest extends BasicRequestTest {
         assertTrue(str.contains("..."));
         assertTrue(str.length() < 150);
     }
-
+    
     @Test
     @DisplayName("test toString with configType")
     void testToStringWithConfigType() {
@@ -123,14 +123,14 @@ class ConfigQueryResultTest extends BasicRequestTest {
         assertNotNull(str);
         assertTrue(str.contains("json"));
     }
-
+    
     @Test
     @DisplayName("test serialize to json")
     void testSerializeToJson() throws JacksonException {
         ConfigQueryResult result = new ConfigQueryResult("test content", "abc123");
         result.setConfigType("yaml");
         result.setEncryptedDataKey("key");
-
+        
         String json = mapper.writeValueAsString(result);
         assertNotNull(json);
         assertTrue(json.contains("\"content\":\"test content\""));
@@ -138,13 +138,13 @@ class ConfigQueryResultTest extends BasicRequestTest {
         assertTrue(json.contains("\"configType\":\"yaml\""));
         assertTrue(json.contains("\"encryptedDataKey\":\"key\""));
     }
-
+    
     @Test
     @DisplayName("test deserialize from json")
     void testDeserializeFromJson() throws JacksonException {
         String json =
             "{\"content\":\"test\",\"md5\":\"abc123\",\"configType\":\"yaml\",\"encryptedDataKey\":\"key\"}";
-
+        
         ConfigQueryResult result = mapper.readValue(json, ConfigQueryResult.class);
         assertNotNull(result);
         assertEquals("test", result.getContent());

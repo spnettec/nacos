@@ -37,36 +37,36 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class A2aCompatibilityOperationServiceTest {
-
+    
     @Mock
     private A2aCompatibilityModeResolver modeResolver;
-
+    
     @Mock
     private A2aServerOperationService canonicalService;
-
+    
     @Mock
     private LegacyA2aOperationService legacyService;
-
+    
     private A2aCompatibilityOperationService service;
-
+    
     @BeforeEach
     void setUp() {
         service = new A2aCompatibilityOperationService(modeResolver, canonicalService,
             legacyService);
     }
-
+    
     @Test
     void shouldRouteEveryOperationToCanonical() throws NacosException {
         when(modeResolver.resolve()).thenReturn(A2aCompatibilityMode.CANONICAL);
         exerciseAndVerify(canonicalService);
     }
-
+    
     @Test
     void shouldRouteEveryOperationToLegacy() throws NacosException {
         when(modeResolver.resolve()).thenReturn(A2aCompatibilityMode.LEGACY);
         exerciseAndVerify(legacyService);
     }
-
+    
     private void exerciseAndVerify(A2aOperationService selected) throws NacosException {
         AgentCard card = new AgentCard();
         AgentCardDetailInfo detail = new AgentCardDetailInfo();
@@ -77,7 +77,7 @@ class A2aCompatibilityOperationServiceTest {
             .thenReturn(detail);
         when(selected.listAgents("ns", "agent", "blur", 1, 10)).thenReturn(page);
         when(selected.listAgentVersions("ns", "agent")).thenReturn(versions);
-
+        
         service.registerAgent(card, "ns", "URL");
         service.releaseAgent(card, "ns", "SERVICE", true);
         service.updateAgentCard(card, "ns", "URL", false);
@@ -86,7 +86,7 @@ class A2aCompatibilityOperationServiceTest {
         assertSame(detail, service.getAgentCardForClient("ns", "agent", "1.0.0", "URL"));
         assertSame(page, service.listAgents("ns", "agent", "blur", 1, 10));
         assertSame(versions, service.listAgentVersions("ns", "agent"));
-
+        
         verify(selected).registerAgent(card, "ns", "URL");
         verify(selected).releaseAgent(card, "ns", "SERVICE", true);
         verify(selected).updateAgentCard(card, "ns", "URL", false);

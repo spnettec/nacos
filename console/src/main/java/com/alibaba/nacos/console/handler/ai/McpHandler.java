@@ -33,7 +33,7 @@ import com.alibaba.nacos.api.model.Page;
  * @author xiweng.yy
  */
 public interface McpHandler {
-
+    
     /**
      * List mcp server.
      *
@@ -49,7 +49,7 @@ public interface McpHandler {
     Page<McpServerBasicInfo> listMcpServers(String namespaceId, String mcpName, String search,
         int pageNo, int pageSize)
         throws NacosException;
-
+    
     /**
      * Get specified mcp server detail info.
      *
@@ -62,7 +62,7 @@ public interface McpHandler {
      */
     McpServerDetailInfo getMcpServer(String namespaceId, String mcpName, String mcpId,
         String version) throws NacosException;
-
+    
     /**
      * Create new mcp server.
      *
@@ -76,7 +76,7 @@ public interface McpHandler {
     String createMcpServer(String namespaceId, McpServerBasicInfo serverSpecification,
         McpToolSpecification toolSpecification, McpEndpointSpec endpointSpecification)
         throws NacosException;
-
+    
     /**
      * Update existed mcp server.
      *
@@ -96,7 +96,7 @@ public interface McpHandler {
         McpServerBasicInfo serverSpecification,
         McpToolSpecification toolSpecification, McpEndpointSpec endpointSpecification,
         boolean overrideExisting) throws NacosException;
-
+    
     /**
      * Delete existed mcp server.
      *
@@ -108,7 +108,7 @@ public interface McpHandler {
      */
     void deleteMcpServer(String namespaceId, String mcpName, String mcpId, String version)
         throws NacosException;
-
+    
     /**
      * Validate MCP server import request.
      *
@@ -122,7 +122,7 @@ public interface McpHandler {
     @Deprecated
     McpServerImportValidationResult validateImport(String namespaceId,
         McpServerImportRequest request) throws NacosException;
-
+    
     /**
      * Execute MCP server import operation.
      *

@@ -77,11 +77,11 @@ public class GrpcBiStreamRequestAcceptor extends BiRequestStreamGrpc.BiRequestSt
         StreamObserver<Payload> streamObserver = new StreamObserver<>() {
             
             final String connectionId = GrpcServerConstants.CONTEXT_KEY_CONN_ID.get();
-
+            
             final Integer localPort = GrpcServerConstants.CONTEXT_KEY_CONN_LOCAL_PORT.get();
-
+            
             final int remotePort = GrpcServerConstants.CONTEXT_KEY_CONN_REMOTE_PORT.get();
-
+            
             String remoteIp = GrpcServerConstants.CONTEXT_KEY_CONN_REMOTE_IP.get();
             
             String clientIp = "";
@@ -206,7 +206,8 @@ public class GrpcBiStreamRequestAcceptor extends BiRequestStreamGrpc.BiRequestSt
                     if (setUpRequest.getAbilityTable() != null) {
                         // finish register, tell client has set up successfully
                         // async response without client ack
-                        Loggers.REMOTE_DIGEST.info("[{}]Send setup ack request, server abilities={}",
+                        Loggers.REMOTE_DIGEST.info(
+                            "[{}]Send setup ack request, server abilities={}",
                             connectionId, NacosAbilityManagerHolder.getInstance()
                                 .getCurrentNodeAbilities(AbilityMode.SERVER));
                         connection.sendRequestNoAck(new SetupAckRequest(

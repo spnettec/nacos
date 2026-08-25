@@ -50,24 +50,24 @@ import static com.alibaba.nacos.config.server.utils.LogUtil.FATAL_LOG;
  * @author Nacos
  */
 public class ConfigCacheService {
-
+    
     private static final String NO_SPACE_CN = "设备上没有空间";
-
+    
     private static final String NO_SPACE_EN = "No space left on device";
-
+    
     private static final String DISK_QUOTA_CN = "超出磁盘限额";
-
+    
     private static final String DISK_QUOTA_EN = "Disk quota exceeded";
-
+    
     /**
      * groupKey -> cacheItem.
      */
     static final ConcurrentHashMap<String, CacheItem> CACHE = new ConcurrentHashMap<>();
-
+    
     public static int groupCount() {
         return CACHE.size();
     }
-
+    
     /**
      * Save config file and update md5 value in cache.
      *
@@ -87,14 +87,14 @@ public class ConfigCacheService {
         CacheItem ci = makeSure(groupKey, encryptedDataKey);
         ci.setType(type);
         final int lockResult = tryConfigWriteLock(groupKey);
-
+        
         if (lockResult < 0) {
             DUMP_LOG.warn("[dump-error] write lock failed. {}", groupKey);
             return false;
         }
-
+        
         try {
-
+            
             //check timestamp
             boolean lastModifiedOutDated =
                 lastModifiedTs < ConfigCacheService.getLastModifiedTs(groupKey);
@@ -102,14 +102,14 @@ public class ConfigCacheService {
                 DUMP_LOG.warn("[dump-ignore] timestamp is outdated,groupKey={}", groupKey);
                 return true;
             }
-
+            
             boolean newLastModified =
                 lastModifiedTs > ConfigCacheService.getLastModifiedTs(groupKey);
-
+            
             if (md5 == null) {
                 md5 = MD5Utils.md5Hex(content, PERSIST_ENCODE);
             }
-
+            
             //check md5 & update local disk cache.
             String localContentMd5 = ConfigCacheService.getContentMd5(groupKey);
             boolean md5Changed = !md5.equals(localContentMd5);
@@ -124,7 +124,7 @@ public class ConfigCacheService {
                     "[dump-ignore] ignore to save to disk cache. md5 consistent,groupKey={}, md5={}",
                     groupKey, md5);
             }
-
+            
             //check  md5 and timestamp & update local jvm cache.
             if (md5Changed) {
                 DUMP_LOG.info(
@@ -141,7 +141,7 @@ public class ConfigCacheService {
                     "[dump-ignore] ignore to save to jvm cache. md5 consistent and no new timestamp changed.groupKey={}",
                     groupKey);
             }
-
+            
             return true;
         } catch (IOException ioe) {
             DUMP_LOG.error("[dump-exception] save disk error. " + groupKey + ", " + ioe);
@@ -159,9 +159,9 @@ public class ConfigCacheService {
         } finally {
             releaseWriteLock(groupKey);
         }
-
+        
     }
-
+    
     /**
      * Save config file and update md5 value in cache.
      *
@@ -180,7 +180,7 @@ public class ConfigCacheService {
         return dumpWithMd5(dataId, group, tenant, content, null, lastModifiedTs, type,
             encryptedDataKey);
     }
-
+    
     /**
      * Save gray config file and update md5 value in cache.
      *
@@ -197,34 +197,34 @@ public class ConfigCacheService {
         String grayRule,
         String content, long lastModifiedTs, String encryptedDataKey) {
         final String groupKey = GroupKey2.getKey(dataId, group, tenant);
-
+        
         makeSure(groupKey, null);
         final int lockResult = tryConfigWriteLock(groupKey);
-
+        
         if (lockResult < 0) {
             DUMP_LOG.warn("[dump-gray-error] write lock failed. {}", groupKey);
             return false;
         }
-
+        
         try {
-
+            
             //check timestamp
             long localGrayLastModifiedTs =
                 ConfigCacheService.getGrayLastModifiedTs(groupKey, grayName);
-
+            
             boolean timestampOutdated = lastModifiedTs < localGrayLastModifiedTs;
             if (timestampOutdated) {
                 DUMP_LOG.warn("[dump-gray-ignore] timestamp is outdated,groupKey={}", groupKey);
                 return true;
             }
-
+            
             boolean timestampChanged = lastModifiedTs > localGrayLastModifiedTs;
-
+            
             final String md5 = MD5Utils.md5Hex(content, ENCODE_UTF8);
-
+            
             String localContentGrayMd5 = ConfigCacheService.getContentGrayMd5(groupKey, grayName);
             boolean md5Changed = !md5.equals(localContentGrayMd5);
-
+            
             GrayRule localGrayRule = ConfigCacheService.getGrayRule(groupKey, grayName);
             GrayRule grayRuleNew = GrayRuleManager.constructGrayRule(
                 GrayRuleManager.deserializeConfigGrayPersistInfo(grayRule));
@@ -233,9 +233,9 @@ public class ConfigCacheService {
                     + ",  unknown gray rule for  gray name" + grayName);
                 return false;
             }
-
+            
             boolean grayRuleChanged = !grayRuleNew.equals(localGrayRule);
-
+            
             if (md5Changed) {
                 DUMP_LOG.info(
                     "[dump-gray] md5 changed, update local jvm cache& local disk cache, groupKey={},grayName={}, "
@@ -246,7 +246,7 @@ public class ConfigCacheService {
                     encryptedDataKey);
                 ConfigDiskServiceFactory.getInstance().saveGrayToDisk(dataId, group, tenant,
                     grayName, content);
-
+                
             } else if (grayRuleChanged) {
                 DUMP_LOG.info(
                     "[dump-gray] gray rule changed, update local jvm cache, groupKey={},grayName={}, "
@@ -261,7 +261,7 @@ public class ConfigCacheService {
                     groupKey, grayName, lastModifiedTs,
                     localGrayLastModifiedTs);
                 updateGrayTimeStamp(groupKey, grayName, lastModifiedTs);
-
+                
             } else {
                 DUMP_LOG.warn(
                     "[dump-gray-ignore] md5 & timestamp not changed. groupKey={},grayName={}",
@@ -277,7 +277,7 @@ public class ConfigCacheService {
             releaseWriteLock(groupKey);
         }
     }
-
+    
     /**
      * Delete gray config file, and delete cache.
      *
@@ -290,19 +290,19 @@ public class ConfigCacheService {
     public static boolean removeGray(String dataId, String group, String tenant, String grayName) {
         final String groupKey = GroupKey2.getKey(dataId, group, tenant);
         final int lockResult = tryWriteLock(groupKey);
-
+        
         // If data is non-existent.
         if (0 == lockResult) {
             DUMP_LOG.info("[remove-ok] {} not exist.", groupKey);
             return true;
         }
-
+        
         // try to lock failed
         if (lockResult < 0) {
             DUMP_LOG.warn("[remove-error] write lock failed. {}", groupKey);
             return false;
         }
-
+        
         try {
             DUMP_LOG.info(
                 "[remove-gray-ok] remove gray in local disk cache,grayName={},groupKey={} ",
@@ -310,7 +310,7 @@ public class ConfigCacheService {
                 groupKey);
             ConfigDiskServiceFactory.getInstance().removeConfigInfo4Gray(dataId, group, tenant,
                 grayName);
-
+            
             CacheItem ci = CACHE.get(groupKey);
             if (ci.getConfigCacheGray() != null) {
                 ci.getConfigCacheGray().remove(grayName);
@@ -320,19 +320,19 @@ public class ConfigCacheService {
                     ci.sortConfigGray();
                 }
             }
-
+            
             DUMP_LOG.info(
                 "[remove-gray-ok] remove gray in local jvm cache,grayName={},groupKey={} ",
                 grayName,
                 groupKey);
-
+            
             NotifyCenter.publishEvent(new LocalDataChangeEvent(groupKey));
             return true;
         } finally {
             releaseWriteLock(groupKey);
         }
     }
-
+    
     /**
      * Delete config file, and delete cache.
      *
@@ -344,34 +344,34 @@ public class ConfigCacheService {
     public static boolean remove(String dataId, String group, String tenant) {
         final String groupKey = GroupKey2.getKey(dataId, group, tenant);
         final int lockResult = tryWriteLock(groupKey);
-
+        
         // If data is non-existent.
         if (0 == lockResult) {
             DUMP_LOG.info("[remove-ok] {} not exist.", groupKey);
             return true;
         }
-
+        
         // try to lock failed
         if (lockResult < 0) {
             DUMP_LOG.warn("[remove-error] write lock failed. {}", groupKey);
             return false;
         }
-
+        
         try {
             DUMP_LOG.info("[dump] remove  local disk cache,groupKey={} ", groupKey);
             ConfigDiskServiceFactory.getInstance().removeConfigInfo(dataId, group, tenant);
-
+            
             CACHE.remove(groupKey);
             DUMP_LOG.info("[dump] remove  local jvm cache,groupKey={} ", groupKey);
-
+            
             NotifyCenter.publishEvent(new LocalDataChangeEvent(groupKey));
-
+            
             return true;
         } finally {
             releaseWriteLock(groupKey);
         }
     }
-
+    
     /**
      * Update md5 value.
      *
@@ -393,7 +393,7 @@ public class ConfigCacheService {
             NotifyCenter.publishEvent(new LocalDataChangeEvent(groupKey));
         }
     }
-
+    
     /**
      * Update gray md5 value.
      *
@@ -419,18 +419,18 @@ public class ConfigCacheService {
         ConfigCachePostProcessorDelegate.getInstance().postProcess(configCache, content);
         NotifyCenter.publishEvent(new LocalDataChangeEvent(groupKey));
     }
-
+    
     /**
      * Get and return content md5 value from cache. Empty string represents no data.
      */
     public static String getContentMd5(String groupKey) {
         return getContentMd5(groupKey, null, null);
     }
-
+    
     public static String getContentMd5(String groupKey, String ip, String tag) {
         return getContentMd5(groupKey, ip, tag, null);
     }
-
+    
     public static String getContentMd5(String groupKey, String ip, String tag,
         Map<String, String> connLabels) {
         CacheItem item = CACHE.get(groupKey);
@@ -443,7 +443,7 @@ public class ConfigCacheService {
         if (connLabels == null && StringUtils.isNotBlank(tag)) {
             connLabels = new HashMap<>(4);
         }
-
+        
         if (StringUtils.isNotBlank(ip)) {
             connLabels.put(CLIENT_IP, ip);
         }
@@ -460,7 +460,7 @@ public class ConfigCacheService {
         String md5 = item.getConfigCache().getMd5();
         return md5 == null ? NULL : md5;
     }
-
+    
     private static void updateGrayRule(String groupKey, String grayName, String grayRule,
         long lastModifiedTs,
         String encryptedDataKey) {
@@ -473,7 +473,7 @@ public class ConfigCacheService {
         cache.sortConfigGray();
         NotifyCenter.publishEvent(new LocalDataChangeEvent(groupKey));
     }
-
+    
     /**
      * Get and return gray md5 value from cache. Empty string represents no data.
      *
@@ -489,7 +489,7 @@ public class ConfigCacheService {
         }
         return item.getConfigCacheGray().get(grayName).getMd5();
     }
-
+    
     public static long getGrayLastModifiedTs(String groupKey, String grayName) {
         CacheItem item = CACHE.get(groupKey);
         if (item == null || item.getConfigCacheGray() == null
@@ -497,10 +497,10 @@ public class ConfigCacheService {
             return 0;
         }
         ConfigCache configCacheGray = item.getConfigCacheGray().get(grayName);
-
+        
         return (null != configCacheGray) ? configCacheGray.getLastModifiedTs() : 0;
     }
-
+    
     public static GrayRule getGrayRule(String groupKey, String grayName) {
         CacheItem item = CACHE.get(groupKey);
         if (item == null || item.getConfigCacheGray() == null
@@ -509,7 +509,7 @@ public class ConfigCacheService {
         }
         return item.getConfigCacheGray().get(grayName).getGrayRule();
     }
-
+    
     /**
      * Get and return content cache.
      *
@@ -519,12 +519,12 @@ public class ConfigCacheService {
     public static CacheItem getContentCache(String groupKey) {
         return CACHE.get(groupKey);
     }
-
+    
     public static long getLastModifiedTs(String groupKey) {
         CacheItem item = CACHE.get(groupKey);
         return (null != item) ? item.getConfigCache().getLastModifiedTs() : 0L;
     }
-
+    
     /**
      * update gray timestamp.
      *
@@ -537,21 +537,21 @@ public class ConfigCacheService {
         cache.initConfigGrayIfEmpty(grayName);
         cache.getConfigCacheGray().get(grayName).setLastModifiedTs(lastModifiedTs);
     }
-
+    
     public static boolean isUptodate(String groupKey, String md5) {
         return isUptodate(groupKey, md5, null, null);
     }
-
+    
     public static boolean isUptodate(String groupKey, String md5, String ip, String tag) {
         return isUptodate(groupKey, md5, ip, tag, null);
     }
-
+    
     public static boolean isUptodate(String groupKey, String md5, String ip, String tag,
         Map<String, String> appLabels) {
         String serverMd5 = ConfigCacheService.getContentMd5(groupKey, ip, tag, appLabels);
         return StringUtils.equals(md5, serverMd5);
     }
-
+    
     /**
      * Try to add read lock. If it succeeded, then it can call {@link #releaseWriteLock(String)}.And it won't call if
      * failed.
@@ -567,7 +567,7 @@ public class ConfigCacheService {
         }
         return result;
     }
-
+    
     /**
      * Release readLock.
      *
@@ -579,7 +579,7 @@ public class ConfigCacheService {
             item.getRwLock().releaseReadLock();
         }
     }
-
+    
     /**
      * Try to add write lock. If it succeeded, then it can call {@link #releaseWriteLock(String)}.And it won't call if
      * failed.
@@ -595,14 +595,14 @@ public class ConfigCacheService {
         }
         return result;
     }
-
+    
     static void releaseWriteLock(String groupKey) {
         CacheItem groupItem = CACHE.get(groupKey);
         if (null != groupItem) {
             groupItem.getRwLock().releaseWriteLock();
         }
     }
-
+    
     static CacheItem makeSure(final String groupKey, final String encryptedDataKey) {
         CacheItem item = CACHE.get(groupKey);
         if (null != item) {
@@ -612,7 +612,7 @@ public class ConfigCacheService {
         item = CACHE.putIfAbsent(groupKey, tmp);
         return (null == item) ? tmp : item;
     }
-
+    
     /**
      * update time stamp.
      *
@@ -625,20 +625,20 @@ public class ConfigCacheService {
         CacheItem cache = makeSure(groupKey, encryptedDataKey);
         cache.getConfigCache().setLastModifiedTs(lastModifiedTs);
     }
-
+    
     /**
      * Maximum number of attempts used by {@link #tryConfigReadLock(String)} / {@link #tryConfigWriteLock(String)} when
      * the lock is contended. The implementation performs exactly {@code MAX_LOCK_ATTEMPTS} attempts, sleeping for
      * {@link #LOCK_RETRY_INTERVAL_MILLIS} between two consecutive attempts.
      */
     private static final int MAX_LOCK_ATTEMPTS = 10;
-
+    
     /**
      * Sleep interval between two consecutive lock attempts of {@link #tryConfigReadLock(String)} /
      * {@link #tryConfigWriteLock(String)}.
      */
     private static final int LOCK_RETRY_INTERVAL_MILLIS = 1;
-
+    
     /**
      * Try config read lock with retry of {@link #MAX_LOCK_ATTEMPTS} times.
      *
@@ -648,7 +648,7 @@ public class ConfigCacheService {
     public static int tryConfigReadLock(String groupKey) {
         return tryLockWithRetry(groupKey, true);
     }
-
+    
     /**
      * Try config write lock with retry of {@link #MAX_LOCK_ATTEMPTS} times.
      *
@@ -658,7 +658,7 @@ public class ConfigCacheService {
     static int tryConfigWriteLock(String groupKey) {
         return tryLockWithRetry(groupKey, false);
     }
-
+    
     /**
      * Acquire the read or write lock with a bounded retry loop.
      *
@@ -687,22 +687,22 @@ public class ConfigCacheService {
                 attempts++;
                 lockResult = readLock ? ConfigCacheService.tryReadLock(groupKey)
                     : ConfigCacheService.tryWriteLock(groupKey);
-
+                
                 // The data is non-existent.
                 if (0 == lockResult) {
                     return lockResult;
                 }
-
+                
                 // Success
                 if (lockResult > 0) {
                     return lockResult;
                 }
-
+                
                 // No more attempts.
                 if (i == MAX_LOCK_ATTEMPTS - 1) {
                     break;
                 }
-
+                
                 try {
                     Thread.sleep(LOCK_RETRY_INTERVAL_MILLIS);
                 } catch (InterruptedException e) {
@@ -719,7 +719,7 @@ public class ConfigCacheService {
                 Thread.currentThread().interrupt();
             }
         }
-
+        
         // All attempts exhausted: log a single aggregated warning including attempt count and elapsed time.
         if (lockResult < 0) {
             DUMP_LOG.warn("[{}-lock] failed after {} attempts, cost={}ms, groupKey={}",

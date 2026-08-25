@@ -38,8 +38,8 @@ class NacosMemberTest {
     @BeforeEach
     void setUp() {
         mapper = JsonMapper.builder()
-                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-                .build();
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .build();
         member = new NacosMember();
         member.setIp("127.0.0.1");
         member.setPort(8080);

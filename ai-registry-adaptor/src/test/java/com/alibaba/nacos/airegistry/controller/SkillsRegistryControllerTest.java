@@ -56,23 +56,23 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ContextConfiguration(classes = org.springframework.mock.web.MockServletContext.class)
 @WebAppConfiguration
 class SkillsRegistryControllerTest {
-
+    
     @InjectMocks
     private SkillsRegistryController skillsRegistryController;
-
+    
     @Mock
     private NacosSkillsRegistryService nacosSkillsRegistryService;
-
+    
     private MockMvc mockMvc;
-
+    
     private static final String SCHEMA_0_2 =
         "https://schemas.agentskills.io/discovery/0.2.0/schema.json";
-
+    
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(skillsRegistryController).build();
     }
-
+    
     @Test
     void testGetAgentSkillsIndex() throws Exception {
         WellKnownSkillEntry entry = new WellKnownSkillEntry();
@@ -85,14 +85,14 @@ class SkillsRegistryControllerTest {
         index.setSchema(SCHEMA_0_2);
         index.setSkills(List.of(entry));
         when(nacosSkillsRegistryService.buildAgentSkillsIndex("public")).thenReturn(index);
-
+        
         String content = mockMvc.perform(
             MockMvcRequestBuilders.get("/registry/public/.well-known/agent-skills/index.json"))
             .andExpect(status().isOk())
             .andReturn()
             .getResponse()
             .getContentAsString();
-
+        
         WellKnownSkillsIndex response = JacksonUtils.toObj(content, WellKnownSkillsIndex.class);
         assertEquals(SCHEMA_0_2, response.getSchema());
         assertEquals(1, response.getSkills().size());
@@ -100,7 +100,7 @@ class SkillsRegistryControllerTest {
         assertEquals("archive", response.getSkills().get(0).getType());
         assertEquals("demo-skill.zip", response.getSkills().get(0).getUrl());
     }
-
+    
     @Test
     void testGetLegacySkillsIndex() throws Exception {
         WellKnownSkillEntry entry = new WellKnownSkillEntry();
@@ -110,20 +110,20 @@ class SkillsRegistryControllerTest {
         WellKnownSkillsIndex index = new WellKnownSkillsIndex();
         index.setSkills(List.of(entry));
         when(nacosSkillsRegistryService.buildLegacySkillsIndex("public")).thenReturn(index);
-
+        
         String content = mockMvc.perform(
             MockMvcRequestBuilders.get("/registry/public/.well-known/skills/index.json"))
             .andExpect(status().isOk())
             .andReturn()
             .getResponse()
             .getContentAsString();
-
+        
         WellKnownSkillsIndex response = JacksonUtils.toObj(content, WellKnownSkillsIndex.class);
         assertEquals(1, response.getSkills().size());
         assertEquals(List.of("SKILL.md", "docs/guide.md"),
             response.getSkills().get(0).getFiles());
     }
-
+    
     @Test
     void testSearch() throws Exception {
         SkillsSearchItem item = new SkillsSearchItem();
@@ -135,24 +135,24 @@ class SkillsRegistryControllerTest {
         response.setSkills(List.of(item));
         when(nacosSkillsRegistryService.search(eq("public"), eq("demo"), eq(10),
             eq("http://localhost/registry/public"))).thenReturn(response);
-
+        
         String content = mockMvc.perform(MockMvcRequestBuilders.get("/registry/public/api/search")
             .param("q", "demo"))
             .andExpect(status().isOk())
             .andReturn()
             .getResponse()
             .getContentAsString();
-
+        
         SkillsSearchResponse actual = JacksonUtils.toObj(content, SkillsSearchResponse.class);
         assertEquals(1, actual.getSkills().size());
         assertEquals("demo-skill", actual.getSkills().get(0).getId());
     }
-
+    
     @Test
     void testGetSkillMarkdown() throws Exception {
         when(nacosSkillsRegistryService.getSkillFileContent("public", "demo-skill", "SKILL.md"))
             .thenReturn("---\nname: demo-skill\n---\n");
-
+        
         String content = mockMvc.perform(
             MockMvcRequestBuilders
                 .get("/registry/public/.well-known/agent-skills/demo-skill/SKILL.md"))
@@ -160,26 +160,26 @@ class SkillsRegistryControllerTest {
             .andReturn()
             .getResponse()
             .getContentAsString();
-
+        
         assertTrue(content.contains("demo-skill"));
     }
-
+    
     @Test
     void testGetSkillMarkdownNotFound() throws Exception {
         when(nacosSkillsRegistryService.getSkillFileContent("public", "missing-skill", "SKILL.md"))
             .thenReturn(null);
-
+        
         mockMvc.perform(
             MockMvcRequestBuilders
                 .get("/registry/public/.well-known/agent-skills/missing-skill/SKILL.md"))
             .andExpect(status().isNotFound());
     }
-
+    
     @Test
     void testGetSkillArchive() throws Exception {
         when(nacosSkillsRegistryService.getSkillArchiveContent("public", "demo-skill"))
             .thenReturn("zip".getBytes());
-
+        
         byte[] content = mockMvc.perform(
             MockMvcRequestBuilders
                 .get("/registry/public/.well-known/agent-skills/demo-skill.zip"))
@@ -187,27 +187,27 @@ class SkillsRegistryControllerTest {
             .andReturn()
             .getResponse()
             .getContentAsByteArray();
-
+        
         assertEquals("zip", new String(content, StandardCharsets.UTF_8));
     }
-
+    
     @Test
     void testGetSkillArchiveNotFound() throws Exception {
         when(nacosSkillsRegistryService.getSkillArchiveContent("public", "missing-skill"))
             .thenReturn(null);
-
+        
         mockMvc.perform(
             MockMvcRequestBuilders
                 .get("/registry/public/.well-known/agent-skills/missing-skill.zip"))
             .andExpect(status().isNotFound());
     }
-
+    
     @Test
     void testGetNestedFile() throws Exception {
         when(
             nacosSkillsRegistryService.getSkillFileContent("public", "demo-skill", "docs/guide.md"))
             .thenReturn("guide");
-
+        
         String content = mockMvc.perform(
             MockMvcRequestBuilders
                 .get("/registry/public/.well-known/skills/demo-skill/docs/guide.md"))
@@ -215,36 +215,36 @@ class SkillsRegistryControllerTest {
             .andReturn()
             .getResponse()
             .getContentAsString();
-
+        
         assertEquals("guide", content);
     }
-
+    
     @Test
     void testGetFileNotFound() throws Exception {
         when(nacosSkillsRegistryService.getSkillFileContent("public", "demo-skill",
             "docs/missing.md"))
             .thenReturn(null);
-
+        
         mockMvc.perform(
             MockMvcRequestBuilders
                 .get("/registry/public/.well-known/agent-skills/demo-skill/docs/missing.md"))
             .andExpect(status().isNotFound());
     }
-
+    
     @Test
     void testExtractFilePathBoundaryCases() throws Exception {
         Method extractFilePath =
             SkillsRegistryController.class.getDeclaredMethod("extractFilePath",
                 HttpServletRequest.class);
         extractFilePath.setAccessible(true);
-
+        
         HttpServletRequest blankRequest = mock(HttpServletRequest.class);
         when(blankRequest.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE))
             .thenReturn("/registry/public/.well-known/skills/demo-skill/");
         when(blankRequest.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE))
             .thenReturn("/registry/{namespaceId}/.well-known/skills/{skillName}/**");
         assertEquals("", extractFilePath.invoke(skillsRegistryController, blankRequest));
-
+        
         HttpServletRequest slashRequest = mock(HttpServletRequest.class);
         when(slashRequest.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE))
             .thenReturn("/docs/guide.md");

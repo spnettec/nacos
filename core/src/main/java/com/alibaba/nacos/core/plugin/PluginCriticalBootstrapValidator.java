@@ -37,13 +37,13 @@ import java.util.Map;
  * @author Nacos
  */
 public final class PluginCriticalBootstrapValidator {
-
+    
     private static final Logger LOGGER =
         LoggerFactory.getLogger(PluginCriticalBootstrapValidator.class);
-
+    
     private PluginCriticalBootstrapValidator() {
     }
-
+    
     /**
      * Validate critical plugin availability using service-loaded policies and providers.
      */
@@ -53,7 +53,7 @@ public final class PluginCriticalBootstrapValidator {
         policyRegistry.initialize();
         validate(policyRegistry, NacosServiceLoader.load(PluginProvider.class));
     }
-
+    
     @SuppressWarnings("rawtypes")
     static void validate(PluginTypePolicyRegistry policyRegistry,
         Collection<PluginProvider> providers) {
@@ -73,7 +73,7 @@ public final class PluginCriticalBootstrapValidator {
             }
         }
     }
-
+    
     @SuppressWarnings("rawtypes")
     private static Map<PluginType, List<PluginProvider>> groupProvidersByType(
         Collection<PluginProvider> providers) {
@@ -91,7 +91,7 @@ public final class PluginCriticalBootstrapValidator {
             typeProviders -> typeProviders.sort(Comparator.comparingInt(PluginProvider::getOrder)));
         return result;
     }
-
+    
     @SuppressWarnings("rawtypes")
     private static Map<String, Boolean> discoverImplementations(PluginType type,
         List<PluginProvider> providers, PluginTypePolicyRegistry policyRegistry) {

@@ -33,7 +33,7 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
 class A2aCompatibilityModeResolverTest {
-
+    
     @Test
     void shouldDefaultToCanonical() {
         ServerMemberManager memberManager = mock(ServerMemberManager.class);
@@ -48,7 +48,7 @@ class A2aCompatibilityModeResolverTest {
                 new A2aCompatibilityModeResolver(memberManager).resolve());
         }
     }
-
+    
     @Test
     void shouldParseExplicitModesCaseInsensitively() {
         ServerMemberManager memberManager = mock(ServerMemberManager.class);
@@ -59,7 +59,7 @@ class A2aCompatibilityModeResolverTest {
         assertThrows(IllegalArgumentException.class,
             () -> new A2aCompatibilityModeResolver(memberManager, () -> "unknown").resolve());
     }
-
+    
     @Test
     void shouldKeepAutoLegacyWithoutCompleteSupportedMembership() {
         ServerMemberManager memberManager = mock(ServerMemberManager.class);
@@ -78,7 +78,7 @@ class A2aCompatibilityModeResolverTest {
             assertEquals(A2aCompatibilityMode.LEGACY, resolver.resolve());
         }
     }
-
+    
     @Test
     void shouldSwitchAutoToCanonicalOnlyOnce() {
         ServerMemberManager memberManager = mock(ServerMemberManager.class);
@@ -92,11 +92,11 @@ class A2aCompatibilityModeResolverTest {
         assertEquals(A2aCompatibilityMode.CANONICAL, resolver.resolve());
         assertEquals(A2aCompatibilityMode.CANONICAL, resolver.resolve());
     }
-
+    
     private Member memberWithVersion(String version) {
         return memberWithValue(version);
     }
-
+    
     private Member memberWithValue(Object version) {
         Member member = mock(Member.class);
         when(member.getExtendVal(MemberMetaDataConstants.VERSION)).thenReturn(version);

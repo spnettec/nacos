@@ -27,11 +27,11 @@ import com.alibaba.nacos.client.redo.data.RedoData;
  */
 public class AgentEndpointPublicationRedoData
     extends RedoData<AgentEndpointRegistrationBatch> {
-
+    
     private static final String KEY_SEPARATOR = Constants.SERVICE_INFO_SPLITER;
-
+    
     private final String key;
-
+    
     /**
      * Build redo state from one complete publication Batch.
      *
@@ -46,7 +46,7 @@ public class AgentEndpointPublicationRedoData
         this.key = keyOf(batch.getNamespaceId(), batch.getAgentName(), batch.getProtocol());
         set(batch);
     }
-
+    
     /**
      * Generate the String key required by the shared redo map.
      *
@@ -58,7 +58,7 @@ public class AgentEndpointPublicationRedoData
     public static String keyOf(String namespaceId, String agentName, String protocol) {
         return namespaceId + KEY_SEPARATOR + agentName + KEY_SEPARATOR + protocol;
     }
-
+    
     /**
      * Return the generated publication key.
      *

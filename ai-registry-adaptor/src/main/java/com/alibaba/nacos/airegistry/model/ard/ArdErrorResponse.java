@@ -22,20 +22,20 @@ package com.alibaba.nacos.airegistry.model.ard;
  * @author nacos
  */
 public class ArdErrorResponse {
-
+    
     private final String errorCode;
-
+    
     private final String message;
-
+    
     public ArdErrorResponse(String errorCode, String message) {
         this.errorCode = errorCode;
         this.message = message;
     }
-
+    
     public String getErrorCode() {
         return errorCode;
     }
-
+    
     public String getMessage() {
         return message;
     }

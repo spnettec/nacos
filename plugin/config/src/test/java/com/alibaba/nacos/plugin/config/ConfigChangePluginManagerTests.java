@@ -43,40 +43,40 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author liyunfei
  **/
 class ConfigChangePluginManagerTests {
-
+    
     @Test
     void testInstance() {
         ConfigChangePluginManager instance = ConfigChangePluginManager.getInstance();
         assertNotNull(instance);
     }
-
+    
     @BeforeEach
     void initPluginServices() {
         PluginStateCheckerHolder.setInstance(null);
         ConfigChangePluginManager.reset();
         ConfigChangePluginManager.join(new ConfigChangePluginService() {
-
+            
             @Override
             public void execute(ConfigChangeRequest configChangeRequest,
                 ConfigChangeResponse configChangeResponse) {
                 // ignore
             }
-
+            
             @Override
             public ConfigChangeExecuteTypes executeType() {
                 return ConfigChangeExecuteTypes.EXECUTE_BEFORE_TYPE;
             }
-
+            
             @Override
             public String getServiceType() {
                 return "test1";
             }
-
+            
             @Override
             public int getOrder() {
                 return 0;
             }
-
+            
             @Override
             public ConfigChangePointCutTypes[] pointcutMethodNames() {
                 return new ConfigChangePointCutTypes[] {ConfigChangePointCutTypes.PUBLISH_BY_HTTP,
@@ -84,28 +84,28 @@ class ConfigChangePluginManagerTests {
             }
         });
         ConfigChangePluginManager.join(new ConfigChangePluginService() {
-
+            
             @Override
             public void execute(ConfigChangeRequest configChangeRequest,
                 ConfigChangeResponse configChangeResponse) {
                 // ignore
             }
-
+            
             @Override
             public ConfigChangeExecuteTypes executeType() {
                 return ConfigChangeExecuteTypes.EXECUTE_BEFORE_TYPE;
             }
-
+            
             @Override
             public String getServiceType() {
                 return "test2";
             }
-
+            
             @Override
             public int getOrder() {
                 return 200;
             }
-
+            
             @Override
             public ConfigChangePointCutTypes[] pointcutMethodNames() {
                 return new ConfigChangePointCutTypes[] {ConfigChangePointCutTypes.IMPORT_BY_HTTP,
@@ -113,28 +113,28 @@ class ConfigChangePluginManagerTests {
             }
         });
         ConfigChangePluginManager.join(new ConfigChangePluginService() {
-
+            
             @Override
             public void execute(ConfigChangeRequest configChangeRequest,
                 ConfigChangeResponse configChangeResponse) {
                 // ignore
             }
-
+            
             @Override
             public ConfigChangeExecuteTypes executeType() {
                 return ConfigChangeExecuteTypes.EXECUTE_AFTER_TYPE;
             }
-
+            
             @Override
             public String getServiceType() {
                 return "test3";
             }
-
+            
             @Override
             public int getOrder() {
                 return 400;
             }
-
+            
             @Override
             public ConfigChangePointCutTypes[] pointcutMethodNames() {
                 return new ConfigChangePointCutTypes[] {ConfigChangePointCutTypes.IMPORT_BY_HTTP,
@@ -144,30 +144,30 @@ class ConfigChangePluginManagerTests {
                     ConfigChangePointCutTypes.REMOVE_BY_HTTP};
             }
         });
-
+        
         ConfigChangePluginManager.join(new ConfigChangePluginService() {
-
+            
             @Override
             public void execute(ConfigChangeRequest configChangeRequest,
                 ConfigChangeResponse configChangeResponse) {
                 // ignore
             }
-
+            
             @Override
             public ConfigChangeExecuteTypes executeType() {
                 return ConfigChangeExecuteTypes.EXECUTE_AFTER_TYPE;
             }
-
+            
             @Override
             public String getServiceType() {
                 return "test4";
             }
-
+            
             @Override
             public int getOrder() {
                 return 600;
             }
-
+            
             @Override
             public ConfigChangePointCutTypes[] pointcutMethodNames() {
                 return new ConfigChangePointCutTypes[] {ConfigChangePointCutTypes.PUBLISH_BY_HTTP,
@@ -176,15 +176,15 @@ class ConfigChangePluginManagerTests {
                     ConfigChangePointCutTypes.REMOVE_BY_HTTP};
             }
         });
-
+        
     }
-
+    
     @AfterEach
     void tearDown() {
         PluginStateCheckerHolder.setInstance(null);
         ConfigChangePluginManager.reset();
     }
-
+    
     @Test
     void testFindPluginServiceQueueByPointcut() {
         List<ConfigChangePluginService> configChangePluginServices =
@@ -213,7 +213,7 @@ class ConfigChangePluginManagerTests {
         assertEquals(2, configChangePluginServices.size());
         assertTrue(isSorted(configChangePluginServices));
     }
-
+    
     @Test
     void testGetAllPluginsByServiceType() {
         assertTrue(ConfigChangePluginManager.getInstance().getAllPlugins().containsKey("test1"));
@@ -222,65 +222,65 @@ class ConfigChangePluginManagerTests {
         assertTrue(ConfigChangePluginManager.getInstance().getAllPlugins().containsKey("test4"));
         assertFalse(ConfigChangePluginManager.getInstance().getAllPlugins().containsKey("test5"));
     }
-
+    
     @Test
     void testGetAllPluginsUnmodifiable() {
         assertThrows(UnsupportedOperationException.class,
             () -> ConfigChangePluginManager.getInstance().getAllPlugins().clear());
     }
-
+    
     @Test
     void testJoinIgnoresInvalidAndDuplicatePlugin() {
         ConfigChangePluginService existing =
             ConfigChangePluginManager.getInstance().getAllPlugins().get("test1");
         int beforeCount = ConfigChangePluginManager.findPluginServicesByPointcut(
             ConfigChangePointCutTypes.PUBLISH_BY_HTTP).size();
-
+        
         assertFalse(ConfigChangePluginManager.join(null));
         assertFalse(ConfigChangePluginManager.join(existing));
-
+        
         assertEquals(beforeCount, ConfigChangePluginManager.findPluginServicesByPointcut(
             ConfigChangePointCutTypes.PUBLISH_BY_HTTP).size());
     }
-
+    
     @Test
     void testFindPluginServicesFiltersDisabledPlugin() {
         PluginStateCheckerHolder.setInstance(
             (pluginType, pluginName) -> !PluginType.CONFIG_CHANGE.getType().equals(pluginType)
                 || !"test2".equals(pluginName));
-
+        
         List<ConfigChangePluginService> services =
             ConfigChangePluginManager.findPluginServicesByPointcut(
                 ConfigChangePointCutTypes.PUBLISH_BY_RPC);
-
+        
         assertEquals(2, services.size());
         assertFalse(
             services.stream().anyMatch(service -> "test2".equals(service.getServiceType())));
     }
-
+    
     @Test
     void testSortPluginServiceByPointCut() throws Exception {
         Method method = ConfigChangePluginManager.class.getDeclaredMethod(
             "sortPluginServiceByPointCut");
         method.setAccessible(true);
-
+        
         method.invoke(null);
-
+        
         List<ConfigChangePluginService> services =
             ConfigChangePluginManager.findPluginServicesByPointcut(
                 ConfigChangePointCutTypes.PUBLISH_BY_RPC);
         assertTrue(isSorted(services));
     }
-
+    
     @Test
     void testLoadConfigChangeServicesFromSpi() throws Exception {
         ConfigChangePluginManager.reset();
         Method method = ConfigChangePluginManager.class.getDeclaredMethod(
             "loadConfigChangeServices");
         method.setAccessible(true);
-
+        
         method.invoke(null);
-
+        
         assertTrue(
             ConfigChangePluginManager.getInstance().getAllPlugins().containsKey("spi-config"));
         assertFalse(ConfigChangePluginManager.getInstance().getAllPlugins().containsKey(""));
@@ -288,7 +288,7 @@ class ConfigChangePluginManagerTests {
             ConfigChangePointCutTypes.PUBLISH_BY_HTTP).stream()
             .anyMatch(each -> "spi-config".equals(each.getServiceType())));
     }
-
+    
     private boolean isSorted(List<ConfigChangePluginService> list) {
         return IntStream.range(0, list.size() - 1)
             .allMatch(i -> list.get(i).getOrder() <= list.get(i + 1).getOrder());

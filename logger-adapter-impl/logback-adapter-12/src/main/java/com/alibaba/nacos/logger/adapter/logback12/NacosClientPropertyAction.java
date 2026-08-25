@@ -35,13 +35,13 @@ class NacosClientPropertyAction extends Action {
     private static final String DEFAULT_VALUE_ATTRIBUTE = "defaultValue";
     
     private static final String SOURCE_ATTRIBUTE = "source";
-
+    
     private final NacosLoggingProperties loggingProperties;
-
+    
     NacosClientPropertyAction(NacosLoggingProperties loggingProperties) {
         this.loggingProperties = loggingProperties;
     }
-
+    
     @Override
     public void begin(InterpretationContext ic, String elementName, Attributes attributes)
         throws ActionException {

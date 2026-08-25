@@ -25,56 +25,56 @@ package com.alibaba.nacos.ai.constant;
  * @author nacos
  */
 public final class AiResourceConstants {
-
+    
     public static final String RESOURCE_TYPE_SKILL = "skill";
-
+    
     public static final String RESOURCE_TYPE_PROMPT = "prompt";
-
+    
     public static final String RESOURCE_TYPE_MCP = "mcp";
-
+    
     private AiResourceConstants() {
     }
-
+    
     /**
      * Meta status: resource is enabled.
      */
     public static final String META_STATUS_ENABLE = "enable";
-
+    
     /**
      * Meta status: resource is disabled.
      */
     public static final String META_STATUS_DISABLE = "disable";
-
+    
     /**
      * Version status: version is online (published and active).
      */
     public static final String VERSION_STATUS_ONLINE = "online";
-
+    
     /**
      * Version status: version is in draft (not yet submitted).
      */
     public static final String VERSION_STATUS_DRAFT = "draft";
-
+    
     /**
      * Version status: version is under review (pipeline running).
      */
     public static final String VERSION_STATUS_REVIEWING = "reviewing";
-
+    
     /**
      * Version status: version has completed pipeline review and awaits the next action.
      */
     public static final String VERSION_STATUS_REVIEWED = "reviewed";
-
+    
     /**
      * Version status: version has been taken offline.
      */
     public static final String VERSION_STATUS_OFFLINE = "offline";
-
+    
     /**
      * Maximum retry count for CAS-based meta update operations.
      */
     public static final int MAX_WORKING_VERSION_RETRY = 3;
-
+    
     /**
      * Label key that points to the latest published version.
      */

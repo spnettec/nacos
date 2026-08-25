@@ -134,3 +134,38 @@ verify`。
 Java SDK IT 必须使用独立的 `java-sdk-integration-test` Maven profile。通用
 `integration-test` profile 保留给 HTTP API IT 工作流，不能意外运行依赖 SDK
 gRPC 连接就绪状态或可选服务端能力的 SDK 测试。
+
+## 8. AI Resource Search 与 Agent 场景
+
+公共 AI SDK Search 或 Agent 行为变更时，Java SDK IT 至少覆盖：
+
+- 真实 SDK Client 对 Agent 单条件、组合 predicate、numbered page 和默认 namespace 的结果；
+- HTTP 与 gRPC Agent Search 在相同事实和传输选择下返回等价目录；
+- Agent publish/online/offline/latest 切换后的有界收敛，且 Endpoint 操作只改变 Discover；
+- 通用单类型 Search 与 Agent、AgentSpec、Skill、Prompt、MCP 资源专用 Search 的候选资格一致；
+- Client transport `AUTO/HTTP/GRPC` 可用时保持同一 Search 契约，协商不支持时返回受控异常；
+- SDK shutdown、重连和 redo 不重复写目录索引，也不把 Runtime Endpoint 带入 Search 结果。
+
+涉及 ARD Artifact 的协议一致性继续由 OpenAPI/适配器 IT 覆盖；Java SDK IT 只通过公开 SDK
+合同验证其可观察目录与 Discover 行为。
+
+## 9. MCP 兼容与 Runtime Endpoint 场景
+
+MCP Storage 路由、生命周期 Facade 或 Endpoint Binding 发生变化时，Java SDK IT 至少覆盖：
+
+- 真实 `AiService` 发布新的 MCP Resource/Version，按精确 Version 和 latest 查询，并且只观察到
+  enable + online 内容；
+- 历史精确 Version conflict/overwrite 行为只存在于兼容 Facade，不影响标准生命周期写入；
+- `subscribeMcpServer` 初始投递、完整结果变化回调、unsubscribe、重新 subscribe 和 shutdown
+  清理，且不建立 Naming subscription；
+- Runtime Endpoint 全 Version、SemVer exact、SemVer Range 和非 SemVer exact Binding，
+  包括拒绝无 Version Range、非 SemVer Range 和不包含 Version 的 Range；
+- `sse`、`streamable-http` 和标准双 Transport publication，以及缺少 Transport metadata 时的
+  兼容不受限语义；
+- 兼容期间合并新的无 Version Service 与历史 `mcpName::version` Service，并正确去重；
+- Deregister、断连、重连和 redo 恢复同一份防御性 publication 快照，不重复 Instance，
+  也不丢失其他 MCP publication；
+- 默认 JSON Adapter 与 Jackson 3 Adapter 行为等价，包括省略全部新增字段的旧 Request Fixture。
+
+使用显式新增 Endpoint 字段的 SDK 必须协商服务端支持；能力缺失时返回受控异常或文档化 fallback。
+Client HTTP 对齐和心跳续约在独立设计批准前不属于该矩阵。

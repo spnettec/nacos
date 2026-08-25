@@ -49,28 +49,28 @@ import java.util.Map;
  * @author Nacos
  */
 public class PreContextPluginInitializer implements PluginInitializer {
-
+    
     private static final Logger LOGGER =
         LoggerFactory.getLogger(PreContextPluginInitializer.class);
-
+    
     private final ConfigurableListableBeanFactory beanFactory;
-
+    
     private final PluginTypePolicyRegistry policyRegistry;
-
+    
     private final Collection<PluginProvider<?>> providers;
-
+    
     private final PluginConfigResolver configResolver;
-
+    
     private final PluginConfigBasicChecker configChecker;
-
+    
     private final PluginConfigApplier configApplier;
-
+    
     public PreContextPluginInitializer(ConfigurableApplicationContext context) {
         this(context.getBeanFactory(), new PluginTypePolicyRegistry(), loadProviders(),
             new PluginConfigResolver(), new PluginConfigBasicChecker(),
             new PluginConfigApplier());
     }
-
+    
     PreContextPluginInitializer(ConfigurableListableBeanFactory beanFactory,
         PluginTypePolicyRegistry policyRegistry, Collection<PluginProvider<?>> providers,
         PluginConfigResolver configResolver, PluginConfigBasicChecker configChecker,
@@ -82,12 +82,12 @@ public class PreContextPluginInitializer implements PluginInitializer {
         this.configChecker = configChecker;
         this.configApplier = configApplier;
     }
-
+    
     @Override
     public PluginInitializationPhase getInitializationPhase() {
         return PluginInitializationPhase.PRE_CONTEXT;
     }
-
+    
     @Override
     public void initialize() {
         if (beanFactory.containsSingleton(PreContextPluginInitializationResult.BEAN_NAME)) {
@@ -109,7 +109,7 @@ public class PreContextPluginInitializer implements PluginInitializer {
         beanFactory.registerSingleton(PreContextPluginInitializationResult.BEAN_NAME, result);
         LOGGER.info("[PreContextPluginInitializer] Initialized {} plugins", pluginInfos.size());
     }
-
+    
     private void initializeProvider(PluginProvider<?> provider,
         Map<String, PluginInfo> pluginInfos, Map<String, Object> pluginInstances,
         Map<String, PluginConfigResolution> configResolutions) {
@@ -139,7 +139,7 @@ public class PreContextPluginInitializer implements PluginInitializer {
         plugins.forEach((name, instance) -> initializePlugin(pluginType, name, instance,
             pluginInfos, pluginInstances, configResolutions));
     }
-
+    
     private void initializePlugin(PluginType pluginType, String pluginName, Object instance,
         Map<String, PluginInfo> pluginInfos, Map<String, Object> pluginInstances,
         Map<String, PluginConfigResolution> configResolutions) {
@@ -163,7 +163,7 @@ public class PreContextPluginInitializer implements PluginInitializer {
         pluginInstances.put(pluginId, instance);
         configResolutions.put(pluginId, resolution);
     }
-
+    
     private PluginInfo createPluginInfo(PluginType pluginType, String pluginName, String pluginId,
         Object instance) {
         PluginInfo result = new PluginInfo();
@@ -185,7 +185,7 @@ public class PreContextPluginInitializer implements PluginInitializer {
         }
         return result;
     }
-
+    
     private PluginConfigResolution initializePluginConfig(PluginInfo pluginInfo, Object instance) {
         configResolver.initializeStaticConfig(pluginInfo);
         PluginConfigResolution resolution = configResolver.resolve(pluginInfo, false);
@@ -203,7 +203,7 @@ public class PreContextPluginInitializer implements PluginInitializer {
         }
         return configResolver.resolve(pluginInfo, true);
     }
-
+    
     private void initializePluginLifecycle(PluginInfo pluginInfo, Object instance) {
         if (!pluginInfo.isEnabled() || !(instance instanceof PluginStartupLifecycle)) {
             return;
@@ -217,11 +217,11 @@ public class PreContextPluginInitializer implements PluginInitializer {
                 e);
         }
     }
-
+    
     private Map<String, String> copyConfig(Map<String, String> config) {
         return config == null ? new LinkedHashMap<>() : new LinkedHashMap<>(config);
     }
-
+    
     private void initializeEnvironmentManager(Map<String, PluginInfo> pluginInfos,
         Map<String, Object> pluginInstances) {
         List<CustomEnvironmentPluginService> services = new ArrayList<>();
@@ -234,7 +234,7 @@ public class PreContextPluginInitializer implements PluginInitializer {
         });
         CustomEnvironmentPluginManager.getInstance().initialize(services);
     }
-
+    
     @SuppressWarnings({"rawtypes", "unchecked"})
     private static Collection<PluginProvider<?>> loadProviders() {
         return (Collection) NacosServiceLoader.load(PluginProvider.class);

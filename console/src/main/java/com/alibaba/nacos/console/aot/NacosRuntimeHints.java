@@ -43,7 +43,7 @@ import java.util.stream.Stream;
  */
 @SuppressWarnings("all")
 public class NacosRuntimeHints implements RuntimeHintsRegistrar {
-
+    
     private final Class<?>[] directReflectionTypes = {byte.class, byte[].class,
         boolean.class, Object.class, Integer.class,
         String.class, ConcurrentHashMap.class,
@@ -211,7 +211,7 @@ public class NacosRuntimeHints implements RuntimeHintsRegistrar {
         com.alibaba.nacos.api.selector.ExpressionSelector.class,
         com.alibaba.nacos.api.selector.NoneSelector.class,
         ServiceView.class};
-
+    
     private final String[] optionalReflectionTypes = {
         "io.grpc.internal.ServerCallImpl",
         "io.grpc.netty.shaded.io.grpc.netty.WriteQueue",
@@ -356,7 +356,7 @@ public class NacosRuntimeHints implements RuntimeHintsRegistrar {
         "com.alipay.sofa.jraft.core.NodeImpl",
         "com.alipay.sofa.jraft.core.Replicator",
         "com.alipay.sofa.jraft.storage.snapshot.local.LocalSnapshotReader"};
-
+    
     private final String[] optionalDerbyTypes = {
         "org.apache.derby.impl.store.raw.data.CachedPage",
         "org.apache.derby.catalog.types.TypesImplInstanceGetter",
@@ -436,7 +436,7 @@ public class NacosRuntimeHints implements RuntimeHintsRegistrar {
         "org.apache.derby.impl.services.monitor.ProtocolKey",
         "org.apache.derby.impl.services.monitor.TopService",
         "org.apache.derby.iapi.services.cache.ClassSizeCatalogImpl"};
-
+    
     private final List<Class<? extends Serializable>> directSerializationTypes = List.of(byte.class,
         byte[].class, String.class, ConcurrentHashMap.class,
         com.alibaba.nacos.api.grpc.auto.Metadata.class,
@@ -451,7 +451,7 @@ public class NacosRuntimeHints implements RuntimeHintsRegistrar {
         com.alibaba.nacos.api.naming.pojo.healthcheck.impl.Tcp.class,
         com.alibaba.nacos.api.selector.ExpressionSelector.class,
         com.alibaba.nacos.api.selector.NoneSelector.class);
-
+    
     private final String[] optionalSerializationTypes = {
         "com.alibaba.nacos.naming.core.v2.client.ClientSyncData",
         "com.alibaba.nacos.naming.core.v2.metadata.InstanceMetadata",
@@ -471,68 +471,66 @@ public class NacosRuntimeHints implements RuntimeHintsRegistrar {
         "com.alibaba.nacos.consistency.entity.Response",
         "com.alibaba.nacos.consistency.entity.GetRequest",
         "com.alibaba.nacos.consistency.entity.Log"};
-
+    
     private final String[] resourcePattern = {AotConfiguration.reflectToNativeLibraryLoader(),
         ".*libnetty_transport_native_epoll_.*\\.so", ".*\\.desc$", ".*\\.html$",
         ".*\\.css$", ".*\\.js$", ".*\\.js.map$", ".*\\.png$", ".*\\.svg$",
         ".*\\.eot$", ".*\\.woff$", ".*\\.woff2$", ".*\\.ttf$",
         "org/apache/derby/modules.properties", "application.properties"};
-
+    
     public NacosRuntimeHints() {
     }
-
+    
     @Override
     public void registerHints(RuntimeHints hints, ClassLoader classLoader) {
         Stream.of(directReflectionTypes).forEach(type -> registerReflectionType(hints, type));
         registerNestedTypes(hints, com.google.protobuf.DescriptorProtos.class);
         Stream.of(optionalReflectionTypes, optionalDerbyTypes).flatMap(Stream::of)
             .forEach(className -> registerOptionalClass(hints, classLoader, className));
-
+        
         for (String pattern : resourcePattern) {
             if (!pattern.isBlank()) {
                 hints.resources().registerPattern(pattern);
             }
         }
-
+        
         directSerializationTypes.forEach(type -> hints.serialization().registerType(type));
         Stream.of(optionalSerializationTypes)
             .forEach(className -> registerOptionalSerializationType(hints, classLoader, className));
     }
-
+    
     private void registerNestedTypes(RuntimeHints hints, Class<?> type) {
         registerReflectionType(hints, type);
         for (Class<?> nestedType : type.getDeclaredClasses()) {
             registerNestedTypes(hints, nestedType);
         }
     }
-
+    
     private void registerOptionalClass(RuntimeHints hints, ClassLoader classLoader,
-            String className) {
+        String className) {
         resolveClass(classLoader, className).ifPresent(clazz -> {
             try {
                 registerReflectionType(hints, clazz);
-            }
-            catch (LinkageError e) {
+            } catch (LinkageError e) {
                 // Optional dependency is only partially present in this application.
             }
         });
     }
-
+    
     @SuppressWarnings("unchecked")
     private void registerOptionalSerializationType(RuntimeHints hints, ClassLoader classLoader,
-            String className) {
+        String className) {
         resolveClass(classLoader, className).filter(Serializable.class::isAssignableFrom)
             .map(clazz -> (Class<? extends Serializable>) clazz)
             .ifPresent(type -> {
                 try {
                     hints.serialization().registerType(type);
-                }
-                catch (LinkageError e) {
+                } catch (LinkageError e) {
                     // Optional dependency is only partially present in this application.
                 }
             });
     }
-
+    
     private void registerReflectionType(RuntimeHints hints, Class<?> type) {
         hints.reflection().registerType(type, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
             MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS, MemberCategory.INTROSPECT_PUBLIC_METHODS,
@@ -540,14 +538,13 @@ public class NacosRuntimeHints implements RuntimeHintsRegistrar {
             MemberCategory.DECLARED_FIELDS, MemberCategory.DECLARED_CLASSES,
             MemberCategory.PUBLIC_CLASSES);
     }
-
+    
     private java.util.Optional<Class<?>> resolveClass(ClassLoader classLoader, String className) {
         ClassLoader targetClassLoader = classLoader != null ? classLoader
-                : Thread.currentThread().getContextClassLoader();
+            : Thread.currentThread().getContextClassLoader();
         try {
             return java.util.Optional.of(Class.forName(className, false, targetClassLoader));
-        }
-        catch (ClassNotFoundException | LinkageError e) {
+        } catch (ClassNotFoundException | LinkageError e) {
             return java.util.Optional.empty();
         }
     }

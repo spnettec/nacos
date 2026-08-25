@@ -32,10 +32,10 @@ import java.util.List;
  * @author Nacos
  */
 public final class AgentVersionComparator {
-
+    
     private AgentVersionComparator() {
     }
-
+    
     /**
      * Compare two Agent Version values by RAD SemVer precedence.
      *
@@ -48,17 +48,17 @@ public final class AgentVersionComparator {
         AgentValidationUtils.validateVersion(right);
         return ParsedVersion.parse(left).compareTo(ParsedVersion.parse(right));
     }
-
+    
     private static final class ParsedVersion implements Comparable<ParsedVersion> {
-
+        
         private final BigInteger major;
-
+        
         private final BigInteger minor;
-
+        
         private final BigInteger patch;
-
+        
         private final List<PrereleaseIdentifier> prerelease;
-
+        
         private ParsedVersion(BigInteger major, BigInteger minor, BigInteger patch,
             List<PrereleaseIdentifier> prerelease) {
             this.major = major;
@@ -66,7 +66,7 @@ public final class AgentVersionComparator {
             this.patch = patch;
             this.prerelease = prerelease;
         }
-
+        
         private static ParsedVersion parse(String version) {
             int separator = version.indexOf('-');
             String core = separator < 0 ? version : version.substring(0, separator);
@@ -82,7 +82,7 @@ public final class AgentVersionComparator {
             return new ParsedVersion(new BigInteger(numbers[0]), new BigInteger(numbers[1]),
                 new BigInteger(numbers[2]), prerelease);
         }
-
+        
         @Override
         public int compareTo(ParsedVersion other) {
             int result = major.compareTo(other.major);
@@ -113,19 +113,19 @@ public final class AgentVersionComparator {
             return Integer.compare(prerelease.size(), other.prerelease.size());
         }
     }
-
+    
     private static final class PrereleaseIdentifier
         implements Comparable<PrereleaseIdentifier> {
-
+        
         private final String value;
-
+        
         private final BigInteger numericValue;
-
+        
         private PrereleaseIdentifier(String value) {
             this.value = value;
             this.numericValue = isNumeric(value) ? new BigInteger(value) : null;
         }
-
+        
         @Override
         public int compareTo(PrereleaseIdentifier other) {
             if (numericValue != null && other.numericValue != null) {
@@ -136,7 +136,7 @@ public final class AgentVersionComparator {
             }
             return value.compareTo(other.value);
         }
-
+        
         private static boolean isNumeric(String value) {
             for (int i = 0; i < value.length(); i++) {
                 if (value.charAt(i) < '0' || value.charAt(i) > '9') {

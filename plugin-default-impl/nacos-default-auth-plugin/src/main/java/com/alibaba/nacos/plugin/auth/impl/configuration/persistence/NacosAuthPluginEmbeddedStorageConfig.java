@@ -36,22 +36,22 @@ import org.springframework.context.annotation.Conditional;
  */
 @Conditional(value = {ConditionOnEmbeddedStorage.class, ConditionOnInnerDatasource.class})
 public class NacosAuthPluginEmbeddedStorageConfig {
-
+    
     @Bean
     public AuthRowMapperManager authRowMapperManager() {
         return new AuthRowMapperManager();
     }
-
+    
     @Bean
     public PermissionPersistService permissionPersistService(DatabaseOperate databaseOperate) {
         return new EmbeddedPermissionPersistServiceImpl(databaseOperate);
     }
-
+    
     @Bean
     public RolePersistService rolePersistService(DatabaseOperate databaseOperate) {
         return new EmbeddedRolePersistServiceImpl(databaseOperate);
     }
-
+    
     @Bean
     public UserPersistService userPersistService(DatabaseOperate databaseOperate) {
         return new EmbeddedUserPersistServiceImpl(databaseOperate);

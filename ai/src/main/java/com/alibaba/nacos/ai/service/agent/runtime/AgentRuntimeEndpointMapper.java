@@ -43,14 +43,14 @@ import java.util.regex.Pattern;
  * @author Nacos
  */
 public final class AgentRuntimeEndpointMapper {
-
+    
     private static final int MAX_HOST_LENGTH = 253;
-
+    
     private static final int MAX_NAMING_METADATA_LENGTH = 1024;
-
+    
     private static final Pattern URI_SCHEME_PATTERN =
         Pattern.compile("[a-z][a-z0-9+.-]*");
-
+    
     private static final Set<String> KNOWN_RESERVED_KEYS = Collections.unmodifiableSet(
         new HashSet<String>(Arrays.asList(Constants.Agent.AGENT_ENDPOINT_PATH_KEY,
             Constants.Agent.AGENT_ENDPOINT_TRANSPORT_KEY,
@@ -62,10 +62,10 @@ public final class AgentRuntimeEndpointMapper {
             Constants.Agent.AGENT_ENDPOINT_VERSION_KEY,
             Constants.Agent.AGENT_ENDPOINT_VERSION_RANGE_KEY,
             Constants.Agent.AGENT_ENDPOINT_PRIORITY_KEY)));
-
+    
     private AgentRuntimeEndpointMapper() {
     }
-
+    
     /**
      * Convert one public Runtime Endpoint into an ephemeral Naming instance.
      *
@@ -79,7 +79,7 @@ public final class AgentRuntimeEndpointMapper {
         Endpoint canonical = canonicalPayload(endpoint);
         String canonicalRange = canonicalVersionRange(runtimeVersion, versionRange);
         URI uri = parseCanonicalUri(canonical.getUri());
-
+        
         Map<String, String> metadata = new LinkedHashMap<String, String>();
         metadata.put(Constants.Agent.AGENT_ENDPOINT_PATH_KEY, valueOrEmpty(uri.getRawPath()));
         metadata.put(Constants.Agent.AGENT_ENDPOINT_TRANSPORT_KEY, canonical.getTransport());
@@ -98,7 +98,7 @@ public final class AgentRuntimeEndpointMapper {
             metadata.putAll(canonical.getMetadata());
         }
         validateCompleteMetadata(metadata);
-
+        
         String host = EndpointCanonicalizer.normalizedHost(canonical.getUri());
         validateHost(host);
         Instance result = new Instance();
@@ -112,7 +112,7 @@ public final class AgentRuntimeEndpointMapper {
         result.setMetadata(metadata);
         return result;
     }
-
+    
     /**
      * Convert one legacy A2A Endpoint into the canonical Runtime Naming layout.
      *
@@ -139,7 +139,7 @@ public final class AgentRuntimeEndpointMapper {
         validateCompleteMetadata(result.getMetadata());
         return result;
     }
-
+    
     /**
      * Test whether one canonical Runtime Naming instance supports an exact Agent Version.
      *
@@ -156,7 +156,7 @@ public final class AgentRuntimeEndpointMapper {
         }
         return false;
     }
-
+    
     /**
      * Convert one Naming ServiceStorage instance into a Runtime Endpoint contribution.
      *
@@ -177,7 +177,7 @@ public final class AgentRuntimeEndpointMapper {
         Map<String, String> metadata = stringMetadata(instance.getMetadata());
         validateCompleteMetadata(metadata);
         validateReservedKeys(metadata);
-
+        
         String transport = requiredMetadata(metadata,
             Constants.Agent.AGENT_ENDPOINT_TRANSPORT_KEY);
         AgentValidationUtils.validateTransport(transport);
@@ -197,7 +197,7 @@ public final class AgentRuntimeEndpointMapper {
             throw new IllegalArgumentException(
                 "Agent Endpoint URI scheme and supportTls must agree");
         }
-
+        
         String path = requiredMetadata(metadata, Constants.Agent.AGENT_ENDPOINT_PATH_KEY);
         String query = metadata.get(Constants.Agent.AGENT_ENDPOINT_QUERY_KEY);
         int priority = parsePriority(requiredMetadata(metadata,
@@ -212,7 +212,7 @@ public final class AgentRuntimeEndpointMapper {
                 "Agent Endpoint Version range must be canonical");
         }
         validateLegacyMetadata(metadata);
-
+        
         String uri = composeUri(uriScheme, instance.getIp(), instance.getPort(), path, query);
         Endpoint endpoint = new Endpoint();
         endpoint.setUri(uri);
@@ -241,13 +241,13 @@ public final class AgentRuntimeEndpointMapper {
         result.setLastUpdatedTime(lastUpdatedTime);
         return result;
     }
-
+    
     private static Endpoint canonicalPayload(Endpoint endpoint) {
         Endpoint canonical = EndpointCanonicalizer.canonicalize(endpoint);
         canonical.setHealthy(null);
         return canonical;
     }
-
+    
     private static String canonicalVersionRange(String runtimeVersion, String versionRange) {
         AgentValidationUtils.validateVersion(runtimeVersion);
         String result = versionRange == null
@@ -258,7 +258,7 @@ public final class AgentRuntimeEndpointMapper {
         }
         return result;
     }
-
+    
     private static URI parseCanonicalUri(String uri) {
         try {
             URI result = new URI(uri);
@@ -268,7 +268,7 @@ public final class AgentRuntimeEndpointMapper {
             throw new IllegalArgumentException("Invalid canonical Agent Endpoint URI: " + uri, e);
         }
     }
-
+    
     private static String composeUri(String scheme, String host, int port, String path,
         String query) {
         String formattedHost = host.indexOf(':') >= 0 ? '[' + host + ']' : host;
@@ -279,7 +279,7 @@ public final class AgentRuntimeEndpointMapper {
         }
         return result.toString();
     }
-
+    
     private static Map<String, String> stringMetadata(Map<String, String> rawMetadata) {
         if (rawMetadata == null) {
             throw new IllegalArgumentException("Naming instance metadata must not be null");
@@ -294,7 +294,7 @@ public final class AgentRuntimeEndpointMapper {
         }
         return result;
     }
-
+    
     private static void validateNamingControlKeys(Map<String, String> metadata) {
         if (metadata.containsKey(
             com.alibaba.nacos.naming.constants.Constants.PUBLISH_INSTANCE_ENABLE)
@@ -304,7 +304,7 @@ public final class AgentRuntimeEndpointMapper {
                 "Endpoint metadata uses a reserved Naming control key");
         }
     }
-
+    
     private static void validateReservedKeys(Map<String, String> metadata) {
         for (String key : metadata.keySet()) {
             if (key.startsWith(Constants.Agent.AGENT_ENDPOINT_METADATA_PREFIX)
@@ -314,7 +314,7 @@ public final class AgentRuntimeEndpointMapper {
             }
         }
     }
-
+    
     private static String requiredMetadata(Map<String, String> metadata, String key) {
         String result = metadata.get(key);
         if (result == null) {
@@ -322,7 +322,7 @@ public final class AgentRuntimeEndpointMapper {
         }
         return result;
     }
-
+    
     private static void validateLegacyMetadata(Map<String, String> metadata) {
         String protocolVersion =
             metadata.get(Constants.Agent.AGENT_ENDPOINT_PROTOCOL_VERSION_KEY);
@@ -334,7 +334,7 @@ public final class AgentRuntimeEndpointMapper {
             throw new IllegalArgumentException("Invalid Agent Endpoint tenant");
         }
     }
-
+    
     private static Map<String, String> publicMetadata(Map<String, String> metadata) {
         Map<String, String> result = new LinkedHashMap<String, String>();
         for (Map.Entry<String, String> entry : metadata.entrySet()) {
@@ -346,7 +346,7 @@ public final class AgentRuntimeEndpointMapper {
         validateNamingControlKeys(result);
         return result;
     }
-
+    
     private static int parsePriority(String value) {
         if (value.isEmpty() || value.length() > 10
             || value.length() > 1 && value.charAt(0) == '0') {
@@ -363,23 +363,23 @@ public final class AgentRuntimeEndpointMapper {
             throw new IllegalArgumentException("Invalid Agent Endpoint priority: " + value, e);
         }
     }
-
+    
     private static void validateUriScheme(String value) {
         if (value == null || !URI_SCHEME_PATTERN.matcher(value).matches()) {
             throw new IllegalArgumentException("Invalid Agent Endpoint URI scheme: " + value);
         }
     }
-
+    
     private static boolean isTlsScheme(String scheme) {
         return "https".equals(scheme) || "wss".equals(scheme);
     }
-
+    
     private static void validateHost(String host) {
         if (host == null || host.isEmpty() || host.length() > MAX_HOST_LENGTH) {
             throw new IllegalArgumentException("Invalid Naming instance host: " + host);
         }
     }
-
+    
     private static void validateCompleteMetadata(Map<String, String> metadata) {
         int length = 0;
         for (Map.Entry<String, String> entry : metadata.entrySet()) {
@@ -391,11 +391,11 @@ public final class AgentRuntimeEndpointMapper {
             }
         }
     }
-
+    
     private static String valueOrEmpty(String value) {
         return value == null ? "" : value;
     }
-
+    
     private static RuntimeEndpointState runtimeState(boolean enabled, boolean healthy) {
         if (!enabled) {
             return RuntimeEndpointState.DISABLED;

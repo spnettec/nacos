@@ -26,15 +26,15 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.Mockito.mock;
 
 class AiDistroConfigurationTest {
-
+    
     @Test
     void testFilterAndRegistration() {
         AiDistroConfiguration configuration = new AiDistroConfiguration();
         AiDistroFilter filter = configuration.aiDistroFilter(mock(DistroMapper.class));
-
+        
         FilterRegistrationBean<AiDistroFilter> registration =
             configuration.aiDistroFilterRegistration(filter);
-
+        
         assertSame(filter, registration.getFilter());
         assertEquals("aiDistroFilter", registration.getFilterName());
         assertEquals(7, registration.getOrder());

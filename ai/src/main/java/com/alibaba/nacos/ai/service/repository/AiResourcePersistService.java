@@ -26,9 +26,9 @@ import com.alibaba.nacos.api.model.Page;
  * @since 3.2.0
  */
 public interface AiResourcePersistService {
-
+    
     String PATTERN_STR = "*";
-
+    
     /**
      * Convert a search argument that may contain Nacos wildcard ({@code *}) to SQL LIKE syntax ({@code %}).
      * Also escapes the escape character ({@code \}) itself and the SQL single-char wildcard ({@code _}),
@@ -60,11 +60,11 @@ public interface AiResourcePersistService {
             return s;
         }
     }
-
+    
     long insert(AiResource resource);
-
+    
     AiResource find(String namespaceId, String name, String type);
-
+    
     /**
      * List resources with basic filters.
      */
@@ -78,7 +78,7 @@ public interface AiResourcePersistService {
         condition.setBizTagsLike(bizTagsLike);
         return list(condition, pageNo, pageSize);
     }
-
+    
     /**
      * List resources with optional ordering.
      *
@@ -95,7 +95,7 @@ public interface AiResourcePersistService {
         condition.setOrderBy(orderBy);
         return list(condition, pageNo, pageSize);
     }
-
+    
     /**
      * List resources by unified query condition.
      *
@@ -105,7 +105,7 @@ public interface AiResourcePersistService {
      * @return paged resources
      */
     Page<AiResource> list(QueryCondition queryCondition, int pageNo, int pageSize);
-
+    
     /**
      * Update mutable metadata with optimistic lock on meta_version.
      *
@@ -116,7 +116,7 @@ public interface AiResourcePersistService {
      */
     boolean updateMetaCas(String namespaceId, String name, String type, long expectedMetaVersion,
         AiResource newValue);
-
+    
     /**
      * Update resource source with optimistic lock on meta_version.
      *
@@ -124,16 +124,16 @@ public interface AiResourcePersistService {
      */
     boolean updateSourceCas(String namespaceId, String name, String type, long expectedMetaVersion,
         String source);
-
+    
     int delete(String namespaceId, String name, String type);
-
+    
     /**
      * Update the scope (visibility) of a resource.
      *
      * @return true if updated successfully (affectedRows == 1)
      */
     boolean updateScope(String namespaceId, String name, String type, String scope);
-
+    
     /**
      * Increment download count for a skill (total).
      *
@@ -144,5 +144,5 @@ public interface AiResourcePersistService {
      * @return true if updated successfully
      */
     boolean incrementDownloadCount(String namespaceId, String name, String type, long increment);
-
+    
 }

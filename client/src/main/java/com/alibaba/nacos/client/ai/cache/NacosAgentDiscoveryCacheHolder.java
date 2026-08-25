@@ -56,43 +56,63 @@ import java.util.concurrent.TimeUnit;
  * @author Nacos
  */
 public class NacosAgentDiscoveryCacheHolder implements Closeable {
-
+    
     private static final Logger LOGGER =
         LogUtils.logger(NacosAgentDiscoveryCacheHolder.class);
-
+    
     private final String namespaceId;
-
+    
     private final AiClientProxy clientProxy;
-
+    
     private final long updateIntervalMillis;
-
+    
     private final ScheduledExecutorService pollingExecutor;
-
+    
     private final ExecutorService callbackExecutor;
-
+    
+    private final int maxSubscriptions;
+    
     private final Map<SubscriptionKey, Subscription> subscriptions =
         new HashMap<SubscriptionKey, Subscription>();
-
+    
     private boolean closed;
-
+    
     public NacosAgentDiscoveryCacheHolder(String namespaceId, AiClientProxy clientProxy) {
+        this(namespaceId, clientProxy,
+            AiConstants.DEFAULT_AI_AGENT_DISCOVERY_MAX_SUBSCRIPTIONS);
+    }
+    
+    public NacosAgentDiscoveryCacheHolder(String namespaceId, AiClientProxy clientProxy,
+        int maxSubscriptions) {
         this(namespaceId, clientProxy, AiConstants.DEFAULT_AI_CACHE_UPDATE_INTERVAL,
             new ScheduledThreadPoolExecutor(1,
                 new NameThreadFactory("com.alibaba.nacos.client.ai.agent.discovery")),
             Executors.newCachedThreadPool(
-                new NameThreadFactory("com.alibaba.nacos.client.ai.agent.listener")));
+                new NameThreadFactory("com.alibaba.nacos.client.ai.agent.listener")),
+            maxSubscriptions);
     }
-
+    
     NacosAgentDiscoveryCacheHolder(String namespaceId, AiClientProxy clientProxy,
         long updateIntervalMillis, ScheduledExecutorService pollingExecutor,
         ExecutorService callbackExecutor) {
+        this(namespaceId, clientProxy, updateIntervalMillis, pollingExecutor, callbackExecutor,
+            AiConstants.DEFAULT_AI_AGENT_DISCOVERY_MAX_SUBSCRIPTIONS);
+    }
+    
+    NacosAgentDiscoveryCacheHolder(String namespaceId, AiClientProxy clientProxy,
+        long updateIntervalMillis, ScheduledExecutorService pollingExecutor,
+        ExecutorService callbackExecutor, int maxSubscriptions) {
+        if (maxSubscriptions < 1) {
+            throw new IllegalArgumentException("maxSubscriptions must be greater than 0");
+        }
         this.namespaceId = namespaceId;
         this.clientProxy = clientProxy;
         this.updateIntervalMillis = updateIntervalMillis;
         this.pollingExecutor = pollingExecutor;
         this.callbackExecutor = callbackExecutor;
+        this.maxSubscriptions = maxSubscriptions;
     }
-
+    
     /**
      * Subscribe by periodically executing the same Discover request.
      *
@@ -117,13 +137,19 @@ public class NacosAgentDiscoveryCacheHolder implements Closeable {
         if (existing != null) {
             return AgentModelUtils.copyDiscoveryResult(existing.current);
         }
+        if (subscriptions.size() >= maxSubscriptions) {
+            throw new NacosApiException(NacosException.CLIENT_OVER_THRESHOLD,
+                ErrorCode.AGENT_DISCOVERY_SUBSCRIPTION_OVER_LIMIT,
+                "Agent discovery subscription limit of " + maxSubscriptions
+                    + " reached for this SDK Client.");
+        }
         AgentDiscoveryResult current = discoverOrNull(request);
         Subscription subscription = new Subscription(key, request, listener, current);
         subscriptions.put(key, subscription);
         schedule(subscription);
         return AgentModelUtils.copyDiscoveryResult(current);
     }
-
+    
     /**
      * Remove one exact local polling subscription.
      *
@@ -145,7 +171,7 @@ public class NacosAgentDiscoveryCacheHolder implements Closeable {
             removed.cancel();
         }
     }
-
+    
     private AgentDiscoveryResult discoverOrNull(AgentDiscoveryRequest request)
         throws NacosException {
         try {
@@ -157,14 +183,14 @@ public class NacosAgentDiscoveryCacheHolder implements Closeable {
             throw e;
         }
     }
-
+    
     private void schedule(Subscription subscription) {
         if (!closed) {
             subscription.future = pollingExecutor.schedule(subscription, updateIntervalMillis,
                 TimeUnit.MILLISECONDS);
         }
     }
-
+    
     private void poll(Subscription subscription) {
         AgentDiscoveryResult latest;
         try {
@@ -195,13 +221,13 @@ public class NacosAgentDiscoveryCacheHolder implements Closeable {
             dispatch(subscription, AgentModelUtils.copyDiscoveryResult(subscription.current));
         }
     }
-
+    
     private synchronized void rescheduleIfActive(Subscription subscription) {
         if (!closed && subscriptions.get(subscription.key) == subscription) {
             schedule(subscription);
         }
     }
-
+    
     private void dispatch(final Subscription subscription,
         final AgentDiscoveryResult result) {
         Executor executor = subscription.listener.getExecutor();
@@ -210,7 +236,7 @@ public class NacosAgentDiscoveryCacheHolder implements Closeable {
         }
         try {
             executor.execute(new Runnable() {
-
+                
                 @Override
                 public void run() {
                     try {
@@ -224,14 +250,14 @@ public class NacosAgentDiscoveryCacheHolder implements Closeable {
             LOGGER.warn("Agent discovery listener dispatch failed.", e);
         }
     }
-
+    
     private synchronized void invokeIfActive(Subscription subscription,
         AgentDiscoveryResult result) {
         if (!closed && subscriptions.get(subscription.key) == subscription) {
             subscription.listener.onEvent(new NacosAgentDiscoveryEvent(result));
         }
     }
-
+    
     private String buildRequestKey(AgentDiscoveryRequest request) {
         AgentReference reference = request.getReference();
         StringBuilder result = new StringBuilder(request.getNamespaceId()).append('\u0000')
@@ -250,7 +276,7 @@ public class NacosAgentDiscoveryCacheHolder implements Closeable {
                 : new TreeMap<String, String>(filter.getMetadataSelector()).toString());
         return result.toString();
     }
-
+    
     private String sorted(List<String> values) {
         if (values == null) {
             return "[]";
@@ -259,7 +285,7 @@ public class NacosAgentDiscoveryCacheHolder implements Closeable {
         Collections.sort(copy);
         return copy.toString();
     }
-
+    
     private String sortedSources(List<EndpointSource> values) {
         if (values == null) {
             return "[]";
@@ -271,11 +297,11 @@ public class NacosAgentDiscoveryCacheHolder implements Closeable {
         Collections.sort(names);
         return names.toString();
     }
-
+    
     private String value(String value) {
         return value == null ? "" : value;
     }
-
+    
     private String fingerprint(AgentDiscoveryResult result) {
         List<String> revisions = new ArrayList<String>();
         if (result.getCallInterfaces() != null) {
@@ -293,7 +319,7 @@ public class NacosAgentDiscoveryCacheHolder implements Closeable {
         return value(result.getVersion()) + '\u0000' + value(result.getContentDigest())
             + '\u0000' + revisions;
     }
-
+    
     @Override
     public synchronized void shutdown() {
         if (closed) {
@@ -307,23 +333,23 @@ public class NacosAgentDiscoveryCacheHolder implements Closeable {
         pollingExecutor.shutdownNow();
         callbackExecutor.shutdownNow();
     }
-
+    
     private final class Subscription implements Runnable {
-
+        
         private final SubscriptionKey key;
-
+        
         private final AgentDiscoveryRequest request;
-
+        
         private final AbstractNacosAgentDiscoveryListener listener;
-
+        
         private AgentDiscoveryResult current;
-
+        
         private String fingerprint;
-
+        
         private boolean present;
-
+        
         private ScheduledFuture<?> future;
-
+        
         private Subscription(SubscriptionKey key, AgentDiscoveryRequest request,
             AbstractNacosAgentDiscoveryListener listener, AgentDiscoveryResult current) {
             this.key = key;
@@ -333,31 +359,31 @@ public class NacosAgentDiscoveryCacheHolder implements Closeable {
             this.present = current != null;
             this.fingerprint = current == null ? "" : fingerprint(current);
         }
-
+        
         @Override
         public void run() {
             poll(this);
         }
-
+        
         private void cancel() {
             if (future != null) {
                 future.cancel(false);
             }
         }
     }
-
+    
     private static final class SubscriptionKey {
-
+        
         private final String requestKey;
-
+        
         private final AbstractNacosAgentDiscoveryListener listener;
-
+        
         private SubscriptionKey(String requestKey,
             AbstractNacosAgentDiscoveryListener listener) {
             this.requestKey = requestKey;
             this.listener = listener;
         }
-
+        
         @Override
         public boolean equals(Object obj) {
             if (this == obj) {
@@ -369,7 +395,7 @@ public class NacosAgentDiscoveryCacheHolder implements Closeable {
             SubscriptionKey other = (SubscriptionKey) obj;
             return requestKey.equals(other.requestKey) && listener == other.listener;
         }
-
+        
         @Override
         public int hashCode() {
             return 31 * requestKey.hashCode() + System.identityHashCode(listener);

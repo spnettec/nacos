@@ -48,28 +48,28 @@ import static com.alibaba.nacos.common.constant.RequestUrlConstants.HTTP_PREFIX;
  * @author Nacos
  */
 public class HttpLoginProcessor implements LoginProcessor {
-
+    
     private static final Logger SECURITY_LOGGER = LoggerFactory.getLogger(HttpLoginProcessor.class);
-
+    
     private static final String LOGIN_V1_URL = "/v1/auth/users/login";
-
+    
     private static final String LOGIN_V3_URL = "/v3/auth/user/login";
-
+    
     public static final String DEFAULT_NACOS_WEB_CONTEXT = "/nacos";
-
+    
     private final NacosRestTemplate nacosRestTemplate;
-
+    
     public HttpLoginProcessor(NacosRestTemplate nacosRestTemplate) {
         this.nacosRestTemplate = nacosRestTemplate;
     }
-
+    
     @Override
     public LoginIdentityContext getResponse(Properties properties) {
-
+        
         String contextPath = ContextPathUtil.normalizeContextPath(
             properties.getProperty(PropertyKeyConst.CONTEXT_PATH, DEFAULT_NACOS_WEB_CONTEXT));
         String server = properties.getProperty(NacosAuthLoginConstant.SERVER, StringUtils.EMPTY);
-
+        
         if (!server.startsWith(HTTPS_PREFIX) && !server.startsWith(HTTP_PREFIX)) {
             if (!InternetAddressUtil.containsPort(server)) {
                 server = server + InternetAddressUtil.IP_PORT_SPLITER
@@ -77,9 +77,9 @@ public class HttpLoginProcessor implements LoginProcessor {
             }
             server = getProtocolPrefix() + server;
         }
-
+        
         String url = server + contextPath + LOGIN_V3_URL;
-
+        
         Map<String, String> params = new HashMap<>(2);
         Map<String, String> bodyMap = new HashMap<>(2);
         params.put(PropertyKeyConst.USERNAME,
@@ -101,9 +101,9 @@ public class HttpLoginProcessor implements LoginProcessor {
                 return null;
             }
             JsonNode obj = JacksonUtils.toObj(restResult.getData());
-
+            
             LoginIdentityContext loginIdentityContext = new LoginIdentityContext();
-
+            
             if (obj.has(Constants.ACCESS_TOKEN)) {
                 loginIdentityContext.setParameter(NacosAuthLoginConstant.ACCESSTOKEN,
                     obj.get(Constants.ACCESS_TOKEN).asText());
@@ -125,9 +125,9 @@ public class HttpLoginProcessor implements LoginProcessor {
             return null;
         }
     }
-
+    
     private static String getProtocolPrefix() {
         return Boolean.getBoolean(TlsSystemConfig.TLS_ENABLE) ? HTTPS_PREFIX : HTTP_PREFIX;
     }
-
+    
 }

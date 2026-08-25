@@ -37,13 +37,13 @@ import java.util.stream.Collectors;
  */
 @Component("healthCheckDelegateV2")
 public class HealthCheckProcessorV2Delegate implements HealthCheckProcessorV2 {
-
+    
     static final String INVALID_ADDRESS_MESSAGE = "active health check address is invalid";
-
+    
     private final Map<String, HealthCheckProcessorV2> healthCheckProcessorMap = new HashMap<>();
-
+    
     private final HealthCheckCommonV2 healthCheckCommon;
-
+    
     public HealthCheckProcessorV2Delegate(HealthCheckExtendProvider provider,
         HealthCheckProcessorExtendV2 healthCheckProcessorExtend,
         HealthCheckCommonV2 healthCheckCommon) {
@@ -51,7 +51,7 @@ public class HealthCheckProcessorV2Delegate implements HealthCheckProcessorV2 {
         provider.init();
         this.healthCheckCommon = healthCheckCommon;
     }
-
+    
     /**
      * Add health check processors.
      */
@@ -61,7 +61,7 @@ public class HealthCheckProcessorV2Delegate implements HealthCheckProcessorV2 {
             .filter(processor -> processor.getType() != null)
             .collect(Collectors.toMap(HealthCheckProcessorV2::getType, processor -> processor)));
     }
-
+    
     @Override
     public void process(HealthCheckTaskV2 task, Service service, ClusterMetadata metadata) {
         String type = metadata.getHealthyCheckType();
@@ -75,7 +75,7 @@ public class HealthCheckProcessorV2Delegate implements HealthCheckProcessorV2 {
         }
         processor.process(task, service, metadata);
     }
-
+    
     private boolean isInvalidActiveCheckAddress(HealthCheckTaskV2 task, Service service,
         HealthCheckProcessorV2 processor) {
         if (NoneHealthCheckProcessor.TYPE.equals(processor.getType())) {
@@ -84,7 +84,7 @@ public class HealthCheckProcessorV2Delegate implements HealthCheckProcessorV2 {
         InstancePublishInfo instance = task.getClient().getInstancePublishInfo(service);
         return instance != null && !HealthCheckAddressValidator.isValid(instance.getIp());
     }
-
+    
     @Override
     public String getType() {
         return null;

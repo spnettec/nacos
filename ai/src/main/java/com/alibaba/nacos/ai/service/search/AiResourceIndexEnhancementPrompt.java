@@ -22,26 +22,26 @@ package com.alibaba.nacos.ai.service.search;
  * @author nacos
  */
 final class AiResourceIndexEnhancementPrompt {
-
+    
     static final String SYSTEM_PROMPT =
         """
             Generate compact bilingual retrieval-enrichment JSON for the given registry resource.
-
+            
             Goal: improve hybrid keyword + vector recall for the exact resource by simulating what
             humans or agents may type when searching in Chinese or English.
-
+            
             Use only the provided source content, metadata, snippets, tags, capabilities, inputTypes,
             outputTypes, representative queries, and limitations. You may translate source-backed
             capabilities between Chinese and English for retrieval, but must not infer unsupported
             capabilities. If evidence is weak, keep the item generic or omit it.
-
+            
             Retrieval design:
             - First identify the user jobs supported by the source: what the user wants to accomplish,
             what input they have, what output they need, and which workflow or scenario they are in.
             - Then simulate how users or agents would search when they need this resource but may not
             know its formal name. Include exact-name searches only when those names are likely useful.
             - Do not output the analysis steps. Return only the JSON fields in the schema.
-
+            
             Field rules:
             - summary: one compact bilingual summary of what the resource actually does. Mention the
             main task, supported inputs, outputs, and target use case when present.
@@ -50,7 +50,7 @@ final class AiResourceIndexEnhancementPrompt {
             - searchTerms: standalone high-value search terms. Include exact source names, product,
             API, framework, model, protocol, competitor, file-format names, colloquial terms, domain
             nouns, and input/output asset words when they are useful and source-supported.
-
+            
             Bilingual coverage:
             - summary must describe the resource in both Chinese and English.
             - searchIntents must include natural Chinese and English ways users or agents would search
@@ -60,7 +60,7 @@ final class AiResourceIndexEnhancementPrompt {
             in the other language when useful for retrieval.
             - Do not let one language consume all items. If the source is mostly English, add Chinese
             recall phrases; if the source is mostly Chinese, add English recall phrases.
-
+            
             Phrase selection:
             - Prefer phrases grounded in explicit source evidence.
             - Do not only output formal labels. Include colloquial phrases and short keywords that
@@ -77,7 +77,7 @@ final class AiResourceIndexEnhancementPrompt {
             - Do not convert limitations, negative cases, or "notFor" content into positive capabilities.
             - Do not add product, platform, vendor, or framework names unless they explicitly appear
             in the source content or source metadata.
-
+            
             Ranking and size:
             - Return 6 to 10 searchIntents and 6 to 10 searchTerms when enough evidence exists.
             - Put the most likely and highest-recall search phrases first.
@@ -85,9 +85,9 @@ final class AiResourceIndexEnhancementPrompt {
             - Prefer user and agent search language over internal implementation terms.
             - Include formal feature names only when they are likely search terms.
             - Do not add unrelated tools, modalities, vendors, resource types, or unsupported capabilities.
-
+            
             Return strict JSON only. No markdown, no comments, no extra keys.
-
+            
             Schema:
             {
               "summary": "string",
@@ -95,7 +95,7 @@ final class AiResourceIndexEnhancementPrompt {
               "searchTerms": ["string"]
             }
             """;
-
+    
     private AiResourceIndexEnhancementPrompt() {
     }
 }

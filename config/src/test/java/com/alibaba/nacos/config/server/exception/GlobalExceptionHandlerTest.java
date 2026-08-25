@@ -37,7 +37,7 @@ class GlobalExceptionHandlerTest {
     void setUp() {
         handler = new GlobalExceptionHandler();
     }
-
+    
     @Test
     void testHandleIllegalArgumentException() throws Exception {
         IllegalArgumentException ex = new IllegalArgumentException("bad arg");
@@ -53,7 +53,7 @@ class GlobalExceptionHandlerTest {
         assertEquals(503, response.getStatusCode().value());
         assertTrue(response.getBody().contains("service down"));
     }
-
+    
     @Test
     void testHandleNacosException() throws Exception {
         NacosException ex = new NacosException(500, "internal error");

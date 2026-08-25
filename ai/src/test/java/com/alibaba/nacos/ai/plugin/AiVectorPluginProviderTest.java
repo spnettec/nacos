@@ -35,25 +35,25 @@ import static org.mockito.Mockito.when;
  * @author nacos
  */
 class AiVectorPluginProviderTest {
-
+    
     @Test
     void shouldExposeAllLoadedVectorIndexes() {
         AiResourceVectorIndexRegistry registry = mock(AiResourceVectorIndexRegistry.class);
         AiResourceVectorIndex index = mock(AiResourceVectorIndex.class);
         when(registry.getAllIndexes()).thenReturn(Map.of("postgresql", index));
-
+        
         AiVectorPluginProvider provider = new AiVectorPluginProvider(registry);
         Map<String, AiResourceVectorIndex> plugins = provider.getAllPlugins();
-
+        
         assertEquals(PluginType.AI_VECTOR, provider.getPluginType());
         assertSame(index, plugins.get("postgresql"));
     }
-
+    
     @Test
     void shouldReturnEmptyWhenNoVectorIndexIsInstalled() {
         AiResourceVectorIndexRegistry registry = mock(AiResourceVectorIndexRegistry.class);
         when(registry.getAllIndexes()).thenReturn(Collections.emptyMap());
-
+        
         assertEquals(Collections.emptyMap(),
             new AiVectorPluginProvider(registry).getAllPlugins());
     }

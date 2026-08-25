@@ -134,9 +134,9 @@ class HealthCheckerFactoryTest {
     }
     
     private static class NoRegisterHealthChecker extends AbstractHealthChecker {
-
+        
         private static final long serialVersionUID = 9020783491111797559L;
-
+        
         private String testValue;
         
         protected NoRegisterHealthChecker() {
@@ -176,7 +176,7 @@ class HealthCheckerFactoryTest {
     private static class JacksonTestJsonAdapter implements NacosJsonAdapter {
         
         private final List<NacosJsonSubtype> subtypes = new ArrayList<NacosJsonSubtype>();
-
+        
         private volatile ObjectMapper mapper = createObjectMapper(subtypes);
         
         @Override
@@ -289,13 +289,14 @@ class HealthCheckerFactoryTest {
             builder.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
             builder.changeDefaultPropertyInclusion(new NonNullPropertyInclusion());
             for (NacosJsonSubtype subtype : subtypes) {
-                builder.registerSubtypes(new NamedType(subtype.getSubtype(), subtype.getTypeName()));
+                builder
+                    .registerSubtypes(new NamedType(subtype.getSubtype(), subtype.getTypeName()));
             }
             return builder.build();
         }
-
+        
         private static class NonNullPropertyInclusion implements UnaryOperator<JsonInclude.Value> {
-
+            
             @Override
             public JsonInclude.Value apply(JsonInclude.Value value) {
                 return JsonInclude.Value.construct(Include.NON_NULL, Include.NON_NULL);

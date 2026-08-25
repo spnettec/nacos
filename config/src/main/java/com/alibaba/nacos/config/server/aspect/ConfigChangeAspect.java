@@ -183,7 +183,7 @@ public class ConfigChangeAspect {
         ConfigChangeResponse configChangeResponse = new ConfigChangeResponse(handleType);
         // default success,when before plugin service verify failed , set false
         configChangeResponse.setSuccess(true);
-
+        
         List<ConfigChangePluginService> beforeExecutePluginServices =
             new ArrayList<>(DEFAULT_BEFORE_LIST_CAPACITY);
         List<ConfigChangePluginService> afterExecutePluginServices =

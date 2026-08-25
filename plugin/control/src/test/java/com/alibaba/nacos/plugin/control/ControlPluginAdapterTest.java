@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ControlPluginAdapterTest {
-
+    
     @Test
     void testApplyConfigBeforeIdempotentInitialization() {
         ConfigItemDefinition definition =
@@ -47,14 +47,14 @@ class ControlPluginAdapterTest {
         ControlPluginAdapter adapter = new ControlPluginAdapter(builder, managerCenter);
         Map<String, String> input = new LinkedHashMap<>();
         input.put("endpoint", "first");
-
+        
         adapter.applyConfig(input);
         input.put("endpoint", "changed");
         Map<String, String> returnedConfig = adapter.getCurrentConfig();
         returnedConfig.put("endpoint", "returned-change");
         adapter.initialize();
         adapter.initialize();
-
+        
         assertEquals("test", adapter.getPluginName());
         assertEquals(Collections.singletonList(definition), adapter.getConfigDefinitions());
         assertThrows(UnsupportedOperationException.class,
@@ -68,43 +68,43 @@ class ControlPluginAdapterTest {
             managerCenter.getConnectionControlManager().getName());
         assertEquals("testTps", managerCenter.getTpsControlManager().getName());
     }
-
+    
     @Test
     void testNullConfigAndDefinitions() {
         RecordingBuilder builder = new RecordingBuilder(null);
         ControlPluginAdapter adapter =
             new ControlPluginAdapter(builder, new ControlManagerCenter());
-
+        
         adapter.applyConfig(null);
-
+        
         assertTrue(adapter.getConfigDefinitions().isEmpty());
         assertTrue(adapter.getCurrentConfig().isEmpty());
     }
-
+    
     @Test
     void testNullConnectionAndThrowingTpsFallbackIndependently() {
         FailureBuilder builder = new FailureBuilder(false, true);
         ControlManagerCenter managerCenter = new ControlManagerCenter();
         ControlPluginAdapter adapter = new ControlPluginAdapter(builder, managerCenter);
-
+        
         adapter.initialize();
-
+        
         assertEquals("noLimit", managerCenter.getConnectionControlManager().getName());
         assertEquals("noLimit", managerCenter.getTpsControlManager().getName());
     }
-
+    
     @Test
     void testThrowingConnectionAndNullTpsFallbackIndependently() {
         FailureBuilder builder = new FailureBuilder(true, false);
         ControlManagerCenter managerCenter = new ControlManagerCenter();
         ControlPluginAdapter adapter = new ControlPluginAdapter(builder, managerCenter);
-
+        
         adapter.initialize();
-
+        
         assertEquals("noLimit", managerCenter.getConnectionControlManager().getName());
         assertEquals("noLimit", managerCenter.getTpsControlManager().getName());
     }
-
+    
     @Test
     void testRejectInvalidDependenciesAndIgnoreInvalidDefinitions() {
         RecordingBuilder validBuilder =
@@ -112,55 +112,55 @@ class ControlPluginAdapterTest {
         assertThrows(NullPointerException.class, () -> new ControlPluginAdapter(null));
         assertThrows(NullPointerException.class,
             () -> new ControlPluginAdapter(validBuilder, null));
-
+        
         List<ConfigItemDefinition> nullItemDefinitions = new ArrayList<>();
         nullItemDefinitions.add(null);
         ControlPluginAdapter nullItemAdapter = new ControlPluginAdapter(
             new RecordingBuilder(nullItemDefinitions), new ControlManagerCenter());
-
+        
         ConfigItemDefinition runtimeDefinition =
             new ConfigItemDefinition("runtime", "Runtime", ConfigItemType.STRING);
         runtimeDefinition.setEffectMode(ConfigItemEffectMode.RUNTIME);
         ControlPluginAdapter runtimeAdapter = new ControlPluginAdapter(
             new RecordingBuilder(Collections.singletonList(runtimeDefinition)),
             new ControlManagerCenter());
-
+        
         assertTrue(nullItemAdapter.getConfigDefinitions().isEmpty());
         assertTrue(runtimeAdapter.getConfigDefinitions().isEmpty());
     }
-
+    
     @Test
     void testControlManagerBundleRejectsNullManager() {
         ControlManagerBuilderTest builder = new ControlManagerBuilderTest();
         ConnectionControlManager connectionManager =
             builder.buildConnectionControlManager();
         TpsControlManager tpsManager = builder.buildTpsControlManager();
-
+        
         assertThrows(NullPointerException.class,
             () -> new ControlManagerBundle(null, tpsManager));
         assertThrows(NullPointerException.class,
             () -> new ControlManagerBundle(connectionManager, null));
     }
-
+    
     private static class RecordingBuilder extends ControlManagerBuilderTest {
-
+        
         private final List<ConfigItemDefinition> definitions;
-
+        
         private Map<String, String> receivedConfig;
-
+        
         private int connectionBuildCount;
-
+        
         private int tpsBuildCount;
-
+        
         private RecordingBuilder(List<ConfigItemDefinition> definitions) {
             this.definitions = definitions;
         }
-
+        
         @Override
         public List<ConfigItemDefinition> getConfigDefinitions() {
             return definitions;
         }
-
+        
         @Override
         public ConnectionControlManager buildConnectionControlManager(
             Map<String, String> config) {
@@ -168,43 +168,43 @@ class ControlPluginAdapterTest {
             connectionBuildCount++;
             return super.buildConnectionControlManager();
         }
-
+        
         @Override
         public TpsControlManager buildTpsControlManager(Map<String, String> config) {
             receivedConfig = new LinkedHashMap<>(config);
             tpsBuildCount++;
             return super.buildTpsControlManager();
         }
-
+        
         private Map<String, String> getReceivedConfig() {
             return receivedConfig;
         }
-
+        
         private int getConnectionBuildCount() {
             return connectionBuildCount;
         }
-
+        
         private int getTpsBuildCount() {
             return tpsBuildCount;
         }
     }
-
+    
     private static class FailureBuilder implements ControlManagerBuilder {
-
+        
         private final boolean connectionThrows;
-
+        
         private final boolean tpsThrows;
-
+        
         private FailureBuilder(boolean connectionThrows, boolean tpsThrows) {
             this.connectionThrows = connectionThrows;
             this.tpsThrows = tpsThrows;
         }
-
+        
         @Override
         public String getName() {
             return "failure";
         }
-
+        
         @Override
         public ConnectionControlManager buildConnectionControlManager() {
             if (connectionThrows) {
@@ -212,7 +212,7 @@ class ControlPluginAdapterTest {
             }
             return null;
         }
-
+        
         @Override
         public TpsControlManager buildTpsControlManager() {
             if (tpsThrows) {

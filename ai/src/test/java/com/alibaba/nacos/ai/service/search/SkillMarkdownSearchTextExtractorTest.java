@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author nacos
  */
 class SkillMarkdownSearchTextExtractorTest {
-
+    
     @Test
     void extractShouldKeepHighValueSkillMarkdownText() {
         String markdown = "---\n"
@@ -44,9 +44,9 @@ class SkillMarkdownSearchTextExtractorTest {
             + "- talking head\n"
             + "## Usage\n"
             + "$ npm install\n";
-
+        
         List<String> chunks = new SkillMarkdownSearchTextExtractor().extract(markdown);
-
+        
         assertTrue(chunks.stream().anyMatch(text -> text.contains("talking head")));
         assertTrue(chunks.stream().anyMatch(text -> text.contains("description:")));
         assertFalse(chunks.stream().anyMatch(text -> text.contains("curl")));

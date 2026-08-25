@@ -68,39 +68,39 @@ import java.util.stream.Collectors;
 @Deprecated
 @Service
 public class McpExternalDataAdaptor {
-
+    
     private HttpClient httpClient;
-
+    
     private static final String CURSOR_QUERY_NAME = "cursor";
-
+    
     private static final String LIMIT_QUERY_NAME = "limit";
-
+    
     private static final String SEARCH_QUERY_NAME = "search";
-
+    
     private static final String HEADER_ACCEPT = "Accept";
-
+    
     private static final String HEADER_ACCEPT_JSON = "application/json";
-
+    
     private static final String QUERY_MARK = "?";
-
+    
     private static final String AMPERSAND = "&";
-
+    
     private static final int HTTP_STATUS_SUCCESS_MIN = 200;
-
+    
     private static final int HTTP_STATUS_SUCCESS_MAX = 299;
-
+    
     private static final int CONNECT_TIMEOUT_SECONDS = 10;
-
+    
     private static final int READ_TIMEOUT_SECONDS = 20;
-
+    
     private static final int FETCH_ALL_LIMIT_MARK = -1;
-
+    
     /**
      * Safety guard to avoid infinite loops when server keeps returning cursors.
      * Limits the maximum number of pages iterated when fetching from URL.
      */
     private static final int MAX_PAGES_GUARD = 200;
-
+    
     /**
      * Adapt the external data to Nacos MCP server format.
      *
@@ -123,7 +123,7 @@ public class McpExternalDataAdaptor {
             throw new IllegalArgumentException("Unsupported import type: " + externalDataTypeEnum);
         }
     }
-
+    
     /**
      * Fetch one official MCP registry page and adapt it to Nacos MCP server detail info.
      *
@@ -142,7 +142,7 @@ public class McpExternalDataAdaptor {
         }
         return fetchUrlPage(urlData.trim(), cursor, limit, search);
     }
-
+    
     /**
      * Fetch one official MCP registry server by name or generated id.
      *
@@ -169,7 +169,7 @@ public class McpExternalDataAdaptor {
         }
         throw new IllegalStateException("MCP server not found in registry: " + externalId);
     }
-
+    
     private UrlPageResult fetchUrlPage(String urlData, String cursor, Integer limit, String search)
         throws Exception {
         String base = urlData.trim();
@@ -199,7 +199,7 @@ public class McpExternalDataAdaptor {
         }
         return new UrlPageResult(servers, next);
     }
-
+    
     private List<McpServerDetailInfo> fetchUrlServersAll(String urlData, String search)
         throws Exception {
         List<McpServerDetailInfo> collected = new ArrayList<>();
@@ -219,7 +219,7 @@ public class McpExternalDataAdaptor {
         }
         return collected;
     }
-
+    
     private McpServerDetailInfo adaptOfficialMcpServer(McpRegistryServerDetail registryServer) {
         if (registryServer == null) {
             return null;
@@ -231,7 +231,7 @@ public class McpExternalDataAdaptor {
         applyLocalAndRemoteConfig(registryServer, server);
         return server;
     }
-
+    
     /**
      * Adapt official mcp server from server response.
      * Just append version meta info to the result of adaptOfficialMcpServer.
@@ -254,7 +254,7 @@ public class McpExternalDataAdaptor {
         }
         return adaptOfficialMcpServer;
     }
-
+    
     private void applyBasicInfo(McpRegistryServerDetail registryServer, McpServerDetailInfo out) {
         String id = generateMcpServerId(registryServer.getName());
         out.setId(id);
@@ -262,7 +262,7 @@ public class McpExternalDataAdaptor {
         out.setDescription(registryServer.getDescription());
         out.setRepository(registryServer.getRepository());
     }
-
+    
     private void applyVersionInfo(McpRegistryServerDetail registryServer, McpServerDetailInfo out) {
         ServerVersionDetail v = null;
         if (StringUtils.isNotBlank(registryServer.getVersion())) {
@@ -271,7 +271,7 @@ public class McpExternalDataAdaptor {
         }
         out.setVersionDetail(v);
     }
-
+    
     private void applyProtocolInfo(McpRegistryServerDetail registryServer,
         McpServerDetailInfo out) {
         String protocol = resolveServerProtocol(registryServer);
@@ -280,7 +280,7 @@ public class McpExternalDataAdaptor {
             out.setFrontProtocol(protocol);
         }
     }
-
+    
     private void applyLocalAndRemoteConfig(McpRegistryServerDetail registryServer,
         McpServerDetailInfo server) {
         if (registryServer != null) {
@@ -288,12 +288,12 @@ public class McpExternalDataAdaptor {
             server.setRemoteServerConfig(generateRemoteServiceConfig(registryServer.getRemotes()));
         }
     }
-
+    
     private String resolveServerProtocol(McpRegistryServerDetail detail) {
         if (CollectionUtils.isNotEmpty(detail.getPackages())) {
             return AiConstants.Mcp.MCP_PROTOCOL_STDIO;
         }
-
+        
         if (CollectionUtils.isNotEmpty(detail.getRemotes())) {
             Remote first = detail.getRemotes().get(0);
             String tt = first != null ? first.getType() : null;
@@ -309,15 +309,15 @@ public class McpExternalDataAdaptor {
         }
         return null;
     }
-
+    
     private McpServerRemoteServiceConfig generateRemoteServiceConfig(List<Remote> remotes) {
         if (CollectionUtils.isEmpty(remotes)) {
             return null;
         }
-
+        
         McpServerRemoteServiceConfig remoteConfig = new McpServerRemoteServiceConfig();
         List<FrontEndpointConfig> endpoints = new ArrayList<>();
-
+        
         for (Remote remote : remotes) {
             String url = remote.getUrl().trim();
             try {
@@ -335,7 +335,7 @@ public class McpExternalDataAdaptor {
                 cfg.setEndpointType(AiConstants.Mcp.MCP_FRONT_ENDPOINT_TYPE_TO_BACK);
                 cfg.setHeaders(remote.getHeaders());
                 endpoints.add(cfg);
-
+                
                 // Use first remote's path as export path
                 if (remoteConfig.getExportPath() == null) {
                     remoteConfig
@@ -345,11 +345,11 @@ public class McpExternalDataAdaptor {
                 throw new IllegalStateException("Invalid URL: " + url, e);
             }
         }
-
+        
         remoteConfig.setFrontEndpointConfigList(endpoints);
         return remoteConfig;
     }
-
+    
     /**
      * Parse URL into components (scheme, host, port, path).
      * Manual parsing without using URI class.
@@ -362,14 +362,14 @@ public class McpExternalDataAdaptor {
         String host = null;
         int port = -1;
         String path = null;
-
+        
         // Parse scheme
         int schemeEnd = url.indexOf("://");
         if (schemeEnd > 0) {
             scheme = url.substring(0, schemeEnd);
             url = url.substring(schemeEnd + 3);
         }
-
+        
         // Parse host, port, and path
         int pathStart = url.indexOf('/');
         String hostPart;
@@ -380,7 +380,7 @@ public class McpExternalDataAdaptor {
             hostPart = url;
             path = null;
         }
-
+        
         // Parse host and port
         int portStart = hostPart.lastIndexOf(':');
         if (portStart > 0) {
@@ -395,44 +395,44 @@ public class McpExternalDataAdaptor {
         } else {
             host = hostPart;
         }
-
+        
         return new UrlComponents(scheme, host, port, path);
     }
-
+    
     /**
      * Inner class to hold URL components parsed from a URI.
      */
     private static class UrlComponents {
-
+        
         private final String scheme;
         private final String host;
         private final int port;
         private final String path;
-
+        
         public UrlComponents(String scheme, String host, int port, String path) {
             this.scheme = scheme;
             this.host = host;
             this.port = port;
             this.path = path;
         }
-
+        
         public String getScheme() {
             return scheme;
         }
-
+        
         public String getHost() {
             return host;
         }
-
+        
         public int getPort() {
             return port;
         }
-
+        
         public String getPath() {
             return path;
         }
     }
-
+    
     /**
      * URL import wrapper: fetch contents from specified URL and adapt to Nacos mcp servers.
      * Fetch specified contents from specified URL and adapt to Nacos mcp servers.
@@ -450,17 +450,17 @@ public class McpExternalDataAdaptor {
         if (StringUtils.isBlank(urlData)) {
             throw new IllegalArgumentException("URL is blank");
         }
-
+        
         // If limit = -1, fetch all pages
         if (limit != null && limit == FETCH_ALL_LIMIT_MARK) {
             return fetchUrlServersAll(urlData.trim(), search);
         }
-
+        
         // Otherwise, fetch a single page using fetchUrlPage
         UrlPageResult page = fetchUrlPage(urlData.trim(), cursor, limit, search);
         return page.getServers();
     }
-
+    
     /**
      * File import wrapper: parse into a list of RegistryDetails and convert to
      * Nacos servers.
@@ -471,17 +471,17 @@ public class McpExternalDataAdaptor {
             .filter(Objects::nonNull)
             .collect(Collectors.toList());
     }
-
+    
     private List<McpServerDetailInfo> adaptOfficialMcpServerJsonText(String data) {
         McpRegistryServerDetail detail = JacksonUtils.toObj(data, McpRegistryServerDetail.class);
         return Collections.singletonList(adaptOfficialMcpServer(detail));
     }
-
+    
     private List<McpRegistryServerDetail> unmarshaledSeedToServerList(String data) {
         return JacksonUtils.toObj(data, new TypeReference<>() {
         });
     }
-
+    
     private HttpClient getHttpClient() {
         if (httpClient == null) {
             httpClient = HttpClient.newBuilder()
@@ -491,11 +491,11 @@ public class McpExternalDataAdaptor {
         }
         return httpClient;
     }
-
+    
     public void setHttpClient(HttpClient client) {
         this.httpClient = client;
     }
-
+    
     private String buildPageUrl(String base, String cursor, Integer limit, String search) {
         StringBuilder url = new StringBuilder(base);
         boolean hasQuery = base.contains(QUERY_MARK);
@@ -517,18 +517,18 @@ public class McpExternalDataAdaptor {
         }
         return url.toString();
     }
-
+    
     private HttpRequest buildGetRequest(String url) {
         return HttpRequest.newBuilder(URI.create(url))
             .timeout(Duration.ofSeconds(READ_TIMEOUT_SECONDS))
             .GET()
             .header(HEADER_ACCEPT, HEADER_ACCEPT_JSON).build();
     }
-
+    
     private boolean isSuccessStatus(int code) {
         return code >= HTTP_STATUS_SUCCESS_MIN && code <= HTTP_STATUS_SUCCESS_MAX;
     }
-
+    
     private String generateMcpServerId(String name) {
         return UUID.nameUUIDFromBytes(name.getBytes(StandardCharsets.UTF_8)).toString();
     }

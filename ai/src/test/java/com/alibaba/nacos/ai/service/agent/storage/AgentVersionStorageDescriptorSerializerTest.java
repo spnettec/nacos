@@ -26,26 +26,26 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AgentVersionStorageDescriptorSerializerTest {
-
+    
     @Test
     void testNacosConfigRoundTrip() {
         AgentVersionStorageDescriptor original = createNacosConfigDescriptor();
         String json = AgentVersionStorageDescriptorSerializer.serialize(original);
-
+        
         assertTrue(json.contains("\"provider\":\"nacos_config\""));
         assertTrue(json.contains("\"keyFormat\":\"agent-version-config-v1\""));
         AgentVersionStorageDescriptor restored =
             AgentVersionStorageDescriptorSerializer.deserialize(json);
         assertDescriptorEquals(original, restored);
     }
-
+    
     @Test
     void testCustomProviderMayOmitProviderSpecificFields() {
         AgentVersionStorageDescriptor descriptor = createNacosConfigDescriptor();
         descriptor.setProvider("object_store-v2");
         descriptor.setKeyFormat(null);
         descriptor.setAgentNameCodec(null);
-
+        
         String json = AgentVersionStorageDescriptorSerializer.serialize(descriptor);
         assertFalse(json.contains("keyFormat"));
         assertFalse(json.contains("agentNameCodec"));
@@ -54,7 +54,7 @@ class AgentVersionStorageDescriptorSerializerTest {
         assertNull(restored.getKeyFormat());
         assertNull(restored.getAgentNameCodec());
     }
-
+    
     @Test
     void testAcceptSchemaBoundaries() {
         AgentVersionStorageDescriptor descriptor = createNacosConfigDescriptor();
@@ -65,7 +65,7 @@ class AgentVersionStorageDescriptorSerializerTest {
         descriptor.setSize((long) AgentVersionStorageDescriptorSerializer.MAX_CONTENT_SIZE);
         AgentVersionStorageDescriptorSerializer.deserialize(
             AgentVersionStorageDescriptorSerializer.serialize(descriptor));
-
+        
         descriptor.setProvider("nacos_config");
         descriptor.setKeyFormat(AgentVersionStorageDescriptorSerializer.NACOS_CONFIG_KEY_FORMAT);
         descriptor.setAgentNameCodec(
@@ -73,7 +73,7 @@ class AgentVersionStorageDescriptorSerializerTest {
         descriptor.setSize(0L);
         AgentVersionStorageDescriptorSerializer.serialize(descriptor);
     }
-
+    
     @Test
     void testRejectUnknownOrInvalidJsonShape() {
         String valid =
@@ -115,7 +115,7 @@ class AgentVersionStorageDescriptorSerializerTest {
             () -> AgentVersionStorageDescriptorSerializer.deserialize(
                 valid.replace("\"size\":128", "\"size\":\"large\"")));
     }
-
+    
     @Test
     void testRejectMissingRequiredJsonFields() {
         String valid =
@@ -138,7 +138,7 @@ class AgentVersionStorageDescriptorSerializerTest {
             () -> AgentVersionStorageDescriptorSerializer.deserialize(
                 valid.replace(",\"size\":128", "")));
     }
-
+    
     @Test
     void testRejectWrongJsonFieldTypes() {
         String valid =
@@ -170,7 +170,7 @@ class AgentVersionStorageDescriptorSerializerTest {
             () -> AgentVersionStorageDescriptorSerializer.deserialize(
                 valid.replace("\"size\":128", "\"size\":128.5")));
     }
-
+    
     @Test
     void testRejectInvalidProvider() {
         assertRejected(null, descriptor -> descriptor.setProvider(null));
@@ -179,7 +179,7 @@ class AgentVersionStorageDescriptorSerializerTest {
         assertRejected(null, descriptor -> descriptor.setProvider("provider.dot"));
         assertRejected(null, descriptor -> descriptor.setProvider("a" + repeat('b', 64)));
     }
-
+    
     @Test
     void testRejectInvalidKeyAndOptionalProviderFields() {
         assertRejected(null, descriptor -> descriptor.setKey(null));
@@ -190,7 +190,7 @@ class AgentVersionStorageDescriptorSerializerTest {
         assertRejected("custom", descriptor -> descriptor.setAgentNameCodec(""));
         assertRejected("custom", descriptor -> descriptor.setAgentNameCodec(repeat('c', 65)));
     }
-
+    
     @Test
     void testRejectInvalidDigestMediaTypeSchemaAndSize() {
         assertRejected(null, descriptor -> descriptor.setContentDigest(null));
@@ -208,7 +208,7 @@ class AgentVersionStorageDescriptorSerializerTest {
             descriptor -> descriptor.setSize(
                 (long) AgentVersionStorageDescriptorSerializer.MAX_CONTENT_SIZE + 1));
     }
-
+    
     @Test
     void testRejectInvalidNacosConfigProviderContract() {
         assertRejected(null, descriptor -> descriptor.setKeyFormat(null));
@@ -216,7 +216,7 @@ class AgentVersionStorageDescriptorSerializerTest {
         assertRejected(null, descriptor -> descriptor.setAgentNameCodec(null));
         assertRejected(null, descriptor -> descriptor.setAgentNameCodec("other"));
     }
-
+    
     private void assertRejected(String provider, DescriptorMutation mutation) {
         AgentVersionStorageDescriptor descriptor = createNacosConfigDescriptor();
         if (provider != null) {
@@ -226,7 +226,7 @@ class AgentVersionStorageDescriptorSerializerTest {
         assertThrows(IllegalArgumentException.class,
             () -> AgentVersionStorageDescriptorSerializer.serialize(descriptor));
     }
-
+    
     private void assertDescriptorEquals(AgentVersionStorageDescriptor expected,
         AgentVersionStorageDescriptor actual) {
         assertEquals(expected.getProvider(), actual.getProvider());
@@ -238,7 +238,7 @@ class AgentVersionStorageDescriptorSerializerTest {
         assertEquals(expected.getSchemaVersion(), actual.getSchemaVersion());
         assertEquals(expected.getSize(), actual.getSize());
     }
-
+    
     private AgentVersionStorageDescriptor createNacosConfigDescriptor() {
         AgentVersionStorageDescriptor result = new AgentVersionStorageDescriptor();
         result.setProvider(AgentVersionStorageDescriptorSerializer.NACOS_CONFIG_PROVIDER);
@@ -252,7 +252,7 @@ class AgentVersionStorageDescriptorSerializerTest {
         result.setSize(128L);
         return result;
     }
-
+    
     private String repeat(char value, int count) {
         StringBuilder result = new StringBuilder(count);
         for (int i = 0; i < count; i++) {
@@ -260,9 +260,9 @@ class AgentVersionStorageDescriptorSerializerTest {
         }
         return result.toString();
     }
-
+    
     private interface DescriptorMutation {
-
+        
         void apply(AgentVersionStorageDescriptor descriptor);
     }
 }

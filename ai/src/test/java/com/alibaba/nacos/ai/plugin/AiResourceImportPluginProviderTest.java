@@ -35,13 +35,13 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class AiResourceImportPluginProviderTest {
-
+    
     @Test
     void testPluginType() {
         assertEquals(PluginType.AI_RESOURCE_IMPORT,
             new AiResourceImportPluginProvider().getPluginType());
     }
-
+    
     @Test
     void testRejectsUnavailableApplicationContext() {
         try (MockedStatic<ApplicationUtils> applicationUtils =
@@ -50,7 +50,7 @@ class AiResourceImportPluginProviderTest {
                 () -> new AiResourceImportPluginProvider().getAllPlugins());
         }
     }
-
+    
     @Test
     void testReturnsStableManagerPlugins() {
         ApplicationContext context = mock(ApplicationContext.class);
@@ -65,7 +65,7 @@ class AiResourceImportPluginProviderTest {
             applicationUtils.when(
                 () -> ApplicationUtils.getBean(AiResourceImportPluginManager.class))
                 .thenReturn(manager);
-
+            
             assertSame(plugins, new AiResourceImportPluginProvider().getAllPlugins());
         }
     }

@@ -32,7 +32,7 @@ import com.alibaba.nacos.plugin.ai.importer.model.AiResourceImportItem;
  * @since 3.2.1
  */
 public interface AiResourceImportService extends AutoCloseable {
-
+    
     /**
      * Search external candidates from the resolved source.
      *
@@ -44,7 +44,7 @@ public interface AiResourceImportService extends AutoCloseable {
      * @throws NacosException if the source cannot be searched
      */
     AiResourceImportCandidatePage search(AiResourceImportContext context) throws NacosException;
-
+    
     /**
      * Fetch a selected external item as an import artifact.
      *
@@ -55,7 +55,7 @@ public interface AiResourceImportService extends AutoCloseable {
      */
     AiResourceImportArtifact fetch(AiResourceImportContext context, AiResourceImportItem item)
         throws NacosException;
-
+    
     /**
      * Release request-scoped resources.
      */

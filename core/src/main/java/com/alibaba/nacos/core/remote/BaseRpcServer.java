@@ -74,7 +74,7 @@ public abstract class BaseRpcServer {
         }));
         
     }
-
+    
     private boolean parentRpcServerExists() {
         ApplicationContext context = ApplicationUtils.getApplicationContext();
         if (context == null || context.getParent() == null) {

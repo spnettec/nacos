@@ -29,19 +29,19 @@ import com.alibaba.nacos.api.remote.request.Request;
  * @author Nacos
  */
 public abstract class AbstractAgentClientRpcRequest extends Request {
-
+    
     @Override
     public String getModule() {
         return Constants.AI.AI_MODULE;
     }
-
+    
     /**
      * Extract the request namespace for parameter checks and authorization.
      *
      * @return namespace id, or {@code null} when the operation payload is absent
      */
     public abstract String extractNamespaceId();
-
+    
     /**
      * Extract the Agent name for parameter checks and authorization.
      *

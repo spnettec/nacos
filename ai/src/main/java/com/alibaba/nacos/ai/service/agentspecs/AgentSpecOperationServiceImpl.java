@@ -27,6 +27,7 @@ import com.alibaba.nacos.ai.service.repository.AiResourceVersionPersistService;
 import com.alibaba.nacos.ai.service.repository.QueryCondition;
 import com.alibaba.nacos.ai.service.resource.AiResourceManager;
 import com.alibaba.nacos.ai.service.resource.ResourceVersionInfo;
+import com.alibaba.nacos.ai.service.search.AiResourceIndexMaintenanceService;
 import com.alibaba.nacos.ai.service.trace.AiResourceTraceService;
 import com.alibaba.nacos.ai.storage.AiResourceStorageUtils;
 import com.alibaba.nacos.ai.storage.NacosConfigAiResourceStorage;
@@ -36,7 +37,6 @@ import com.alibaba.nacos.ai.utils.AgentSpecZipParser;
 import com.alibaba.nacos.ai.utils.AiResourceVersionStorageJsonUtil;
 import com.alibaba.nacos.ai.utils.ExecutorUtils;
 import com.alibaba.nacos.api.ai.model.agentspecs.AgentSpec;
-import com.alibaba.nacos.api.ai.model.agentspecs.AgentSpecBasicInfo;
 import com.alibaba.nacos.api.ai.model.agentspecs.AgentSpecMeta;
 import com.alibaba.nacos.api.ai.model.agentspecs.AgentSpecResource;
 import com.alibaba.nacos.api.ai.model.agentspecs.AgentSpecSummary;
@@ -55,6 +55,7 @@ import com.alibaba.nacos.plugin.ai.storage.model.StorageKey;
 import com.alibaba.nacos.plugin.visibility.constant.VisibilityConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
@@ -62,8 +63,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
@@ -86,30 +89,35 @@ import java.util.concurrent.Executor;
  */
 @Service
 public class AgentSpecOperationServiceImpl implements AgentSpecOperationService {
-
+    
     private static final Logger LOGGER =
         LoggerFactory.getLogger(AgentSpecOperationServiceImpl.class);
-
+    
     private static final String STORAGE_PROVIDER_NACOS_CONFIG = "nacos_config";
-
+    
     private static final String RESOURCE_TYPE_AGENTSPEC = "agentspec";
-
+    
     private static final String DEFAULT_AUTHOR = "nacos";
-
+    
     private static final String DEFAULT_INITIAL_VERSION = "0.0.1";
-
+    
     private static final String SCOPE_AGENTSPEC = "agentspec";
-
+    
     private final AiResourceStorageRouter storageRouter;
-
+    
     private final AiResourcePersistService aiResourcePersistService;
-
+    
     private final AiResourceVersionPersistService aiResourceVersionPersistService;
-
+    
     private final PublishPipelineExecutor publishPipelineExecutor;
-
+    
     private final AiResourceManager resourceManager;
-
+    
+    private AgentSpecStorageReader storageReader = new AgentSpecStorageReader();
+    
+    private AiResourceIndexMaintenanceService resourceIndexMaintenanceService =
+        AiResourceIndexMaintenanceService.NOOP;
+    
     public AgentSpecOperationServiceImpl(AiResourcePersistService aiResourcePersistService,
         AiResourceVersionPersistService aiResourceVersionPersistService,
         PublishPipelineExecutor publishPipelineExecutor,
@@ -120,7 +128,22 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
         this.publishPipelineExecutor = publishPipelineExecutor;
         this.resourceManager = resourceManager;
     }
-
+    
+    @Autowired(required = false)
+    public void setAiResourceIndexMaintenanceService(
+        AiResourceIndexMaintenanceService resourceIndexMaintenanceService) {
+        if (resourceIndexMaintenanceService != null) {
+            this.resourceIndexMaintenanceService = resourceIndexMaintenanceService;
+        }
+    }
+    
+    @Autowired(required = false)
+    public void setAgentSpecStorageReader(AgentSpecStorageReader storageReader) {
+        if (storageReader != null) {
+            this.storageReader = storageReader;
+        }
+    }
+    
     /**
      * Core draft creation logic shared by upload, overwrite, and createDraft flows.
      * Steps: 1) write main config + resource files to storage, 2) insert a draft version row,
@@ -131,30 +154,31 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
         String agentSpecName = agentSpec.getName();
         long uniformId = System.currentTimeMillis();
         String currentUser = VisibilityHelper.resolveCurrentIdentity();
-
+        
         // 1) write storage for draft version (main config + resources persisted concurrently)
         String storageJson = writeAgentSpecToStorage(namespaceId, agentSpec, version, uniformId,
             null);
-
+        
         // 2) insert draft version row
         resourceManager.insertVersionRow(namespaceId, agentSpecName, RESOURCE_TYPE_AGENTSPEC,
             StringUtils.isBlank(currentUser) ? DEFAULT_AUTHOR : currentUser,
             AiResourceConstants.VERSION_STATUS_DRAFT, version, agentSpec.getDescription(),
             storageJson);
-
+        
         // 3) create or update meta for editingVersion
         resourceManager.initOrUpdateMetaForDraft(namespaceId, agentSpecName,
             RESOURCE_TYPE_AGENTSPEC,
             agentSpec.getDescription(), agentSpec.getBizTags(), version, existedMeta, isNew);
+        scheduleAgentSpecIndexMaintenance(namespaceId, agentSpecName);
     }
-
+    
     @Override
     public AgentSpecMeta getAgentSpecDetail(String namespaceId, String agentSpecName,
         String version)
         throws NacosException {
         return getAgentSpecDetail(namespaceId, agentSpecName);
     }
-
+    
     /**
      * Get AgentSpec detail metadata including all version summaries, labels, and online count.
      */
@@ -194,7 +218,7 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
                 versionSummaries.add(summary);
             }
         }
-
+        
         // Step 3: Merge meta info and version list into AgentSpecMeta detail response
         AgentSpecMeta detail = new AgentSpecMeta();
         detail.setNamespaceId(meta.getNamespaceId());
@@ -216,7 +240,7 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
         detail.setWritable(VisibilityHelper.canWriteResource(meta));
         return detail;
     }
-
+    
     /**
      * Get the full content of a specific AgentSpec version by reading from storage.
      */
@@ -244,7 +268,7 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
         return loadAgentSpecFromStorage(namespaceId, agentSpecName, version,
             versionRow.getStorage());
     }
-
+    
     /**
      * Get agentspec version metadata without resource content. Only reads the main config file (manifest.json) and
      * builds resource list from the reference entries, skipping all resource file IO.
@@ -273,7 +297,7 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
         return loadAgentSpecMetaFromStorage(namespaceId, agentSpecName, version,
             versionRow.getStorage());
     }
-
+    
     /**
      * Delete an AgentSpec entirely. Removes all version storage files, version rows, and the meta row.
      */
@@ -285,13 +309,14 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
             return;
         }
         VisibilityHelper.checkWritableResource(meta);
-
+        
         resourceManager.deleteResourceWithVersions(namespaceId, agentSpecName,
             RESOURCE_TYPE_AGENTSPEC,
             v -> deleteAgentSpecStorageForVersion(namespaceId, agentSpecName, v.getVersion(),
                 v.getStorage()));
+        scheduleAgentSpecIndexMaintenance(namespaceId, agentSpecName);
     }
-
+    
     @Override
     public Page<AgentSpecSummary> listAgentSpecs(String namespaceId, String agentSpecName,
         String search,
@@ -299,7 +324,7 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
         return listAgentSpecs(namespaceId, agentSpecName, search, null, null, null, pageNo,
             pageSize);
     }
-
+    
     /**
      * List AgentSpecs with optional name filter, ordering, owner/scope filter, and pagination.
      * Supports both accurate and fuzzy name matching.
@@ -318,7 +343,7 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
                     Constants.ALL_PATTERN + agentSpecName + Constants.ALL_PATTERN);
             }
         }
-
+        
         QueryCondition queryCondition = resourceManager.buildQueryCondition(namespaceId,
             RESOURCE_TYPE_AGENTSPEC, nameLike, null, scope, owner,
             VisibilityConstants.ACTION_READ);
@@ -358,10 +383,10 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
                 items.add(item);
             }
         }
-
+        
         return AiResourceManager.buildPageResult(items, metaPage, pageNo);
     }
-
+    
     /**
      * Upload AgentSpec(s) from a ZIP archive. Supports both single-spec ZIPs and multi-spec seed archives
      * (containing multiple inner ZIPs). Each spec is processed via {@link #uploadSingleAgentSpecFromZip}.
@@ -388,7 +413,7 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
         // Not a seed archive: treat as a single AgentSpec ZIP
         return uploadSingleAgentSpecFromZip(namespaceId, zipBytes, overwrite);
     }
-
+    
     /**
      * Try to read the ZIP as a multi-spec seed archive. Returns empty list if it's a regular single-spec ZIP.
      */
@@ -402,7 +427,7 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
                 "Failed to read agentspec zip archive");
         }
     }
-
+    
     /**
      * Upload a single AgentSpec from ZIP bytes.
      * If overwrite=true, replaces existing draft or creates new. Otherwise fails on working version conflict.
@@ -431,23 +456,24 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
                 VisibilityHelper.resolveCurrentIdentity(), VisibilityHelper.resolveClientIp());
             return name;
         }
-
+        
         // Non-overwrite upload for existing agentspec: ensure no editing/reviewing version exists
         VisibilityHelper.checkWritableResource(meta);
         ResourceVersionInfo info = AiResourceManager.requireVersionInfo(meta);
         AiResourceManager.ensureNoWorkingVersion(info, "upload");
-
+        
         // Step 3: Assign new version number and create draft
         String newVersion = nextVersion(namespaceId, name);
         createDraftWithAgentSpec(namespaceId, agentSpec, newVersion, meta, false);
         resourceManager.syncImportedMeta(namespaceId, meta, agentSpec.getDescription(),
             agentSpec.getBizTags());
+        scheduleAgentSpecIndexMaintenance(namespaceId, name);
         AiResourceTraceService.logSuccess(RESOURCE_TYPE_AGENTSPEC, name, newVersion,
             AiResourceTraceService.OP_UPLOAD,
             VisibilityHelper.resolveCurrentIdentity(), VisibilityHelper.resolveClientIp());
         return name;
     }
-
+    
     /**
      * Bootstrap a built-in AgentSpec from a ZIP archive (delegates to the overload with null source).
      */
@@ -456,7 +482,7 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
         throws NacosException {
         bootstrapAgentSpecFromZip(namespaceId, zipBytes, null);
     }
-
+    
     /**
      * Bootstrap a built-in AgentSpec from a ZIP archive. Skips if the spec already exists
      * (unless it detects the existing content is broken and needs repair).
@@ -484,18 +510,19 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
                 name);
             return;
         }
-
+        
         // Step 3: Brand-new bootstrap: write to storage and directly create published meta + version (skip draft workflow)
         String version = DEFAULT_INITIAL_VERSION;
         long uniformId = System.currentTimeMillis();
         String storageJson = writeAgentSpecToStorage(namespaceId, agentSpec, version, uniformId,
             null);
-
+        
         resourceManager.insertBootstrapMeta(namespaceId, name, RESOURCE_TYPE_AGENTSPEC,
             agentSpec.getDescription(), agentSpec.getBizTags(), DEFAULT_AUTHOR, from, version,
             storageJson);
+        scheduleAgentSpecIndexMaintenance(namespaceId, name);
     }
-
+    
     /**
      * Attempt to repair a broken built-in AgentSpec by re-writing storage content.
      * Only repairs if: owned by default author, no working versions, latest version is online,
@@ -534,7 +561,7 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
             || !StringUtils.equals(DEFAULT_AUTHOR, versionRow.getAuthor())) {
             return false;
         }
-
+        
         // Read current storage content and compare with bundled content to detect missing critical data
         AgentSpec currentAgentSpec;
         try {
@@ -546,7 +573,7 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
         if (!isBuiltInContentMissing(currentAgentSpec, bundledAgentSpec)) {
             return false;
         }
-
+        
         // Content is missing: overwrite storage with bundled data and update version/meta records
         long uniformId = System.currentTimeMillis();
         String storageJson = writeAgentSpecToStorage(namespaceId, bundledAgentSpec, latestVersion,
@@ -556,9 +583,10 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
             bundledAgentSpec.getDescription());
         resourceManager.syncImportedMeta(namespaceId, meta, bundledAgentSpec.getDescription(),
             bundledAgentSpec.getBizTags());
+        scheduleAgentSpecIndexMaintenance(namespaceId, bundledAgentSpec.getName());
         return true;
     }
-
+    
     /**
      * Handle overwrite upload: if an editing draft exists, overwrite it in-place;
      * otherwise create a new draft with a bumped version.
@@ -572,7 +600,7 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
             createDraftWithAgentSpec(namespaceId, agentSpec, DEFAULT_INITIAL_VERSION, null, true);
             return name;
         }
-
+        
         VisibilityHelper.checkWritableResource(meta);
         ResourceVersionInfo info = AiResourceManager.requireVersionInfo(meta);
         String editing = info.getEditingVersion();
@@ -581,15 +609,16 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
             overwriteEditingDraft(namespaceId, agentSpec, meta, editing);
             return name;
         }
-
+        
         // No editing draft -> assign new version number and create new draft
         String newVersion = nextVersion(namespaceId, name);
         createDraftWithAgentSpec(namespaceId, agentSpec, newVersion, meta, false);
         resourceManager.syncImportedMeta(namespaceId, meta, agentSpec.getDescription(),
             agentSpec.getBizTags());
+        scheduleAgentSpecIndexMaintenance(namespaceId, agentSpec.getName());
         return name;
     }
-
+    
     /**
      * Overwrite an existing editing draft's storage content, version description, and meta info.
      */
@@ -606,50 +635,9 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
             agentSpec.getDescription());
         resourceManager.syncImportedMeta(namespaceId, meta, agentSpec.getDescription(),
             agentSpec.getBizTags());
+        scheduleAgentSpecIndexMaintenance(namespaceId, agentSpec.getName());
     }
-
-    /**
-     * Search AgentSpecs by keyword (fuzzy name match). Only returns enabled specs with at least one online version.
-     */
-    @Override
-    public Page<AgentSpecBasicInfo> searchAgentSpecs(String namespaceId, String keyword, int pageNo,
-        int pageSize)
-        throws NacosException {
-        // Build fuzzy query condition
-        String nameLike = StringUtils.isBlank(keyword) ? null
-            : resourceManager
-                .generateLikeArgument(Constants.ALL_PATTERN + keyword + Constants.ALL_PATTERN);
-        QueryCondition queryCondition = resourceManager.buildQueryCondition(namespaceId,
-            RESOURCE_TYPE_AGENTSPEC, nameLike, null,
-            VisibilityConstants.ACTION_READ);
-        if (queryCondition.isAlwaysEmpty()) {
-            return AiResourceManager.buildEmptyPage(pageNo);
-        }
-        Page<AiResource> metaPage = resourceManager.listMeta(queryCondition, pageNo, pageSize);
-        List<AgentSpecBasicInfo> items = new ArrayList<>();
-        if (metaPage != null && metaPage.getPageItems() != null) {
-            for (AiResource meta : metaPage.getPageItems()) {
-                if (meta == null) {
-                    continue;
-                }
-                // Only return enabled agentspecs with at least one online version (for client-side search)
-                if (!AiResourceConstants.META_STATUS_ENABLE.equalsIgnoreCase(meta.getStatus())) {
-                    continue;
-                }
-                ResourceVersionInfo info =
-                    AiResourceManager.parseVersionInfo(meta.getVersionInfo());
-                if (info == null || info.getOnlineCnt() == null || info.getOnlineCnt() <= 0) {
-                    continue;
-                }
-                AgentSpecBasicInfo basicInfo = new AgentSpecBasicInfo();
-                basicInfo.setName(meta.getName());
-                basicInfo.setDescription(meta.getDesc());
-                items.add(basicInfo);
-            }
-        }
-        return AiResourceManager.buildPageResult(items, metaPage, pageNo);
-    }
-
+    
     /**
      * Query an AgentSpec for client consumption. Resolves the target version via explicit version or label,
      * checks the spec is enabled and the version is online, then loads content from storage.
@@ -684,7 +672,7 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
         }
         return loadAgentSpecFromStorage(namespaceId, name, resolved, versionRow.getStorage());
     }
-
+    
     /**
      * Query an AgentSpec for the client listener path with MD5-based not-modified semantics.
      * When {@code clientMd5} matches the stored content MD5, returns a not-modified result so the
@@ -709,16 +697,16 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
             throw new NacosApiException(NacosException.NOT_FOUND, ErrorCode.RESOURCE_NOT_FOUND,
                 "AgentSpec version not found: " + name);
         }
-
+        
         // Step 2: Read stored contentMd5 from version row's storage JSON
         String storedMd5 = readStoredContentMd5(namespaceId, name, resolved);
-
+        
         // Step 3: Fast path — client cache is fresh
         if (StringUtils.isNotBlank(storedMd5) && StringUtils.isNotBlank(clientMd5)
             && storedMd5.equals(clientMd5)) {
             return AgentSpecQueryResult.notModified(storedMd5, resolved);
         }
-
+        
         // Step 4: Load full AgentSpec from storage
         AiResourceVersion versionRow = resourceManager.findVersion(namespaceId, name,
             RESOURCE_TYPE_AGENTSPEC, resolved);
@@ -729,7 +717,7 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
         }
         AgentSpec agentSpec = loadAgentSpecFromStorage(namespaceId, name, resolved,
             versionRow.getStorage());
-
+        
         // Step 5: Determine effective MD5; back-fill if missing (legacy data)
         String effectiveMd5 = storedMd5;
         if (StringUtils.isBlank(effectiveMd5)) {
@@ -737,7 +725,7 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
         }
         return new AgentSpecQueryResult(agentSpec, effectiveMd5, resolved);
     }
-
+    
     /**
      * Read the persisted contentMd5 from the version row's storage JSON column.
      */
@@ -764,7 +752,7 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
             return null;
         }
     }
-
+    
     /**
      * Back-fill: compute the content MD5 from the loaded AgentSpec and persist it into the
      * version row's storage column. Persistence failure is swallowed and logged.
@@ -792,7 +780,7 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
         }
         return computed;
     }
-
+    
     /**
      * Create a new draft version for an existing or brand-new AgentSpec.
      * For existing specs with a base version, copies storage content from that version.
@@ -824,12 +812,12 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
                 VisibilityHelper.resolveClientIp());
             return version;
         }
-
+        
         // ---- Case B: Existing agentspec, fork from existing version ----
         VisibilityHelper.checkWritableResource(meta);
         ResourceVersionInfo info = AiResourceManager.requireVersionInfo(meta);
         AiResourceManager.ensureNoWorkingVersion(info, "create draft");
-
+        
         String base =
             resourceManager.resolveBaseVersion(namespaceId, name, RESOURCE_TYPE_AGENTSPEC, meta,
                 basedOnVersion);
@@ -846,27 +834,28 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
                 VisibilityHelper.resolveClientIp());
             return newVersion;
         }
-
+        
         // Step 1: Copy storage content from base version to new version path
         AgentSpec baseAgentSpec = loadAgentSpecFromStorage(namespaceId, name, base);
         long uniformId = System.currentTimeMillis();
         String storageJson = writeAgentSpecToStorage(namespaceId, baseAgentSpec, newVersion,
             uniformId, null);
-
+        
         // Step 2: Insert draft version row
         resourceManager.insertVersionRow(namespaceId, name, RESOURCE_TYPE_AGENTSPEC, DEFAULT_AUTHOR,
             AiResourceConstants.VERSION_STATUS_DRAFT, newVersion, baseAgentSpec.getDescription(),
             storageJson);
-
+        
         // Step 3: Update meta's editingVersion pointer
         resourceManager.markEditingVersionCas(namespaceId, meta, info, newVersion,
             "create draft");
+        scheduleAgentSpecIndexMaintenance(namespaceId, name);
         AiResourceTraceService.logSuccess(RESOURCE_TYPE_AGENTSPEC, name, newVersion,
             AiResourceTraceService.OP_CREATE_DRAFT, VisibilityHelper.resolveCurrentIdentity(),
             VisibilityHelper.resolveClientIp());
         return newVersion;
     }
-
+    
     /**
      * Update the content of an existing editing draft. If no meta exists, auto-creates a new draft.
      * Writes updated files to storage and bumps the meta description.
@@ -899,7 +888,7 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
         }
         AiResourceVersion draft = resourceManager.requireDraftVersion(namespaceId, name,
             RESOURCE_TYPE_AGENTSPEC, editing);
-
+        
         // Overwrite storage files with new content, update version row and meta description
         long uniformId = System.currentTimeMillis();
         String storageJson = writeAgentSpecToStorage(namespaceId, draftAgentSpec, editing,
@@ -907,11 +896,12 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
         resourceManager.updateVersionStorageAndDesc(namespaceId, name, RESOURCE_TYPE_AGENTSPEC,
             editing, storageJson, draftAgentSpec.getDescription());
         resourceManager.bumpMetaDescription(namespaceId, meta, draftAgentSpec.getDescription());
+        scheduleAgentSpecIndexMaintenance(namespaceId, name);
         AiResourceTraceService.logSuccess(RESOURCE_TYPE_AGENTSPEC, name, editing,
             AiResourceTraceService.OP_UPDATE_DRAFT,
             VisibilityHelper.resolveCurrentIdentity(), VisibilityHelper.resolveClientIp());
     }
-
+    
     /**
      * Delete the current editing draft. Removes storage files, version row,
      * and clears the editingVersion pointer in meta.
@@ -921,8 +911,9 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
         resourceManager.doDeleteDraft(namespaceId, name, RESOURCE_TYPE_AGENTSPEC,
             v -> deleteAgentSpecStorageForVersion(namespaceId, name, v.getVersion(),
                 v.getStorage()));
+        scheduleAgentSpecIndexMaintenance(namespaceId, name);
     }
-
+    
     /**
      * Submit a draft or reviewed version for review and publish.
      *
@@ -936,21 +927,21 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
         AiResource meta = resourceManager.requireMeta(namespaceId, name, RESOURCE_TYPE_AGENTSPEC);
         VisibilityHelper.checkWritableResource(meta);
         ResourceVersionInfo info = AiResourceManager.requireVersionInfo(meta);
-
+        
         // Step 2: Determine the target version to submit
         String target =
             resourceManager.resolveSubmitTarget(info, version, RESOURCE_TYPE_AGENTSPEC, name);
-
+        
         AiResourceVersion v =
             resourceManager.prepareSubmitVersion(namespaceId, name, RESOURCE_TYPE_AGENTSPEC,
                 target);
         final String finalTarget = target;
-
+        
         // Step 3: If the version is already reviewing, submit is idempotent.
         if (AiResourceManager.isReviewingVersion(v)) {
             return finalTarget;
         }
-
+        
         // Step 4: Build pipeline context with lazy file loading.
         AgentSpecPipelineContext ctx = new AgentSpecPipelineContext();
         ctx.setNamespaceId(namespaceId);
@@ -965,14 +956,15 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
                     "Failed to load AgentSpec files for pipeline execution", e);
             }
         });
-
+        
         // Step 5: Check if a publish pipeline is available
         if (!publishPipelineExecutor.isPipelineAvailable(ctx.getResourceType())) {
             // No pipeline available -> skip review and publish directly
             resourceManager.directPublishVersion(namespaceId, meta, info, finalTarget, true);
+            scheduleAgentSpecIndexMaintenance(namespaceId, name);
             return finalTarget;
         }
-
+        
         // Step 6: Move draft or reviewed status to reviewing, then run pipeline asynchronously.
         resourceManager.moveToReviewing(namespaceId, name, RESOURCE_TYPE_AGENTSPEC, finalTarget,
             meta, info);
@@ -980,11 +972,12 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
             finalTarget,
             ctx, publishPipelineExecutor)) {
             resourceManager.directPublishVersion(namespaceId, meta, info, finalTarget, true);
+            scheduleAgentSpecIndexMaintenance(namespaceId, name);
         }
-
+        
         return finalTarget;
     }
-
+    
     /**
      * Publish a version: update version status to online and compute content MD5.
      */
@@ -993,8 +986,9 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
         boolean updateLatestLabel) throws NacosException {
         resourceManager.doPublish(namespaceId, name, RESOURCE_TYPE_AGENTSPEC, version, true);
         computeAndStoreContentMd5(namespaceId, name, version);
+        scheduleAgentSpecIndexMaintenance(namespaceId, name);
     }
-
+    
     /**
      * Force-publish a draft, reviewing, or reviewed version.
      */
@@ -1003,8 +997,9 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
         boolean updateLatestLabel) throws NacosException {
         resourceManager.doForcePublish(namespaceId, name, RESOURCE_TYPE_AGENTSPEC, version, true);
         computeAndStoreContentMd5(namespaceId, name, version);
+        scheduleAgentSpecIndexMaintenance(namespaceId, name);
     }
-
+    
     /**
      * Compute content MD5 for a published version and persist it to the storage column.
      * Failure is logged but does not break the publish operation.
@@ -1020,12 +1015,13 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
                 name, version, e);
         }
     }
-
+    
     @Override
     public void redraft(String namespaceId, String name, String version) throws NacosException {
         resourceManager.doRedraft(namespaceId, name, RESOURCE_TYPE_AGENTSPEC, version);
+        scheduleAgentSpecIndexMaintenance(namespaceId, name);
     }
-
+    
     /**
      * Update version labels (e.g., "latest") for an AgentSpec.
      */
@@ -1033,8 +1029,9 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
     public void updateLabels(String namespaceId, String name, Map<String, String> labels)
         throws NacosException {
         resourceManager.validateAndUpdateLabels(namespaceId, name, RESOURCE_TYPE_AGENTSPEC, labels);
+        scheduleAgentSpecIndexMaintenance(namespaceId, name);
     }
-
+    
     /**
      * Update business tags on the AgentSpec meta.
      */
@@ -1044,11 +1041,12 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
         AiResource meta = resourceManager.requireMeta(namespaceId, name, RESOURCE_TYPE_AGENTSPEC);
         VisibilityHelper.checkWritableResource(meta);
         resourceManager.updateBizTagsCas(namespaceId, meta, bizTags);
+        scheduleAgentSpecIndexMaintenance(namespaceId, name);
         AiResourceTraceService.logSuccess(RESOURCE_TYPE_AGENTSPEC, name, null,
             AiResourceTraceService.OP_UPDATE_BIZ_TAGS,
             VisibilityHelper.resolveCurrentIdentity(), VisibilityHelper.resolveClientIp());
     }
-
+    
     /**
      * Toggle online/offline status at either AgentSpec scope (enable/disable the entire spec)
      * or version scope (toggle a specific version's online status).
@@ -1060,30 +1058,43 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
         AiResource meta = resourceManager.requireMeta(namespaceId, name, RESOURCE_TYPE_AGENTSPEC);
         VisibilityHelper.checkWritableResource(meta);
         ResourceVersionInfo info = AiResourceManager.requireVersionInfo(meta);
-
+        
         // Determine operation scope: agentspec scope (enable/disable entire spec) vs version scope (toggle single version)
         boolean agentSpecScope =
             SCOPE_AGENTSPEC.equalsIgnoreCase(scope) || StringUtils.isBlank(version);
         if (agentSpecScope) {
             // Enable/disable entire agentspec: update meta status
             resourceManager.metaEnableDisable(namespaceId, meta, online);
+            scheduleAgentSpecIndexMaintenance(namespaceId, name);
             return;
         }
-
+        
         // Single version toggle (unlike Skill, AgentSpec has no index manifest to sync)
         resourceManager.toggleVersionOnlineStatus(namespaceId, meta, info, version, online);
+        scheduleAgentSpecIndexMaintenance(namespaceId, name);
     }
-
+    
     /**
      * Update the visibility scope of an AgentSpec.
      */
     @Override
     public void updateScope(String namespaceId, String name, String scope) throws NacosException {
         resourceManager.doUpdateScope(namespaceId, name, RESOURCE_TYPE_AGENTSPEC, scope);
+        scheduleAgentSpecIndexMaintenance(namespaceId, name);
     }
-
+    
+    private void scheduleAgentSpecIndexMaintenance(String namespaceId, String name) {
+        try {
+            resourceIndexMaintenanceService.schedule(namespaceId, RESOURCE_TYPE_AGENTSPEC, name);
+        } catch (RuntimeException e) {
+            LOGGER.warn(
+                "Failed to schedule AgentSpec search-index maintenance for {} in namespace {}",
+                name, namespaceId, e);
+        }
+    }
+    
     // ---- Private helper methods ----
-
+    
     /**
      * Build main agentspec content as JSON bytes (manifest.json content stored as-is).
      */
@@ -1107,7 +1118,7 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
         mainConfig.setResources(resourceRefs);
         return JacksonUtils.toJson(mainConfig).getBytes(StandardCharsets.UTF_8);
     }
-
+    
     /**
      * Build resource content as JSON bytes.
      */
@@ -1120,7 +1131,7 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
         metadata.put("uniformId", uniformId);
         return JacksonUtils.toJson(resource).getBytes(StandardCharsets.UTF_8);
     }
-
+    
     /**
      * Resolve the storage provider from system config. Defaults to "nacos_config".
      */
@@ -1129,7 +1140,7 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
             Constants.AgentSpecs.AGENTSPEC_STORAGE_PROVIDER_CONFIG_KEY,
             STORAGE_PROVIDER_NACOS_CONFIG);
     }
-
+    
     /**
      * Build storage metadata JSON for version row (provider + scope).
      */
@@ -1140,7 +1151,7 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
         json.put("scope", namespaceId + ":" + agentSpecName + ":" + version);
         return JacksonUtils.toJson(json);
     }
-
+    
     private static String parseStorageProvider(String storageJson) {
         if (StringUtils.isNotBlank(storageJson)) {
             try {
@@ -1154,7 +1165,7 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
         }
         return STORAGE_PROVIDER_NACOS_CONFIG;
     }
-
+    
     /**
      * Compute the next vN version number based on existing versions.
      */
@@ -1171,7 +1182,7 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
         }
         return DEFAULT_INITIAL_VERSION;
     }
-
+    
     private String resolveSpecifiedDraftVersion(String namespaceId, String name,
         String targetVersion,
         String basedOnVersion, String baseVersion) throws NacosException {
@@ -1202,7 +1213,7 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
         }
         return candidate;
     }
-
+    
     /**
      * Check whether the built-in AgentSpec content is missing critical data (e.g., main content or AGENTS.md).
      * Used by bootstrap repair logic to decide if re-writing is needed.
@@ -1237,7 +1248,7 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
         String currentAgentsContent = extractAgentsContent(currentResources);
         return StringUtils.isBlank(currentAgentsContent);
     }
-
+    
     /**
      * Extract the content of the AGENTS.md resource from a resource map (case-insensitive match).
      */
@@ -1260,7 +1271,7 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
         }
         return null;
     }
-
+    
     /**
      * Write all AgentSpec files (main config + resources) to storage.
      * Main config is serialized as JSON containing name, description, content, and resource references.
@@ -1273,38 +1284,75 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
         long uniformId, String persistedStorage) throws NacosException {
         String provider = persistedStorage == null ? resolveStorageProvider()
             : parseStorageProvider(persistedStorage);
-        saveAgentSpecFilesConcurrently(provider, namespaceId, agentSpec, version, uniformId);
+        if (persistedStorage == null) {
+            saveAgentSpecFilesConcurrently(provider, namespaceId, agentSpec, version, uniformId,
+                true);
+        } else {
+            replaceAgentSpecFiles(provider, namespaceId, agentSpec, version, uniformId);
+        }
         return buildStorageJson(namespaceId, agentSpec.getName(), version, provider);
     }
-
+    
+    private void replaceAgentSpecFiles(String provider, String namespaceId, AgentSpec agentSpec,
+        String version, long uniformId) throws NacosException {
+        StorageKey mainKey = NacosConfigAiResourceStorage.buildStorageKey(provider, namespaceId,
+            NacosConfigAiResourceStorage.RESOURCE_TYPE_AGENTSPEC, agentSpec.getName(), version,
+            NacosConfigAiResourceStorage.getMainFilePath(AgentSpecUtils.AGENTSPEC_MAIN_DATA_ID));
+        byte[] previousMainContent = storageRouter.route(mainKey).get(mainKey);
+        List<String> previousResourcePaths = parseAgentSpecResourcePaths(previousMainContent);
+        Set<String> retainedResourcePaths = new HashSet<>();
+        if (agentSpec.getResource() != null) {
+            for (AgentSpecResource resource : agentSpec.getResource().values()) {
+                retainedResourcePaths.add(
+                    NacosConfigAiResourceStorage.getAgentSpecResourceFilePath(resource.getType(),
+                        resource.getName()));
+            }
+        }
+        
+        saveAgentSpecFilesConcurrently(provider, namespaceId, agentSpec, version, uniformId,
+            false);
+        List<String> removedResourcePaths = new ArrayList<>();
+        for (String resourcePath : previousResourcePaths) {
+            if (!retainedResourcePaths.contains(resourcePath)) {
+                removedResourcePaths.add(resourcePath);
+            }
+        }
+        deleteAgentSpecStorageFiles(namespaceId, agentSpec.getName(), version, provider,
+            removedResourcePaths);
+        storageRouter.route(mainKey).save(mainKey, buildMainContent(agentSpec, uniformId));
+    }
+    
     /**
-     * Persist AgentSpec main config (manifest.json) and all resource files concurrently.
+     * Persist AgentSpec files concurrently. The main config is included for new versions and
+     * excluded while replacement resource files are staged before old-file cleanup.
      *
-     * <p>Each file (main + N resources) is submitted to {@link ExecutorUtils#getAgentSpecStorageIoExecutor()}
-     * and waited on via {@link CompletableFuture#allOf}. Underlying {@link NacosException}s thrown from
-     * individual save tasks are unwrapped from {@link CompletionException} and rethrown to keep the
-     * original exception semantics aligned with the previous serial implementation.</p>
+     * <p>Each selected file is submitted to {@link ExecutorUtils#getAgentSpecStorageIoExecutor()}
+     * and waited on via {@link CompletableFuture#allOf}. Underlying {@link NacosException}s thrown
+     * from individual save tasks are unwrapped from {@link CompletionException} and rethrown.</p>
      */
     private void saveAgentSpecFilesConcurrently(String provider, String namespaceId,
-        AgentSpec agentSpec, String version, long uniformId) throws NacosException {
+        AgentSpec agentSpec, String version, long uniformId, boolean includeMainConfig)
+        throws NacosException {
         String agentSpecName = agentSpec.getName();
         Executor executor = ExecutorUtils.getAgentSpecStorageIoExecutor();
         List<CompletableFuture<Void>> tasks = new ArrayList<>();
-
-        // 1) Main config file (manifest.json)
-        byte[] mainContent = buildMainContent(agentSpec, uniformId);
-        StorageKey mainKey = NacosConfigAiResourceStorage.buildStorageKey(provider, namespaceId,
-            NacosConfigAiResourceStorage.RESOURCE_TYPE_AGENTSPEC, agentSpecName, version,
-            NacosConfigAiResourceStorage.getMainFilePath(AgentSpecUtils.AGENTSPEC_MAIN_DATA_ID));
-        tasks.add(CompletableFuture.runAsync(() -> {
-            try {
-                storageRouter.route(mainKey).save(mainKey, mainContent);
-            } catch (NacosException e) {
-                throw new CompletionException(e);
-            }
-        }, executor));
-
-        // 2) Resource files (each carries a uniformId for consistency tracking)
+        
+        if (includeMainConfig) {
+            byte[] mainContent = buildMainContent(agentSpec, uniformId);
+            StorageKey mainKey = NacosConfigAiResourceStorage.buildStorageKey(provider,
+                namespaceId, NacosConfigAiResourceStorage.RESOURCE_TYPE_AGENTSPEC,
+                agentSpecName, version,
+                NacosConfigAiResourceStorage.getMainFilePath(
+                    AgentSpecUtils.AGENTSPEC_MAIN_DATA_ID));
+            tasks.add(CompletableFuture.runAsync(() -> {
+                try {
+                    storageRouter.route(mainKey).save(mainKey, mainContent);
+                } catch (NacosException e) {
+                    throw new CompletionException(e);
+                }
+            }, executor));
+        }
+        
         if (agentSpec.getResource() != null && !agentSpec.getResource().isEmpty()) {
             for (Map.Entry<String, AgentSpecResource> entry : agentSpec.getResource().entrySet()) {
                 AgentSpecResource resource = entry.getValue();
@@ -1324,7 +1372,7 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
                 }, executor));
             }
         }
-
+        
         try {
             CompletableFuture.allOf(tasks.toArray(new CompletableFuture[0])).join();
         } catch (CompletionException ex) {
@@ -1335,7 +1383,24 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
             throw ex;
         }
     }
-
+    
+    private static List<String> parseAgentSpecResourcePaths(byte[] mainContent) {
+        List<String> resourcePaths = new ArrayList<>();
+        if (mainContent == null) {
+            return resourcePaths;
+        }
+        AgentSpecMainConfig mainConfig = JacksonUtils.toObj(
+            new String(mainContent, StandardCharsets.UTF_8), AgentSpecMainConfig.class);
+        if (mainConfig.getResources() == null) {
+            return resourcePaths;
+        }
+        for (AgentSpecResourceRef resourceRef : mainConfig.getResources()) {
+            resourcePaths.add(NacosConfigAiResourceStorage.getAgentSpecResourceFilePath(
+                resourceRef.getType(), resourceRef.getName()));
+        }
+        return resourcePaths;
+    }
+    
     /**
      * Load an AgentSpec from storage. Reads the main config JSON first to discover resource references,
      * then loads each resource file individually and assembles the full AgentSpec object.
@@ -1352,95 +1417,21 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
         return loadAgentSpecFromStorage(namespaceId, agentSpecName, version,
             versionRow.getStorage());
     }
-
+    
     private AgentSpec loadAgentSpecFromStorage(String namespaceId, String agentSpecName,
         String version, String storageJson) throws NacosException {
-        String provider = parseStorageProvider(storageJson);
-        // Step 1: Read main config file (manifest.json)
-        StorageKey mainKey = NacosConfigAiResourceStorage.buildStorageKey(provider, namespaceId,
-            NacosConfigAiResourceStorage.RESOURCE_TYPE_AGENTSPEC, agentSpecName, version,
-            NacosConfigAiResourceStorage.getMainFilePath(AgentSpecUtils.AGENTSPEC_MAIN_DATA_ID));
-        byte[] mainBytes = storageRouter.route(mainKey).get(mainKey);
-        if (mainBytes == null) {
-            throw new NacosApiException(NacosException.NOT_FOUND, ErrorCode.RESOURCE_NOT_FOUND,
-                "AgentSpec not found: " + agentSpecName);
-        }
-
-        // Step 2: Deserialize main config, extract name/description/content
-        AgentSpecMainConfig mainConfig =
-            JacksonUtils.toObj(new String(mainBytes, StandardCharsets.UTF_8),
-                AgentSpecMainConfig.class);
-        AgentSpec agentSpec = new AgentSpec();
-        agentSpec.setNamespaceId(namespaceId);
-        agentSpec.setName(mainConfig.getName());
-        agentSpec.setDescription(mainConfig.getDescription());
-        agentSpec.setContent(mainConfig.getContent());
-
-        // Step 3: Load each resource file based on the resource reference list in main config
-        Map<String, AgentSpecResource> resourceMap = new HashMap<>(
-            mainConfig.getResources() != null ? mainConfig.getResources().size() : 16);
-        if (mainConfig.getResources() != null && !mainConfig.getResources().isEmpty()) {
-            for (AgentSpecResourceRef resourceRef : mainConfig.getResources()) {
-                String resourceId =
-                    AgentSpecUtils.generateResourceId(resourceRef.getType(), resourceRef.getName());
-                String path =
-                    NacosConfigAiResourceStorage.getAgentSpecResourceFilePath(resourceRef.getType(),
-                        resourceRef.getName());
-                StorageKey resourceKey =
-                    NacosConfigAiResourceStorage.buildStorageKey(provider, namespaceId,
-                        NacosConfigAiResourceStorage.RESOURCE_TYPE_AGENTSPEC, agentSpecName,
-                        version, path);
-                byte[] resourceBytes = storageRouter.route(resourceKey).get(resourceKey);
-                if (resourceBytes != null) {
-                    AgentSpecResource resource = JacksonUtils.toObj(
-                        new String(resourceBytes, StandardCharsets.UTF_8), AgentSpecResource.class);
-                    resourceMap.put(resourceId, resource);
-                }
-            }
-        }
-        agentSpec.setResource(resourceMap);
-        return agentSpec;
+        return storageReader.read(namespaceId, agentSpecName, version, storageJson);
     }
-
+    
     /**
      * Load agentspec metadata from storage without reading resource files. Only reads the main config (manifest.json)
      * and builds resource entries with name and type from the reference list.
      */
     private AgentSpec loadAgentSpecMetaFromStorage(String namespaceId, String agentSpecName,
         String version, String storageJson) throws NacosException {
-        String provider = parseStorageProvider(storageJson);
-        StorageKey mainKey = NacosConfigAiResourceStorage.buildStorageKey(provider, namespaceId,
-            NacosConfigAiResourceStorage.RESOURCE_TYPE_AGENTSPEC, agentSpecName, version,
-            NacosConfigAiResourceStorage.getMainFilePath(AgentSpecUtils.AGENTSPEC_MAIN_DATA_ID));
-        byte[] mainBytes = storageRouter.route(mainKey).get(mainKey);
-        if (mainBytes == null) {
-            throw new NacosApiException(NacosException.NOT_FOUND, ErrorCode.RESOURCE_NOT_FOUND,
-                "AgentSpec not found: " + agentSpecName);
-        }
-        AgentSpecMainConfig mainConfig =
-            JacksonUtils.toObj(new String(mainBytes, StandardCharsets.UTF_8),
-                AgentSpecMainConfig.class);
-        AgentSpec agentSpec = new AgentSpec();
-        agentSpec.setNamespaceId(namespaceId);
-        agentSpec.setName(mainConfig.getName());
-        agentSpec.setDescription(mainConfig.getDescription());
-        agentSpec.setContent(mainConfig.getContent());
-        Map<String, AgentSpecResource> resourceMap = new HashMap<>(
-            mainConfig.getResources() != null ? mainConfig.getResources().size() : 16);
-        if (mainConfig.getResources() != null && !mainConfig.getResources().isEmpty()) {
-            for (AgentSpecResourceRef resourceRef : mainConfig.getResources()) {
-                String resourceId =
-                    AgentSpecUtils.generateResourceId(resourceRef.getType(), resourceRef.getName());
-                AgentSpecResource resource = new AgentSpecResource();
-                resource.setName(resourceRef.getName());
-                resource.setType(resourceRef.getType());
-                resourceMap.put(resourceId, resource);
-            }
-        }
-        agentSpec.setResource(resourceMap);
-        return agentSpec;
+        return storageReader.readMeta(namespaceId, agentSpecName, version, storageJson);
     }
-
+    
     /**
      * Build pipeline file representations from an AgentSpec for use by the publish pipeline executor.
      * Includes manifest.json (main content) and all resource files.
@@ -1460,7 +1451,7 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
         }
         return files;
     }
-
+    
     /**
      * Build a storage-relative file path for a resource: "{type}/{name}" or just "{name}" if type is blank.
      * Avoids path duplication when name already contains the type prefix.
@@ -1476,7 +1467,7 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
         }
         return normalizedType + "/" + normalizedName;
     }
-
+    
     /**
      * Delete all storage files for a given AgentSpec version.
      * Reads the main config first to discover resource references, deletes each resource file,
@@ -1486,132 +1477,126 @@ public class AgentSpecOperationServiceImpl implements AgentSpecOperationService 
         String version, String storageJson)
         throws NacosException {
         // Step 1: Read main config first to get the resource reference list
-        String provider = AiResourceVersionStorageJsonUtil.requireProvider(storageJson);
+        String provider = AiResourceVersionStorageJsonUtil.resolveProvider(storageJson,
+            STORAGE_PROVIDER_NACOS_CONFIG);
         StorageKey mainKey = NacosConfigAiResourceStorage.buildStorageKey(provider, namespaceId,
             NacosConfigAiResourceStorage.RESOURCE_TYPE_AGENTSPEC, agentSpecName, version,
             NacosConfigAiResourceStorage.getMainFilePath(AgentSpecUtils.AGENTSPEC_MAIN_DATA_ID));
         byte[] mainBytes = storageRouter.route(mainKey).get(mainKey);
+        List<String> resourcePaths = parseAgentSpecResourcePaths(mainBytes);
+        deleteAgentSpecStorageFiles(namespaceId, agentSpecName, version, provider, resourcePaths);
+        // Step 3: Delete the main config file itself
+        storageRouter.route(mainKey).delete(mainKey);
+    }
+    
+    private void deleteAgentSpecStorageFiles(String namespaceId, String agentSpecName,
+        String version, String provider, List<String> resourcePaths) throws NacosException {
         NacosException firstFailure = null;
-        if (mainBytes != null) {
-            // Step 2: Delete each resource file
-            AgentSpecMainConfig mainConfig =
-                JacksonUtils.toObj(new String(mainBytes, StandardCharsets.UTF_8),
-                    AgentSpecMainConfig.class);
-            if (mainConfig.getResources() != null && !mainConfig.getResources().isEmpty()) {
-                for (AgentSpecResourceRef resourceRef : mainConfig.getResources()) {
-                    String path = NacosConfigAiResourceStorage.getAgentSpecResourceFilePath(
-                        resourceRef.getType(),
-                        resourceRef.getName());
-                    StorageKey resourceKey = NacosConfigAiResourceStorage.buildStorageKey(provider,
-                        namespaceId, NacosConfigAiResourceStorage.RESOURCE_TYPE_AGENTSPEC,
-                        agentSpecName, version,
-                        path);
-                    try {
-                        storageRouter.route(resourceKey).delete(resourceKey);
-                    } catch (Exception e) {
-                        NacosException failure = e instanceof NacosException ? (NacosException) e
-                            : new NacosException(NacosException.SERVER_ERROR,
-                                "Failed to delete AgentSpec storage: " + agentSpecName + '@'
-                                    + version,
-                                e);
-                        if (firstFailure == null) {
-                            firstFailure = failure;
-                        } else {
-                            firstFailure.addSuppressed(failure);
-                        }
-                    }
+        for (String resourcePath : resourcePaths) {
+            StorageKey resourceKey = NacosConfigAiResourceStorage.buildStorageKey(provider,
+                namespaceId, NacosConfigAiResourceStorage.RESOURCE_TYPE_AGENTSPEC,
+                agentSpecName, version, resourcePath);
+            try {
+                storageRouter.route(resourceKey).delete(resourceKey);
+            } catch (Exception e) {
+                NacosException failure = e instanceof NacosException ? (NacosException) e
+                    : new NacosException(NacosException.SERVER_ERROR,
+                        "Failed to delete AgentSpec storage: " + agentSpecName + '@' + version,
+                        e);
+                if (firstFailure == null) {
+                    firstFailure = failure;
+                } else {
+                    firstFailure.addSuppressed(failure);
                 }
             }
         }
         if (firstFailure != null) {
             throw firstFailure;
         }
-        // Step 3: Delete the main config file itself
-        storageRouter.route(mainKey).delete(mainKey);
     }
-
+    
     // ---- Inner classes ----
-
+    
     /**
      * AgentSpec main config (from manifest.json storage wrapper).
      */
     private static class AgentSpecMainConfig {
-
+        
         private String name;
-
+        
         private String description;
-
+        
         private String content;
-
+        
         private Long uniformId;
-
+        
         private List<AgentSpecResourceRef> resources;
-
+        
         public String getName() {
             return name;
         }
-
+        
         public void setName(String name) {
             this.name = name;
         }
-
+        
         public String getDescription() {
             return description;
         }
-
+        
         public void setDescription(String description) {
             this.description = description;
         }
-
+        
         public String getContent() {
             return content;
         }
-
+        
         public void setContent(String content) {
             this.content = content;
         }
-
+        
         public Long getUniformId() {
             return uniformId;
         }
-
+        
         public void setUniformId(Long uniformId) {
             this.uniformId = uniformId;
         }
-
+        
         public List<AgentSpecResourceRef> getResources() {
             return resources;
         }
-
+        
         public void setResources(List<AgentSpecResourceRef> resources) {
             this.resources = resources;
         }
     }
-
+    
     /**
      * AgentSpec resource reference (in main config).
      */
     private static class AgentSpecResourceRef {
-
+        
         private String name;
-
+        
         private String type;
-
+        
         public String getName() {
             return name;
         }
-
+        
         public void setName(String name) {
             this.name = name;
         }
-
+        
         public String getType() {
             return type;
         }
-
+        
         public void setType(String type) {
             this.type = type;
         }
     }
-
+    
 }

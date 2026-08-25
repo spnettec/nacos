@@ -54,26 +54,26 @@ import static org.mockito.Mockito.when;
  */
 @ExtendWith(MockitoExtension.class)
 class AgentInnerHandlerTest {
-
+    
     private static final String NAMESPACE_ID = "test_namespace";
-
+    
     private static final String AGENT_NAME = "test-agent";
-
+    
     private static final String VERSION = "1.0.0";
-
+    
     @Mock
     private AgentOperationService agentOperationService;
-
+    
     @Mock
     private AgentRuntimeRegistryService runtimeRegistryService;
-
+    
     private AgentInnerHandler handler;
-
+    
     @BeforeEach
     void setUp() {
         handler = new AgentInnerHandler(agentOperationService, runtimeRegistryService);
     }
-
+    
     @Test
     void shouldDelegateEveryOperationToLocalServices() throws Exception {
         AgentOverview overview = new AgentOverview();
@@ -123,7 +123,7 @@ class AgentInnerHandlerTest {
             .thenReturn(versionSummary);
         when(agentOperationService.updateLabels(NAMESPACE_ID, AGENT_NAME,
             labelsRequest.getLabels())).thenReturn(persistedAgent);
-
+        
         assertSame(overview, handler.getAgent(NAMESPACE_ID, AGENT_NAME));
         AgentUpdateRequest updateRequest = updateRequest();
         assertSame(persistedAgent, handler.updateAgent(NAMESPACE_ID, updateRequest));
@@ -145,14 +145,14 @@ class AgentInnerHandlerTest {
         assertSame(versionSummary, handler.online(NAMESPACE_ID, AGENT_NAME, VERSION));
         assertSame(versionSummary, handler.offline(NAMESPACE_ID, AGENT_NAME, VERSION));
         assertSame(persistedAgent, handler.updateLabels(NAMESPACE_ID, labelsRequest));
-
+        
         ArgumentCaptor<Agent> agentCaptor = ArgumentCaptor.forClass(Agent.class);
         verify(agentOperationService).updateAgent(agentCaptor.capture());
         assertMappedAgent(agentCaptor.getValue(), updateRequest);
         verify(agentOperationService).deleteAgent(NAMESPACE_ID, AGENT_NAME);
         verify(agentOperationService).deleteDraft(NAMESPACE_ID, AGENT_NAME, VERSION);
     }
-
+    
     private AgentUpdateRequest updateRequest() {
         AgentUpdateRequest result = new AgentUpdateRequest();
         result.setAgentName(AGENT_NAME);
@@ -167,7 +167,7 @@ class AgentInnerHandlerTest {
         result.setStatus("enable");
         return result;
     }
-
+    
     private void assertMappedAgent(Agent actual, AgentUpdateRequest expected) {
         assertEquals(NAMESPACE_ID, actual.getNamespaceId());
         assertEquals(expected.getAgentName(), actual.getAgentName());

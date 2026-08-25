@@ -37,8 +37,8 @@ class SubscriberInfoTest {
     @BeforeEach
     void setUp() throws Exception {
         mapper = JsonMapper.builder()
-                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-                .build();
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .build();
         subscriberInfo = new SubscriberInfo();
         subscriberInfo.setNamespaceId("namespaceId");
         subscriberInfo.setGroupName("groupName");

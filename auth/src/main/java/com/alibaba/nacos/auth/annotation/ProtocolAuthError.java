@@ -34,14 +34,14 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface ProtocolAuthError {
-
+    
     /**
      * HTTP status returned when authentication or authorization fails.
      *
      * @return HTTP status
      */
     int status();
-
+    
     /**
      * External protocol error code.
      *

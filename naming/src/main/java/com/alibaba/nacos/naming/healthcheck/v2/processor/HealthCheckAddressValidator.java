@@ -27,12 +27,12 @@ import java.net.URL;
  * @author xiweng.yy
  */
 final class HealthCheckAddressValidator {
-
+    
     private static final String URL_PREFIX = "http://";
-
+    
     private HealthCheckAddressValidator() {
     }
-
+    
     /**
      * Returns whether the address is a plain host without URL components controlled by the
      * instance IP field.
@@ -60,7 +60,7 @@ final class HealthCheckAddressValidator {
             return false;
         }
     }
-
+    
     private static boolean isIpv6Host(String address) {
         boolean startsWithBracket = address.startsWith(InternetAddressUtil.IPV6_START_MARK);
         boolean endsWithBracket = address.endsWith(InternetAddressUtil.IPV6_END_MARK);
@@ -72,7 +72,7 @@ final class HealthCheckAddressValidator {
         }
         return InternetAddressUtil.isIpv6(address);
     }
-
+    
     private static boolean containsUnsafeCharacter(String address, boolean ipv6Host) {
         for (int index = 0; index < address.length(); index++) {
             char each = address.charAt(index);

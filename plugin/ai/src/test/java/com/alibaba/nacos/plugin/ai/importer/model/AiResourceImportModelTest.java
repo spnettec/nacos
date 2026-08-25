@@ -28,13 +28,13 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AiResourceImportModelTest {
-
+    
     private static final Map<String, String> METADATA = Collections.singletonMap("key", "value");
-
+    
     @Test
     void testImportContextAccessors() {
         AiResourceImportContext context = new AiResourceImportContext();
-
+        
         context.setNamespaceId("namespace");
         context.setResourceType("mcp");
         context.setQuery("nacos");
@@ -44,7 +44,7 @@ class AiResourceImportModelTest {
         context.setRequestId("request");
         context.setOperator("operator");
         context.setClientIp("127.0.0.1");
-
+        
         assertEquals("namespace", context.getNamespaceId());
         assertEquals("mcp", context.getResourceType());
         assertEquals("nacos", context.getQuery());
@@ -55,12 +55,12 @@ class AiResourceImportModelTest {
         assertEquals("operator", context.getOperator());
         assertEquals("127.0.0.1", context.getClientIp());
     }
-
+    
     @Test
     void testImportCandidateAndPageAccessors() {
         AiResourceImportCandidate candidate = new AiResourceImportCandidate();
         AiResourceImportCandidatePage page = new AiResourceImportCandidatePage();
-
+        
         candidate.setResourceType("skill");
         candidate.setExternalId("external");
         candidate.setName("name");
@@ -71,7 +71,7 @@ class AiResourceImportModelTest {
         page.setNextCursor("next");
         page.setHasMore(true);
         page.setSourceMetadata(METADATA);
-
+        
         assertEquals("skill", candidate.getResourceType());
         assertEquals("external", candidate.getExternalId());
         assertEquals("name", candidate.getName());
@@ -85,13 +85,13 @@ class AiResourceImportModelTest {
         page.setHasMore(false);
         assertFalse(page.isHasMore());
     }
-
+    
     @Test
     void testImportItemAndArtifactAccessors() {
         byte[] payload = new byte[] {1, 2, 3};
         AiResourceImportItem item = new AiResourceImportItem();
         AiResourceImportArtifact artifact = new AiResourceImportArtifact();
-
+        
         item.setExternalId("external");
         item.setName("item");
         item.setVersion("v1");
@@ -106,7 +106,7 @@ class AiResourceImportModelTest {
         artifact.setPayloadJson("{}");
         artifact.setChecksum("sha256");
         artifact.setSourceMetadata(METADATA);
-
+        
         assertEquals("external", item.getExternalId());
         assertEquals("item", item.getName());
         assertEquals("v1", item.getVersion());

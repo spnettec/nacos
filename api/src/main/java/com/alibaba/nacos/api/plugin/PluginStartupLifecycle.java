@@ -25,7 +25,7 @@ package com.alibaba.nacos.api.plugin;
  * @author Nacos
  */
 public interface PluginStartupLifecycle {
-
+    
     /**
      * Initialize plugin-owned runtime resources.
      */

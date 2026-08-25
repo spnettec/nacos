@@ -48,39 +48,39 @@ import java.util.stream.Collectors;
  * @since 3.2.1
  */
 class McpRegistryClient {
-
+    
     private static final String CURSOR_QUERY_NAME = "cursor";
-
+    
     private static final String LIMIT_QUERY_NAME = "limit";
-
+    
     private static final String SEARCH_QUERY_NAME = "search";
-
+    
     private static final String HEADER_ACCEPT_JSON = "application/json";
-
+    
     private static final String QUERY_MARK = "?";
-
+    
     private static final String AMPERSAND = "&";
-
+    
     private static final int HTTP_STATUS_SUCCESS_MIN = 200;
-
+    
     private static final int HTTP_STATUS_SUCCESS_MAX = 299;
-
+    
     private static final int READ_TIMEOUT_SECONDS = 20;
-
+    
     private final String endpoint;
-
+    
     private final DefaultImportHttpClient httpClient;
-
+    
     McpRegistryClient(String endpoint, boolean allowHttp, boolean allowPrivateNetwork,
         long maxArtifactSize) {
         this(endpoint, new DefaultImportHttpClient(allowHttp, allowPrivateNetwork,
             maxArtifactSize));
     }
-
+    
     McpRegistryClient(String endpoint, HttpClient httpClient) {
         this(endpoint, new DefaultImportHttpClient(httpClient));
     }
-
+    
     McpRegistryClient(String endpoint, DefaultImportHttpClient httpClient) {
         if (StringUtils.isBlank(endpoint)) {
             throw new IllegalArgumentException("URL is blank");
@@ -88,11 +88,11 @@ class McpRegistryClient {
         this.endpoint = endpoint.trim();
         this.httpClient = httpClient;
     }
-
+    
     Page fetchOfficialRegistryPage(String cursor, Integer limit, String search) throws Exception {
         return fetchUrlPage(endpoint, cursor, limit, search);
     }
-
+    
     McpServerDetailInfo fetchOfficialRegistryServer(String externalId, int limit)
         throws Exception {
         if (StringUtils.isBlank(externalId)) {
@@ -110,7 +110,7 @@ class McpRegistryClient {
         }
         throw new IllegalStateException("MCP server not found in registry: " + externalId);
     }
-
+    
     private Page fetchUrlPage(String urlData, String cursor, Integer limit, String search)
         throws Exception {
         String pageUrl = buildPageUrl(urlData.trim(), cursor, limit, search);
@@ -138,7 +138,7 @@ class McpRegistryClient {
             throw new IllegalStateException("Failed to parse response body", e);
         }
     }
-
+    
     private McpServerDetailInfo adaptOfficialMcpServerFromResponse(ServerResponse response) {
         McpServerDetailInfo server = adaptOfficialMcpServer(response.getServer());
         ServerVersionDetail versionDetail = server.getVersionDetail();
@@ -154,7 +154,7 @@ class McpRegistryClient {
         }
         return server;
     }
-
+    
     private McpServerDetailInfo adaptOfficialMcpServer(McpRegistryServerDetail registryServer) {
         if (registryServer == null) {
             return null;
@@ -166,7 +166,7 @@ class McpRegistryClient {
         applyLocalAndRemoteConfig(registryServer, server);
         return server;
     }
-
+    
     private void applyBasicInfo(McpRegistryServerDetail registryServer,
         McpServerDetailInfo out) {
         out.setId(generateMcpServerId(registryServer.getName()));
@@ -174,7 +174,7 @@ class McpRegistryClient {
         out.setDescription(registryServer.getDescription());
         out.setRepository(registryServer.getRepository());
     }
-
+    
     private void applyVersionInfo(McpRegistryServerDetail registryServer,
         McpServerDetailInfo out) {
         ServerVersionDetail versionDetail = null;
@@ -184,7 +184,7 @@ class McpRegistryClient {
         }
         out.setVersionDetail(versionDetail);
     }
-
+    
     private void applyProtocolInfo(McpRegistryServerDetail registryServer,
         McpServerDetailInfo out) {
         String protocol = resolveServerProtocol(registryServer);
@@ -193,13 +193,13 @@ class McpRegistryClient {
             out.setFrontProtocol(protocol);
         }
     }
-
+    
     private void applyLocalAndRemoteConfig(McpRegistryServerDetail registryServer,
         McpServerDetailInfo server) {
         server.setPackages(registryServer.getPackages());
         server.setRemoteServerConfig(generateRemoteServiceConfig(registryServer.getRemotes()));
     }
-
+    
     private String resolveServerProtocol(McpRegistryServerDetail detail) {
         if (CollectionUtils.isNotEmpty(detail.getPackages())) {
             return AiConstants.Mcp.MCP_PROTOCOL_STDIO;
@@ -219,7 +219,7 @@ class McpRegistryClient {
         }
         return null;
     }
-
+    
     private McpServerRemoteServiceConfig generateRemoteServiceConfig(List<Remote> remotes) {
         if (CollectionUtils.isEmpty(remotes)) {
             return null;
@@ -253,7 +253,7 @@ class McpRegistryClient {
         remoteConfig.setFrontEndpointConfigList(endpoints);
         return remoteConfig;
     }
-
+    
     private UrlComponents parseUrlComponents(String url) {
         String scheme = null;
         int schemeEnd = url.indexOf("://");
@@ -287,7 +287,7 @@ class McpRegistryClient {
         }
         return new UrlComponents(scheme, host, port, path);
     }
-
+    
     private String buildPageUrl(String base, String cursor, Integer limit, String search) {
         StringBuilder url = new StringBuilder(base);
         boolean hasQuery = base.contains(QUERY_MARK);
@@ -307,64 +307,64 @@ class McpRegistryClient {
         }
         return url.toString();
     }
-
+    
     private boolean isSuccessStatus(int code) {
         return code >= HTTP_STATUS_SUCCESS_MIN && code <= HTTP_STATUS_SUCCESS_MAX;
     }
-
+    
     private String generateMcpServerId(String name) {
         return UUID.nameUUIDFromBytes(name.getBytes(StandardCharsets.UTF_8)).toString();
     }
-
+    
     static class Page {
-
+        
         private final List<McpServerDetailInfo> servers;
-
+        
         private final String nextCursor;
-
+        
         Page(List<McpServerDetailInfo> servers, String nextCursor) {
             this.servers = servers;
             this.nextCursor = nextCursor;
         }
-
+        
         List<McpServerDetailInfo> getServers() {
             return servers;
         }
-
+        
         String getNextCursor() {
             return nextCursor;
         }
     }
-
+    
     private static class UrlComponents {
-
+        
         private final String scheme;
-
+        
         private final String host;
-
+        
         private final int port;
-
+        
         private final String path;
-
+        
         UrlComponents(String scheme, String host, int port, String path) {
             this.scheme = scheme;
             this.host = host;
             this.port = port;
             this.path = path;
         }
-
+        
         String getScheme() {
             return scheme;
         }
-
+        
         String getHost() {
             return host;
         }
-
+        
         int getPort() {
             return port;
         }
-
+        
         String getPath() {
             return path;
         }

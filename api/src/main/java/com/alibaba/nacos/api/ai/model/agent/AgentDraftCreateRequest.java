@@ -29,33 +29,33 @@ import java.util.Map;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AgentDraftCreateRequest implements Serializable {
-
+    
     private static final long serialVersionUID = 1L;
-
+    
     private String agentName;
-
+    
     private String displayName;
-
+    
     private String description;
-
+    
     private String iconUrl;
-
+    
     private AgentProvider provider;
-
+    
     private List<String> tags;
-
+    
     private Map<String, Object> extensions;
-
+    
     private String version;
-
+    
     private List<AgentCallInterface> callInterfaces;
-
+    
     private String author;
-
+    
     private String changeDescription;
-
+    
     private String basedOnVersion;
-
+    
     /**
      * Validate the draft identity and content source.
      */
@@ -72,99 +72,99 @@ public class AgentDraftCreateRequest implements Serializable {
             AgentAdminRequestUtils.validateVersion(basedOnVersion);
         }
     }
-
+    
     public String getAgentName() {
         return agentName;
     }
-
+    
     public void setAgentName(String agentName) {
         this.agentName = agentName;
     }
-
+    
     public String getDisplayName() {
         return displayName;
     }
-
+    
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
     }
-
+    
     public String getDescription() {
         return description;
     }
-
+    
     public void setDescription(String description) {
         this.description = description;
     }
-
+    
     public String getIconUrl() {
         return iconUrl;
     }
-
+    
     public void setIconUrl(String iconUrl) {
         this.iconUrl = iconUrl;
     }
-
+    
     public AgentProvider getProvider() {
         return provider;
     }
-
+    
     public void setProvider(AgentProvider provider) {
         this.provider = provider;
     }
-
+    
     public List<String> getTags() {
         return tags;
     }
-
+    
     public void setTags(List<String> tags) {
         this.tags = tags;
     }
-
+    
     public Map<String, Object> getExtensions() {
         return extensions;
     }
-
+    
     public void setExtensions(Map<String, Object> extensions) {
         this.extensions = extensions;
     }
-
+    
     public String getVersion() {
         return version;
     }
-
+    
     public void setVersion(String version) {
         this.version = version;
     }
-
+    
     public List<AgentCallInterface> getCallInterfaces() {
         return callInterfaces;
     }
-
+    
     public void setCallInterfaces(List<AgentCallInterface> callInterfaces) {
         this.callInterfaces = callInterfaces;
     }
-
+    
     public String getAuthor() {
         return author;
     }
-
+    
     public void setAuthor(String author) {
         this.author = author;
     }
-
+    
     public String getChangeDescription() {
         return changeDescription;
     }
-
+    
     public void setChangeDescription(String changeDescription) {
         this.changeDescription = changeDescription;
     }
-
+    
     public String getBasedOnVersion() {
         return basedOnVersion;
     }
-
+    
     public void setBasedOnVersion(String basedOnVersion) {
         this.basedOnVersion = basedOnVersion;
     }

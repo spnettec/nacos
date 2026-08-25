@@ -53,25 +53,25 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ClientAttributesFilterTest {
-
+    
     @Mock
     ClientManager clientManager;
-
+    
     @Mock
     IpPortBasedClient client;
-
+    
     @Mock
     HttpServletRequest request;
-
+    
     @Mock
     HttpServletResponse response;
-
+    
     @Mock
     Servlet servlet;
-
+    
     @InjectMocks
     ClientAttributesFilter filter;
-
+    
     @BeforeEach
     void setUp() {
         RequestContextHolder.getContext().getBasicContext()
@@ -82,12 +82,12 @@ class ClientAttributesFilterTest {
         RequestContextHolder.getContext().getBasicContext().getAddressContext()
             .setSourceIp("2.2.2.2");
     }
-
+    
     @AfterEach
     void tearDown() {
         RequestContextHolder.removeContext();
     }
-
+    
     @Test
     void testDoFilterForRegisterUri() throws IOException {
         when(request.getRequestURI()).thenReturn(
@@ -96,17 +96,17 @@ class ClientAttributesFilterTest {
         when(request.getMethod()).thenReturn("POST");
         filter.doFilter(request, response, new MockFilterChain(servlet, new MockRegisterFilter()));
     }
-
+    
     @Test
     void testDoFilterForRegisterV2Uri() throws IOException {
         when(request.getRequestURI()).thenReturn(
             UtilsAndCommons.NACOS_SERVER_CONTEXT + UtilsAndCommons.DEFAULT_NACOS_NAMING_CONTEXT_V2
                 + UtilsAndCommons.NACOS_NAMING_INSTANCE_CONTEXT);
         when(request.getMethod()).thenReturn("POST");
-
+        
         filter.doFilter(request, response, new MockFilterChain(servlet, new MockRegisterFilter()));
     }
-
+    
     @Test
     void testDoFilterForBeatUri() throws IOException {
         when(request.getParameter("ip")).thenReturn("127.0.0.1");
@@ -120,7 +120,7 @@ class ClientAttributesFilterTest {
         filter.doFilter(request, response, new MockFilterChain());
         verify(client).setAttributes(any(ClientAttributes.class));
     }
-
+    
     @Test
     void testDoFilterForBeatUriSkipsWhenRequestVersionMissing() throws IOException {
         RequestContextHolder.getContext().getBasicContext().setUserAgent(null);
@@ -132,12 +132,12 @@ class ClientAttributesFilterTest {
             UtilsAndCommons.NACOS_SERVER_CONTEXT + UtilsAndCommons.NACOS_NAMING_CONTEXT
                 + UtilsAndCommons.NACOS_NAMING_INSTANCE_CONTEXT + "/beat");
         when(request.getMethod()).thenReturn("PUT");
-
+        
         filter.doFilter(request, response, new MockFilterChain());
-
+        
         verify(client, never()).setAttributes(any(ClientAttributes.class));
     }
-
+    
     @Test
     void testDoFilterForBeatUriSkipsWhenClientAlreadyHasVersion() throws IOException {
         ClientAttributes clientAttributes = new ClientAttributes();
@@ -151,12 +151,12 @@ class ClientAttributesFilterTest {
             UtilsAndCommons.NACOS_SERVER_CONTEXT + UtilsAndCommons.DEFAULT_NACOS_NAMING_CONTEXT_V2
                 + UtilsAndCommons.NACOS_NAMING_INSTANCE_CONTEXT + "/beat");
         when(request.getMethod()).thenReturn("PUT");
-
+        
         filter.doFilter(request, response, new MockFilterChain());
-
+        
         verify(client, never()).setAttributes(any(ClientAttributes.class));
     }
-
+    
     @Test
     void testDoFilterSwallowsAttributeHandlingException() throws IOException, ServletException {
         when(request.getParameter("encoding")).thenReturn("utf-8");
@@ -167,27 +167,27 @@ class ClientAttributesFilterTest {
                 + UtilsAndCommons.NACOS_NAMING_INSTANCE_CONTEXT + "/beat");
         when(request.getMethod()).thenReturn("PUT");
         FilterChain chain = org.mockito.Mockito.mock(FilterChain.class);
-
+        
         filter.doFilter(request, response, chain);
-
+        
         verify(chain).doFilter(request, response);
     }
-
+    
     @Test
     void testDoFilterWrapsServletException() throws IOException, ServletException {
         when(request.getRequestURI()).thenReturn("/nacos/v1/other");
         when(request.getMethod()).thenReturn("GET");
         FilterChain chain = org.mockito.Mockito.mock(FilterChain.class);
         doThrow(new ServletException("mock")).when(chain).doFilter(request, response);
-
+        
         RuntimeException actual =
             assertThrows(RuntimeException.class, () -> filter.doFilter(request, response, chain));
-
+        
         assertTrue(actual.getCause() instanceof ServletException);
     }
-
+    
     private static class MockRegisterFilter implements Filter {
-
+        
         @Override
         public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse,
             FilterChain filterChain)

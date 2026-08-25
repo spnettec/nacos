@@ -24,21 +24,21 @@ import java.util.function.Supplier;
  * @author Nacos
  */
 class RaftPluginStateSynchronizerProvider implements PluginStateSynchronizerProvider {
-
+    
     static final String NAME = "raft";
-
+    
     private final Supplier<PluginStateConsensusService> consensusServiceSupplier;
-
+    
     RaftPluginStateSynchronizerProvider(
         Supplier<PluginStateConsensusService> consensusServiceSupplier) {
         this.consensusServiceSupplier = consensusServiceSupplier;
     }
-
+    
     @Override
     public String getName() {
         return NAME;
     }
-
+    
     @Override
     public PluginStateSynchronizer createSynchronizer(
         PluginStateSynchronizationContext context) {

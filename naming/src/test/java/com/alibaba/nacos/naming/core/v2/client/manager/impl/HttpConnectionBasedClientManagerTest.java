@@ -49,25 +49,25 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 class HttpConnectionBasedClientManagerTest {
-
+    
     private static final String CLIENT_ID = "HTTP_CLIENT@@client";
-
+    
     private DistroMapper distroMapper;
-
+    
     private HttpConnectionBasedClientManager clientManager;
-
+    
     @BeforeAll
     static void setUpEnvironment() {
         EnvUtil.setEnvironment(new MockEnvironment());
     }
-
+    
     @BeforeEach
     void setUp() {
         distroMapper = mock(DistroMapper.class);
         when(distroMapper.responsible(CLIENT_ID)).thenReturn(true);
         clientManager = new HttpConnectionBasedClientManager(distroMapper, false);
     }
-
+    
     @Test
     void testSpringConstructorSelection() {
         DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
@@ -78,14 +78,14 @@ class HttpConnectionBasedClientManagerTest {
         beanFactory.registerSingleton("distroMapper", distroMapper);
         beanFactory.registerBeanDefinition("httpConnectionBasedClientManager",
             new RootBeanDefinition(HttpConnectionBasedClientManager.class));
-
+        
         assertNotNull(beanFactory.getBean("httpConnectionBasedClientManager"));
     }
-
+    
     @Test
     void testClientLifecycleAndOwnership() {
         ClientAttributes attributes = currentAttributes();
-
+        
         assertTrue(clientManager.clientConnected(CLIENT_ID, attributes));
         assertTrue(clientManager.clientConnected(CLIENT_ID, attributes));
         Client client = clientManager.getClient(CLIENT_ID);
@@ -94,15 +94,15 @@ class HttpConnectionBasedClientManagerTest {
         assertEquals(Collections.singleton(CLIENT_ID), clientManager.allClientId());
         assertTrue(clientManager.isResponsibleClient(client));
         assertFalse(clientManager.isResponsibleClient(mock(Client.class)));
-
+        
         when(distroMapper.responsible(CLIENT_ID)).thenReturn(false);
         assertTrue(clientManager.clientConnected(CLIENT_ID, attributes));
-
+        
         assertTrue(clientManager.clientDisconnected(CLIENT_ID));
         assertFalse(clientManager.contains(CLIENT_ID));
         assertTrue(clientManager.clientDisconnected(CLIENT_ID));
     }
-
+    
     @Test
     void testSyncClientLifecycle() {
         when(distroMapper.responsible(CLIENT_ID)).thenReturn(false);
@@ -111,16 +111,16 @@ class HttpConnectionBasedClientManagerTest {
         HttpConnectionBasedClient client =
             (HttpConnectionBasedClient) clientManager.getClient(CLIENT_ID);
         assertEquals(100L, client.getLastUpdatedTime());
-
+        
         ClientAttributes update = attributes(2L, 300L, 400L, false);
         assertTrue(clientManager.syncClientConnected(CLIENT_ID, update));
-
+        
         assertSame(client, clientManager.getClient(CLIENT_ID));
         assertEquals(300L, client.getLastUpdatedTime());
         assertEquals(400L, client.getPublisherLastUpdatedTime());
         assertFalse(client.isPublisherHealthy());
     }
-
+    
     @Test
     void testVerifyClient() {
         assertFalse(clientManager.verifyClient(new DistroClientVerifyInfo(CLIENT_ID, 0L)));
@@ -130,27 +130,27 @@ class HttpConnectionBasedClientManagerTest {
             (HttpConnectionBasedClient) clientManager.getClient(CLIENT_ID);
         client.setRevision(3L);
         long oldRenewTime = client.getLastRenewTime();
-
+        
         assertTrue(clientManager.verifyClient(new DistroClientVerifyInfo(CLIENT_ID, 0L)));
         assertTrue(clientManager.verifyClient(new DistroClientVerifyInfo(CLIENT_ID, 3L)));
         assertTrue(client.getLastRenewTime() >= oldRenewTime);
         assertFalse(clientManager.verifyClient(new DistroClientVerifyInfo(CLIENT_ID, 4L)));
     }
-
+    
     @Test
     void testRenewClient() {
         assertFalse(clientManager.renewClient(CLIENT_ID));
         clientManager.clientConnected(CLIENT_ID, attributes(0L, 1L, 1L, true));
         HttpConnectionBasedClient client =
             (HttpConnectionBasedClient) clientManager.getClient(CLIENT_ID);
-
+        
         assertTrue(clientManager.renewClient(CLIENT_ID));
         assertTrue(client.getLastUpdatedTime() > 1L);
-
+        
         when(distroMapper.responsible(CLIENT_ID)).thenReturn(false);
         assertFalse(clientManager.renewClient(CLIENT_ID));
     }
-
+    
     @Test
     void testRenewPublisher() {
         assertFalse(clientManager.renewPublisher(CLIENT_ID));
@@ -158,23 +158,23 @@ class HttpConnectionBasedClientManagerTest {
         HttpConnectionBasedClient client =
             (HttpConnectionBasedClient) clientManager.getClient(CLIENT_ID);
         assertFalse(clientManager.renewPublisher(CLIENT_ID));
-
+        
         Service service = service("publisher");
         InstancePublishInfo instance = instance();
         client.addServiceInstance(service, instance);
         assertTrue(clientManager.renewPublisher(CLIENT_ID));
-
+        
         assertTrue(client.markPublisherUnhealthy());
         long revision = client.getRevision();
         assertTrue(clientManager.renewPublisher(CLIENT_ID));
         assertTrue(client.isPublisherHealthy());
         assertTrue(instance.isHealthy());
         assertEquals(revision + 1, client.getRevision());
-
+        
         when(distroMapper.responsible(CLIENT_ID)).thenReturn(false);
         assertFalse(clientManager.renewPublisher(CLIENT_ID));
     }
-
+    
     @Test
     void testDisconnectIfEmpty() {
         assertTrue(clientManager.disconnectIfEmpty(CLIENT_ID));
@@ -184,23 +184,23 @@ class HttpConnectionBasedClientManagerTest {
         Service service = service("state");
         client.addServiceInstance(service, instance());
         assertFalse(clientManager.disconnectIfEmpty(CLIENT_ID));
-
+        
         client.removeServiceInstance(service);
         client.addServiceSubscriber(service, new Subscriber());
         assertFalse(clientManager.disconnectIfEmpty(CLIENT_ID));
-
+        
         client.removeServiceSubscriber(service);
         assertTrue(clientManager.disconnectIfEmpty(CLIENT_ID));
         assertFalse(clientManager.contains(CLIENT_ID));
     }
-
+    
     @Test
     void testCleanerIgnoresMissingAndFreshClients() {
         clientManager.cleanExpiredClients();
         HttpConnectionBasedClientManager manager = spy(clientManager);
         when(manager.allClientId()).thenReturn(Collections.singleton("missing"));
         manager.cleanExpiredClients(System.currentTimeMillis());
-
+        
         long now = System.currentTimeMillis();
         clientManager.clientConnected(CLIENT_ID, attributes(0L, now, now, true));
         clientManager.cleanExpiredClients(now);
@@ -208,7 +208,7 @@ class HttpConnectionBasedClientManagerTest {
         assertTrue(((HttpConnectionBasedClient) clientManager.getClient(CLIENT_ID))
             .isPublisherHealthy());
     }
-
+    
     @Test
     void testCleanerRemovesExpiredReplica() {
         when(distroMapper.responsible(CLIENT_ID)).thenReturn(false);
@@ -216,29 +216,29 @@ class HttpConnectionBasedClientManagerTest {
         HttpConnectionBasedClient client =
             (HttpConnectionBasedClient) clientManager.getClient(CLIENT_ID);
         when(distroMapper.responsible(CLIENT_ID)).thenReturn(false);
-
+        
         clientManager.cleanExpiredClients(client.getLastRenewTime()
             + ClientConfig.getInstance().getClientExpiredTime() - 1);
         assertTrue(clientManager.contains(CLIENT_ID));
-
+        
         clientManager.cleanExpiredClients(client.getLastRenewTime()
             + ClientConfig.getInstance().getClientExpiredTime() + 1);
         assertFalse(clientManager.contains(CLIENT_ID));
     }
-
+    
     @Test
     void testCleanerRemovesExpiredClient() {
         clientManager.clientConnected(CLIENT_ID, currentAttributes());
         HttpConnectionBasedClient client =
             (HttpConnectionBasedClient) clientManager.getClient(CLIENT_ID);
-
+        
         clientManager.cleanExpiredClients(
             Math.max(client.getLastUpdatedTime(), client.getLastRenewTime())
                 + ClientConfig.getInstance().getClientExpiredTime() + 1);
-
+        
         assertFalse(clientManager.contains(CLIENT_ID));
     }
-
+    
     @Test
     void testCleanerUsesReplicaVerificationWindowAfterResponsibilityTransfer() {
         long now = System.currentTimeMillis();
@@ -250,22 +250,22 @@ class HttpConnectionBasedClientManagerTest {
             (HttpConnectionBasedClient) clientManager.getClient(CLIENT_ID);
         client.addServiceInstance(service("transferred"), instance());
         when(distroMapper.responsible(CLIENT_ID)).thenReturn(true);
-
+        
         clientManager.cleanExpiredClients(now);
-
+        
         assertTrue(clientManager.contains(CLIENT_ID));
         assertTrue(client.getLastRenewTime() >= now);
         assertTrue(client.isPublisherHealthy());
-
+        
         clientManager.cleanExpiredClients(
             client.getLastRenewTime() + Constants.DEFAULT_HEART_BEAT_TIMEOUT + 1);
         assertFalse(client.isPublisherHealthy());
-
+        
         clientManager.cleanExpiredClients(
             client.getLastRenewTime() + Constants.DEFAULT_IP_DELETE_TIMEOUT + 1);
         assertFalse(clientManager.contains(CLIENT_ID));
     }
-
+    
     @Test
     void testCleanerMarksPublisherUnhealthyAndRecovers() {
         long now = System.currentTimeMillis();
@@ -275,18 +275,18 @@ class HttpConnectionBasedClientManagerTest {
             (HttpConnectionBasedClient) clientManager.getClient(CLIENT_ID);
         InstancePublishInfo instance = instance();
         client.addServiceInstance(service("unhealthy"), instance);
-
+        
         long unhealthyTime = client.getLastRenewTime()
             + Constants.DEFAULT_HEART_BEAT_TIMEOUT + 1;
         clientManager.cleanExpiredClients(unhealthyTime);
-
+        
         assertFalse(client.isPublisherHealthy());
         assertFalse(instance.isHealthy());
         assertEquals(1L, client.getRevision());
         clientManager.cleanExpiredClients(unhealthyTime + 1);
         assertEquals(1L, client.getRevision());
     }
-
+    
     @Test
     void testCleanerExpiresPublisherAndKeepsSubscriberClient() {
         long now = System.currentTimeMillis();
@@ -297,17 +297,17 @@ class HttpConnectionBasedClientManagerTest {
         Service service = service("expired");
         client.addServiceInstance(service, instance());
         client.addServiceSubscriber(service, new Subscriber());
-
+        
         clientManager.cleanExpiredClients(
             client.getLastRenewTime() + Constants.DEFAULT_IP_DELETE_TIMEOUT + 1);
-
+        
         assertTrue(clientManager.contains(CLIENT_ID));
         assertTrue(client.getAllPublishedService().isEmpty());
         assertTrue(client.isPublisherHealthy());
         assertEquals(0L, client.getPublisherLastUpdatedTime());
         assertEquals(1L, client.getRevision());
     }
-
+    
     @Test
     void testCleanerExpiresPublisherAndRemovesEmptyClient() {
         long now = System.currentTimeMillis();
@@ -317,19 +317,19 @@ class HttpConnectionBasedClientManagerTest {
             (HttpConnectionBasedClient) clientManager.getClient(CLIENT_ID);
         Service service = service("expired");
         client.addServiceInstance(service, instance());
-
+        
         clientManager.cleanExpiredClients(
             client.getLastRenewTime() + Constants.DEFAULT_IP_DELETE_TIMEOUT + 1);
-
+        
         assertNull(clientManager.getClient(CLIENT_ID));
         assertTrue(client.getAllPublishedService().isEmpty());
     }
-
+    
     private ClientAttributes currentAttributes() {
         long now = System.currentTimeMillis();
         return attributes(0L, now, now, true);
     }
-
+    
     private ClientAttributes attributes(Object revision, long clientTime, long publisherTime,
         boolean healthy) {
         ClientAttributes result = new ClientAttributes();
@@ -339,11 +339,11 @@ class HttpConnectionBasedClientManagerTest {
         result.addClientAttribute(ClientConstants.HTTP_PUBLISHER_HEALTHY, healthy);
         return result;
     }
-
+    
     private Service service(String name) {
         return Service.newService("namespace", "group", name);
     }
-
+    
     private InstancePublishInfo instance() {
         InstancePublishInfo result = new InstancePublishInfo("1.1.1.1", 8080);
         result.setHealthy(true);

@@ -30,20 +30,20 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class StandardPluginInitializerTest {
-
+    
     @Test
     void testInitializeAndReadyFallbackUseSameFlow() {
         PluginManager pluginManager = mock(PluginManager.class);
         StandardPluginInitializer initializer = new StandardPluginInitializer(pluginManager);
-
+        
         initializer.initialize();
         initializer.onApplicationEvent(mock(ApplicationReadyEvent.class));
-
+        
         assertEquals(PluginInitializationPhase.STANDARD,
             initializer.getInitializationPhase());
         verify(pluginManager, times(2)).initialize();
     }
-
+    
     @Test
     void testSynchronizerStartsAfterLocalPluginInitialization() {
         PluginManager pluginManager = mock(PluginManager.class);
@@ -53,14 +53,14 @@ class StandardPluginInitializerTest {
         when(provider.getIfAvailable()).thenReturn(synchronizer);
         StandardPluginInitializer initializer =
             new StandardPluginInitializer(pluginManager, provider);
-
+        
         initializer.initialize();
-
+        
         org.mockito.InOrder order = inOrder(pluginManager, synchronizer);
         order.verify(pluginManager).initialize();
         order.verify(synchronizer).initialize();
     }
-
+    
     @Test
     void testMissingSynchronizerKeepsStandaloneFlow() {
         PluginManager pluginManager = mock(PluginManager.class);
@@ -68,9 +68,9 @@ class StandardPluginInitializerTest {
         ObjectProvider<PluginStateSynchronizer> provider = mock(ObjectProvider.class);
         StandardPluginInitializer initializer =
             new StandardPluginInitializer(pluginManager, provider);
-
+        
         initializer.initialize();
-
+        
         verify(pluginManager).initialize();
     }
 }

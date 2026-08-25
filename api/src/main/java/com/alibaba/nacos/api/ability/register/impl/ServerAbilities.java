@@ -28,9 +28,9 @@ import java.util.Map;
  * @date 2022/8/31 12:32
  **/
 public class ServerAbilities extends AbstractAbilityRegistry {
-
+    
     private static final ServerAbilities INSTANCE = new ServerAbilities();
-
+    
     {
         /*
          * example:
@@ -55,7 +55,7 @@ public class ServerAbilities extends AbstractAbilityRegistry {
         supportedAbilities.put(AbilityKey.SERVER_AGENT_ENDPOINT_V1, true);
         supportedAbilities.put(AbilityKey.SERVER_AGENT_PUBLISH_V1, true);
     }
-
+    
     /**.
      * get static ability current server supports
      *
@@ -64,5 +64,5 @@ public class ServerAbilities extends AbstractAbilityRegistry {
     public static Map<AbilityKey, Boolean> getStaticAbilities() {
         return INSTANCE.getSupportedAbilities();
     }
-
+    
 }

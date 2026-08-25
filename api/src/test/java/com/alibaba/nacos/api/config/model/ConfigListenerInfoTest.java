@@ -36,8 +36,8 @@ class ConfigListenerInfoTest {
     @BeforeEach
     void setUp() {
         mapper = JsonMapper.builder()
-                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-                .build();
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .build();
         configListenerInfo = new ConfigListenerInfo();
         configListenerInfo.setQueryType(ConfigListenerInfo.QUERY_TYPE_CONFIG);
         configListenerInfo.setListenersStatus(Collections.singletonMap("1.1.1.1", "testMd5"));

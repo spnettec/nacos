@@ -27,36 +27,36 @@ import java.util.Objects;
  * @author xiweng.yy
  */
 public class AgentEndpointRedoData extends RedoData<AgentEndpointWrapper> {
-
+    
     private final String agentName;
-
+    
     private final String version;
-
+    
     private final String key;
-
+    
     public AgentEndpointRedoData(String agentName, AgentEndpointWrapper agentEndpoint) {
         this.agentName = agentName;
         this.version = agentEndpoint.getVersion();
         this.key = keyOf(agentName, version);
         this.set(agentEndpoint);
     }
-
+    
     public static String keyOf(String agentName, String version) {
         return agentName + Constants.SERVICE_INFO_SPLITER + version;
     }
-
+    
     public String getAgentName() {
         return agentName;
     }
-
+    
     public String getVersion() {
         return version;
     }
-
+    
     public String getKey() {
         return key;
     }
-
+    
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -71,7 +71,7 @@ public class AgentEndpointRedoData extends RedoData<AgentEndpointWrapper> {
         AgentEndpointRedoData that = (AgentEndpointRedoData) o;
         return Objects.equals(key, that.key) && super.equals(o);
     }
-
+    
     @Override
     public int hashCode() {
         return Objects.hash(super.hashCode(), key);

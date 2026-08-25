@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 class AgentResourceExtTest {
-
+    
     @Test
     void testPlainBeanAccessorsAndJacksonRoundTrip() throws Exception {
         AgentResourceExt resourceExt = new AgentResourceExt();
@@ -39,7 +39,7 @@ class AgentResourceExtTest {
         assertNull(resourceExt.getProvider());
         assertNull(resourceExt.getExtensions());
         assertNull(resourceExt.getVersionCatalog());
-
+        
         AgentProvider provider = new AgentProvider();
         provider.setName("Nacos");
         provider.setUrl("https://nacos.io");
@@ -47,21 +47,21 @@ class AgentResourceExtTest {
         extensions.put("example.com/enabled", true);
         AgentVersionCatalog catalog = new AgentVersionCatalog();
         catalog.setOnlineVersions(Collections.emptyList());
-
+        
         resourceExt.setSchemaVersion(AgentResourceExt.SCHEMA_VERSION);
         resourceExt.setDisplayName("Nacos Agent");
         resourceExt.setIconUrl("https://nacos.io/icon.png");
         resourceExt.setProvider(provider);
         resourceExt.setExtensions(extensions);
         resourceExt.setVersionCatalog(catalog);
-
+        
         assertEquals(1, resourceExt.getSchemaVersion());
         assertEquals("Nacos Agent", resourceExt.getDisplayName());
         assertEquals("https://nacos.io/icon.png", resourceExt.getIconUrl());
         assertEquals(provider, resourceExt.getProvider());
         assertEquals(extensions, resourceExt.getExtensions());
         assertEquals(catalog, resourceExt.getVersionCatalog());
-
+        
         ObjectMapper mapper = new ObjectMapper();
         AgentResourceExt restored =
             mapper.readValue(mapper.writeValueAsString(resourceExt), AgentResourceExt.class);

@@ -68,7 +68,7 @@ class RpcClientFactoryTest {
     void tearDown() throws IllegalAccessException {
         clientMap().clear();
     }
-
+    
     @SuppressWarnings("unchecked")
     private static Map<String, RpcClient> clientMap() throws IllegalAccessException {
         return (Map<String, RpcClient>) clientMapField.get(null);

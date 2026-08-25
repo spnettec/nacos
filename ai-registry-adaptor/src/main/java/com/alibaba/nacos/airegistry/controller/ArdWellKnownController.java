@@ -46,13 +46,13 @@ import static com.alibaba.nacos.plugin.auth.constant.Constants.Tag.ALLOW_ANONYMO
 @RequestMapping(ArdProtocolConstants.WELL_KNOWN_PATH)
 @ExtractorManager.Extractor(httpExtractor = ExtractorManager.DefaultHttpExtractor.class)
 public class ArdWellKnownController {
-
+    
     private final ArdSearchService ardSearchService;
-
+    
     public ArdWellKnownController(ArdSearchService ardSearchService) {
         this.ardSearchService = ardSearchService;
     }
-
+    
     /**
      * Return the standard ARD catalog discovery document.
      */

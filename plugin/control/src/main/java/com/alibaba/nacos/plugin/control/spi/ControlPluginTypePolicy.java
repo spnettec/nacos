@@ -28,9 +28,9 @@ import com.alibaba.nacos.plugin.control.Loggers;
  * @author Nacos
  */
 public class ControlPluginTypePolicy implements PluginTypePolicy {
-
+    
     public static final String CONTROL_TYPE_PROPERTY = "nacos.plugin.control.type";
-
+    
     /**
      * Legacy control plugin selection property.
      *
@@ -39,9 +39,9 @@ public class ControlPluginTypePolicy implements PluginTypePolicy {
     @Deprecated
     public static final String LEGACY_CONTROL_TYPE_PROPERTY =
         "nacos.plugin.control.manager.type";
-
+    
     private String selectedPlugin = "";
-
+    
     @Override
     public void initialize(PluginTypeConfiguration configuration) {
         if (configuration.containsProperty(CONTROL_TYPE_PROPERTY)) {
@@ -55,29 +55,29 @@ public class ControlPluginTypePolicy implements PluginTypePolicy {
                 LEGACY_CONTROL_TYPE_PROPERTY, CONTROL_TYPE_PROPERTY);
         }
     }
-
+    
     @Override
     public PluginType getPluginType() {
         return PluginType.CONTROL;
     }
-
+    
     @Override
     public boolean isPluginEnabledByDefault(String pluginName,
         PluginTypeConfiguration configuration) {
         return StringUtils.isNotBlank(selectedPlugin)
             && pluginName.equalsIgnoreCase(selectedPlugin);
     }
-
+    
     @Override
     public boolean isLoadingEnabled(PluginTypeConfiguration configuration) {
         return StringUtils.isNotBlank(selectedPlugin);
     }
-
+    
     @Override
     public String getSelectionProperty() {
         return CONTROL_TYPE_PROPERTY;
     }
-
+    
     private String normalize(String value) {
         return StringUtils.isBlank(value) ? "" : value.trim();
     }

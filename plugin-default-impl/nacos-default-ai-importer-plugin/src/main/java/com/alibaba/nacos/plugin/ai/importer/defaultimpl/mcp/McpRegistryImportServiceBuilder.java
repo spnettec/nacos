@@ -30,23 +30,23 @@ import java.util.Collections;
  */
 public class McpRegistryImportServiceBuilder
     extends AbstractAiResourceImportServiceBuilder {
-
+    
     public static final String PLUGIN_NAME = "mcp-registry-protocol";
-
+    
     public static final String IMPORTER_TYPE = "mcp-registry";
-
+    
     public McpRegistryImportServiceBuilder() {
         this(PLUGIN_NAME, "MCP Registry Protocol",
             "Import MCP servers from an MCP Registry protocol endpoint.", null, null);
     }
-
+    
     protected McpRegistryImportServiceBuilder(String pluginName, String displayName,
         String description, String fixedEndpoint, String legacyPrefix) {
         super(pluginName, IMPORTER_TYPE, displayName, description,
             Collections.singleton(AiResourceImportConstants.RESOURCE_TYPE_MCP),
             fixedEndpoint, legacyPrefix);
     }
-
+    
     @Override
     protected AiResourceImportService createService(ConfigSnapshot config) {
         return new McpRegistryImportService(config.getEndpoint(), config.isAllowHttp(),

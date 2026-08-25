@@ -40,20 +40,20 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author xiweng.yy
  */
 public class VisibilityPluginManager {
-
+    
     private static final Logger LOGGER = LoggerFactory.getLogger(VisibilityPluginManager.class);
-
+    
     private static final VisibilityPluginManager INSTANCE = new VisibilityPluginManager();
-
+    
     private static final String PROPERTIES_PREFIX = "nacos.plugin.visibility.";
-
+    
     private final Map<String, VisibilityService> visibilityServiceMap = new ConcurrentHashMap<>();
-
+    
     private volatile boolean initialized;
-
+    
     private VisibilityPluginManager() {
     }
-
+    
     private synchronized void initVisibilityServices() {
         if (initialized) {
             return;
@@ -79,7 +79,7 @@ public class VisibilityPluginManager {
         }
         initialized = true;
     }
-
+    
     private void registerVisibilityService(VisibilityService service, Properties allProperties) {
         if (service == null) {
             PluginRegistryUtils.registerFirst(visibilityServiceMap,
@@ -116,7 +116,7 @@ public class VisibilityPluginManager {
                 service.getClass(), serviceName);
         }
     }
-
+    
     /**
      * Initialize a legacy visibility implementation from server properties.
      *
@@ -145,7 +145,7 @@ public class VisibilityPluginManager {
             return false;
         }
     }
-
+    
     /**
      * Resolve legacy properties for one visibility implementation.
      *
@@ -171,11 +171,11 @@ public class VisibilityPluginManager {
         }
         return result;
     }
-
+    
     public static VisibilityPluginManager getInstance() {
         return INSTANCE;
     }
-
+    
     /**
      * Find a visibility service by name.
      *
@@ -196,14 +196,14 @@ public class VisibilityPluginManager {
         }
         return Optional.ofNullable(visibilityServiceMap.get(serviceName));
     }
-
+    
     private boolean isVisibilityModuleEnabled() {
         Properties allProperties = EnvUtil.getProperties();
         String enabledValue = allProperties.getProperty(
             VisibilityPluginTypePolicy.VISIBILITY_ENABLED_PROPERTY);
         return StringUtils.isBlank(enabledValue) || Boolean.parseBoolean(enabledValue);
     }
-
+    
     public Map<String, VisibilityService> getAllPlugins() {
         initVisibilityServices();
         return Collections.unmodifiableMap(visibilityServiceMap);

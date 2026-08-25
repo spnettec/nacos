@@ -29,7 +29,7 @@ import java.util.Set;
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>
  */
 public interface ReuseHttpRequest extends HttpServletRequest {
-
+    
     /**
      * get request body.
      *
@@ -37,7 +37,7 @@ public interface ReuseHttpRequest extends HttpServletRequest {
      * @throws Exception exception
      */
     Object getBody() throws Exception;
-
+    
     /**
      * Remove duplicate values from the array.
      *

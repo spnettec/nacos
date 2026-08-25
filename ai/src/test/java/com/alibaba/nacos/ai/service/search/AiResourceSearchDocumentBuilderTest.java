@@ -34,59 +34,59 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author nacos
  */
 class AiResourceSearchDocumentBuilderTest {
-
+    
     private final AiResourceSearchDocumentBuilder builder = new AiResourceSearchDocumentBuilder();
-
+    
     @Test
     void fromAiResourceShouldBuildSkillSearchEntry() {
         AiResourceSearchDocument entry =
             builder.fromAiResource(resource(AiResourceConstants.RESOURCE_TYPE_SKILL,
                 "avatar skill"), version("1.0.0"));
-
+        
         assertEquals(AiResourceConstants.RESOURCE_TYPE_SKILL, entry.getResourceType());
         assertEquals("avatar skill", entry.getResourceName());
         assertEquals("1.0.0", entry.getResourceVersion());
         Map<?, ?> metadata = JacksonUtils.toObj(entry.getMetadata(), Map.class);
         assertEquals("SKILL.md", metadata.get("entrypoint"));
     }
-
+    
     @Test
     void fromAiResourceShouldBuildPromptSearchEntry() {
         AiResourceSearchDocument entry = builder.fromAiResource(
             resource(AiResourceConstants.RESOURCE_TYPE_PROMPT, "avatar prompt"),
             version("2.0.0"));
-
+        
         assertEquals(AiResourceConstants.RESOURCE_TYPE_PROMPT, entry.getResourceType());
         assertEquals("avatar prompt", entry.getResourceName());
         assertEquals("2.0.0", entry.getResourceVersion());
     }
-
+    
     @Test
     void fromMcpServerShouldRetainArtifactLookupMetadata() {
         McpServerBasicInfo server = new McpServerBasicInfo();
         server.setId("mcp/avatar server");
         server.setName("avatar-server");
         server.setVersion("3.0.0");
-
+        
         AiResourceSearchDocument entry = builder.fromMcpServer("public", server);
-
+        
         assertEquals(AiResourceConstants.RESOURCE_TYPE_MCP, entry.getResourceType());
         assertEquals("mcp/avatar server", entry.getResourceName());
         Map<?, ?> metadata = JacksonUtils.toObj(entry.getMetadata(), Map.class);
         assertEquals("avatar-server", metadata.get("mcpName"));
     }
-
+    
     @Test
     void fromMcpServerShouldUseNameWhenIdIsBlank() {
         McpServerBasicInfo server = new McpServerBasicInfo();
         server.setName("avatar server");
         server.setVersion("3.0.0");
-
+        
         AiResourceSearchDocument entry = builder.fromMcpServer("public", server);
-
+        
         assertEquals("avatar server", entry.getResourceName());
     }
-
+    
     private AiResource resource(String type, String name) {
         AiResource resource = new AiResource();
         resource.setNamespaceId("public");
@@ -95,7 +95,7 @@ class AiResourceSearchDocumentBuilderTest {
         resource.setDesc("demo");
         return resource;
     }
-
+    
     private AiResourceVersion version(String version) {
         AiResourceVersion resourceVersion = new AiResourceVersion();
         resourceVersion.setVersion(version);

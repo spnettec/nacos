@@ -37,35 +37,35 @@ import java.util.Map;
  */
 class RuntimePersistedPluginConfigSourceResolver extends AbstractMapPluginConfigSourceResolver
     implements PersistedPluginConfigSourceResolver {
-
+    
     private static final Logger LOGGER =
         LoggerFactory.getLogger(RuntimePersistedPluginConfigSourceResolver.class);
-
+    
     private final PluginConfigStorageProvider storageProvider;
-
+    
     private final PluginConfigKeyResolver keyResolver = new PluginConfigKeyResolver();
-
+    
     private volatile PluginConfigStorage storage;
-
+    
     private volatile boolean initialized;
-
+    
     private volatile boolean available;
-
+    
     private volatile Throwable unavailableCause;
-
+    
     RuntimePersistedPluginConfigSourceResolver() {
         this(new MemoryPluginConfigStorageProvider());
     }
-
+    
     RuntimePersistedPluginConfigSourceResolver(PluginStatePersistenceService persistence) {
         this(new PluginConfigStorageRegistry(persistence).getSelectedProvider());
     }
-
+    
     RuntimePersistedPluginConfigSourceResolver(PluginConfigStorageProvider storageProvider) {
         this.storageProvider = storageProvider;
         this.available = storageProvider != null;
     }
-
+    
     @Override
     public synchronized void initialize() {
         if (initialized) {
@@ -91,13 +91,13 @@ class RuntimePersistedPluginConfigSourceResolver extends AbstractMapPluginConfig
             markUnavailable(e);
         }
     }
-
+    
     @Override
     public boolean isAvailable() {
         initialize();
         return available;
     }
-
+    
     @Override
     public void initializeConfig(PluginInfo pluginInfo) {
         Map<String, String> config = super.getConfig(pluginInfo);
@@ -106,7 +106,7 @@ class RuntimePersistedPluginConfigSourceResolver extends AbstractMapPluginConfig
                 config));
         }
     }
-
+    
     @Override
     public synchronized void updateConfig(String pluginId, Map<String, String> config) {
         PluginConfigStorage currentStorage = getAvailableStorage();
@@ -115,12 +115,12 @@ class RuntimePersistedPluginConfigSourceResolver extends AbstractMapPluginConfig
         currentStorage.saveConfig(pluginId, configToStore);
         super.updateConfig(pluginId, configToStore);
     }
-
+    
     @Override
     public Map<String, Map<String, String>> getAllConfigs() {
         return getAllConfigsSnapshot();
     }
-
+    
     @Override
     public synchronized void restoreConfigs(Map<String, Map<String, String>> configs) {
         PluginConfigStorage currentStorage = getAvailableStorage();
@@ -128,18 +128,18 @@ class RuntimePersistedPluginConfigSourceResolver extends AbstractMapPluginConfig
         currentStorage.replaceAllConfigs(configsToRestore);
         replaceAllConfigs(configsToRestore);
     }
-
+    
     @Override
     public synchronized void shutdown() {
         available = false;
         shutdownStorage();
     }
-
+    
     @Override
     public PluginConfigSourceType getSourceType() {
         return PluginConfigSourceType.RUNTIME_PERSISTED;
     }
-
+    
     private Map<String, Map<String, String>> copyConfigs(
         Map<String, Map<String, String>> configs) {
         Map<String, Map<String, String>> result = new HashMap<>();
@@ -149,7 +149,7 @@ class RuntimePersistedPluginConfigSourceResolver extends AbstractMapPluginConfig
         }
         return result;
     }
-
+    
     private PluginConfigStorage getAvailableStorage() {
         initialize();
         if (!available || storage == null) {
@@ -158,7 +158,7 @@ class RuntimePersistedPluginConfigSourceResolver extends AbstractMapPluginConfig
         }
         return storage;
     }
-
+    
     private void markUnavailable(Throwable cause) {
         available = false;
         unavailableCause = cause;
@@ -173,7 +173,7 @@ class RuntimePersistedPluginConfigSourceResolver extends AbstractMapPluginConfig
                 getStorageName(), cause);
         }
     }
-
+    
     private void shutdownStorage() {
         PluginConfigStorage currentStorage = storage;
         storage = null;
@@ -187,7 +187,7 @@ class RuntimePersistedPluginConfigSourceResolver extends AbstractMapPluginConfig
                 + "'{}'.", getStorageName(), e);
         }
     }
-
+    
     private String getStorageName() {
         if (storageProvider == null) {
             return "none";
@@ -199,28 +199,28 @@ class RuntimePersistedPluginConfigSourceResolver extends AbstractMapPluginConfig
             return storageProvider.getClass().getName();
         }
     }
-
+    
     private static class MemoryPluginConfigStorageProvider
         implements PluginConfigStorageProvider {
-
+        
         @Override
         public String getName() {
             return "memory";
         }
-
+        
         @Override
         public PluginConfigStorage createStorage() {
             return new PluginConfigStorage() {
-
+                
                 @Override
                 public Map<String, Map<String, String>> loadAllConfigs() {
                     return Collections.emptyMap();
                 }
-
+                
                 @Override
                 public void saveConfig(String pluginId, Map<String, String> config) {
                 }
-
+                
                 @Override
                 public void replaceAllConfigs(Map<String, Map<String, String>> configs) {
                 }

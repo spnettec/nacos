@@ -84,7 +84,7 @@ public class DataSourcePoolProperties {
         dataSource.setPassword(password);
         dataSource.addDataSourceProperty("password", password);
     }
-
+    
     public void setTestQuery(final String testQuery) {
         dataSource.setConnectionTestQuery(testQuery);
     }

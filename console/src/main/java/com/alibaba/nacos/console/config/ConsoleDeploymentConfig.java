@@ -33,18 +33,23 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 @Configuration(proxyBeanMethods = false)
 @EnabledRemoteHandler
 public class ConsoleDeploymentConfig {
-
+    
     @Bean
     public ControllerMethodsCache controllerMethodsCache(
         ObjectProvider<RequestMappingHandlerMapping> handlerMappingProvider) {
         return new ControllerMethodsCache(handlerMappingProvider);
     }
-
+    
     @Bean
     public SelectorManager selectorManager() {
         return new SelectorManager();
     }
-
+    
+    @Bean
+    public ConsoleAuthPluginInitializer consoleAuthPluginInitializer() {
+        return new ConsoleAuthPluginInitializer();
+    }
+    
     /**
      * Provide the config clone source read permission checker for standalone console deployment.
      *

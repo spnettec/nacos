@@ -31,25 +31,25 @@ import java.util.Locale;
  * @author Zhengcy05
  */
 final class VisibilityGrantRoleHelper {
-
+    
     private static final String RESOURCE_IDENTIFIER_PREFIX = "@@visibility/";
-
+    
     private static final String USER_ROLE_MARKER = "u.";
-
+    
     private static final int USER_ROLE_HASH_HEX_LENGTH = 32;
-
+    
     private VisibilityGrantRoleHelper() {
     }
-
+    
     static String normalizeNamespaceId(String namespaceId) {
         return StringUtils.isBlank(namespaceId) ? Constants.DEFAULT_NAMESPACE_ID : namespaceId;
     }
-
+    
     static String normalizeResourceType(String resourceType) {
         return StringUtils.isBlank(resourceType) ? resourceType
             : resourceType.trim().toLowerCase(Locale.ROOT);
     }
-
+    
     static String normalizeStoredAction(String action) {
         if (StringUtils.isBlank(action)) {
             throw new IllegalArgumentException("action is blank");
@@ -63,7 +63,7 @@ final class VisibilityGrantRoleHelper {
         }
         throw new IllegalArgumentException("unsupported action: " + action);
     }
-
+    
     static boolean matchesRequestedAction(String storedAction, String requestedAction) {
         String normalizedRequested = normalizeStoredAction(requestedAction);
         if ("rw".equals(normalizedRequested)) {
@@ -71,7 +71,7 @@ final class VisibilityGrantRoleHelper {
         }
         return "r".equals(storedAction) || "rw".equals(storedAction);
     }
-
+    
     static String buildUserRoleName(String username) {
         if (StringUtils.isBlank(username)) {
             throw new IllegalArgumentException("username is blank");
@@ -81,21 +81,21 @@ final class VisibilityGrantRoleHelper {
         return buildUserRoleNamePrefix() + sha256LowerHex(username).substring(0,
             USER_ROLE_HASH_HEX_LENGTH);
     }
-
+    
     static String buildUserRoleNamePrefix() {
         return AuthConstants.VISIBILITY_GRANT_ROLE_PREFIX + USER_ROLE_MARKER;
     }
-
+    
     static boolean isUserGrantRole(String roleName) {
         return StringUtils.isNotBlank(roleName) && roleName.startsWith(buildUserRoleNamePrefix());
     }
-
+    
     static String buildResourceIdentifier(String namespaceId, String resourceType,
         String resourceName) {
         return RESOURCE_IDENTIFIER_PREFIX + normalizeNamespaceId(namespaceId) + "/"
             + normalizeResourceType(resourceType) + "/" + resourceName;
     }
-
+    
     static ParsedGrantResource tryParseResourceIdentifier(String resourceIdentifier) {
         if (StringUtils.isBlank(resourceIdentifier)
             || !resourceIdentifier.startsWith(RESOURCE_IDENTIFIER_PREFIX)) {
@@ -109,7 +109,7 @@ final class VisibilityGrantRoleHelper {
         }
         return new ParsedGrantResource(parts[0], parts[1], parts[2]);
     }
-
+    
     private static String sha256LowerHex(String value) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
@@ -123,30 +123,30 @@ final class VisibilityGrantRoleHelper {
             throw new IllegalStateException("SHA-256 is not available", e);
         }
     }
-
+    
     static final class ParsedGrantResource {
-
+        
         private final String namespaceId;
-
+        
         private final String resourceType;
-
+        
         private final String resourceName;
-
+        
         private ParsedGrantResource(String namespaceId, String resourceType,
             String resourceName) {
             this.namespaceId = namespaceId;
             this.resourceType = resourceType;
             this.resourceName = resourceName;
         }
-
+        
         String getNamespaceId() {
             return namespaceId;
         }
-
+        
         String getResourceType() {
             return resourceType;
         }
-
+        
         String getResourceName() {
             return resourceName;
         }

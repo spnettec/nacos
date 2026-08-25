@@ -39,21 +39,21 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author xiweng.yy
  */
 public class RemoteServerUtil {
-
+    
     private static final String DEFAULT_REMOTE_SERVER_CONTEXT_PATH = "/nacos";
-
+    
     private static List<String> serverAddresses = new LinkedList<>();
-
+    
     private static AtomicInteger index = new AtomicInteger();
-
+    
     private static String remoteServerContextPath = DEFAULT_REMOTE_SERVER_CONTEXT_PATH;
-
+    
     static {
         readRemoteServerAddress();
         registerWatcher();
         initRemoteServerContextPath();
     }
-
+    
     private static void initRemoteServerContextPath() {
         if (EnvUtil.getEnvironment() == null) {
             return;
@@ -62,16 +62,16 @@ public class RemoteServerUtil {
             EnvUtil.getProperty("nacos.console.remote.server.context-path",
                 DEFAULT_REMOTE_SERVER_CONTEXT_PATH);
     }
-
+    
     private static void registerWatcher() {
         try {
             WatchFileCenter.registerWatcher(EnvUtil.getClusterConfFilePath(), new FileWatcher() {
-
+                
                 @Override
                 public void onChange(FileChangeEvent event) {
                     readRemoteServerAddress();
                 }
-
+                
                 @Override
                 public boolean interest(String context) {
                     return true;
@@ -80,7 +80,7 @@ public class RemoteServerUtil {
         } catch (Exception ignored) {
         }
     }
-
+    
     /**
      * Read nacos server address from cluster.conf.
      */
@@ -90,20 +90,20 @@ public class RemoteServerUtil {
         } catch (IOException ignored) {
         }
     }
-
+    
     public static List<String> getServerAddresses() {
         return new LinkedList<>(serverAddresses);
     }
-
+    
     public static String getOneNacosServerAddress() {
         int actual = index.getAndUpdate(operand -> (operand + 1) % serverAddresses.size());
         return serverAddresses.get(actual);
     }
-
+    
     public static String getRemoteServerContextPath() {
         return remoteServerContextPath;
     }
-
+    
     /**
      * Single check http result, if not success, wrapper result as Nacos exception.
      *
@@ -116,7 +116,7 @@ public class RemoteServerUtil {
         }
         throw new NacosException(result.getCode(), result.getMessage());
     }
-
+    
     /**
      * Build the remote server identity header from the server module configuration.
      *

@@ -38,24 +38,24 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class QueryAgentCardRequestHandlerTest {
-
+    
     @Mock
     private A2aCompatibilityOperationService a2aServerOperationService;
-
+    
     @Mock
     private RequestMeta meta;
-
+    
     private QueryAgentCardRequestHandler requestHandler;
-
+    
     @BeforeEach
     void setUp() {
         requestHandler = new QueryAgentCardRequestHandler(a2aServerOperationService);
     }
-
+    
     @AfterEach
     void tearDown() {
     }
-
+    
     @Test
     void handleWithInvalidAgentName() throws NacosException {
         QueryAgentCardRequest request = new QueryAgentCardRequest();
@@ -64,7 +64,7 @@ class QueryAgentCardRequestHandlerTest {
         assertEquals(NacosException.INVALID_PARAM, response.getErrorCode());
         assertEquals("parameters `agentName` can't be empty or null", response.getMessage());
     }
-
+    
     @Test
     void handleWithValidParameters() throws NacosException {
         QueryAgentCardRequest request = new QueryAgentCardRequest();
@@ -78,7 +78,7 @@ class QueryAgentCardRequestHandlerTest {
         assertEquals(mockAgentCard, response.getAgentCardDetailInfo());
         assertNull(response.getMessage());
     }
-
+    
     @Test
     void handleWithException() throws NacosException {
         QueryAgentCardRequest request = new QueryAgentCardRequest();

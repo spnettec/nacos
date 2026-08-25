@@ -32,20 +32,20 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ParamUtilTest {
-
+    
     private int defaultConnectTimeout;
-
+    
     private int defaultReadTimeout;
-
+    
     private double defaultPerTaskConfigSize;
-
+    
     @BeforeEach
     void before() {
         defaultConnectTimeout = 1000;
         defaultReadTimeout = 3000;
         defaultPerTaskConfigSize = 3000.0;
     }
-
+    
     @AfterEach
     void after() {
         ParamUtil.setConnectTimeout(defaultConnectTimeout);
@@ -56,37 +56,37 @@ class ParamUtilTest {
         System.clearProperty("PER_TASK_CONFIG_SIZE");
         System.clearProperty(PropertyKeyConst.SystemEnv.ALIBABA_ALIWARE_ENDPOINT_URL);
     }
-
+    
     @Test
     void testSetConnectTimeout() {
         int defaultVal = ParamUtil.getConnectTimeout();
         assertEquals(defaultConnectTimeout, defaultVal);
-
+        
         int expect = 50;
         ParamUtil.setConnectTimeout(expect);
         assertEquals(expect, ParamUtil.getConnectTimeout());
     }
-
+    
     @Test
     void testSetReadTimeout() {
         int defaultVal = ParamUtil.getReadTimeout();
         assertEquals(defaultReadTimeout, defaultVal);
-
+        
         int expect = 3000;
         ParamUtil.setReadTimeout(expect);
         assertEquals(expect, ParamUtil.getReadTimeout());
     }
-
+    
     @Test
     void testGetPerTaskConfigSize() {
         double defaultVal = ParamUtil.getPerTaskConfigSize();
         assertEquals(defaultPerTaskConfigSize, defaultVal, 0.01);
-
+        
         double expect = 50.0;
         ParamUtil.setPerTaskConfigSize(expect);
         assertEquals(expect, ParamUtil.getPerTaskConfigSize(), 0.01);
     }
-
+    
     @Test
     void testInitConnectionTimeoutWithException() throws Throwable {
         assertThrows(IllegalArgumentException.class, () -> {
@@ -100,7 +100,7 @@ class ParamUtilTest {
             }
         });
     }
-
+    
     @Test
     void testInitReadTimeoutWithException() throws Throwable {
         assertThrows(IllegalArgumentException.class, () -> {
@@ -114,7 +114,7 @@ class ParamUtilTest {
             }
         });
     }
-
+    
     @Test
     void testInitPerTaskConfigSizeWithException() throws Throwable {
         assertThrows(IllegalArgumentException.class, () -> {
@@ -128,7 +128,7 @@ class ParamUtilTest {
             }
         });
     }
-
+    
     @Test
     void testSimplyEnvNameIfOverLimit() {
         StringBuilder envNameOverLimitBuilder = new StringBuilder("test");
@@ -140,7 +140,7 @@ class ParamUtilTest {
         String expect = envName.substring(0, 50) + MD5Utils.md5Hex(envName, "UTF-8");
         assertEquals(expect, actual);
     }
-
+    
     @Test
     void testSimplyEnvNameNotOverLimit() {
         String expect = "test";

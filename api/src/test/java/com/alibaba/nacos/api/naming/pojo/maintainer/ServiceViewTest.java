@@ -37,8 +37,8 @@ class ServiceViewTest {
     @BeforeEach
     void setUp() throws Exception {
         mapper = JsonMapper.builder()
-                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-                .build();
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .build();
         serviceView = new ServiceView();
         serviceView.setName("service");
         serviceView.setGroupName("group");

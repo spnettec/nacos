@@ -24,9 +24,9 @@ import com.alibaba.nacos.api.ai.model.rad.AgentDiscoveryResult;
  * @author Nacos
  */
 public class NacosAgentDiscoveryEvent implements NacosAiEvent {
-
+    
     private final AgentDiscoveryResult agentDiscoveryResult;
-
+    
     /**
      * Create one complete replacement event.
      *
@@ -35,7 +35,7 @@ public class NacosAgentDiscoveryEvent implements NacosAiEvent {
     public NacosAgentDiscoveryEvent(AgentDiscoveryResult agentDiscoveryResult) {
         this.agentDiscoveryResult = agentDiscoveryResult;
     }
-
+    
     /**
      * Get the complete discovery snapshot.
      *

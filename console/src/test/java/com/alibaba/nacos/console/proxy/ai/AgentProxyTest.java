@@ -47,23 +47,23 @@ import static org.mockito.Mockito.when;
  */
 @ExtendWith(MockitoExtension.class)
 class AgentProxyTest {
-
+    
     private static final String NAMESPACE_ID = "test_namespace";
-
+    
     private static final String AGENT_NAME = "Nacos Agent";
-
+    
     private static final String VERSION = "1.0.0";
-
+    
     @Mock
     private AgentHandler agentHandler;
-
+    
     private AgentProxy agentProxy;
-
+    
     @BeforeEach
     void setUp() {
         agentProxy = new AgentProxy(agentHandler);
     }
-
+    
     @Test
     void shouldDelegateEveryOperationAndBuildRuntimeView() throws Exception {
         AgentOverview overview = new AgentOverview();
@@ -97,7 +97,7 @@ class AgentProxyTest {
         when(agentHandler.online(NAMESPACE_ID, AGENT_NAME, VERSION)).thenReturn(versionSummary);
         when(agentHandler.offline(NAMESPACE_ID, AGENT_NAME, VERSION)).thenReturn(versionSummary);
         when(agentHandler.updateLabels(NAMESPACE_ID, labelsRequest)).thenReturn(agent);
-
+        
         assertSame(overview, agentProxy.getAgent(NAMESPACE_ID, AGENT_NAME));
         assertSame(agent, agentProxy.updateAgent(NAMESPACE_ID, updateRequest));
         agentProxy.deleteAgent(NAMESPACE_ID, AGENT_NAME);
@@ -123,7 +123,7 @@ class AgentProxyTest {
         assertSame(versionSummary, agentProxy.online(NAMESPACE_ID, AGENT_NAME, VERSION));
         assertSame(versionSummary, agentProxy.offline(NAMESPACE_ID, AGENT_NAME, VERSION));
         assertSame(agent, agentProxy.updateLabels(NAMESPACE_ID, labelsRequest));
-
+        
         verify(agentHandler).deleteAgent(NAMESPACE_ID, AGENT_NAME);
         verify(agentHandler).deleteDraft(NAMESPACE_ID, AGENT_NAME, VERSION);
     }

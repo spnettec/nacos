@@ -29,25 +29,25 @@ import java.util.Map;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AgentUpdateRequest implements Serializable {
-
+    
     private static final long serialVersionUID = 1L;
-
+    
     private String agentName;
-
+    
     private String displayName;
-
+    
     private String description;
-
+    
     private String iconUrl;
-
+    
     private AgentProvider provider;
-
+    
     private List<String> tags;
-
+    
     private Map<String, Object> extensions;
-
+    
     private String status;
-
+    
     /**
      * Validate required request identity and status.
      */
@@ -55,67 +55,67 @@ public class AgentUpdateRequest implements Serializable {
         AgentAdminRequestUtils.validateIdentity(agentName);
         AgentAdminRequestUtils.validateWritableStatus(status);
     }
-
+    
     public String getAgentName() {
         return agentName;
     }
-
+    
     public void setAgentName(String agentName) {
         this.agentName = agentName;
     }
-
+    
     public String getDisplayName() {
         return displayName;
     }
-
+    
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
     }
-
+    
     public String getDescription() {
         return description;
     }
-
+    
     public void setDescription(String description) {
         this.description = description;
     }
-
+    
     public String getIconUrl() {
         return iconUrl;
     }
-
+    
     public void setIconUrl(String iconUrl) {
         this.iconUrl = iconUrl;
     }
-
+    
     public AgentProvider getProvider() {
         return provider;
     }
-
+    
     public void setProvider(AgentProvider provider) {
         this.provider = provider;
     }
-
+    
     public List<String> getTags() {
         return tags;
     }
-
+    
     public void setTags(List<String> tags) {
         this.tags = tags;
     }
-
+    
     public Map<String, Object> getExtensions() {
         return extensions;
     }
-
+    
     public void setExtensions(Map<String, Object> extensions) {
         this.extensions = extensions;
     }
-
+    
     public String getStatus() {
         return status;
     }
-
+    
     public void setStatus(String status) {
         this.status = status;
     }

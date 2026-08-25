@@ -40,22 +40,22 @@ import java.util.function.Supplier;
  * @author Nacos
  */
 public class PluginConfigStorageRegistry {
-
+    
     static final String ENABLED_PROPERTY_PREFIX = "nacos.plugin.config.source.";
-
+    
     static final String ENABLED_PROPERTY_SUFFIX = ".enabled";
-
+    
     private static final Logger LOGGER =
         LoggerFactory.getLogger(PluginConfigStorageRegistry.class);
-
+    
     private final PluginConfigStorageProvider selectedProvider;
-
+    
     public PluginConfigStorageRegistry(PluginStatePersistenceService persistence) {
         this(new LocalFilePluginConfigStorageProvider(persistence),
             () -> NacosServiceLoader.load(PluginConfigStorageProvider.class),
             PluginConfigStorageRegistry::readEnabledProperty);
     }
-
+    
     PluginConfigStorageRegistry(PluginConfigStorageProvider builtInProvider,
         Supplier<Collection<PluginConfigStorageProvider>> providerSupplier,
         BiFunction<String, Boolean, Boolean> enabledResolver) {
@@ -65,7 +65,7 @@ public class PluginConfigStorageRegistry {
             .thenComparing(ProviderCandidate::getClassName));
         this.selectedProvider = selectProvider(candidates, enabledResolver);
     }
-
+    
     /**
      * Get the provider selected for this process.
      *
@@ -74,7 +74,7 @@ public class PluginConfigStorageRegistry {
     public PluginConfigStorageProvider getSelectedProvider() {
         return selectedProvider;
     }
-
+    
     private List<ProviderCandidate> loadCandidates(PluginConfigStorageProvider builtInProvider,
         Supplier<Collection<PluginConfigStorageProvider>> providerSupplier) {
         List<ProviderCandidate> result = new ArrayList<>();
@@ -97,7 +97,7 @@ public class PluginConfigStorageRegistry {
         }
         return result;
     }
-
+    
     private boolean addCandidate(List<ProviderCandidate> candidates,
         PluginConfigStorageProvider provider) {
         if (provider == null) {
@@ -122,7 +122,7 @@ public class PluginConfigStorageRegistry {
             return false;
         }
     }
-
+    
     private PluginConfigStorageProvider selectProvider(List<ProviderCandidate> candidates,
         BiFunction<String, Boolean, Boolean> enabledResolver) {
         Map<String, ProviderCandidate> uniqueCandidates = new LinkedHashMap<>();
@@ -135,7 +135,7 @@ public class PluginConfigStorageRegistry {
                     existing.getClassName(), candidate.getClassName());
             }
         }
-
+        
         ProviderCandidate selected = null;
         for (ProviderCandidate candidate : uniqueCandidates.values()) {
             boolean enabled;
@@ -166,28 +166,28 @@ public class PluginConfigStorageRegistry {
             selected.getName());
         return selected.getProvider();
     }
-
+    
     private boolean isEnabled(ProviderCandidate candidate,
         BiFunction<String, Boolean, Boolean> enabledResolver) {
         String property = ENABLED_PROPERTY_PREFIX + candidate.getName() + ENABLED_PROPERTY_SUFFIX;
         return Boolean.TRUE.equals(enabledResolver.apply(property,
             candidate.isEnabledByDefault()));
     }
-
+    
     private static Boolean readEnabledProperty(String property, Boolean defaultValue) {
         return EnvUtil.getProperty(property, Boolean.class, defaultValue);
     }
-
+    
     private static class ProviderCandidate {
-
+        
         private final PluginConfigStorageProvider provider;
-
+        
         private final String name;
-
+        
         private final int order;
-
+        
         private final boolean enabledByDefault;
-
+        
         ProviderCandidate(PluginConfigStorageProvider provider, String name, int order,
             boolean enabledByDefault) {
             this.provider = provider;
@@ -195,23 +195,23 @@ public class PluginConfigStorageRegistry {
             this.order = order;
             this.enabledByDefault = enabledByDefault;
         }
-
+        
         PluginConfigStorageProvider getProvider() {
             return provider;
         }
-
+        
         String getName() {
             return name;
         }
-
+        
         int getOrder() {
             return order;
         }
-
+        
         boolean isEnabledByDefault() {
             return enabledByDefault;
         }
-
+        
         String getClassName() {
             return provider.getClass().getName();
         }

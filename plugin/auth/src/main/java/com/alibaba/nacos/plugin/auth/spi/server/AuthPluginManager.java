@@ -37,20 +37,20 @@ import java.util.Optional;
  * @author xiweng.yy
  */
 public class AuthPluginManager {
-
+    
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthPluginManager.class);
-
+    
     private static final AuthPluginManager INSTANCE = new AuthPluginManager();
-
+    
     /**
      * The relationship of context type and {@link AuthPluginService}.
      */
     private final Map<String, AuthPluginService> authServiceMap = new HashMap<>();
-
+    
     private AuthPluginManager() {
         initAuthServices();
     }
-
+    
     private void initAuthServices() {
         Collection<AuthPluginService> authPluginServices =
             NacosServiceLoader.load(AuthPluginService.class);
@@ -63,11 +63,11 @@ public class AuthPluginManager {
             }
         }
     }
-
+    
     public static AuthPluginManager getInstance() {
         return INSTANCE;
     }
-
+    
     /**
      * get AuthPluginService instance which AuthPluginService.getType() is type.
      *
@@ -82,7 +82,7 @@ public class AuthPluginManager {
         }
         return Optional.ofNullable(authServiceMap.get(authServiceName));
     }
-
+    
     /**
      * Get all registered auth plugins.
      *
@@ -91,5 +91,5 @@ public class AuthPluginManager {
     public Map<String, AuthPluginService> getAllPlugins() {
         return Collections.unmodifiableMap(authServiceMap);
     }
-
+    
 }

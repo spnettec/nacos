@@ -28,20 +28,20 @@ import java.util.Map;
  * @author Nacos
  */
 public interface PluginConfigStorage {
-
+    
     /**
      * Initialize resources before the initial load.
      */
     default void initialize() {
     }
-
+    
     /**
      * Load the complete runtime persisted configuration.
      *
      * @return plugin ID to complete source map
      */
     Map<String, Map<String, String>> loadAllConfigs();
-
+    
     /**
      * Replace one plugin's complete source map.
      *
@@ -49,14 +49,14 @@ public interface PluginConfigStorage {
      * @param config complete source map
      */
     void saveConfig(String pluginId, Map<String, String> config);
-
+    
     /**
      * Replace the complete storage content while restoring a snapshot.
      *
      * @param configs complete storage content
      */
     void replaceAllConfigs(Map<String, Map<String, String>> configs);
-
+    
     /**
      * Release storage resources.
      */

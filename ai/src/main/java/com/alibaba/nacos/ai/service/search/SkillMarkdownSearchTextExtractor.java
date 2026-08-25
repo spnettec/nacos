@@ -28,21 +28,21 @@ import java.util.Locale;
  * @author nacos
  */
 class SkillMarkdownSearchTextExtractor {
-
+    
     private static final int MAX_CHUNKS = 8;
-
+    
     private static final int MAX_CHARS_PER_CHUNK = 1000;
-
+    
     private static final int MIN_SHORT_PARAGRAPH_CHARS = 12;
-
+    
     private static final int MAX_SHORT_PARAGRAPH_CHARS = 500;
-
+    
     private static final String[] FRONT_MATTER_KEYS = {
         "name", "description", "trigger", "triggers", "tag", "tags", "capability",
         "capabilities", "usecase", "usecases", "use_case", "use_cases", "template",
         "variable", "variables", "tool", "tools", "resource", "resources"
     };
-
+    
     private static final String[] HIGH_VALUE_KEYWORDS = {
         "trigger", "triggers", "use case", "use cases", "usecase", "usecases", "capability",
         "capabilities", "when to use", "example", "examples", "query", "queries", "user asks",
@@ -50,7 +50,7 @@ class SkillMarkdownSearchTextExtractor {
         "resources", "schema", "endpoint", "触发词", "触发", "适用场景", "使用场景", "能力",
         "示例", "查询", "用户问题", "用户输入", "模板", "变量", "工具", "资源"
     };
-
+    
     List<String> extract(String markdown) {
         if (StringUtils.isBlank(markdown)) {
             return List.of();
@@ -60,7 +60,7 @@ class SkillMarkdownSearchTextExtractor {
         addBody(body, result);
         return result;
     }
-
+    
     private String addFrontMatter(String markdown, List<String> result) {
         FrontMatter frontMatter = parseFrontMatter(markdown);
         for (String line : frontMatter.lines) {
@@ -71,7 +71,7 @@ class SkillMarkdownSearchTextExtractor {
         }
         return frontMatter.body;
     }
-
+    
     private FrontMatter parseFrontMatter(String markdown) {
         List<String> lines = markdown.lines().toList();
         if (lines.isEmpty() || !"---".equals(lines.get(0).trim())) {
@@ -100,7 +100,7 @@ class SkillMarkdownSearchTextExtractor {
         }
         return new FrontMatter(frontMatterLines, body.toString());
     }
-
+    
     private boolean frontMatterKey(String text) {
         int separator = text.indexOf(':');
         if (separator <= 0) {
@@ -114,7 +114,7 @@ class SkillMarkdownSearchTextExtractor {
         }
         return false;
     }
-
+    
     private void addBody(String markdown, List<String> result) {
         boolean inFence = false;
         boolean highValueSection = false;
@@ -148,7 +148,7 @@ class SkillMarkdownSearchTextExtractor {
             }
         }
     }
-
+    
     private boolean highValueText(String text) {
         String lower = text.toLowerCase(Locale.ROOT);
         for (String keyword : HIGH_VALUE_KEYWORDS) {
@@ -158,17 +158,17 @@ class SkillMarkdownSearchTextExtractor {
         }
         return false;
     }
-
+    
     private boolean shortParagraph(String text) {
         return text.length() >= MIN_SHORT_PARAGRAPH_CHARS
             && text.length() <= MAX_SHORT_PARAGRAPH_CHARS;
     }
-
+    
     private boolean isCandidate(String text) {
         return StringUtils.isNotBlank(text) && !looksLikeCommand(text)
             && !looksLikeTableSeparator(text);
     }
-
+    
     private boolean looksLikeCommand(String text) {
         String lower = text.toLowerCase(Locale.ROOT);
         return lower.startsWith("$ ") || lower.startsWith("curl ")
@@ -176,18 +176,18 @@ class SkillMarkdownSearchTextExtractor {
             || lower.startsWith("pnpm ") || lower.startsWith("yarn ")
             || lower.startsWith("python ") || lower.startsWith("python3 ");
     }
-
+    
     private boolean looksLikeTableSeparator(String text) {
         return text.matches("^[|\\-: ]+$");
     }
-
+    
     private String cleanMarkdownText(String text) {
         if (text == null) {
             return "";
         }
         return text.replace("`", "").replaceAll("\\s+", " ").trim();
     }
-
+    
     private void add(List<String> result, String text) {
         if (result.size() >= MAX_CHUNKS) {
             return;
@@ -200,20 +200,20 @@ class SkillMarkdownSearchTextExtractor {
         }
         result.add(value);
     }
-
+    
     private String limit(String text) {
         if (text.length() <= MAX_CHARS_PER_CHUNK) {
             return text;
         }
         return text.substring(0, MAX_CHARS_PER_CHUNK);
     }
-
+    
     private static class FrontMatter {
-
+        
         private final List<String> lines;
-
+        
         private final String body;
-
+        
         private FrontMatter(List<String> lines, String body) {
             this.lines = lines;
             this.body = body;

@@ -48,10 +48,10 @@ import static com.alibaba.nacos.prometheus.api.ApiConstants.PROMETHEUS_CONTROLLE
 @ConditionalOnProperty(value = Constants.Auth.NACOS_CORE_AUTH_ENABLED, havingValue = "true")
 @ConditionalOnBean(PrometheusController.class)
 public class PrometheusAuthFilter {
-
+    
     private static final String PROMETHEUS_SUB_PATH_PATTERN =
         PROMETHEUS_CONTROLLER_PATH + "/*";
-
+    
     @Bean
     public AuthenticationManager authenticationManager(HttpSecurity http,
         UserDetailsService userDetailsService,
@@ -62,7 +62,7 @@ public class PrometheusAuthFilter {
             .passwordEncoder(passwordEncoder);
         return authenticationManagerBuilder.getOrBuild();
     }
-
+    
     @Bean
     public FilterRegistrationBean<BasicAuthenticationFilter> basicAuthenticationFilter(
         AuthenticationManager authenticationManager) {
@@ -74,7 +74,7 @@ public class PrometheusAuthFilter {
         registration.setOrder(2);
         return registration;
     }
-
+    
     @Bean
     public FilterRegistrationBean<AnonymousAuthenticationFilter> anonymousAuthenticationFilter() {
         FilterRegistrationBean<AnonymousAuthenticationFilter> registration =
@@ -85,7 +85,7 @@ public class PrometheusAuthFilter {
         registration.setOrder(3);
         return registration;
     }
-
+    
     @Bean
     public FilterRegistrationBean<AuthorizationFilter> authorizationFilter() {
         FilterRegistrationBean<AuthorizationFilter> registration = new FilterRegistrationBean<>();
@@ -95,7 +95,7 @@ public class PrometheusAuthFilter {
         registration.setOrder(4);
         return registration;
     }
-
+    
     @Bean
     public FilterRegistrationBean<ExceptionTranslationFilter> exceptionTranslationFilter() {
         FilterRegistrationBean<ExceptionTranslationFilter> registration =

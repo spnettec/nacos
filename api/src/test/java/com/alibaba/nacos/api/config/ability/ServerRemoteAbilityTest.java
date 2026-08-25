@@ -41,10 +41,12 @@ class ServerRemoteAbilityTest {
     @BeforeAll
     static void setUpBeforeClass() throws Exception {
         mapper = JsonMapper.builder().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-                .changeDefaultPropertyInclusion(incl -> incl.withValueInclusion(JsonInclude.Include.NON_NULL))
-                .changeDefaultPropertyInclusion(incl -> incl.withContentInclusion(JsonInclude.Include.NON_NULL))
-                .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
-                .build();
+            .changeDefaultPropertyInclusion(
+                incl -> incl.withValueInclusion(JsonInclude.Include.NON_NULL))
+            .changeDefaultPropertyInclusion(
+                incl -> incl.withContentInclusion(JsonInclude.Include.NON_NULL))
+            .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
+            .build();
     }
     
     @BeforeEach

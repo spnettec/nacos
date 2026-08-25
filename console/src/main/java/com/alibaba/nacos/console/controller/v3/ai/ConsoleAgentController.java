@@ -69,13 +69,13 @@ import java.util.Locale;
 @RequestMapping(Constants.Agent.CONSOLE_PATH)
 @ExtractorManager.Extractor(httpExtractor = AgentAdminHttpParamExtractor.class)
 public class ConsoleAgentController {
-
+    
     private final AgentProxy agentProxy;
-
+    
     public ConsoleAgentController(AgentProxy agentProxy) {
         this.agentProxy = agentProxy;
     }
-
+    
     /**
      * Read one Agent and the first bounded Version-summary page.
      */
@@ -86,7 +86,7 @@ public class ConsoleAgentController {
         form.validate();
         return Result.success(agentProxy.getAgent(form.getNamespaceId(), form.getAgentName()));
     }
-
+    
     /**
      * Replace every writable field of one Agent.
      */
@@ -97,7 +97,7 @@ public class ConsoleAgentController {
         AgentUpdateRequest request = form.toRequest();
         return Result.success(agentProxy.updateAgent(form.getNamespaceId(), request));
     }
-
+    
     /**
      * Delete one Agent definition and all of its Version content.
      */
@@ -109,7 +109,7 @@ public class ConsoleAgentController {
         agentProxy.deleteAgent(form.getNamespaceId(), form.getAgentName());
         return Result.success();
     }
-
+    
     /**
      * Filter and page Agent summaries.
      */
@@ -127,7 +127,7 @@ public class ConsoleAgentController {
             filterableForm.getBizTag(), scope, filterableForm.getOwner(), form.getOrderBy(),
             pageForm.getPageNo(), pageForm.getPageSize()));
     }
-
+    
     /**
      * Page Version summaries for one Agent.
      */
@@ -141,7 +141,7 @@ public class ConsoleAgentController {
         return Result.success(agentProxy.listVersions(form.getNamespaceId(), form.getAgentName(),
             form.getStatus(), pageForm.getPageNo(), pageForm.getPageSize()));
     }
-
+    
     /**
      * Read one exact Agent Version definition.
      */
@@ -153,7 +153,7 @@ public class ConsoleAgentController {
         return Result.success(agentProxy.getVersion(form.getNamespaceId(), form.getAgentName(),
             form.getVersion()));
     }
-
+    
     /**
      * Read one protocol's complete Runtime Endpoint snapshot and Naming service reference.
      */
@@ -166,7 +166,7 @@ public class ConsoleAgentController {
         return Result.success(agentProxy.getRuntimeEndpoints(form.getNamespaceId(),
             form.getAgentName(), form.getProtocol(), form.getVersion()));
     }
-
+    
     /**
      * Create one initial or subsequent Agent draft.
      */
@@ -178,7 +178,7 @@ public class ConsoleAgentController {
         AgentDraftCreateRequest request = form.toRequest();
         return Result.success(agentProxy.createDraft(form.getNamespaceId(), request));
     }
-
+    
     /**
      * Replace one exact Agent draft.
      */
@@ -190,7 +190,7 @@ public class ConsoleAgentController {
         AgentDraftUpdateRequest request = form.toRequest();
         return Result.success(agentProxy.updateDraft(form.getNamespaceId(), request));
     }
-
+    
     /**
      * Delete one exact current Agent draft.
      */
@@ -202,7 +202,7 @@ public class ConsoleAgentController {
         agentProxy.deleteDraft(form.getNamespaceId(), form.getAgentName(), form.getVersion());
         return Result.success();
     }
-
+    
     /**
      * Submit one exact Agent draft.
      */
@@ -214,7 +214,7 @@ public class ConsoleAgentController {
         return Result.success(agentProxy.submit(form.getNamespaceId(), form.getAgentName(),
             form.getVersion()));
     }
-
+    
     /**
      * Publish one exact reviewed Agent Version.
      */
@@ -226,7 +226,7 @@ public class ConsoleAgentController {
         return Result.success(agentProxy.publish(form.getNamespaceId(), form.getAgentName(),
             form.getVersion()));
     }
-
+    
     /**
      * Force-publish one exact working Agent Version.
      */
@@ -240,7 +240,7 @@ public class ConsoleAgentController {
         return Result.success(agentProxy.forcePublish(form.getNamespaceId(),
             form.getAgentName(), form.getVersion()));
     }
-
+    
     /**
      * Move one exact reviewed Agent Version back to draft.
      */
@@ -252,7 +252,7 @@ public class ConsoleAgentController {
         return Result.success(agentProxy.redraft(form.getNamespaceId(), form.getAgentName(),
             form.getVersion()));
     }
-
+    
     /**
      * Bring one exact offline Agent Version online.
      */
@@ -264,7 +264,7 @@ public class ConsoleAgentController {
         return Result.success(agentProxy.online(form.getNamespaceId(), form.getAgentName(),
             form.getVersion()));
     }
-
+    
     /**
      * Take one exact online Agent Version offline.
      */
@@ -276,7 +276,7 @@ public class ConsoleAgentController {
         return Result.success(agentProxy.offline(form.getNamespaceId(), form.getAgentName(),
             form.getVersion()));
     }
-
+    
     /**
      * Replace custom labels while preserving the service-managed latest label.
      */

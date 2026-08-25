@@ -22,73 +22,73 @@ package com.alibaba.nacos.ai.model.search;
  * @author nacos
  */
 public class AiResourceSearchHit {
-
+    
     private Long documentId;
-
+    
     private Long chunkId;
-
+    
     private String resourceType;
-
+    
     private String resourceName;
-
+    
     private String resourceVersion;
-
+    
     private String chunkType;
-
+    
     private double score;
-
+    
     public Long getDocumentId() {
         return documentId;
     }
-
+    
     public void setDocumentId(Long documentId) {
         this.documentId = documentId;
     }
-
+    
     public Long getChunkId() {
         return chunkId;
     }
-
+    
     public void setChunkId(Long chunkId) {
         this.chunkId = chunkId;
     }
-
+    
     public String getResourceType() {
         return resourceType;
     }
-
+    
     public void setResourceType(String resourceType) {
         this.resourceType = resourceType;
     }
-
+    
     public String getResourceName() {
         return resourceName;
     }
-
+    
     public void setResourceName(String resourceName) {
         this.resourceName = resourceName;
     }
-
+    
     public String getResourceVersion() {
         return resourceVersion;
     }
-
+    
     public void setResourceVersion(String resourceVersion) {
         this.resourceVersion = resourceVersion;
     }
-
+    
     public String getChunkType() {
         return chunkType;
     }
-
+    
     public void setChunkType(String chunkType) {
         this.chunkType = chunkType;
     }
-
+    
     public double getScore() {
         return score;
     }
-
+    
     public void setScore(double score) {
         this.score = score;
     }

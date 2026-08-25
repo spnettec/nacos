@@ -24,103 +24,103 @@ import com.fasterxml.jackson.annotation.JsonCreator;
  * @author nacos
  */
 public class AiResourceIndexTaskPayload {
-
+    
     public static final int CURRENT_SCHEMA_VERSION = 1;
-
+    
     private int schemaVersion = CURRENT_SCHEMA_VERSION;
-
+    
     private Subject subject;
-
+    
     private Options options;
-
+    
     public AiResourceIndexTaskPayload() {
     }
-
+    
     @JsonCreator(mode = JsonCreator.Mode.DISABLED)
     public AiResourceIndexTaskPayload(String resourceType, String resourceName,
         boolean enhancementRequested) {
         this.subject = new Subject(resourceType, resourceName);
         this.options = new Options(enhancementRequested);
     }
-
+    
     public int getSchemaVersion() {
         return schemaVersion;
     }
-
+    
     public void setSchemaVersion(int schemaVersion) {
         this.schemaVersion = schemaVersion;
     }
-
+    
     public Subject getSubject() {
         return subject;
     }
-
+    
     public void setSubject(Subject subject) {
         this.subject = subject;
     }
-
+    
     public Options getOptions() {
         return options;
     }
-
+    
     public void setOptions(Options options) {
         this.options = options;
     }
-
+    
     /**
      * Canonical resource identity owned by the search-index task type.
      */
     public static class Subject {
-
+        
         private String resourceType;
-
+        
         private String resourceName;
-
+        
         public Subject() {
         }
-
+        
         @JsonCreator(mode = JsonCreator.Mode.DISABLED)
         public Subject(String resourceType, String resourceName) {
             this.resourceType = resourceType;
             this.resourceName = resourceName;
         }
-
+        
         public String getResourceType() {
             return resourceType;
         }
-
+        
         public void setResourceType(String resourceType) {
             this.resourceType = resourceType;
         }
-
+        
         public String getResourceName() {
             return resourceName;
         }
-
+        
         public void setResourceName(String resourceName) {
             this.resourceName = resourceName;
         }
     }
-
+    
     /**
      * Durable execution intent owned by the search-index task type.
      */
     public static class Options {
-
+        
         private boolean enhancementRequested;
-
+        
         public Options() {
         }
-
+        
         @JsonCreator(mode = JsonCreator.Mode.DISABLED)
         public Options(boolean enhancementRequested) {
             this.enhancementRequested = enhancementRequested;
         }
-
+        
         public boolean isEnhancementRequested() {
             return enhancementRequested;
         }
-
+        
         public void setEnhancementRequested(boolean enhancementRequested) {
             this.enhancementRequested = enhancementRequested;
         }

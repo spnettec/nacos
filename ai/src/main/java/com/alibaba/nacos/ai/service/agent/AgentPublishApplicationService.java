@@ -38,13 +38,13 @@ import java.util.Objects;
  */
 @Service
 public class AgentPublishApplicationService {
-
+    
     private final AgentOperationService operationService;
-
+    
     public AgentPublishApplicationService(AgentOperationService operationService) {
         this.operationService = operationService;
     }
-
+    
     /**
      * Publish one exact Agent Version and optionally submit it.
      *
@@ -87,7 +87,7 @@ public class AgentPublishApplicationService {
         return requireSubmittedState(operationService.getVersion(namespaceId,
             request.getAgentName(), request.getVersion()));
     }
-
+    
     private AgentVersionDetail findEquivalent(String namespaceId, AgentPublishRequest request)
         throws NacosException {
         final AgentVersionDetail existing;
@@ -104,7 +104,7 @@ public class AgentPublishApplicationService {
         requireEquivalentInitialMetadata(namespaceId, request);
         return existing;
     }
-
+    
     private AgentVersionDetail recoverEquivalent(String namespaceId, AgentPublishRequest request,
         NacosException originalFailure) throws NacosException {
         final AgentVersionDetail existing;
@@ -119,7 +119,7 @@ public class AgentPublishApplicationService {
         requireEquivalentInitialMetadata(namespaceId, request);
         return existing;
     }
-
+    
     private void requireEquivalentContent(String namespaceId, AgentPublishRequest request,
         AgentVersionDetail existing) throws NacosException {
         String requestedDigest;
@@ -137,7 +137,7 @@ public class AgentPublishApplicationService {
                 + request.getAgentName() + '@' + request.getVersion());
         }
     }
-
+    
     private void requireEquivalentInitialMetadata(String namespaceId,
         AgentPublishRequest request) throws NacosException {
         if (!hasInitialMetadata(request)) {
@@ -159,18 +159,18 @@ public class AgentPublishApplicationService {
                 + request.getAgentName());
         }
     }
-
+    
     private boolean hasInitialMetadata(AgentPublishRequest request) {
         return request.getDisplayName() != null || request.getDescription() != null
             || request.getIconUrl() != null || request.getProvider() != null
             || request.getTags() != null || request.getExtensions() != null;
     }
-
+    
     private boolean sameProvider(AgentProvider requested, AgentProvider existing) {
         return existing != null && Objects.equals(requested.getName(), existing.getName())
             && Objects.equals(requested.getUrl(), existing.getUrl());
     }
-
+    
     private AgentVersionDetail requireSubmittedState(AgentVersionDetail version)
         throws NacosApiException {
         String status = version.getStatus();
@@ -182,7 +182,7 @@ public class AgentPublishApplicationService {
         throw illegalState("Agent Version did not reach a submitted state: "
             + version.getAgentName() + '@' + version.getVersion() + ", status=" + status);
     }
-
+    
     private void requireStatus(AgentVersionDetail version, String expected)
         throws NacosApiException {
         if (!expected.equals(version.getStatus())) {
@@ -190,12 +190,12 @@ public class AgentPublishApplicationService {
                 + version.getAgentName() + '@' + version.getVersion());
         }
     }
-
+    
     private NacosApiException conflict(String message) {
         return new NacosApiException(NacosException.CONFLICT, ErrorCode.RESOURCE_CONFLICT,
             message);
     }
-
+    
     private NacosApiException illegalState(String message) {
         return new NacosApiException(NacosException.INVALID_PARAM, ErrorCode.ILLEGAL_STATE,
             message);

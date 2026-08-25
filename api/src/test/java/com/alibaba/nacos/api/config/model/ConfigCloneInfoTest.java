@@ -26,21 +26,21 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ConfigCloneInfoTest {
-
+    
     private ObjectMapper mapper;
-
+    
     ConfigCloneInfo configCloneInfo;
-
+    
     @BeforeEach
     void setUp() {
         mapper = JsonMapper.builder().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-                .build();
+            .build();
         configCloneInfo = new ConfigCloneInfo();
         configCloneInfo.setConfigId(1L);
         configCloneInfo.setTargetDataId("newDataId");
         configCloneInfo.setTargetGroupName("newGroup");
     }
-
+    
     @Test
     public void testSerialize() throws Exception {
         String json = mapper.writeValueAsString(configCloneInfo);
@@ -48,7 +48,7 @@ class ConfigCloneInfoTest {
         assertTrue(json.contains("\"targetGroupName\":\"newGroup\""));
         assertTrue(json.contains("\"targetDataId\":\"newDataId\""));
     }
-
+    
     @Test
     public void testDeserialize() throws Exception {
         String json =

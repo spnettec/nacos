@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
 class AgentEndpointRedoDataTest {
-
+    
     private AgentEndpoint newEndpoint(String address, int port) {
         AgentEndpoint endpoint = new AgentEndpoint();
         endpoint.setAddress(address);
@@ -32,7 +32,7 @@ class AgentEndpointRedoDataTest {
         endpoint.setVersion("1.0.0");
         return endpoint;
     }
-
+    
     @Test
     void testGetAgentName() {
         AgentEndpointWrapper wrapper = AgentEndpointWrapper.wrap(newEndpoint("127.0.0.1", 8080));
@@ -43,7 +43,7 @@ class AgentEndpointRedoDataTest {
         assertEquals("agentX@@1.0.0", AgentEndpointRedoData.keyOf("agentX", "1.0.0"));
         assertSame(wrapper, data.get());
     }
-
+    
     @Test
     void testEquals() {
         AgentEndpointWrapper wrapper = AgentEndpointWrapper.wrap(newEndpoint("127.0.0.1", 8080));
@@ -51,18 +51,18 @@ class AgentEndpointRedoDataTest {
         assertEquals(data, data);
         assertNotEquals(data, null);
         assertNotEquals(data, new Object());
-
+        
         AgentEndpointRedoData same = new AgentEndpointRedoData("agentX", wrapper);
         assertEquals(data, same);
         assertEquals(data.hashCode(), same.hashCode());
-
+        
         AgentEndpointRedoData diffName = new AgentEndpointRedoData("agentY", wrapper);
         assertNotEquals(data, diffName);
         AgentEndpoint differentVersion = newEndpoint("127.0.0.1", 8080);
         differentVersion.setVersion("2.0.0");
         assertNotEquals(data,
             new AgentEndpointRedoData("agentX", AgentEndpointWrapper.wrap(differentVersion)));
-
+        
         AgentEndpointWrapper otherWrapper =
             AgentEndpointWrapper.wrap(newEndpoint("127.0.0.2", 9090));
         AgentEndpointRedoData diffWrapper = new AgentEndpointRedoData("agentX", otherWrapper);

@@ -146,7 +146,7 @@ public class ExternalDataSourceServiceImpl implements DataSourceService {
                 .build(EnvUtil.getEnvironment(), (dataSource) -> {
                     //check datasource connection
                     ConnectionCheckUtil.checkDataSourceConnection(dataSource);
-
+                    
                     JdbcTemplate jdbcTemplate = new JdbcTemplate();
                     jdbcTemplate.setQueryTimeout(queryTimeout);
                     jdbcTemplate.setDataSource(dataSource);

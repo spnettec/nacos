@@ -53,20 +53,20 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class GrpcProtocolAuthServiceTest {
-
+    
     @Mock
     private NacosAuthConfig authConfig;
-
+    
     private ConfigPublishRequest configRequest;
-
+    
     private AbstractNamingRequest namingRequest;
-
+    
     private AbstractMcpRequest mcpRequest;
-
+    
     private AbstractAgentRequest agentRequest;
-
+    
     private GrpcProtocolAuthService protocolAuthService;
-
+    
     @BeforeEach
     void setUp() throws Exception {
         protocolAuthService = new GrpcProtocolAuthService(authConfig);
@@ -76,14 +76,14 @@ class GrpcProtocolAuthServiceTest {
         mockMcpRequest();
         mockAgentRequest();
     }
-
+    
     private void mockConfigRequest() {
         configRequest = new ConfigPublishRequest();
         configRequest.setTenant("testCNs");
         configRequest.setGroup("testCG");
         configRequest.setDataId("testD");
     }
-
+    
     private void mockNamingRequest() {
         namingRequest = new AbstractNamingRequest() {
         };
@@ -91,21 +91,21 @@ class GrpcProtocolAuthServiceTest {
         namingRequest.setGroupName("testNG");
         namingRequest.setServiceName("testS");
     }
-
+    
     private void mockMcpRequest() {
         mcpRequest = new AbstractMcpRequest() {
         };
         mcpRequest.setNamespaceId("testNNs");
         mcpRequest.setMcpName("testS");
     }
-
+    
     private void mockAgentRequest() {
         agentRequest = new AbstractAgentRequest() {
         };
         agentRequest.setNamespaceId("testNNs");
         agentRequest.setAgentName("testS");
     }
-
+    
     @Test
     @Secured(resource = "testResource", parser = MockResourceParser.class)
     void testParseResourceWithSpecifiedResource() throws NoSuchMethodException {
@@ -118,7 +118,7 @@ class GrpcProtocolAuthServiceTest {
         assertNotNull(actual.getProperties());
         assertTrue(actual.getProperties().isEmpty());
     }
-
+    
     @Test
     @Secured(signType = "non-exist")
     void testParseResourceWithNonExistType() throws NoSuchMethodException {
@@ -126,7 +126,7 @@ class GrpcProtocolAuthServiceTest {
         Resource actual = protocolAuthService.parseResource(namingRequest, secured);
         assertEquals(Resource.EMPTY_RESOURCE, actual);
     }
-
+    
     @Test
     @Secured(signType = "non-exist", parser = MockResourceParser.class)
     void testParseResourceWithNonExistTypeException() throws NoSuchMethodException {
@@ -134,7 +134,7 @@ class GrpcProtocolAuthServiceTest {
         assertThrows(NacosRuntimeException.class,
             () -> protocolAuthService.parseResource(namingRequest, secured));
     }
-
+    
     @Test
     @Secured(signType = SignType.NAMING, parser = MockSuccessResourceParser.class)
     void testExplicitParserOverridesTypedParser() throws NoSuchMethodException {
@@ -145,7 +145,7 @@ class GrpcProtocolAuthServiceTest {
         assertEquals("testCustomGroup", actual.getGroup());
         assertEquals(SignType.NAMING, actual.getType());
     }
-
+    
     @Test
     @Secured()
     void testParseResourceWithNamingType() throws NoSuchMethodException {
@@ -157,7 +157,7 @@ class GrpcProtocolAuthServiceTest {
         assertEquals("testNG", actual.getGroup());
         assertNotNull(actual.getProperties());
     }
-
+    
     @Test
     @Secured(signType = SignType.CONFIG)
     void testParseResourceWithConfigType() throws NoSuchMethodException {
@@ -169,7 +169,7 @@ class GrpcProtocolAuthServiceTest {
         assertEquals("testCG", actual.getGroup());
         assertNotNull(actual.getProperties());
     }
-
+    
     @Test
     @Secured(signType = SignType.AI)
     void testParseResourceWithMcpType() throws NoSuchMethodException {
@@ -181,7 +181,7 @@ class GrpcProtocolAuthServiceTest {
         assertEquals(Constants.DEFAULT_GROUP, actual.getGroup());
         assertNotNull(actual.getProperties());
     }
-
+    
     @Test
     @Secured(signType = SignType.AI)
     void testParseResourceWithAgentType() throws NoSuchMethodException {
@@ -193,20 +193,20 @@ class GrpcProtocolAuthServiceTest {
         assertEquals(Constants.DEFAULT_GROUP, actual.getGroup());
         assertNotNull(actual.getProperties());
     }
-
+    
     @Test
     void testParseIdentity() {
         IdentityContext actual = protocolAuthService.parseIdentity(namingRequest);
         assertNotNull(actual);
     }
-
+    
     @Test
     void testValidateIdentityWithoutPlugin() throws AccessException {
         IdentityContext identityContext = new IdentityContext();
         assertTrue(protocolAuthService.validateIdentity(identityContext, Resource.EMPTY_RESOURCE)
             .isSuccess());
     }
-
+    
     @Test
     void testValidateIdentityWithPlugin() throws AccessException {
         Mockito.when(authConfig.getNacosAuthSystemType())
@@ -215,13 +215,13 @@ class GrpcProtocolAuthServiceTest {
         assertFalse(protocolAuthService.validateIdentity(identityContext, Resource.EMPTY_RESOURCE)
             .isSuccess());
     }
-
+    
     @Test
     void testValidateAuthorityWithoutPlugin() throws AccessException {
         assertTrue(protocolAuthService.validateAuthority(new IdentityContext(),
             new Permission(Resource.EMPTY_RESOURCE, "")).isSuccess());
     }
-
+    
     @Test
     void testValidateAuthorityWithPlugin() throws AccessException {
         Mockito.when(authConfig.getNacosAuthSystemType())
@@ -229,7 +229,7 @@ class GrpcProtocolAuthServiceTest {
         assertFalse(protocolAuthService.validateAuthority(new IdentityContext(),
             new Permission(Resource.EMPTY_RESOURCE, "")).isSuccess());
     }
-
+    
     @Test
     @Secured(signType = SignType.CONFIG)
     void testEnabledAuthWithPlugin() throws NoSuchMethodException {
@@ -238,7 +238,7 @@ class GrpcProtocolAuthServiceTest {
         Secured secured = getMethodSecure("testEnabledAuthWithPlugin");
         assertTrue(protocolAuthService.enableAuth(secured));
     }
-
+    
     @Test
     @Secured(signType = SignType.CONFIG)
     void testEnabledAuthWithoutPlugin() throws NoSuchMethodException {
@@ -246,7 +246,7 @@ class GrpcProtocolAuthServiceTest {
         Secured secured = getMethodSecure("testEnabledAuthWithoutPlugin");
         assertFalse(protocolAuthService.enableAuth(secured));
     }
-
+    
     @Test
     @Secured(apiType = ApiType.INNER_API)
     void testCheckServerIdentityWithoutIdentityConfig() throws NoSuchMethodException {
@@ -266,7 +266,7 @@ class GrpcProtocolAuthServiceTest {
                 + " and `nacos.core.auth.server.identity.value`, or open `nacos.core.auth.enable.userAgentAuthWhite`",
             result.getMessage());
     }
-
+    
     @Test
     @Secured(apiType = ApiType.INNER_API)
     void testCheckServerIdentityNotMatched() throws NoSuchMethodException {
@@ -280,7 +280,7 @@ class GrpcProtocolAuthServiceTest {
         result = protocolAuthService.checkServerIdentity(namingRequest, secured);
         assertEquals(ServerIdentityResult.ResultStatus.NOT_MATCHED, result.getStatus());
     }
-
+    
     @Test
     @Secured(apiType = ApiType.INNER_API)
     void testCheckServerIdentityMatched() throws NoSuchMethodException {
@@ -292,7 +292,7 @@ class GrpcProtocolAuthServiceTest {
             protocolAuthService.checkServerIdentity(namingRequest, secured);
         assertEquals(ServerIdentityResult.ResultStatus.MATCHED, result.getStatus());
     }
-
+    
     @Test
     @Secured
     void testCheckServerIdentityForOtherTypeApi() throws NoSuchMethodException {
@@ -302,7 +302,7 @@ class GrpcProtocolAuthServiceTest {
             protocolAuthService.checkServerIdentity(namingRequest, secured);
         assertEquals(ServerIdentityResult.ResultStatus.NOT_MATCHED, result.getStatus());
     }
-
+    
     private Secured getMethodSecure(String methodName) throws NoSuchMethodException {
         Method method = GrpcProtocolAuthServiceTest.class.getDeclaredMethod(methodName);
         return method.getAnnotation(Secured.class);

@@ -80,22 +80,22 @@ import java.util.Objects;
  */
 @Service
 public class AgentPersistenceService {
-
+    
     private static final String RESOURCE_SOURCE_LOCAL = "local";
-
+    
     private static final int MAX_BIZ_TAGS_LENGTH = 1024;
-
+    
     private static final int VERSION_SCAN_PAGE_SIZE = 100;
-
+    
     private static final String VALIDATION_CONTENT_DIGEST =
         AgentVersionContentSerializer.digest(new byte[0]);
-
+    
     private final AiResourcePersistService resourcePersistService;
-
+    
     private final AiResourceVersionPersistService versionPersistService;
-
+    
     private final AgentVersionStorageService storageService;
-
+    
     public AgentPersistenceService(AiResourcePersistService resourcePersistService,
         AiResourceVersionPersistService versionPersistService,
         AgentVersionStorageService storageService) {
@@ -103,7 +103,7 @@ public class AgentPersistenceService {
         this.versionPersistService = versionPersistService;
         this.storageService = storageService;
     }
-
+    
     /**
      * Create the first Agent draft and its metadata as an insert-only logical operation.
      *
@@ -123,7 +123,7 @@ public class AgentPersistenceService {
         return createInitialVersion(agent, initialDraft, AiConstants.Agent.VERSION_STATUS_DRAFT,
             RESOURCE_SOURCE_LOCAL);
     }
-
+    
     /**
      * Create the first online Agent Version for a compatibility facade.
      *
@@ -141,7 +141,7 @@ public class AgentPersistenceService {
         return createInitialVersion(agent, initialVersion,
             AiConstants.Agent.VERSION_STATUS_ONLINE, resourceSource);
     }
-
+    
     private AgentVersionDetail createInitialVersion(Agent agent,
         AgentVersionDetail initialVersion, String status, String resourceSource)
         throws NacosException {
@@ -164,7 +164,7 @@ public class AgentPersistenceService {
             normalizeCreateAgent(agent, toAgentVersionInfo(versionInfo),
                 derived.getVersionCatalog());
         AgentModelValidator.validateAgent(normalizedAgent);
-
+        
         AgentVersionContent content = new AgentVersionContent(initialVersion.getCallInterfaces());
         PreparedAgentVersionWrite prepared = storageService.prepare(agent.getNamespaceId(),
             agent.getAgentName(), initialVersion.getVersion(), content);
@@ -172,7 +172,7 @@ public class AgentPersistenceService {
         AgentVersionDetail normalizedVersion =
             normalizeInitialVersion(agent, initialVersion, descriptor, status);
         AgentModelValidator.validateVersionDetail(normalizedVersion);
-
+        
         AiResource resourceRow = toResourceRow(normalizedAgent);
         resourceRow.setFrom(resourceSource);
         AiResourceVersion versionRow = toVersionRow(normalizedVersion, descriptor);
@@ -184,10 +184,10 @@ public class AgentPersistenceService {
                     throw conflict("Agent already exists: " + resourceRow.getName(), null);
                 }
             }
-
+            
             claimVersion(versionRow);
             storageService.save(prepared);
-
+            
             if (existingResource == null) {
                 try {
                     long resourceId = resourcePersistService.insert(resourceRow);
@@ -232,7 +232,7 @@ public class AgentPersistenceService {
                 + agent.getAgentName() + '@' + initialVersion.getVersion(), e);
         }
     }
-
+    
     /**
      * Read one exact Agent Resource projection without loading Version content.
      *
@@ -255,7 +255,7 @@ public class AgentPersistenceService {
             throw serverError("Stored Agent metadata is invalid: " + agentName, e);
         }
     }
-
+    
     /**
      * Read one Agent and the first bounded page of Version summaries.
      *
@@ -274,7 +274,7 @@ public class AgentPersistenceService {
         AgentModelValidator.validateOverview(result);
         return result;
     }
-
+    
     /**
      * Try to replace every writable field of one Agent using an already authorized Resource row.
      *
@@ -309,7 +309,7 @@ public class AgentPersistenceService {
         }
         return getAgent(replacement.getNamespaceId(), replacement.getAgentName());
     }
-
+    
     /**
      * List bounded Agent summaries from an already visibility-constrained query.
      *
@@ -341,7 +341,7 @@ public class AgentPersistenceService {
         result.setPageItems(summaries);
         return result;
     }
-
+    
     /**
      * Read one exact Agent Version and verify its content against the stored descriptor.
      *
@@ -374,7 +374,7 @@ public class AgentPersistenceService {
                 + version, e);
         }
     }
-
+    
     /**
      * Replace one draft Version.
      *
@@ -406,7 +406,7 @@ public class AgentPersistenceService {
             AgentVersionStorageDescriptor targetDescriptor = prepared.getDescriptor();
             String targetStorage =
                 AgentVersionStorageDescriptorSerializer.serialize(targetDescriptor);
-
+            
             validateUpdatedDraft(currentRow, targetDescriptor, callInterfaces,
                 changeDescription);
             storageService.save(prepared);
@@ -421,7 +421,7 @@ public class AgentPersistenceService {
             throw asNacosException("Failed to update Agent draft " + agentName + '@' + version, e);
         }
     }
-
+    
     /**
      * Create one subsequent draft from direct content or one exact existing Version.
      *
@@ -460,7 +460,7 @@ public class AgentPersistenceService {
                 + draft.getVersion(), e);
         }
     }
-
+    
     /**
      * Create an online Version without occupying the Agent draft or review pointers.
      *
@@ -491,7 +491,7 @@ public class AgentPersistenceService {
                 + version.getVersion(), e);
         }
     }
-
+    
     /**
      * Delete one exact current draft and its Agent Version content.
      *
@@ -538,7 +538,7 @@ public class AgentPersistenceService {
             throw asNacosException("Failed to delete Agent draft " + agentName + '@' + version, e);
         }
     }
-
+    
     /**
      * Delete an Agent definition, every Version row, and all referenced Version content.
      *
@@ -564,7 +564,7 @@ public class AgentPersistenceService {
             throw asNacosException("Failed to read Agent Version storage descriptors for "
                 + agentName, e);
         }
-
+        
         NacosException firstFailure = null;
         for (AgentVersionStorageDescriptor descriptor : descriptors) {
             try {
@@ -592,7 +592,7 @@ public class AgentPersistenceService {
             throw serverError("Agent Version rows were not deleted: " + agentName, null);
         }
     }
-
+    
     /**
      * Delete one exact Agent Version in any lifecycle state.
      *
@@ -626,7 +626,7 @@ public class AgentPersistenceService {
                 e);
         }
     }
-
+    
     /**
      * List Agent Version summaries without loading Version content.
      *
@@ -662,7 +662,7 @@ public class AgentPersistenceService {
         result.setPageItems(summaries);
         return result;
     }
-
+    
     /**
      * Read one exact Agent Version summary without loading Version content.
      *
@@ -685,17 +685,17 @@ public class AgentPersistenceService {
                 + version, e);
         }
     }
-
+    
     AiResourceVersion requireVersionRow(String namespaceId, String agentName, String version)
         throws NacosApiException {
         return findVersion(namespaceId, agentName, version);
     }
-
+    
     AiResourceVersion findVersionRow(String namespaceId, String agentName, String version) {
         return versionPersistService.find(namespaceId, agentName,
             Constants.Agent.RESOURCE_TYPE_AGENT, version);
     }
-
+    
     void updateVersionStatus(String namespaceId, String agentName, String version, String status)
         throws NacosException {
         int updated = versionPersistService.updateStatus(namespaceId, agentName,
@@ -705,7 +705,7 @@ public class AgentPersistenceService {
                 + version, null);
         }
     }
-
+    
     void updatePublishPipelineInfo(String namespaceId, String agentName, String version,
         String publishPipelineInfo) throws NacosException {
         int updated = versionPersistService.updatePublishPipelineInfo(namespaceId, agentName,
@@ -715,7 +715,7 @@ public class AgentPersistenceService {
                 + version, null);
         }
     }
-
+    
     /**
      * Rebuild Agent lifecycle summary and Version catalog from current online Version facts.
      *
@@ -754,7 +754,7 @@ public class AgentPersistenceService {
                 AgentVersionCatalogBuilder.build(onlineVersionProtocols, labels);
             versionInfo.setOnlineCnt(onlineVersionProtocols.size());
             versionInfo.setLabels(new LinkedHashMap<String, String>(derived.getLabels()));
-
+            
             AgentResourceExt resourceExt = AgentResourceExtSerializer.deserialize(meta.getExt());
             resourceExt.setVersionCatalog(derived.getVersionCatalog());
             AiResource updateValue = buildMetaUpdateValue(meta, versionInfo, resourceExt);
@@ -765,7 +765,7 @@ public class AgentPersistenceService {
         }
         throw conflict("Agent lifecycle metadata changed concurrently: " + agentName, null);
     }
-
+    
     private void validateSubsequentDraftInputs(String namespaceId, String agentName,
         AgentVersionDetail draft, String basedOnVersion) {
         AgentValidationUtils.validateNamespaceId(namespaceId);
@@ -804,7 +804,7 @@ public class AgentPersistenceService {
             }
         }
     }
-
+    
     private AgentVersionDetail normalizeSubsequentDraft(String namespaceId, String agentName,
         AgentVersionDetail source, List<AgentCallInterface> callInterfaces,
         AgentVersionStorageDescriptor descriptor) {
@@ -821,14 +821,14 @@ public class AgentPersistenceService {
         result.setUpdateTime(0L);
         return result;
     }
-
+    
     private void ensureDraftSlotAvailable(Agent agent, String version) throws NacosException {
         String editingVersion = agent.getVersionInfo().getEditingVersion();
         if (StringUtils.isNotBlank(editingVersion) && !version.equals(editingVersion)) {
             throw conflict("Agent already has an editing Version: " + editingVersion, null);
         }
     }
-
+    
     private void markEditingVersion(String namespaceId, String agentName, String version)
         throws NacosException {
         for (int i = 0; i < AiResourceConstants.MAX_WORKING_VERSION_RETRY; i++) {
@@ -858,7 +858,7 @@ public class AgentPersistenceService {
         }
         throw conflict("Agent editing Version changed concurrently: " + agentName, null);
     }
-
+    
     private void clearEditingVersion(String namespaceId, String agentName, String version)
         throws NacosException {
         for (int i = 0; i < AiResourceConstants.MAX_WORKING_VERSION_RETRY; i++) {
@@ -885,7 +885,7 @@ public class AgentPersistenceService {
         }
         throw conflict("Agent editing Version changed concurrently: " + agentName, null);
     }
-
+    
     private Map<String, String> mergeRequestedLabels(ResourceVersionInfo versionInfo,
         Map<String, String> requestedLabels) {
         Map<String, String> result = requestedLabels == null
@@ -900,7 +900,7 @@ public class AgentPersistenceService {
         }
         return result;
     }
-
+    
     private void validateLabelTargets(String namespaceId, String agentName,
         Map<String, String> labels) throws NacosException {
         for (Map.Entry<String, String> label : labels.entrySet()) {
@@ -922,7 +922,7 @@ public class AgentPersistenceService {
             }
         }
     }
-
+    
     private Map<String, List<String>> loadOnlineVersionProtocols(String namespaceId,
         String agentName) throws NacosException {
         List<AiResourceVersion> onlineRows = listAllVersionRows(namespaceId, agentName,
@@ -942,7 +942,7 @@ public class AgentPersistenceService {
         }
         return result;
     }
-
+    
     private List<AiResourceVersion> listAllVersionRows(String namespaceId, String agentName,
         String status) {
         List<AiResourceVersion> result = new ArrayList<AiResourceVersion>();
@@ -960,7 +960,7 @@ public class AgentPersistenceService {
             pageNo++;
         }
     }
-
+    
     private AiResource buildMetaUpdateValue(AiResource source, ResourceVersionInfo versionInfo,
         AgentResourceExt resourceExt) {
         AiResource result = new AiResource();
@@ -977,7 +977,7 @@ public class AgentPersistenceService {
         }
         return result;
     }
-
+    
     private void validateDraftUpdateInputs(String namespaceId, String agentName, String version,
         List<AgentCallInterface> callInterfaces, String changeDescription) {
         AgentVersionDetail input = new AgentVersionDetail();
@@ -992,7 +992,7 @@ public class AgentPersistenceService {
         input.setUpdateTime(0L);
         AgentModelValidator.validateVersionDetail(input);
     }
-
+    
     private void validateUpdatedDraft(AiResourceVersion currentRow,
         AgentVersionStorageDescriptor targetDescriptor, List<AgentCallInterface> callInterfaces,
         String changeDescription) {
@@ -1009,7 +1009,7 @@ public class AgentPersistenceService {
         target.setUpdateTime(0L);
         AgentModelValidator.validateVersionDetail(target);
     }
-
+    
     private void validateCreateInputs(Agent agent, AgentVersionDetail initialVersion,
         String expectedStatus) {
         if (agent == null) {
@@ -1045,7 +1045,7 @@ public class AgentPersistenceService {
             throw new IllegalArgumentException("initialVersion status must be " + expectedStatus);
         }
     }
-
+    
     private void validateOnlineVersionInputs(String namespaceId, String agentName,
         AgentVersionDetail version, String preferredLatest) {
         AgentValidationUtils.validateNamespaceId(namespaceId);
@@ -1077,7 +1077,7 @@ public class AgentPersistenceService {
             throw new IllegalArgumentException("preferredLatest must target the created Version");
         }
     }
-
+    
     private void validateAgentUpdateInputs(Agent replacement) {
         if (replacement == null) {
             throw new IllegalArgumentException("Agent replacement must not be null");
@@ -1091,7 +1091,7 @@ public class AgentPersistenceService {
                 "Agent update input must not contain read-only projection fields");
         }
     }
-
+    
     private Agent normalizeAgentUpdate(Agent source, Agent current) {
         Agent result = new Agent();
         result.setNamespaceId(source.getNamespaceId());
@@ -1112,7 +1112,7 @@ public class AgentPersistenceService {
         result.setUpdateTime(current.getUpdateTime());
         return result;
     }
-
+    
     private Agent normalizeCreateAgent(Agent source, AgentVersionInfo versionInfo,
         AgentVersionCatalog versionCatalog) {
         Agent result = new Agent();
@@ -1134,7 +1134,7 @@ public class AgentPersistenceService {
         result.setUpdateTime(0L);
         return result;
     }
-
+    
     private AgentVersionDetail normalizeInitialVersion(Agent agent, AgentVersionDetail source,
         AgentVersionStorageDescriptor descriptor, String status) {
         AgentVersionDetail result = new AgentVersionDetail();
@@ -1150,7 +1150,7 @@ public class AgentPersistenceService {
         result.setUpdateTime(0L);
         return result;
     }
-
+    
     private AgentVersionDetail normalizeOnlineVersion(String namespaceId, String agentName,
         AgentVersionDetail source, AgentVersionStorageDescriptor descriptor) {
         AgentVersionDetail result = new AgentVersionDetail();
@@ -1166,7 +1166,7 @@ public class AgentPersistenceService {
         result.setUpdateTime(0L);
         return result;
     }
-
+    
     private ResourceVersionInfo initialVersionInfo(String version, String status,
         Map<String, String> labels) {
         AgentValidationUtils.validateVersion(version);
@@ -1180,7 +1180,7 @@ public class AgentPersistenceService {
         result.setLabels(new HashMap<String, String>(labels));
         return result;
     }
-
+    
     private List<String> protocolNames(List<AgentCallInterface> callInterfaces) {
         if (callInterfaces == null) {
             throw new IllegalArgumentException("Online Agent Version must contain callInterfaces");
@@ -1191,7 +1191,7 @@ public class AgentPersistenceService {
         }
         return result;
     }
-
+    
     private String serializeTags(List<String> tags) {
         List<String> persistedTags =
             tags == null ? Collections.<String>emptyList() : tags;
@@ -1207,7 +1207,7 @@ public class AgentPersistenceService {
         }
         return result;
     }
-
+    
     private List<String> deserializeTags(String json) {
         if (json == null || json.trim().isEmpty()) {
             return Collections.emptyList();
@@ -1231,7 +1231,7 @@ public class AgentPersistenceService {
         }
         return result;
     }
-
+    
     private String serializeVersionInfo(AgentVersionInfo versionInfo) {
         try {
             return JacksonUtils.toJson(toResourceVersionInfo(versionInfo));
@@ -1239,7 +1239,7 @@ public class AgentPersistenceService {
             throw new IllegalArgumentException("Unable to serialize Agent version info", e);
         }
     }
-
+    
     private ResourceVersionInfo toResourceVersionInfo(AgentVersionInfo source) {
         if (source == null) {
             throw new IllegalArgumentException("Agent versionInfo must not be null");
@@ -1252,7 +1252,7 @@ public class AgentPersistenceService {
             : new HashMap<String, String>(source.getLabels()));
         return result;
     }
-
+    
     private AgentVersionInfo toAgentVersionInfo(ResourceVersionInfo source) {
         if (source == null) {
             throw new IllegalArgumentException("Stored Agent versionInfo must not be null");
@@ -1265,7 +1265,7 @@ public class AgentPersistenceService {
             : new HashMap<String, String>(source.getLabels()));
         return result;
     }
-
+    
     private AiResource toResourceRow(Agent agent) {
         AgentResourceExt resourceExt = new AgentResourceExt();
         resourceExt.setSchemaVersion(AgentResourceExt.SCHEMA_VERSION);
@@ -1274,7 +1274,7 @@ public class AgentPersistenceService {
         resourceExt.setProvider(agent.getProvider());
         resourceExt.setExtensions(agent.getExtensions());
         resourceExt.setVersionCatalog(agent.getVersionCatalog());
-
+        
         AiResource result = new AiResource();
         result.setNamespaceId(agent.getNamespaceId());
         result.setName(agent.getAgentName());
@@ -1290,7 +1290,7 @@ public class AgentPersistenceService {
         result.setMetaVersion(1L);
         return result;
     }
-
+    
     private AiResourceVersion toVersionRow(AgentVersionDetail version,
         AgentVersionStorageDescriptor descriptor) {
         AiResourceVersion result = new AiResourceVersion();
@@ -1304,10 +1304,10 @@ public class AgentPersistenceService {
         result.setStorage(AgentVersionStorageDescriptorSerializer.serialize(descriptor));
         return result;
     }
-
+    
     private Agent toAgent(AiResource row) {
         AgentResourceExt resourceExt = AgentResourceExtSerializer.deserialize(row.getExt());
-
+        
         Agent result = new Agent();
         result.setNamespaceId(row.getNamespaceId());
         result.setAgentName(row.getName());
@@ -1328,7 +1328,7 @@ public class AgentPersistenceService {
         AgentModelValidator.validateAgent(result);
         return result;
     }
-
+    
     private AgentSummary toAgentSummary(AiResource row) {
         AgentResourceExt resourceExt = AgentResourceExtSerializer.deserialize(row.getExt());
         AgentSummary result = new AgentSummary();
@@ -1349,7 +1349,7 @@ public class AgentPersistenceService {
         result.setUpdateTime(toMillis(row.getGmtModified()));
         return result;
     }
-
+    
     private AgentVersionDetail toVersionDetail(AiResourceVersion row,
         AgentVersionStorageDescriptor descriptor, AgentVersionContent content) {
         AgentVersionDetail result = new AgentVersionDetail();
@@ -1365,7 +1365,7 @@ public class AgentPersistenceService {
         result.setUpdateTime(toMillis(row.getGmtModified()));
         return result;
     }
-
+    
     private AgentVersionSummary toVersionSummary(AiResourceVersion row) {
         AgentVersionStorageDescriptor descriptor =
             AgentVersionStorageDescriptorSerializer.deserialize(row.getStorage());
@@ -1379,7 +1379,7 @@ public class AgentPersistenceService {
         result.setUpdateTime(toMillis(row.getGmtModified()));
         return result;
     }
-
+    
     private void claimVersion(AiResourceVersion version) throws NacosException {
         AiResourceVersion existingVersion = versionPersistService.find(version.getNamespaceId(),
             version.getName(), version.getType(), version.getVersion());
@@ -1413,7 +1413,7 @@ public class AgentPersistenceService {
                 + version.getVersion(), insertFailure);
         }
     }
-
+    
     private AiResourceVersion findVersion(String namespaceId, String agentName, String version)
         throws NacosApiException {
         AiResourceVersion result = versionPersistService.find(namespaceId, agentName,
@@ -1423,7 +1423,7 @@ public class AgentPersistenceService {
         }
         return result;
     }
-
+    
     private void requireCurrentDraft(Agent agent, AiResourceVersion row, String agentName,
         String version) throws NacosApiException {
         if (!AiConstants.Agent.VERSION_STATUS_DRAFT.equals(row.getStatus())) {
@@ -1435,7 +1435,7 @@ public class AgentPersistenceService {
                 + version);
         }
     }
-
+    
     private AgentVersionStorageDescriptor requireStorageDescriptor(AiResourceVersion row,
         String agentName, String version) throws NacosApiException {
         final AgentVersionStorageDescriptor descriptor;
@@ -1447,7 +1447,7 @@ public class AgentPersistenceService {
         }
         return descriptor;
     }
-
+    
     private boolean sameResource(AiResource actual, AiResource expected) {
         if (!matches(actual, expected.getNamespaceId(), expected.getName())
             || !Objects.equals(actual.getDesc(), expected.getDesc())
@@ -1464,7 +1464,7 @@ public class AgentPersistenceService {
             && sameVersionInfo(AiResourceManager.requireVersionInfo(actual),
                 AiResourceManager.requireVersionInfo(expected));
     }
-
+    
     private boolean sameVersion(AiResourceVersion actual, AiResourceVersion expected) {
         return matches(actual, expected.getNamespaceId(), expected.getName(),
             expected.getVersion()) && Objects.equals(actual.getStatus(), expected.getStatus())
@@ -1475,7 +1475,7 @@ public class AgentPersistenceService {
                 AgentVersionStorageDescriptorSerializer.deserialize(expected.getStorage()))
             && Objects.equals(actual.getPublishPipelineInfo(), expected.getPublishPipelineInfo());
     }
-
+    
     private boolean sameResourceExt(AgentResourceExt actual, AgentResourceExt expected) {
         return Objects.equals(actual.getSchemaVersion(), expected.getSchemaVersion())
             && Objects.equals(actual.getDisplayName(), expected.getDisplayName())
@@ -1484,20 +1484,20 @@ public class AgentPersistenceService {
             && Objects.equals(actual.getExtensions(), expected.getExtensions())
             && sameVersionCatalog(actual.getVersionCatalog(), expected.getVersionCatalog());
     }
-
+    
     private boolean sameProvider(AgentProvider actual, AgentProvider expected) {
         return actual == expected || actual != null && expected != null
             && Objects.equals(actual.getName(), expected.getName())
             && Objects.equals(actual.getUrl(), expected.getUrl());
     }
-
+    
     private boolean sameVersionInfo(ResourceVersionInfo actual, ResourceVersionInfo expected) {
         return Objects.equals(actual.getEditingVersion(), expected.getEditingVersion())
             && Objects.equals(actual.getReviewingVersion(), expected.getReviewingVersion())
             && Objects.equals(actual.getOnlineCnt(), expected.getOnlineCnt())
             && Objects.equals(actual.getLabels(), expected.getLabels());
     }
-
+    
     private boolean sameVersionCatalog(AgentVersionCatalog actual,
         AgentVersionCatalog expected) {
         if (!Objects.equals(actual.getLatestVersion(), expected.getLatestVersion())
@@ -1515,7 +1515,7 @@ public class AgentPersistenceService {
         }
         return true;
     }
-
+    
     private boolean sameStorageDescriptor(AgentVersionStorageDescriptor actual,
         AgentVersionStorageDescriptor expected) {
         return Objects.equals(actual.getProvider(), expected.getProvider())
@@ -1527,14 +1527,14 @@ public class AgentPersistenceService {
             && Objects.equals(actual.getSchemaVersion(), expected.getSchemaVersion())
             && Objects.equals(actual.getSize(), expected.getSize());
     }
-
+    
     private NacosException mapResourceInsertFailure(AiResource resource,
         RuntimeException failure) {
         return failure instanceof DuplicateKeyException
             ? conflict("Agent already exists: " + resource.getName(), failure)
             : serverError("Failed to insert Agent Resource: " + resource.getName(), failure);
     }
-
+    
     private NacosException mapVersionInsertFailure(AiResourceVersion version,
         RuntimeException failure) {
         return failure instanceof DuplicateKeyException
@@ -1542,52 +1542,52 @@ public class AgentPersistenceService {
             : serverError("Failed to insert Agent Version: " + version.getName() + '@'
                 + version.getVersion(), failure);
     }
-
+    
     private String versionConflictMessage(AiResourceVersion version) {
         return "Agent Version already exists: " + version.getName() + '@' + version.getVersion();
     }
-
+    
     private boolean matches(AiResource resource, String namespaceId, String agentName) {
         return resource != null && namespaceId.equals(resource.getNamespaceId())
             && agentName.equals(resource.getName())
             && Constants.Agent.RESOURCE_TYPE_AGENT.equals(resource.getType());
     }
-
+    
     private boolean matches(AiResourceVersion version, String namespaceId, String agentName,
         String exactVersion) {
         return version != null && namespaceId.equals(version.getNamespaceId())
             && agentName.equals(version.getName()) && exactVersion.equals(version.getVersion())
             && Constants.Agent.RESOURCE_TYPE_AGENT.equals(version.getType());
     }
-
+    
     private Long toMillis(Timestamp timestamp) {
         return timestamp == null ? null : timestamp.getTime();
     }
-
+    
     private NacosApiException conflict(String message, Throwable cause) {
         return cause == null
             ? new NacosApiException(NacosException.CONFLICT, ErrorCode.RESOURCE_CONFLICT, message)
             : new NacosApiException(NacosException.CONFLICT, ErrorCode.RESOURCE_CONFLICT, cause,
                 message);
     }
-
+    
     private NacosApiException notFound(String message) {
         return new NacosApiException(NacosException.NOT_FOUND, ErrorCode.RESOURCE_NOT_FOUND,
             message);
     }
-
+    
     private NacosApiException illegalState(String message) {
         return new NacosApiException(NacosException.INVALID_PARAM, ErrorCode.ILLEGAL_STATE,
             message);
     }
-
+    
     private NacosApiException serverError(String message, Throwable cause) {
         return cause == null
             ? new NacosApiException(NacosException.SERVER_ERROR, ErrorCode.SERVER_ERROR, message)
             : new NacosApiException(NacosException.SERVER_ERROR, ErrorCode.SERVER_ERROR, cause,
                 message);
     }
-
+    
     private NacosException asNacosException(String message, Exception cause) {
         return cause instanceof NacosException ? (NacosException) cause
             : serverError(message, cause);

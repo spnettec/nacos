@@ -51,9 +51,9 @@ import static com.alibaba.nacos.plugin.auth.constant.Constants.Resource.AI_TYPE;
 import static com.alibaba.nacos.plugin.auth.constant.Constants.Resource.AI_TYPE_AGENT;
 
 class AiGrpcResourceParserTest {
-
+    
     private AiGrpcResourceParser resourceParser;
-
+    
     private static Stream<Arguments> fulContextRequests() {
         Arguments case1 = Arguments.of(mockMcpRequest("testNs", "testName"), "testNs", "testName",
             MockMcpRequest.class.getSimpleName());
@@ -70,7 +70,7 @@ class AiGrpcResourceParserTest {
             "testSpecName", ReleaseMcpServerRequest.class.getSimpleName());
         return Stream.of(case1, case2, case3, case4, case5);
     }
-
+    
     private static Stream<Arguments> withoutNamespaceRequests() {
         Arguments case1 = Arguments.of(mockMcpRequest("", "testName"),
             AiConstants.Mcp.MCP_DEFAULT_NAMESPACE, "testName",
@@ -86,7 +86,7 @@ class AiGrpcResourceParserTest {
             NotifySubscriberRequest.class.getSimpleName());
         return Stream.of(case1, case2, case3, case4);
     }
-
+    
     private static Stream<Arguments> withoutNameRequests() {
         Arguments case1 = Arguments.of(mockMcpRequest("testNs", ""), "testNs", "",
             MockMcpRequest.class.getSimpleName());
@@ -99,7 +99,7 @@ class AiGrpcResourceParserTest {
             NotifySubscriberRequest.class.getSimpleName());
         return Stream.of(case1, case2, case3, case4);
     }
-
+    
     private static Stream<Arguments> agentClientRequests() {
         return Stream.of(
             Arguments.of(agentSearchRpcRequest("search-ns"), "search-ns", ""),
@@ -119,12 +119,12 @@ class AiGrpcResourceParserTest {
             Arguments.of(new AgentEndpointDeregisterRpcRequest(),
                 AiConstants.Mcp.MCP_DEFAULT_NAMESPACE, ""));
     }
-
+    
     @BeforeEach
     void setUp() throws Exception {
         resourceParser = new AiGrpcResourceParser();
     }
-
+    
     @ParameterizedTest
     @MethodSource({"fulContextRequests", "withoutNamespaceRequests", "withoutNameRequests"})
     @Secured(signType = SignType.AI)
@@ -140,7 +140,7 @@ class AiGrpcResourceParserTest {
         assertEquals(expectedRequestClassName, actual.getProperties()
             .getProperty(com.alibaba.nacos.plugin.auth.constant.Constants.Resource.REQUEST_CLASS));
     }
-
+    
     @ParameterizedTest
     @MethodSource("agentClientRequests")
     @Secured(signType = SignType.AI)
@@ -151,21 +151,21 @@ class AiGrpcResourceParserTest {
         assertEquals(expectedName, actual.getName());
         assertEquals(AI_TYPE_AGENT, actual.getProperties().getProperty(AI_TYPE));
     }
-
+    
     private static AbstractMcpRequest mockMcpRequest(String testNs, String testS) {
         MockMcpRequest result = new MockMcpRequest();
         result.setNamespaceId(testNs);
         result.setMcpName(testS);
         return result;
     }
-
+    
     private static MockAgentRequest mockAgentRequest(String testNs, String testS) {
         MockAgentRequest result = new MockAgentRequest();
         result.setNamespaceId(testNs);
         result.setAgentName(testS);
         return result;
     }
-
+    
     private static ReleaseAgentCardRequest makeReleaseAgentCardRequest(String testNs,
         String agentName, String cardName) {
         ReleaseAgentCardRequest result = new ReleaseAgentCardRequest();
@@ -176,7 +176,7 @@ class AiGrpcResourceParserTest {
         result.setAgentCard(agentCard);
         return result;
     }
-
+    
     private static ReleaseMcpServerRequest makeReleaseMcpServerRequest(String testNs,
         String mcpName,
         String specName) {
@@ -188,14 +188,14 @@ class AiGrpcResourceParserTest {
         result.setServerSpecification(serverSpecification);
         return result;
     }
-
+    
     private static AbstractPromptRequest mockPromptRequest(String testNs, String promptKey) {
         MockPromptRequest result = new MockPromptRequest();
         result.setNamespaceId(testNs);
         result.setPromptKey(promptKey);
         return result;
     }
-
+    
     private static Request mockOtherRequest(String testNs, String testS) {
         NotifySubscriberRequest result = new NotifySubscriberRequest();
         result.setNamespace(testNs);
@@ -203,7 +203,7 @@ class AiGrpcResourceParserTest {
         result.setServiceName(testS);
         return result;
     }
-
+    
     private static AgentSearchRpcRequest agentSearchRpcRequest(String namespaceId) {
         AgentSearchRequest search = new AgentSearchRequest();
         search.setNamespaceId(namespaceId);
@@ -211,7 +211,7 @@ class AiGrpcResourceParserTest {
         result.setSearchRequest(search);
         return result;
     }
-
+    
     private static AgentDiscoveryRpcRequest agentDiscoveryRpcRequest(
         String namespaceId, String agentName) {
         AgentDiscoveryRequest discovery = new AgentDiscoveryRequest();
@@ -225,7 +225,7 @@ class AiGrpcResourceParserTest {
         result.setDiscoveryRequest(discovery);
         return result;
     }
-
+    
     private static AgentEndpointRegisterRpcRequest agentEndpointRegisterRpcRequest(
         String namespaceId,
         String agentName) {
@@ -236,7 +236,7 @@ class AiGrpcResourceParserTest {
         result.setRegistrationBatch(batch);
         return result;
     }
-
+    
     private static AgentEndpointDeregisterRpcRequest agentEndpointDeregisterRpcRequest(
         String namespaceId, String agentName) {
         AgentEndpointDeregisterRpcRequest result = new AgentEndpointDeregisterRpcRequest();
@@ -244,27 +244,27 @@ class AiGrpcResourceParserTest {
         result.setAgentName(agentName);
         return result;
     }
-
+    
     @Secured(signType = SignType.AI)
     void forSecureAnnotationMethod() {
-
+        
     }
-
+    
     private Secured getMethodSecure() throws NoSuchMethodException {
         Method method =
             AiGrpcResourceParserTest.class.getDeclaredMethod("forSecureAnnotationMethod");
         return method.getAnnotation(Secured.class);
     }
-
+    
     private static class MockMcpRequest extends AbstractMcpRequest {
-
+        
     }
-
+    
     private static class MockAgentRequest extends AbstractAgentRequest {
-
+        
     }
-
+    
     private static class MockPromptRequest extends AbstractPromptRequest {
-
+        
     }
 }

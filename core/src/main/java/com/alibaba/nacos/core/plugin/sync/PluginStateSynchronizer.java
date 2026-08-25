@@ -30,13 +30,13 @@ import java.util.Map;
  * @since 3.2.0
  */
 public interface PluginStateSynchronizer {
-
+    
     /**
      * Initialize synchronization resources after local plugins have been initialized.
      */
     default void initialize() {
     }
-
+    
     /**
      * Whether this synchronizer can currently accept cluster writes.
      *
@@ -45,7 +45,7 @@ public interface PluginStateSynchronizer {
     default boolean isAvailable() {
         return true;
     }
-
+    
     /**
      * Synchronize plugin state change to cluster.
      *
@@ -54,7 +54,7 @@ public interface PluginStateSynchronizer {
      * @throws NacosApiException if sync fails
      */
     void syncStateChange(String pluginId, boolean enabled) throws NacosApiException;
-
+    
     /**
      * Synchronize plugin config change to cluster.
      *
@@ -63,7 +63,7 @@ public interface PluginStateSynchronizer {
      * @throws NacosApiException if sync fails
      */
     void syncConfigChange(String pluginId, Map<String, String> config) throws NacosApiException;
-
+    
     /**
      * Release synchronization resources.
      */

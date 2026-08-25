@@ -65,7 +65,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 @Component
 public class SwitchManager extends RequestProcessor4CP {
-
+    
     private final SwitchDomain switchDomain;
     
     private final ProtocolManager protocolManager;
@@ -73,13 +73,13 @@ public class SwitchManager extends RequestProcessor4CP {
     private final ReentrantReadWriteLock raftLock;
     
     private final ReentrantLock requestLock;
-
+    
     private final Serializer serializer;
-
+    
     private final SwitchDomainSnapshotOperation snapshotOperation;
-
+    
     private final File dataFile;
-
+    
     public SwitchManager(SwitchDomain switchDomain, ProtocolManager protocolManager) {
         this.switchDomain = switchDomain;
         this.protocolManager = protocolManager;
@@ -415,7 +415,7 @@ public class SwitchManager extends RequestProcessor4CP {
             throw new NacosException(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage());
         }
     }
-
+    
     public SwitchDomain getSwitchDomain() {
         return switchDomain;
     }
@@ -424,7 +424,7 @@ public class SwitchManager extends RequestProcessor4CP {
     public List<SnapshotOperation> loadSnapshotOperate() {
         return Collections.singletonList(snapshotOperation);
     }
-
+    
     /**
      * Load Snapshot from snapshot dir.
      *
@@ -458,7 +458,7 @@ public class SwitchManager extends RequestProcessor4CP {
             this.raftLock.writeLock().unlock();
         }
     }
-
+    
     /**
      * Dump data from data dir to snapshot dir.
      *
@@ -544,7 +544,7 @@ public class SwitchManager extends RequestProcessor4CP {
         String keyString = new String(keys.get(0), StandardCharsets.UTF_8);
         return !KeyBuilder.getSwitchDomainKey().equals(keyString);
     }
-
+    
     private Type getDatumType() {
         return TypeUtils.parameterize(Datum.class, SwitchDomain.class);
     }

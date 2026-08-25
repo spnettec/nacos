@@ -27,134 +27,134 @@ import java.util.Map;
  * @author nacos
  */
 public class AiResourceSearchResult {
-
+    
     private String namespaceId;
-
+    
     private String resourceType;
-
+    
     private String resourceName;
-
+    
     private String resourceVersion;
-
+    
     private String displayName;
-
+    
     private String description;
-
+    
     private List<String> tags = Collections.emptyList();
-
+    
     private List<String> capabilities = Collections.emptyList();
-
+    
     private List<String> representativeQueries = Collections.emptyList();
-
+    
     private Map<String, Object> metadata = Collections.emptyMap();
-
+    
     private Timestamp gmtCreate;
-
+    
     private Timestamp gmtModified;
-
+    
     private Integer score;
-
+    
     public String getNamespaceId() {
         return namespaceId;
     }
-
+    
     public void setNamespaceId(String namespaceId) {
         this.namespaceId = namespaceId;
     }
-
+    
     public String getResourceType() {
         return resourceType;
     }
-
+    
     public void setResourceType(String resourceType) {
         this.resourceType = resourceType;
     }
-
+    
     public String getResourceName() {
         return resourceName;
     }
-
+    
     public void setResourceName(String resourceName) {
         this.resourceName = resourceName;
     }
-
+    
     public String getResourceVersion() {
         return resourceVersion;
     }
-
+    
     public void setResourceVersion(String resourceVersion) {
         this.resourceVersion = resourceVersion;
     }
-
+    
     public String getDisplayName() {
         return displayName;
     }
-
+    
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
     }
-
+    
     public String getDescription() {
         return description;
     }
-
+    
     public void setDescription(String description) {
         this.description = description;
     }
-
+    
     public List<String> getTags() {
         return tags;
     }
-
+    
     public void setTags(List<String> tags) {
         this.tags = tags == null ? Collections.emptyList() : tags;
     }
-
+    
     public List<String> getCapabilities() {
         return capabilities;
     }
-
+    
     public void setCapabilities(List<String> capabilities) {
         this.capabilities = capabilities == null ? Collections.emptyList() : capabilities;
     }
-
+    
     public List<String> getRepresentativeQueries() {
         return representativeQueries;
     }
-
+    
     public void setRepresentativeQueries(List<String> representativeQueries) {
         this.representativeQueries = representativeQueries == null ? Collections.emptyList()
             : representativeQueries;
     }
-
+    
     public Map<String, Object> getMetadata() {
         return metadata;
     }
-
+    
     public void setMetadata(Map<String, Object> metadata) {
         this.metadata = metadata == null ? Collections.emptyMap() : metadata;
     }
-
+    
     public Timestamp getGmtCreate() {
         return gmtCreate;
     }
-
+    
     public void setGmtCreate(Timestamp gmtCreate) {
         this.gmtCreate = gmtCreate;
     }
-
+    
     public Timestamp getGmtModified() {
         return gmtModified;
     }
-
+    
     public void setGmtModified(Timestamp gmtModified) {
         this.gmtModified = gmtModified;
     }
-
+    
     public Integer getScore() {
         return score;
     }
-
+    
     public void setScore(Integer score) {
         this.score = score;
     }

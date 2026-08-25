@@ -28,9 +28,9 @@ import jakarta.servlet.http.HttpServletRequest;
  * @author xiweng.yy
  */
 public class AgentSpecCardHttpResourceParser extends AiHttpResourceParser {
-
+    
     private static final String AGENT_SPEC_CARD_PARAM = "agentSpecCard";
-
+    
     @Override
     protected String getResourceName(HttpServletRequest request) {
         String agentSpecCard = request.getParameter(AGENT_SPEC_CARD_PARAM);

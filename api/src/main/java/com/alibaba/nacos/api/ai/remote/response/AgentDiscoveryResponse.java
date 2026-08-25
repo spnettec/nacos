@@ -25,13 +25,13 @@ import com.alibaba.nacos.api.remote.response.Response;
  * @author Nacos
  */
 public class AgentDiscoveryResponse extends Response {
-
+    
     private AgentDiscoveryResult discoveryResult;
-
+    
     public AgentDiscoveryResult getDiscoveryResult() {
         return discoveryResult;
     }
-
+    
     public void setDiscoveryResult(AgentDiscoveryResult discoveryResult) {
         this.discoveryResult = discoveryResult;
     }

@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AgentClientFormsTest {
-
+    
     @Test
     void testSearchFormBuildsRequestAndValidates() throws NacosApiException {
         AgentSearchForm form = new AgentSearchForm();
@@ -49,27 +49,27 @@ class AgentClientFormsTest {
         form.setProtocolsAny(Arrays.asList("a2a", "jsonrpc"));
         form.setPageNo(2);
         form.setPageSize(20);
-
+        
         assertEquals("team", form.getNamespaceId());
         assertEquals("demo", form.getAgentNameContains());
         assertEquals(Arrays.asList("assistant", "support"), form.getTagsAll());
         assertEquals(Arrays.asList("a2a", "jsonrpc"), form.getProtocolsAny());
         assertEquals(2, form.getPageNo());
         assertEquals(20, form.getPageSize());
-
+        
         AgentSearchRequest request = form.toRequest();
         assertEquals("team", request.getNamespaceId());
         assertEquals("demo", request.getAgentNameContains());
         assertEquals(2, request.getPageNo());
         form.validate();
-
+        
         AgentSearchForm defaultNamespace = new AgentSearchForm();
         defaultNamespace.setPageNo(0);
         assertThrows(IllegalArgumentException.class, defaultNamespace::toRequest);
         defaultNamespace.setPageNo(1);
         assertEquals("public", defaultNamespace.toRequest().getNamespaceId());
     }
-
+    
     @Test
     void testDiscoveryFormBuildsCompleteFilter() throws NacosApiException {
         AgentDiscoveryForm form = new AgentDiscoveryForm();
@@ -82,7 +82,7 @@ class AgentClientFormsTest {
         form.setTransport(Collections.singletonList("HTTP"));
         form.setEndpointSource(Arrays.asList("RUNTIME", "DECLARED"));
         form.setMetadataSelector("{\"zone\":\"east\"}");
-
+        
         assertEquals("team", form.getNamespaceId());
         assertEquals("demo", form.getAgentName());
         assertEquals("1.0.0", form.getVersion());
@@ -92,7 +92,7 @@ class AgentClientFormsTest {
         assertEquals(Collections.singletonList("HTTP"), form.getTransport());
         assertEquals(Arrays.asList("RUNTIME", "DECLARED"), form.getEndpointSource());
         assertEquals("{\"zone\":\"east\"}", form.getMetadataSelector());
-
+        
         AgentDiscoveryRequest request = form.toRequest();
         assertEquals("team", request.getNamespaceId());
         assertEquals("demo", request.getReference().getAgentName());
@@ -101,7 +101,7 @@ class AgentClientFormsTest {
         assertEquals("east", request.getFilter().getMetadataSelector().get("zone"));
         form.validate();
     }
-
+    
     @Test
     void testDiscoveryFormSupportsNoFilterAndRejectsInvalidValues()
         throws NacosApiException {
@@ -112,12 +112,12 @@ class AgentClientFormsTest {
         assertEquals("public", request.getNamespaceId());
         assertEquals("stable", request.getReference().getLabel());
         assertNull(request.getFilter());
-
+        
         form.setProtocol(Collections.singletonList("a2a"));
         request = form.toRequest();
         assertEquals(Collections.singletonList("a2a"), request.getFilter().getProtocols());
         assertNull(request.getFilter().getEndpointSources());
-
+        
         form.setProtocol(null);
         form.setEndpointSource(Collections.singletonList("UNKNOWN"));
         assertThrows(NacosApiException.class, form::toRequest);
@@ -129,7 +129,7 @@ class AgentClientFormsTest {
         assertEquals("Request parameter `metadataSelector` is not valid JSON.",
             exception.getMessage());
     }
-
+    
     @Test
     void testRegistrationFormBuildsCompleteBatch() throws NacosApiException {
         Endpoint endpoint = endpoint();
@@ -141,44 +141,44 @@ class AgentClientFormsTest {
         form.setProtocol("a2a");
         String endpoints = JsonUtils.toJson(Collections.singletonList(endpoint));
         form.setEndpoints(endpoints);
-
+        
         assertNull(form.getNamespaceId());
         assertEquals("demo", form.getAgentName());
         assertEquals("1.0.0", form.getRuntimeVersion());
         assertEquals("[1.0.0,2.0.0)", form.getVersionRange());
         assertEquals("a2a", form.getProtocol());
         assertEquals(endpoints, form.getEndpoints());
-
+        
         AgentEndpointRegistrationBatch request = form.toRequest();
         assertEquals("public", request.getNamespaceId());
         assertEquals(endpoint.getUri(), request.getEndpoints().get(0).getUri());
         assertEquals(endpoint.getTransport(), request.getEndpoints().get(0).getTransport());
         form.validate();
-
+        
         form.setEndpoints("{");
         assertThrows(NacosApiException.class, form::toRequest);
     }
-
+    
     @Test
     void testDeregistrationFormValidatesPublicationFields() throws NacosApiException {
         AgentEndpointDeregistrationForm form = new AgentEndpointDeregistrationForm();
         form.setNamespaceId("");
         form.setAgentName("demo");
         form.setProtocol("a2a");
-
+        
         assertEquals("", form.getNamespaceId());
         assertEquals("demo", form.getAgentName());
         assertEquals("a2a", form.getProtocol());
-
+        
         form.validate();
         assertEquals("public", form.getNamespaceId());
         assertEquals("demo", form.getAgentName());
         assertEquals("a2a", form.getProtocol());
-
+        
         form.setProtocol("");
         assertThrows(IllegalArgumentException.class, form::validate);
     }
-
+    
     @Test
     void testPublishFormParsesAndValidatesOnce() throws NacosApiException {
         AgentPublishForm form = new AgentPublishForm();
@@ -195,7 +195,7 @@ class AgentClientFormsTest {
         form.setAuthor("alice");
         form.setChangeDescription("initial");
         form.setAutoSubmit("true");
-
+        
         AgentPublishRequest request = form.toRequest();
         assertEquals("demo-agent", request.getAgentName());
         assertEquals("Demo", request.getDisplayName());
@@ -212,7 +212,7 @@ class AgentClientFormsTest {
         assertEquals("true", form.getAutoSubmit());
         assertTrue(request.isAutoSubmit());
         form.validate();
-
+        
         form.setAutoSubmit("false");
         assertFalse(form.toRequest().isAutoSubmit());
         form.setAutoSubmit("invalid");
@@ -221,7 +221,7 @@ class AgentClientFormsTest {
         form.setCallInterfaces("{");
         assertThrows(NacosApiException.class, form::validate);
     }
-
+    
     @Test
     void testJsonParserAndPrivateConstructor() throws Exception {
         NacosTypeReference<Map<String, String>> type =
@@ -230,13 +230,13 @@ class AgentClientFormsTest {
         assertNull(AgentClientFormJsonParser.parseOptional("selector", " ", type));
         assertEquals("east", AgentClientFormJsonParser.parseOptional("selector",
             "{\"zone\":\"east\"}", type).get("zone"));
-
+        
         Constructor<AgentClientFormJsonParser> constructor =
             AgentClientFormJsonParser.class.getDeclaredConstructor();
         constructor.setAccessible(true);
         assertTrue(constructor.newInstance() instanceof AgentClientFormJsonParser);
     }
-
+    
     private Endpoint endpoint() {
         Endpoint result = new Endpoint();
         result.setUri("http://127.0.0.1:8080/agent");

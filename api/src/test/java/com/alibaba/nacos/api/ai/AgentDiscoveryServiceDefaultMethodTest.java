@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class AgentDiscoveryServiceDefaultMethodTest {
-
+    
     @Test
     void compatibilityDefaultsReportNotImplemented() {
         AgentDiscoveryService service = new AgentDiscoveryService() {
@@ -52,14 +52,14 @@ class AgentDiscoveryServiceDefaultMethodTest {
         assertNotImplemented(() -> service.deregisterAgentEndpoints(
             new AgentEndpointDeregistrationBatch()));
     }
-
+    
     @Test
     void convenienceOverloadsDelegateWithNullFilter() throws NacosException {
         AtomicInteger invocationCount = new AtomicInteger();
         AgentReference reference = new AgentReference();
         AbstractNacosAgentDiscoveryListener listener = listener();
         AgentDiscoveryService service = new AgentDiscoveryService() {
-
+            
             @Override
             public AgentDiscoveryResult discoverAgent(AgentReference actualReference,
                 AgentDiscoveryFilter filter) {
@@ -68,7 +68,7 @@ class AgentDiscoveryServiceDefaultMethodTest {
                 invocationCount.incrementAndGet();
                 return null;
             }
-
+            
             @Override
             public AgentDiscoveryResult subscribeAgent(AgentReference actualReference,
                 AgentDiscoveryFilter filter,
@@ -79,7 +79,7 @@ class AgentDiscoveryServiceDefaultMethodTest {
                 invocationCount.incrementAndGet();
                 return null;
             }
-
+            
             @Override
             public void unsubscribeAgent(AgentReference actualReference,
                 AgentDiscoveryFilter filter,
@@ -90,30 +90,30 @@ class AgentDiscoveryServiceDefaultMethodTest {
                 invocationCount.incrementAndGet();
             }
         };
-
+        
         service.discoverAgent(reference);
         service.subscribeAgent(reference, listener);
         service.unsubscribeAgent(reference, listener);
-
+        
         assertEquals(3, invocationCount.get());
     }
-
+    
     private void assertNotImplemented(ThrowingOperation operation) {
         NacosException exception = assertThrows(NacosException.class, operation::run);
         assertEquals(NacosException.SERVER_NOT_IMPLEMENTED, exception.getErrCode());
     }
-
+    
     private AbstractNacosAgentDiscoveryListener listener() {
         return new AbstractNacosAgentDiscoveryListener() {
-
+            
             @Override
             public void onEvent(NacosAgentDiscoveryEvent event) {
             }
         };
     }
-
+    
     private interface ThrowingOperation {
-
+        
         void run() throws NacosException;
     }
 }

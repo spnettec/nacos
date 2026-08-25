@@ -23,12 +23,12 @@ package com.alibaba.nacos.plugin.ai.importer.defaultimpl.mcp;
  * @since 3.3.0
  */
 public class McpOfficialImportServiceBuilder extends McpRegistryImportServiceBuilder {
-
+    
     public static final String PLUGIN_NAME = "mcp-official";
-
+    
     public static final String OFFICIAL_ENDPOINT =
         "https://registry.modelcontextprotocol.io/v0/servers";
-
+    
     /**
      * Legacy official MCP importer configuration prefix.
      *
@@ -37,7 +37,7 @@ public class McpOfficialImportServiceBuilder extends McpRegistryImportServiceBui
      */
     @Deprecated
     private static final String LEGACY_PREFIX = "nacos.plugin.ai.importer.mcp.official.";
-
+    
     public McpOfficialImportServiceBuilder() {
         super(PLUGIN_NAME, "Official MCP Registry",
             "Import MCP servers from the official MCP registry.", OFFICIAL_ENDPOINT,

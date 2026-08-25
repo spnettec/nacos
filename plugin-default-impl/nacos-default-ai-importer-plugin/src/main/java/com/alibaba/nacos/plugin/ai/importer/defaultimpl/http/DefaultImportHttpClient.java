@@ -45,46 +45,46 @@ import java.util.concurrent.Flow;
  * @since 3.2.1
  */
 public class DefaultImportHttpClient {
-
+    
     private static final String HTTPS_SCHEME = "https";
-
+    
     private static final String HTTP_SCHEME = "http";
-
+    
     private static final String LOCALHOST = "localhost";
-
+    
     private static final String LOCALHOST_SUFFIX = ".localhost";
-
+    
     private static final int DEFAULT_CONNECT_TIMEOUT_SECONDS = 10;
-
+    
     private static final int DEFAULT_READ_TIMEOUT_SECONDS = 20;
-
+    
     private static final long DEFAULT_MAX_RESPONSE_BYTES = 10L * 1024L * 1024L;
-
+    
     private final HttpClient httpClient;
-
+    
     private final DnsResolver dnsResolver;
-
+    
     private final boolean allowHttp;
-
+    
     private final boolean allowPrivateNetwork;
-
+    
     private final long maxResponseBytes;
-
+    
     public DefaultImportHttpClient() {
         this(false, false, DEFAULT_MAX_RESPONSE_BYTES);
     }
-
+    
     public DefaultImportHttpClient(boolean allowHttp, boolean allowPrivateNetwork,
         long maxResponseBytes) {
         this(newHttpClient(), InetAddress::getAllByName, allowHttp, allowPrivateNetwork,
             maxResponseBytes);
     }
-
+    
     public DefaultImportHttpClient(HttpClient httpClient) {
         this(httpClient, InetAddress::getAllByName, false, false,
             DEFAULT_MAX_RESPONSE_BYTES);
     }
-
+    
     /**
      * Create a default importer HTTP client with custom DNS resolver.
      *
@@ -94,7 +94,7 @@ public class DefaultImportHttpClient {
     public DefaultImportHttpClient(HttpClient httpClient, DnsResolver dnsResolver) {
         this(httpClient, dnsResolver, false, false, DEFAULT_MAX_RESPONSE_BYTES);
     }
-
+    
     /**
      * Create an importer HTTP client with a fixed network policy snapshot.
      *
@@ -113,7 +113,7 @@ public class DefaultImportHttpClient {
         this.maxResponseBytes =
             maxResponseBytes > 0 ? maxResponseBytes : DEFAULT_MAX_RESPONSE_BYTES;
     }
-
+    
     /**
      * Send a GET request with the default read timeout.
      *
@@ -125,7 +125,7 @@ public class DefaultImportHttpClient {
     public ImportHttpResponse get(String url, String accept) throws Exception {
         return get(url, DEFAULT_READ_TIMEOUT_SECONDS, accept);
     }
-
+    
     /**
      * Send a GET request after applying importer network policy.
      *
@@ -152,7 +152,7 @@ public class DefaultImportHttpClient {
         return new ImportHttpResponse(uri.toString(), response.statusCode(), response.headers(),
             body);
     }
-
+    
     private URI parseUrl(String url) throws NacosException {
         if (StringUtils.isBlank(url)) {
             throw invalid("AI resource import request URL must not be empty.");
@@ -167,7 +167,7 @@ public class DefaultImportHttpClient {
             throw invalid("AI resource import request URL is invalid.");
         }
     }
-
+    
     private void checkRequestTarget(URI uri) throws NacosException {
         String scheme =
             uri.getScheme() == null ? null : uri.getScheme().toLowerCase(Locale.ENGLISH);
@@ -186,7 +186,7 @@ public class DefaultImportHttpClient {
                 "AI resource import request URL resolves to a private or local target.");
         }
     }
-
+    
     private boolean isUnsafeHost(String host) throws NacosException {
         String normalized = InternetAddressUtil.removeBrackets(host).toLowerCase(Locale.ENGLISH);
         if (LOCALHOST.equals(normalized) || normalized.endsWith(LOCALHOST_SUFFIX)) {
@@ -200,7 +200,7 @@ public class DefaultImportHttpClient {
         }
         return false;
     }
-
+    
     private InetAddress[] resolveHost(String host) throws NacosException {
         try {
             InetAddress[] result = dnsResolver.resolve(host);
@@ -212,38 +212,38 @@ public class DefaultImportHttpClient {
             throw invalid("AI resource import request URL host cannot be resolved.");
         }
     }
-
+    
     private boolean isUnsafeAddress(InetAddress address) {
         return address.isAnyLocalAddress() || address.isLoopbackAddress()
             || address.isLinkLocalAddress() || address.isSiteLocalAddress()
             || address.isMulticastAddress() || isUniqueLocalIpv6Address(address);
     }
-
+    
     private boolean isUniqueLocalIpv6Address(InetAddress address) {
         byte[] bytes = address.getAddress();
         return bytes.length == 16 && (bytes[0] & 0xfe) == 0xfc;
     }
-
+    
     private static HttpClient newHttpClient() {
         return HttpClient.newBuilder()
             .followRedirects(HttpClient.Redirect.NEVER)
             .connectTimeout(Duration.ofSeconds(DEFAULT_CONNECT_TIMEOUT_SECONDS))
             .build();
     }
-
+    
     private void checkResponseSize(byte[] body, long maxResponseBytes) throws NacosException {
         if (body != null && body.length > maxResponseBytes) {
             throw invalid("AI resource import response size exceeds source limit.");
         }
     }
-
+    
     private NacosException invalid(String message) {
         return new NacosApiException(NacosException.INVALID_PARAM,
             ErrorCode.PARAMETER_VALIDATE_ERROR, message);
     }
-
+    
     public interface DnsResolver {
-
+        
         /**
          * Resolve host to network addresses.
          *
@@ -253,49 +253,49 @@ public class DefaultImportHttpClient {
          */
         InetAddress[] resolve(String host) throws UnknownHostException;
     }
-
+    
     private static class LimitedByteArrayBodyHandler implements HttpResponse.BodyHandler<byte[]> {
-
+        
         private final long maxBytes;
-
+        
         LimitedByteArrayBodyHandler(long maxBytes) {
             this.maxBytes = maxBytes;
         }
-
+        
         @Override
         public HttpResponse.BodySubscriber<byte[]> apply(HttpResponse.ResponseInfo responseInfo) {
             return new LimitedByteArrayBodySubscriber(maxBytes);
         }
     }
-
+    
     private static class LimitedByteArrayBodySubscriber
         implements HttpResponse.BodySubscriber<byte[]> {
-
+        
         private final long maxBytes;
-
+        
         private final CompletableFuture<byte[]> body = new CompletableFuture<>();
-
+        
         private final ByteArrayOutputStream output = new ByteArrayOutputStream();
-
+        
         private Flow.Subscription subscription;
-
+        
         private long totalBytes;
-
+        
         LimitedByteArrayBodySubscriber(long maxBytes) {
             this.maxBytes = maxBytes;
         }
-
+        
         @Override
         public CompletionStage<byte[]> getBody() {
             return body;
         }
-
+        
         @Override
         public void onSubscribe(Flow.Subscription subscription) {
             this.subscription = subscription;
             subscription.request(Long.MAX_VALUE);
         }
-
+        
         @Override
         public void onNext(List<ByteBuffer> items) {
             if (body.isDone()) {
@@ -313,17 +313,17 @@ public class DefaultImportHttpClient {
                 totalBytes += remaining;
             }
         }
-
+        
         @Override
         public void onError(Throwable throwable) {
             body.completeExceptionally(throwable);
         }
-
+        
         @Override
         public void onComplete() {
             body.complete(output.toByteArray());
         }
-
+        
         private void fail(Throwable throwable) {
             if (subscription != null) {
                 subscription.cancel();

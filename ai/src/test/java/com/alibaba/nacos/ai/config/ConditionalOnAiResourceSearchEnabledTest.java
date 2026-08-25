@@ -39,7 +39,6 @@ import java.util.Collections;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -50,46 +49,52 @@ import static org.mockito.Mockito.mock;
  * @author nacos
  */
 class ConditionalOnAiResourceSearchEnabledTest {
-
+    
     private static final Class<?>[] SEARCH_COMPONENTS = {AiResourceIndexBackfillTask.class,
         AiResourceIndexTaskConsumer.class, AiResourceIndexServiceImpl.class,
         AiResourceIndexMaintenanceServiceImpl.class, AiResourceIndexContentLoaderImpl.class,
         AiResourceSearchService.class, HashingAiResourceEmbeddingService.class,
         JdbcAiResourceSearchRepository.class, JdbcAiResourceIndexTaskRepository.class,
         OpenAiCompatibleResourceIndexEnhancementService.class, AiResourceVectorIndexRouter.class};
-
+    
     @Test
-    void shouldBeDisabledByDefault() {
+    void shouldBeEnabledByDefaultIndependentlyFromArd() {
         ConditionalOnProperty condition =
             ConditionalOnAiResourceSearchEnabled.class.getAnnotation(ConditionalOnProperty.class);
-
-        assertEquals(Constants.ARD_ENABLED_KEY, condition.value()[0]);
+        
+        assertEquals(Constants.AI_RESOURCE_SEARCH_ENABLED_KEY, condition.value()[0]);
         assertEquals("true", condition.havingValue());
-        assertFalse(condition.matchIfMissing());
-        assertSearchComponentsDisabled(Collections.emptyMap());
-    }
-
-    @Test
-    void shouldBeDisabledWhenExplicitlyConfiguredFalse() {
-        assertSearchComponentsDisabled(
-            Collections.singletonMap(Constants.ARD_ENABLED_KEY, "false"));
-    }
-
-    @Test
-    void shouldRegisterSearchComponentWhenExplicitlyEnabled() {
+        assertTrue(condition.matchIfMissing());
         try (AnnotationConfigApplicationContext context = newContext(
-            Collections.singletonMap(Constants.ARD_ENABLED_KEY, "true"))) {
+            Collections.singletonMap(Constants.ARD_ENABLED_KEY, "false"))) {
             context.register(HashingAiResourceEmbeddingService.class);
             context.refresh();
-
+            
             assertNotNull(context.getBean(HashingAiResourceEmbeddingService.class));
         }
     }
-
+    
+    @Test
+    void shouldBeDisabledWhenExplicitlyConfiguredFalse() {
+        assertSearchComponentsDisabled(
+            Collections.singletonMap(Constants.AI_RESOURCE_SEARCH_ENABLED_KEY, "false"));
+    }
+    
+    @Test
+    void shouldRegisterSearchComponentWhenExplicitlyEnabled() {
+        try (AnnotationConfigApplicationContext context = newContext(
+            Collections.singletonMap(Constants.AI_RESOURCE_SEARCH_ENABLED_KEY, "true"))) {
+            context.register(HashingAiResourceEmbeddingService.class);
+            context.refresh();
+            
+            assertNotNull(context.getBean(HashingAiResourceEmbeddingService.class));
+        }
+    }
+    
     @Test
     void shouldConstructTaskConsumerWhenExplicitlyEnabled() {
         try (AnnotationConfigApplicationContext context = newContext(
-            Collections.singletonMap(Constants.ARD_ENABLED_KEY, "true"))) {
+            Collections.singletonMap(Constants.AI_RESOURCE_SEARCH_ENABLED_KEY, "true"))) {
             context.registerBean(AiResourceIndexTaskRepository.class,
                 () -> mock(AiResourceIndexTaskRepository.class));
             context.registerBean(AiResourceIndexService.class,
@@ -99,23 +104,23 @@ class ConditionalOnAiResourceSearchEnabledTest {
             context.register(AiResourceIndexTaskConsumer.class);
             EnvUtil.setEnvironment(context.getEnvironment());
             context.refresh();
-
+            
             assertNotNull(context.getBean(AiResourceIndexTaskConsumer.class));
         }
     }
-
+    
     private void assertSearchComponentsDisabled(Map<String, Object> properties) {
         try (AnnotationConfigApplicationContext context = newContext(properties)) {
             context.register(SEARCH_COMPONENTS);
             context.refresh();
-
+            
             for (Class<?> component : SEARCH_COMPONENTS) {
                 assertTrue(context.getBeansOfType(component).isEmpty(),
                     () -> component.getSimpleName() + " should not be registered");
             }
         }
     }
-
+    
     private AnnotationConfigApplicationContext newContext(Map<String, Object> properties) {
         AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
         if (!properties.isEmpty()) {

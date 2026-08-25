@@ -53,37 +53,37 @@ import java.util.concurrent.atomic.AtomicLong;
 @Component
 @Deprecated(since = "3.3.0", forRemoval = true)
 public class JRaftAuthUpgradeCoordinator {
-
+    
     static final String STATE_FILE_NAME = "jraft-auth-enforced.state";
-
+    
     private static final String STATE_FILE_VERSION = "version=1";
-
+    
     private static final String ENFORCED_STATE = "state=ENFORCED";
-
+    
     private static final long WARNING_INTERVAL_MILLIS = TimeUnit.MINUTES.toMillis(1);
-
+    
     private final ServerMemberManager serverMemberManager;
-
+    
     private final Path stateFile;
-
+    
     private final AtomicBoolean enforced = new AtomicBoolean(false);
-
+    
     private final AtomicBoolean statePersisted = new AtomicBoolean(false);
-
+    
     private final AtomicLong nextWarningTime = new AtomicLong(0L);
-
+    
     @Autowired
     public JRaftAuthUpgradeCoordinator(ServerMemberManager serverMemberManager) {
         this(serverMemberManager,
             Path.of(EnvUtil.getNacosHome(), "data", STATE_FILE_NAME));
     }
-
+    
     JRaftAuthUpgradeCoordinator(ServerMemberManager serverMemberManager, Path stateFile) {
         this.serverMemberManager = serverMemberManager;
         this.stateFile = stateFile;
         loadState();
     }
-
+    
     /**
      * Returns whether invalid JRaft credentials must be rejected.
      *
@@ -92,7 +92,7 @@ public class JRaftAuthUpgradeCoordinator {
     public boolean isEnforced() {
         return enforced.get();
     }
-
+    
     /**
      * Handles an invalid credential according to the temporary rolling-upgrade state.
      *
@@ -105,7 +105,7 @@ public class JRaftAuthUpgradeCoordinator {
         warnInvalidCredential();
         return true;
     }
-
+    
     /**
      * Checks the complete member view and irreversibly enables JRaft authentication when every
      * member reports support. In-memory enforcement is enabled immediately, while state-file
@@ -132,7 +132,7 @@ public class JRaftAuthUpgradeCoordinator {
             "All Nacos servers support JRaft authentication; enforcement is enabled");
         persistStateIfNecessary();
     }
-
+    
     private void loadState() {
         if (!Files.isRegularFile(stateFile)) {
             return;
@@ -153,7 +153,7 @@ public class JRaftAuthUpgradeCoordinator {
                 e);
         }
     }
-
+    
     private void persistStateIfNecessary() {
         if (statePersisted.get()) {
             return;
@@ -166,7 +166,7 @@ public class JRaftAuthUpgradeCoordinator {
                 "Failed to persist JRaft authentication enforcement state; will retry", e);
         }
     }
-
+    
     private void persistState() throws IOException {
         Path parent = stateFile.getParent();
         Files.createDirectories(parent);
@@ -181,7 +181,7 @@ public class JRaftAuthUpgradeCoordinator {
             Files.move(temporaryFile, stateFile, StandardCopyOption.REPLACE_EXISTING);
         }
     }
-
+    
     private void warnInvalidCredential() {
         long now = System.currentTimeMillis();
         long next = nextWarningTime.get();

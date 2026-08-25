@@ -35,13 +35,13 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class McpProxy {
-
+    
     private final McpHandler mcpHandler;
-
+    
     public McpProxy(McpHandler mcpHandler) {
         this.mcpHandler = mcpHandler;
     }
-
+    
     /**
      * List mcp server.
      *
@@ -58,7 +58,7 @@ public class McpProxy {
         int pageSize) throws NacosException {
         return mcpHandler.listMcpServers(namespaceId, mcpName, search, pageNo, pageSize);
     }
-
+    
     /**
      * Get specified mcp server detail info.
      *
@@ -71,7 +71,7 @@ public class McpProxy {
         String version) throws NacosException {
         return mcpHandler.getMcpServer(namespaceId, mcpName, mcpId, version);
     }
-
+    
     /**
      * Create new mcp server.
      *
@@ -88,7 +88,7 @@ public class McpProxy {
         return mcpHandler.createMcpServer(namespaceId, serverSpecification, toolSpecification,
             endpointSpecification);
     }
-
+    
     /**
      * Update existed mcp server.
      *
@@ -111,7 +111,7 @@ public class McpProxy {
         mcpHandler.updateMcpServer(namespaceId, isPublish, serverSpecification, toolSpecification,
             endpointSpecification, overrideExisting);
     }
-
+    
     /**
      * Delete existed mcp server.
      *
@@ -124,7 +124,7 @@ public class McpProxy {
         String version) throws NacosException {
         mcpHandler.deleteMcpServer(namespaceId, mcpName, mcpServerId, version);
     }
-
+    
     /**
      * Validate MCP server import request.
      *
@@ -140,7 +140,7 @@ public class McpProxy {
         McpServerImportRequest request) throws NacosException {
         return mcpHandler.validateImport(namespaceId, request);
     }
-
+    
     /**
      * Execute MCP server import operation.
      *

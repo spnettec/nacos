@@ -52,7 +52,7 @@ public class GrpcConnectionInterceptor implements ServerInterceptor {
         
         return Contexts.interceptCall(ctx, call, headers, next);
     }
-
+    
     private Channel getInternalChannel(ServerCall serverCall) {
         Object serverStream = ReflectUtils.getFieldValue(serverCall, "stream");
         Object writeQueue = ReflectUtils.getFieldValue(serverStream, "writeQueue");

@@ -22,23 +22,23 @@ package com.alibaba.nacos.airegistry.model.ard;
  * @author nacos
  */
 public class ArdSearchResult extends ArdCatalogEntry {
-
+    
     private Integer score;
-
+    
     private String source;
-
+    
     public Integer getScore() {
         return score;
     }
-
+    
     public void setScore(Integer score) {
         this.score = score;
     }
-
+    
     public String getSource() {
         return source;
     }
-
+    
     public void setSource(String source) {
         this.source = source;
     }

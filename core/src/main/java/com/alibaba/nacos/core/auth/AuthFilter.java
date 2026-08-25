@@ -30,29 +30,29 @@ import jakarta.servlet.http.HttpServletRequest;
  * @since 1.2.0
  */
 public class AuthFilter extends AbstractWebAuthFilter {
-
+    
     private final NacosAuthConfig authConfig;
-
+    
     private final InnerApiAuthEnabled innerApiAuthEnabled;
-
+    
     public AuthFilter(NacosAuthConfig authConfig, ControllerMethodsCache methodsCache,
         InnerApiAuthEnabled innerApiAuthEnabled) {
         super(authConfig, methodsCache);
         this.authConfig = authConfig;
         this.innerApiAuthEnabled = innerApiAuthEnabled;
     }
-
+    
     @Override
     protected boolean isAuthEnabled() {
         return authConfig.isAuthEnabled();
     }
-
+    
     @Override
     protected boolean isMatchFilter(Secured secured) {
         // ADMIN API use {@link AuthAdminFilter} to handle
         return !ApiType.ADMIN_API.equals(secured.apiType());
     }
-
+    
     @Override
     protected ServerIdentityResult checkServerIdentity(HttpServletRequest request,
         Secured secured) {

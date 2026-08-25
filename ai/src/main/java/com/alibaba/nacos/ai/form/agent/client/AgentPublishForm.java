@@ -31,17 +31,17 @@ import java.io.Serial;
  * @author Nacos
  */
 public class AgentPublishForm extends AgentDraftCreateForm {
-
+    
     @Serial
     private static final long serialVersionUID = 1L;
-
+    
     private String autoSubmit = Boolean.FALSE.toString();
-
+    
     @Override
     public void validate() throws NacosApiException {
         toRequest();
     }
-
+    
     /**
      * Parse JSON-valued fields, validate the complete Form, and build the public request.
      *
@@ -70,15 +70,15 @@ public class AgentPublishForm extends AgentDraftCreateForm {
         result.setAutoSubmit(parseAutoSubmit());
         return result;
     }
-
+    
     public String getAutoSubmit() {
         return autoSubmit;
     }
-
+    
     public void setAutoSubmit(String autoSubmit) {
         this.autoSubmit = autoSubmit;
     }
-
+    
     private boolean parseAutoSubmit() throws NacosApiException {
         if (Boolean.TRUE.toString().equalsIgnoreCase(autoSubmit)) {
             return true;

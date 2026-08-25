@@ -36,9 +36,9 @@ import java.util.List;
  * @see <a href="https://github.com/alibaba/nacos/issues/6999">#6999</a>
  */
 public class NacosLogbackConfiguratorAdapterV1 extends JoranConfigurator {
-
+    
     private NacosLoggingProperties loggingProperties;
-
+    
     public void setLoggingProperties(NacosLoggingProperties loggingProperties) {
         this.loggingProperties = loggingProperties;
     }

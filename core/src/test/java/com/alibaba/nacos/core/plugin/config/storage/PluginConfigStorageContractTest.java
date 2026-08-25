@@ -25,42 +25,42 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 class PluginConfigStorageContractTest {
-
+    
     @Test
     void defaultLifecycleAndProviderMetadataAreNoOp() {
         PluginConfigStorage storage = new NoOpStorage();
         PluginConfigStorageProvider provider = new PluginConfigStorageProvider() {
-
+            
             @Override
             public String getName() {
                 return "test";
             }
-
+            
             @Override
             public PluginConfigStorage createStorage() {
                 return storage;
             }
         };
-
+        
         storage.initialize();
         storage.shutdown();
-
+        
         assertEquals(0, provider.getOrder());
         assertFalse(provider.isEnabledByDefault());
         assertEquals(storage, provider.createStorage());
     }
-
+    
     private static class NoOpStorage implements PluginConfigStorage {
-
+        
         @Override
         public Map<String, Map<String, String>> loadAllConfigs() {
             return Collections.emptyMap();
         }
-
+        
         @Override
         public void saveConfig(String pluginId, Map<String, String> config) {
         }
-
+        
         @Override
         public void replaceAllConfigs(Map<String, Map<String, String>> configs) {
         }

@@ -23,7 +23,7 @@ import java.util.Collections;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class SkillsModelTest {
-
+    
     @Test
     void testSkillsSearchItemGetterAndSetter() {
         SkillsSearchItem item = new SkillsSearchItem();
@@ -31,22 +31,22 @@ class SkillsModelTest {
         item.setName("deploy");
         item.setInstalls(10L);
         item.setSource("skills-sh");
-
+        
         assertEquals("skill-id", item.getId());
         assertEquals("deploy", item.getName());
         assertEquals(10L, item.getInstalls());
         assertEquals("skills-sh", item.getSource());
     }
-
+    
     @Test
     void testSkillsSearchResponseGetterAndSetter() {
         SkillsSearchItem item = new SkillsSearchItem();
         SkillsSearchResponse response = new SkillsSearchResponse();
         response.setSkills(Collections.singletonList(item));
-
+        
         assertEquals(Collections.singletonList(item), response.getSkills());
     }
-
+    
     @Test
     void testWellKnownSkillEntryGetterAndSetter() {
         WellKnownSkillEntry entry = new WellKnownSkillEntry();
@@ -57,7 +57,7 @@ class SkillsModelTest {
         entry.setDigest("sha256:123");
         entry.setVersion("1.0.0");
         entry.setFiles(Collections.singletonList("SKILL.md"));
-
+        
         assertEquals("deploy", entry.getName());
         assertEquals("skill", entry.getType());
         assertEquals("Deploy app", entry.getDescription());
@@ -66,14 +66,14 @@ class SkillsModelTest {
         assertEquals("1.0.0", entry.getVersion());
         assertEquals(Collections.singletonList("SKILL.md"), entry.getFiles());
     }
-
+    
     @Test
     void testWellKnownSkillsIndexGetterAndSetter() {
         WellKnownSkillEntry entry = new WellKnownSkillEntry();
         WellKnownSkillsIndex index = new WellKnownSkillsIndex();
         index.setSchema("https://schemas.example.com/skills.json");
         index.setSkills(Collections.singletonList(entry));
-
+        
         assertEquals("https://schemas.example.com/skills.json", index.getSchema());
         assertEquals(Collections.singletonList(entry), index.getSkills());
     }

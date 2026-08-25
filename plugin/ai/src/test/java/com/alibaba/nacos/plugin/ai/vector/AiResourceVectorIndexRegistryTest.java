@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author nacos
  */
 class AiResourceVectorIndexRegistryTest {
-
+    
     @Test
     void shouldLoadVectorIndexPlugins() {
         FakeVectorIndex first = new FakeVectorIndex();
@@ -42,27 +42,27 @@ class AiResourceVectorIndexRegistryTest {
         AiResourceVectorIndexRegistry registry = new AiResourceVectorIndexRegistry(
             List.of(new FakeVectorIndexBuilder("first", first),
                 new FakeVectorIndexBuilder("second", second)));
-
+        
         assertSame(first, registry.getAllIndexes().get("first"));
         assertSame(second, registry.getAllIndexes().get("second"));
     }
-
+    
     @Test
     void shouldRejectDuplicateProviderType() {
         assertThrows(IllegalStateException.class, () -> new AiResourceVectorIndexRegistry(
             List.of(new FakeVectorIndexBuilder("duplicate", new FakeVectorIndex()),
                 new FakeVectorIndexBuilder("duplicate", new FakeVectorIndex()))));
     }
-
+    
     @Test
     void shouldIgnoreProviderThatCannotBeBuilt() {
         AiResourceVectorIndexBuilder failedBuilder = new AiResourceVectorIndexBuilder() {
-
+            
             @Override
             public String type() {
                 return "failed";
             }
-
+            
             @Override
             public AiResourceVectorIndex build() {
                 throw new IllegalStateException("failed");
@@ -70,59 +70,59 @@ class AiResourceVectorIndexRegistryTest {
         };
         AiResourceVectorIndexRegistry registry = new AiResourceVectorIndexRegistry(
             List.of(failedBuilder, new FakeVectorIndexBuilder("empty", null)));
-
+        
         assertTrue(registry.getAllIndexes().isEmpty());
     }
-
+    
     private static class FakeVectorIndexBuilder implements AiResourceVectorIndexBuilder {
-
+        
         private final String type;
-
+        
         private final AiResourceVectorIndex index;
-
+        
         private FakeVectorIndexBuilder(String type, AiResourceVectorIndex index) {
             this.type = type;
             this.index = index;
         }
-
+        
         @Override
         public String type() {
             return type;
         }
-
+        
         @Override
         public AiResourceVectorIndex build() {
             return index;
         }
     }
-
+    
     private static class FakeVectorIndex implements AiResourceVectorIndex {
-
+        
         @Override
         public boolean available() {
             return true;
         }
-
+        
         @Override
         public void replaceResourceVersion(String namespaceId, String resourceType,
             String resourceName, String resourceVersion,
             Collection<AiResourceVectorDocument> documents) {
         }
-
+        
         @Override
         public void addDocuments(Collection<AiResourceVectorDocument> documents) {
         }
-
+        
         @Override
         public void deleteByResource(String namespaceId, String resourceType,
             String resourceName) {
         }
-
+        
         @Override
         public void deleteByResourceVersion(String namespaceId, String resourceType,
             String resourceName, String resourceVersion) {
         }
-
+        
         @Override
         public List<AiResourceVectorHit> search(String namespaceId, String embeddingModel,
             double[] queryVector, List<String> resourceTypes, int limit) {

@@ -30,7 +30,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class NacosJRaftCallCredentialsTest {
-
+    
     @Test
     void testAppliesCurrentServerIdentity() {
         NacosAuthConfig authConfig = mock(NacosAuthConfig.class);
@@ -38,43 +38,43 @@ class NacosJRaftCallCredentialsTest {
         when(authConfig.getServerIdentityValue()).thenReturn("identity-value");
         NacosJRaftCallCredentials credentials = new NacosJRaftCallCredentials(() -> authConfig);
         AtomicReference<Metadata> result = new AtomicReference<>();
-
+        
         credentials.applyRequestMetadata(mock(CallCredentials.RequestInfo.class), Runnable::run,
             new CallCredentials.MetadataApplier() {
-
+                
                 @Override
                 public void apply(Metadata headers) {
                     result.set(headers);
                 }
-
+                
                 @Override
                 public void fail(Status status) {
                 }
             });
-
+        
         assertNotNull(result.get());
         assertEquals("identity-key", result.get().get(JRaftAuthMetadata.IDENTITY_KEY));
         assertEquals("identity-value", result.get().get(JRaftAuthMetadata.IDENTITY_VALUE));
     }
-
+    
     @Test
     void testFailsWhenAuthConfigIsUnavailable() {
         NacosJRaftCallCredentials credentials = new NacosJRaftCallCredentials(() -> null);
         AtomicReference<Status> result = new AtomicReference<>();
-
+        
         credentials.applyRequestMetadata(mock(CallCredentials.RequestInfo.class), Runnable::run,
             new CallCredentials.MetadataApplier() {
-
+                
                 @Override
                 public void apply(Metadata headers) {
                 }
-
+                
                 @Override
                 public void fail(Status status) {
                     result.set(status);
                 }
             });
-
+        
         assertNotNull(result.get());
         assertEquals(Status.Code.UNAUTHENTICATED, result.get().getCode());
     }

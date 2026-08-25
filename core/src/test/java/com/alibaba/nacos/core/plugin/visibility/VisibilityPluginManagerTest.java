@@ -52,22 +52,22 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(MockitoExtension.class)
 class VisibilityPluginManagerTest {
-
+    
     private static final String TEST_SERVICE_NAME = "test-visibility";
-
+    
     private static final String VISIBILITY_ENABLED_KEY = "nacos.plugin.visibility.enabled";
-
+    
     private VisibilityPluginManager manager;
-
+    
     private ConfigurableEnvironment cachedEnvironment;
-
+    
     private Map<String, Object> testProperties;
-
+    
     @Mock
     private VisibilityService mockVisibilityService;
-
+    
     private Map<String, VisibilityService> serviceMap;
-
+    
     @BeforeEach
     void setUp() throws NoSuchFieldException, IllegalAccessException {
         cachedEnvironment = EnvUtil.getEnvironment();
@@ -86,26 +86,26 @@ class VisibilityPluginManagerTest {
         serviceMap.clear();
         serviceMap.put(TEST_SERVICE_NAME, mockVisibilityService);
     }
-
+    
     @AfterEach
     void tearDown() {
         EnvUtil.setEnvironment(cachedEnvironment);
         PluginStateCheckerHolder.setInstance(null);
         serviceMap.clear();
     }
-
+    
     @Test
     void testGetInstance() {
         assertNotNull(VisibilityPluginManager.getInstance());
     }
-
+    
     @Test
     void testFindVisibilityServiceExists() {
         Optional<VisibilityService> result = manager.findVisibilityService(TEST_SERVICE_NAME);
         assertTrue(result.isPresent());
         assertEquals(mockVisibilityService, result.get());
     }
-
+    
     @Test
     void testFindVisibilityServiceWhenModuleDisabled() throws Exception {
         Field initialized = VisibilityPluginManager.class.getDeclaredField("initialized");
@@ -113,25 +113,25 @@ class VisibilityPluginManagerTest {
         initialized.set(manager, false);
         testProperties.put(VISIBILITY_ENABLED_KEY, "false");
         Optional<VisibilityService> result = manager.findVisibilityService(TEST_SERVICE_NAME);
-
+        
         assertFalse(result.isPresent());
         assertFalse((Boolean) initialized.get(manager));
     }
-
+    
     @Test
     void testFindVisibilityServiceWhenNamedPluginDisabled() {
         PluginStateCheckerHolder.setInstance((pluginType, pluginName) -> false);
-
+        
         Optional<VisibilityService> result = manager.findVisibilityService(TEST_SERVICE_NAME);
-
+        
         assertFalse(result.isPresent());
     }
-
+    
     @Test
     void testGetAllPluginsIsUnmodifiable() {
         assertThrows(UnsupportedOperationException.class, () -> manager.getAllPlugins().clear());
     }
-
+    
     @Test
     void testRegisterVisibilityServiceBranches() throws Exception {
         Properties properties = new Properties();
@@ -139,14 +139,14 @@ class VisibilityPluginManagerTest {
         properties.setProperty("nacos.plugin.visibility.other.timeout", "2000");
         TestVisibilityService service = new TestVisibilityService("custom");
         TestVisibilityService duplicate = new TestVisibilityService("custom");
-
+        
         registerVisibilityService(null, properties);
         registerVisibilityService(service, properties);
         registerVisibilityService(duplicate, properties);
         registerVisibilityService(new TestVisibilityService(""), properties);
         registerVisibilityService(new ThrowNameVisibilityService(), properties);
         registerVisibilityService(new ThrowInitVisibilityService("throw-init"), properties);
-
+        
         assertEquals(service, serviceMap.get("custom"));
         assertEquals("1000", service.initProperties.getProperty("timeout"));
         assertNull(duplicate.initProperties);
@@ -154,39 +154,39 @@ class VisibilityPluginManagerTest {
         assertFalse(serviceMap.containsKey(""));
         assertFalse(serviceMap.containsKey("throw-init"));
     }
-
+    
     @Test
     void testRegisterConfigurableVisibilityServiceSkipsLegacyInit() throws Exception {
         Properties properties = new Properties();
         properties.setProperty("nacos.plugin.visibility.configurable.timeout", "1000");
         ConfigurableVisibilityService service = new ConfigurableVisibilityService();
-
+        
         registerVisibilityService(service, properties);
-
+        
         assertEquals(service, serviceMap.get("configurable"));
         assertFalse(service.legacyInitCalled);
     }
-
+    
     @Test
     void testInitAndPropertyResolutionBranches() throws Exception {
         Field initialized = VisibilityPluginManager.class.getDeclaredField("initialized");
         initialized.setAccessible(true);
         initialized.set(manager, true);
-
+        
         Method initMethod =
             VisibilityPluginManager.class.getDeclaredMethod("initVisibilityServices");
         initMethod.setAccessible(true);
         initMethod.invoke(manager);
-
+        
         Method propertiesMethod = VisibilityPluginManager.class.getDeclaredMethod(
             "resolveLegacyServiceProperties", Properties.class, String.class);
         propertiesMethod.setAccessible(true);
         Properties result = (Properties) propertiesMethod.invoke(manager, new Properties(),
             "custom");
-
+        
         assertTrue(result.isEmpty());
     }
-
+    
     @Test
     void testInitVisibilityServicesLoadsSpiAndSkipsBrokenProvider() throws Exception {
         testProperties.put("nacos.plugin.visibility.spi-loaded.timeout", "3000");
@@ -194,17 +194,17 @@ class VisibilityPluginManagerTest {
         initialized.setAccessible(true);
         initialized.set(manager, false);
         serviceMap.clear();
-
+        
         Method initMethod =
             VisibilityPluginManager.class.getDeclaredMethod("initVisibilityServices");
         initMethod.setAccessible(true);
         initMethod.invoke(manager);
-
+        
         assertTrue((Boolean) initialized.get(manager));
         assertTrue(serviceMap.containsKey("spi-loaded"));
         assertEquals("3000", SpiLoadedVisibilityService.initProperties.getProperty("timeout"));
     }
-
+    
     private void registerVisibilityService(VisibilityService service, Properties properties)
         throws Exception {
         Method method = VisibilityPluginManager.class.getDeclaredMethod("registerVisibilityService",
@@ -212,86 +212,86 @@ class VisibilityPluginManagerTest {
         method.setAccessible(true);
         method.invoke(manager, service, properties);
     }
-
+    
     private static class TestVisibilityService implements VisibilityService {
-
+        
         private final String serviceName;
-
+        
         private Properties initProperties;
-
+        
         private TestVisibilityService(String serviceName) {
             this.serviceName = serviceName;
         }
-
+        
         @Override
         public void init(Properties properties) {
             initProperties = properties;
         }
-
+        
         @Override
         public ValidationResult validateVisibility(String identity, String action, String apiType,
             VisibilityResource resource) {
             return null;
         }
-
+        
         @Override
         public QueryAdvisor adviseQuery(String identity, String action, String apiType,
             VisibilityQueryContext context) {
             return null;
         }
-
+        
         @Override
         public String getVisibilityServiceName() {
             return serviceName;
         }
     }
-
+    
     private static class ThrowNameVisibilityService extends TestVisibilityService {
-
+        
         private ThrowNameVisibilityService() {
             super("throw-name");
         }
-
+        
         @Override
         public String getVisibilityServiceName() {
             throw new IllegalStateException("name failed");
         }
     }
-
+    
     private static class ThrowInitVisibilityService extends TestVisibilityService {
-
+        
         private ThrowInitVisibilityService(String serviceName) {
             super(serviceName);
         }
-
+        
         @Override
         public void init(Properties properties) {
             throw new IllegalStateException("init failed");
         }
     }
-
+    
     private static class ConfigurableVisibilityService extends TestVisibilityService {
-
+        
         private boolean legacyInitCalled;
-
+        
         private ConfigurableVisibilityService() {
             super("configurable");
         }
-
+        
         @Override
         public void init(Properties properties) {
             legacyInitCalled = true;
         }
-
+        
         @Override
         public List<ConfigItemDefinition> getConfigDefinitions() {
             return Collections.singletonList(new ConfigItemDefinition());
         }
-
+        
         @Override
         public void applyConfig(Map<String, String> config) {
         }
-
+        
         @Override
         public Map<String, String> getCurrentConfig() {
             return Collections.emptyMap();

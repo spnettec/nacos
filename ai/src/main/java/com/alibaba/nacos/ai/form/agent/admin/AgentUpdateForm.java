@@ -31,29 +31,29 @@ import java.util.Map;
  * @author Nacos
  */
 public class AgentUpdateForm extends AgentAdminForm {
-
+    
     @Serial
     private static final long serialVersionUID = 1L;
-
+    
     private String displayName;
-
+    
     private String description;
-
+    
     private String iconUrl;
-
+    
     private String provider;
-
+    
     private String tags;
-
+    
     private String extensions;
-
+    
     private String status;
-
+    
     @Override
     public void validate() throws NacosApiException {
         toRequest();
     }
-
+    
     /**
      * Validate this form, parse JSON-valued fields, and build the public request model.
      *
@@ -83,59 +83,59 @@ public class AgentUpdateForm extends AgentAdminForm {
         result.validate();
         return result;
     }
-
+    
     public String getDisplayName() {
         return displayName;
     }
-
+    
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
     }
-
+    
     public String getDescription() {
         return description;
     }
-
+    
     public void setDescription(String description) {
         this.description = description;
     }
-
+    
     public String getIconUrl() {
         return iconUrl;
     }
-
+    
     public void setIconUrl(String iconUrl) {
         this.iconUrl = iconUrl;
     }
-
+    
     public String getProvider() {
         return provider;
     }
-
+    
     public void setProvider(String provider) {
         this.provider = provider;
     }
-
+    
     public String getTags() {
         return tags;
     }
-
+    
     public void setTags(String tags) {
         this.tags = tags;
     }
-
+    
     public String getExtensions() {
         return extensions;
     }
-
+    
     public void setExtensions(String extensions) {
         this.extensions = extensions;
     }
-
+    
     public String getStatus() {
         return status;
     }
-
+    
     public void setStatus(String status) {
         this.status = status;
     }

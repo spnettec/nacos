@@ -647,12 +647,12 @@ class NamingGrpcClientProxyTest {
             public int retryTimes() {
                 return 3;
             }
-
+            
             @Override
             public long retryWaitMills() {
                 return 1000L;
             }
-
+            
             @Override
             public long timeOutMills() {
                 return 3000L;

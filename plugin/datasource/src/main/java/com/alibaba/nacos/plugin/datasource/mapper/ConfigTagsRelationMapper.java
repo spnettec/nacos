@@ -34,7 +34,7 @@ import java.util.List;
  **/
 
 public interface ConfigTagsRelationMapper extends Mapper {
-
+    
     /**
      * Get the count of config info.
      * The default sql:
@@ -51,12 +51,12 @@ public interface ConfigTagsRelationMapper extends Mapper {
         final String group = (String) context.getWhereParameter(FieldConstant.GROUP_ID);
         final String content = (String) context.getWhereParameter(FieldConstant.CONTENT);
         final String[] tagArr = (String[]) context.getWhereParameter(FieldConstant.TAG_ARR);
-
+        
         List<Object> paramList = new ArrayList<>();
         StringBuilder where = new StringBuilder(" WHERE ");
         final String sqlCount =
             "SELECT count(*) FROM config_info  a LEFT JOIN config_tags_relation b ON a.id=b.id";
-
+        
         where.append(" a.tenant_id=? ");
         paramList.add(tenantId);
         if (StringUtils.isNotBlank(dataId)) {
@@ -82,12 +82,12 @@ public interface ConfigTagsRelationMapper extends Mapper {
             }
             where.append('?');
             paramList.add(tagArr[i]);
-
+            
         }
         where.append(") ");
         return new MapperResult(sqlCount + where, paramList);
     }
-
+    
     /**
      * Find config info.
      * The default sql:
@@ -98,7 +98,7 @@ public interface ConfigTagsRelationMapper extends Mapper {
      * @return The sql of finding config info.
      */
     MapperResult findConfigInfo4PageFetchRows(final MapperContext context);
-
+    
     /**
      * Get the count of config information by config tags relation.
      * The default sql:
@@ -115,10 +115,10 @@ public interface ConfigTagsRelationMapper extends Mapper {
         final String content = (String) context.getWhereParameter(FieldConstant.CONTENT);
         final String[] tagArr = (String[]) context.getWhereParameter(FieldConstant.TAG_ARR);
         final String[] types = (String[]) context.getWhereParameter(FieldConstant.TYPE);
-
+        
         WhereBuilder where = new WhereBuilder(
             "SELECT count(*) FROM config_info a LEFT JOIN config_tags_relation b ON a.id=b.id");
-
+        
         String escapeClause = getLikeEscapeClause();
         where.like("a.tenant_id", tenantId, escapeClause);
         if (StringUtils.isNotBlank(dataId)) {
@@ -146,10 +146,10 @@ public interface ConfigTagsRelationMapper extends Mapper {
         if (!ArrayUtils.isEmpty(types)) {
             where.and().in("a.type", types);
         }
-
+        
         return where.build();
     }
-
+    
     /**
      * Query config info.
      * The default sql:
@@ -160,7 +160,7 @@ public interface ConfigTagsRelationMapper extends Mapper {
      * @return The sql of querying config info.
      */
     MapperResult findConfigInfoLike4PageFetchRows(final MapperContext context);
-
+    
     /**
      * 获取返回表名.
      *

@@ -22,28 +22,28 @@ package com.alibaba.nacos.ai.service.search;
  * @author nacos
  */
 public interface AiResourceIndexMaintenanceService {
-
+    
     AiResourceIndexMaintenanceService NOOP = new AiResourceIndexMaintenanceService() {
-
+        
         @Override
         public boolean schedule(String namespaceId, String resourceType, String resourceName) {
             return false;
         }
-
+        
         @Override
         public boolean scheduleReconciliation(String namespaceId, String resourceType,
             String resourceName) {
             return false;
         }
     };
-
+    
     /**
      * Schedule one resource lifecycle change and capture whether enhancement is currently enabled.
      *
      * @return whether the task was durably recorded
      */
     boolean schedule(String namespaceId, String resourceType, String resourceName);
-
+    
     /**
      * Schedule repair for an inconsistent index using the current enhancement setting.
      *

@@ -29,19 +29,19 @@ import java.util.Map;
  * @author Nacos
  */
 public final class PreContextPluginInitializationResult {
-
+    
     public static final String BEAN_NAME = "preContextPluginInitializationResult";
-
+    
     private static final PreContextPluginInitializationResult EMPTY =
         new PreContextPluginInitializationResult(Collections.emptyMap(), Collections.emptyMap(),
             Collections.emptyMap());
-
+    
     private final Map<String, PluginInfo> pluginInfos;
-
+    
     private final Map<String, Object> pluginInstances;
-
+    
     private final Map<String, PluginConfigResolution> configResolutions;
-
+    
     PreContextPluginInitializationResult(Map<String, PluginInfo> pluginInfos,
         Map<String, Object> pluginInstances,
         Map<String, PluginConfigResolution> configResolutions) {
@@ -49,23 +49,23 @@ public final class PreContextPluginInitializationResult {
         this.pluginInstances = immutableCopy(pluginInstances);
         this.configResolutions = immutableCopy(configResolutions);
     }
-
+    
     public static PreContextPluginInitializationResult empty() {
         return EMPTY;
     }
-
+    
     Map<String, PluginInfo> getPluginInfos() {
         return pluginInfos;
     }
-
+    
     Map<String, Object> getPluginInstances() {
         return pluginInstances;
     }
-
+    
     Map<String, PluginConfigResolution> getConfigResolutions() {
         return configResolutions;
     }
-
+    
     private static <T> Map<String, T> immutableCopy(Map<String, T> source) {
         return Collections.unmodifiableMap(new LinkedHashMap<>(source));
     }

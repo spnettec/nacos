@@ -27,13 +27,13 @@ import com.alibaba.nacos.sys.env.EnvUtil;
  * @author shiyiyue
  */
 public class SpringValueConfigsInitializer implements ControlConfigsInitializer {
-
+    
     private static final String PREFIX = "nacos.plugin.control.";
-
+    
     private static final String CONNECTION_RUNTIME_EJECTOR = PREFIX + "connection.runtime.ejector";
-
+    
     private static final String CONTROL_MANAGER_TYPE = PREFIX + "type";
-
+    
     /**
      * Legacy control manager selection property.
      *
@@ -41,13 +41,13 @@ public class SpringValueConfigsInitializer implements ControlConfigsInitializer 
      */
     @Deprecated
     private static final String LEGACY_CONTROL_MANAGER_TYPE = PREFIX + "manager.type";
-
+    
     private static final String RULE_EXTERNAL_STORAGE = PREFIX + "rule.external.storage";
-
+    
     private static final String LOCAL_RULE_STORAGE_BASE_DIR = PREFIX + "rule.local.basedir";
-
+    
     private static final String DEFAULT_CONNECTION_RUNTIME_EJECTOR = "nacos";
-
+    
     @Override
     public void initialize(ControlConfigs controlConfigs) {
         controlConfigs.setConnectionRuntimeEjector(

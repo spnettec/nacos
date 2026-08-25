@@ -34,25 +34,25 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author Long Yu
  */
 public class DatabaseDialectManager {
-
+    
     private static final Logger LOGGER = LoggerFactory.getLogger(DatabaseDialectManager.class);
-
+    
     private static final DatabaseDialectManager INSTANCE = new DatabaseDialectManager();
-
+    
     private static final Map<String, DatabaseDialect> SUPPORT_DIALECT_MAP =
         new ConcurrentHashMap<String, DatabaseDialect>();
-
+    
     private DatabaseDialectManager() {
     }
-
+    
     static {
         loadInitial();
     }
-
+    
     private static void loadInitial() {
         //加载多种数据库方言为映射信息
         Collection<DatabaseDialect> dialectList = NacosServiceLoader.load(DatabaseDialect.class);
-
+        
         for (DatabaseDialect dialect : dialectList) {
             String dialectType = dialect == null ? null : dialect.getType();
             PluginRegistryUtils.registerFirst(SUPPORT_DIALECT_MAP,
@@ -63,7 +63,7 @@ public class DatabaseDialectManager {
                 "[DatasourceDialectManager] Load DatabaseDialect fail, No DatabaseDialect implements");
         }
     }
-
+    
     public DatabaseDialect getDialect(String databaseType) {
         // Check if plugin is enabled
         if (!PluginStateCheckerHolder.isPluginEnabled(PluginType.DATASOURCE_DIALECT.getType(),
@@ -74,7 +74,7 @@ public class DatabaseDialectManager {
                 "DatabaseDialect plugin is disabled: " + databaseType
                     + ". Please enable it via plugin management API.");
         }
-
+        
         DatabaseDialect databaseDialect = SUPPORT_DIALECT_MAP.get(databaseType);
         if (databaseDialect == null) {
             throw new IllegalStateException(
@@ -83,7 +83,7 @@ public class DatabaseDialectManager {
         }
         return databaseDialect;
     }
-
+    
     /**
      * Get DatasourceDialectManager instance.
      *
@@ -92,7 +92,7 @@ public class DatabaseDialectManager {
     public static DatabaseDialectManager getInstance() {
         return INSTANCE;
     }
-
+    
     /**
      * Get all registered database dialects.
      *
@@ -101,5 +101,5 @@ public class DatabaseDialectManager {
     public Map<String, DatabaseDialect> getAllDialects() {
         return Collections.unmodifiableMap(SUPPORT_DIALECT_MAP);
     }
-
+    
 }

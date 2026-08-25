@@ -72,17 +72,17 @@ import static com.alibaba.nacos.config.server.service.repository.ConfigRowMapper
 @Conditional(value = ConditionOnExternalStorage.class)
 @Service("externalConfigInfoGrayPersistServiceImpl")
 public class ExternalConfigInfoGrayPersistServiceImpl implements ConfigInfoGrayPersistService {
-
+    
     private DataSourceService dataSourceService;
-
+    
     protected JdbcTemplate jt;
-
+    
     protected TransactionTemplate tjt;
-
+    
     private MapperManager mapperManager;
-
+    
     private HistoryConfigInfoPersistService historyConfigInfoPersistService;
-
+    
     public ExternalConfigInfoGrayPersistServiceImpl(
         @Qualifier("externalHistoryConfigInfoPersistServiceImpl") HistoryConfigInfoPersistService historyConfigInfoPersistService) {
         this.historyConfigInfoPersistService = historyConfigInfoPersistService;
@@ -94,12 +94,12 @@ public class ExternalConfigInfoGrayPersistServiceImpl implements ConfigInfoGrayP
                 false);
         this.mapperManager = MapperManager.instance(isDataSourceLogEnable);
     }
-
+    
     @Override
     public <E> PaginationHelper<E> createPaginationHelper() {
         return new ExternalStoragePaginationHelperImpl<>(jt);
     }
-
+    
     @Override
     public ConfigInfoStateWrapper findConfigInfo4GrayState(final String dataId, final String group,
         final String tenant,
@@ -120,20 +120,20 @@ public class ExternalConfigInfoGrayPersistServiceImpl implements ConfigInfoGrayP
             return null;
         }
     }
-
+    
     private ConfigOperateResult getGrayOperateResult(String dataId, String group, String tenant,
         String grayName) {
         String tenantTmp = StringUtils.isBlank(tenant) ? StringUtils.EMPTY : tenant;
-
+        
         ConfigInfoStateWrapper configInfo4Gray =
             this.findConfigInfo4GrayState(dataId, group, tenantTmp, grayName);
         if (configInfo4Gray == null) {
             return new ConfigOperateResult(false);
         }
         return new ConfigOperateResult(configInfo4Gray.getId(), configInfo4Gray.getLastModified());
-
+        
     }
-
+    
     @Override
     public ConfigOperateResult addConfigInfo4Gray(ConfigInfo configInfo, String grayName,
         String grayRule, String srcIp,
@@ -148,7 +148,7 @@ public class ExternalConfigInfoGrayPersistServiceImpl implements ConfigInfoGrayP
                 StringUtils.isBlank(grayRule) ? StringUtils.EMPTY : grayRule.trim();
             try {
                 addConfigInfoGrayAtomic(-1, configInfo, grayNameTmp, grayRuleTmp, srcIp, srcUser);
-
+                
                 Timestamp now = new Timestamp(System.currentTimeMillis());
                 historyConfigInfoPersistService.insertConfigHistoryAtomic(0, configInfo, srcIp,
                     srcUser, now, "I",
@@ -163,7 +163,7 @@ public class ExternalConfigInfoGrayPersistServiceImpl implements ConfigInfoGrayP
             }
         });
     }
-
+    
     @Override
     public void addConfigInfoGrayAtomic(long configGrayId, ConfigInfo configInfo, String grayName,
         String grayRule,
@@ -191,11 +191,11 @@ public class ExternalConfigInfoGrayPersistServiceImpl implements ConfigInfoGrayP
         }
         jt.update(configInfoGrayMapper.insert(columns), args.toArray());
     }
-
+    
     private boolean isOracle() {
         return DataSourceConstant.ORACLE.equals(dataSourceService.getDataSourceType());
     }
-
+    
     @Override
     public ConfigOperateResult insertOrUpdateGray(final ConfigInfo configInfo,
         final String grayName,
@@ -207,7 +207,7 @@ public class ExternalConfigInfoGrayPersistServiceImpl implements ConfigInfoGrayP
             return updateConfigInfo4Gray(configInfo, grayName, grayRule, srcIp, srcUser);
         }
     }
-
+    
     @Override
     public ConfigOperateResult insertOrUpdateGrayCas(final ConfigInfo configInfo,
         final String grayName,
@@ -219,12 +219,12 @@ public class ExternalConfigInfoGrayPersistServiceImpl implements ConfigInfoGrayP
             return updateConfigInfo4GrayCas(configInfo, grayName, grayRule, srcIp, srcUser);
         }
     }
-
+    
     @Override
     public void removeConfigInfoGray(final String dataId, final String group, final String tenant,
         final String grayName, final String srcIp, final String srcUser) {
         tjt.execute(new TransactionCallbackWithoutResult() {
-
+            
             @Override
             protected void doInTransactionWithoutResult(TransactionStatus status) {
                 String tenantTmp = StringUtils.isBlank(tenant) ? StringUtils.EMPTY : tenant;
@@ -236,7 +236,7 @@ public class ExternalConfigInfoGrayPersistServiceImpl implements ConfigInfoGrayP
                     if (oldConfigAllInfo4Gray == null) {
                         return;
                     }
-
+                    
                     ConfigInfoGrayMapper configInfoGrayMapper = mapperManager.findMapper(
                         dataSourceService.getDataSourceType(), TableConstant.CONFIG_INFO_GRAY);
                     jt.update(
@@ -259,7 +259,7 @@ public class ExternalConfigInfoGrayPersistServiceImpl implements ConfigInfoGrayP
             }
         });
     }
-
+    
     @Override
     public ConfigOperateResult updateConfigInfo4Gray(ConfigInfo configInfo, String grayName,
         String grayRule,
@@ -283,7 +283,7 @@ public class ExternalConfigInfoGrayPersistServiceImpl implements ConfigInfoGrayP
                     }
                     return new ConfigOperateResult(false);
                 }
-
+                
                 String md5 = MD5Utils.md5Hex(configInfo.getContent(), Constants.ENCODE);
                 ConfigInfoGrayMapper configInfoGrayMapper = mapperManager.findMapper(
                     dataSourceService.getDataSourceType(), TableConstant.CONFIG_INFO_GRAY);
@@ -294,7 +294,7 @@ public class ExternalConfigInfoGrayPersistServiceImpl implements ConfigInfoGrayP
                     configInfo.getContent(),
                     configInfo.getEncryptedDataKey(), md5, srcIp, srcUser, appNameTmp, grayRuleTmp,
                     configInfo.getDataId(), configInfo.getGroup(), tenantTmp, grayNameTmp);
-
+                
                 Timestamp now = new Timestamp(System.currentTimeMillis());
                 historyConfigInfoPersistService.insertConfigHistoryAtomic(
                     oldConfigAllInfo4Gray.getId(),
@@ -312,7 +312,7 @@ public class ExternalConfigInfoGrayPersistServiceImpl implements ConfigInfoGrayP
             }
         });
     }
-
+    
     @Override
     public ConfigOperateResult updateConfigInfo4GrayCas(ConfigInfo configInfo, String grayName,
         String grayRule,
@@ -336,7 +336,7 @@ public class ExternalConfigInfoGrayPersistServiceImpl implements ConfigInfoGrayP
                     }
                     return new ConfigOperateResult(false);
                 }
-
+                
                 String md5 = MD5Utils.md5Hex(configInfo.getContent(), Constants.ENCODE);
                 ConfigInfoGrayMapper configInfoGrayMapper = mapperManager.findMapper(
                     dataSourceService.getDataSourceType(), TableConstant.CONFIG_INFO_GRAY);
@@ -346,19 +346,19 @@ public class ExternalConfigInfoGrayPersistServiceImpl implements ConfigInfoGrayP
                 context.putUpdateParameter(FieldConstant.SRC_IP, srcIp);
                 context.putUpdateParameter(FieldConstant.SRC_USER, srcUser);
                 context.putUpdateParameter(FieldConstant.APP_NAME, appNameTmp);
-
+                
                 context.putWhereParameter(FieldConstant.DATA_ID, configInfo.getDataId());
                 context.putWhereParameter(FieldConstant.GROUP_ID, configInfo.getGroup());
                 context.putWhereParameter(FieldConstant.TENANT_ID, tenantTmp);
                 context.putWhereParameter(FieldConstant.GRAY_NAME, grayNameTmp);
                 context.putWhereParameter(FieldConstant.GRAY_RULE, grayRuleTmp);
                 context.putWhereParameter(FieldConstant.MD5, configInfo.getMd5());
-
+                
                 final MapperResult mapperResult =
                     configInfoGrayMapper.updateConfigInfo4GrayCas(context);
                 boolean success =
                     jt.update(mapperResult.getSql(), mapperResult.getParamList().toArray()) > 0;
-
+                
                 if (success) {
                     Timestamp now = new Timestamp(System.currentTimeMillis());
                     historyConfigInfoPersistService.insertConfigHistoryAtomic(
@@ -380,7 +380,7 @@ public class ExternalConfigInfoGrayPersistServiceImpl implements ConfigInfoGrayP
             }
         });
     }
-
+    
     @Override
     public ConfigInfoGrayWrapper findConfigInfo4Gray(final String dataId, final String group,
         final String tenant,
@@ -405,7 +405,7 @@ public class ExternalConfigInfoGrayPersistServiceImpl implements ConfigInfoGrayP
             throw e;
         }
     }
-
+    
     @Override
     public int configInfoGrayCount() {
         ConfigInfoGrayMapper configInfoGrayMapper =
@@ -418,7 +418,7 @@ public class ExternalConfigInfoGrayPersistServiceImpl implements ConfigInfoGrayP
         }
         return result;
     }
-
+    
     @Override
     public Page<ConfigInfoGrayWrapper> findAllConfigInfoGrayForDumpAll(final int pageNo,
         final int pageSize) {
@@ -429,20 +429,20 @@ public class ExternalConfigInfoGrayPersistServiceImpl implements ConfigInfoGrayP
         String sqlCountRows = configInfoGrayMapper.count(null);
         MapperResult sqlFetchRows = configInfoGrayMapper.findAllConfigInfoGrayForDumpAllFetchRows(
             new MapperContext(startRow, pageSize));
-
+        
         PaginationHelper<ConfigInfoGrayWrapper> helper = createPaginationHelper();
-
+        
         try {
             return helper.fetchPageLimit(sqlCountRows, sqlFetchRows.getSql(),
                 sqlFetchRows.getParamList().toArray(),
                 pageNo, pageSize, CONFIG_INFO_GRAY_WRAPPER_ROW_MAPPER);
-
+            
         } catch (CannotGetJdbcConnectionException e) {
             LogUtil.FATAL_LOG.error("[db-error] " + e, e);
             throw e;
         }
     }
-
+    
     @Override
     public List<ConfigInfoGrayWrapper> findChangeConfig(final Timestamp startTime, long lastMaxId,
         final int pageSize) {
@@ -450,12 +450,12 @@ public class ExternalConfigInfoGrayPersistServiceImpl implements ConfigInfoGrayP
             ConfigInfoGrayMapper configInfoMapper =
                 mapperManager.findMapper(dataSourceService.getDataSourceType(),
                     TableConstant.CONFIG_INFO_GRAY);
-
+            
             MapperContext context = new MapperContext();
             context.putWhereParameter(FieldConstant.START_TIME, startTime);
             context.putWhereParameter(FieldConstant.PAGE_SIZE, pageSize);
             context.putWhereParameter(FieldConstant.LAST_MAX_ID, lastMaxId);
-
+            
             MapperResult mapperResult = configInfoMapper.findChangeConfig(context);
             return jt.query(mapperResult.getSql(), mapperResult.getParamList().toArray(),
                 CONFIG_INFO_GRAY_WRAPPER_ROW_MAPPER);
@@ -464,7 +464,7 @@ public class ExternalConfigInfoGrayPersistServiceImpl implements ConfigInfoGrayP
             throw e;
         }
     }
-
+    
     @Override
     public List<String> findConfigInfoGrays(final String dataId, final String group,
         final String tenant) {
@@ -476,5 +476,5 @@ public class ExternalConfigInfoGrayPersistServiceImpl implements ConfigInfoGrayP
             Arrays.asList("data_id", "group_id", "tenant_id"));
         return jt.queryForList(selectSql, new Object[] {dataId, group, tenantTmp}, String.class);
     }
-
+    
 }

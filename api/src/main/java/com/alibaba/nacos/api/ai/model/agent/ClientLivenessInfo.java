@@ -24,35 +24,35 @@ import java.io.Serializable;
  * @author Nacos
  */
 public class ClientLivenessInfo implements Serializable {
-
+    
     private static final long serialVersionUID = 1L;
-
+    
     private long heartbeatIntervalMillis;
-
+    
     private long unhealthyTimeoutMillis;
-
+    
     private long expireTimeoutMillis;
-
+    
     public long getHeartbeatIntervalMillis() {
         return heartbeatIntervalMillis;
     }
-
+    
     public void setHeartbeatIntervalMillis(long heartbeatIntervalMillis) {
         this.heartbeatIntervalMillis = heartbeatIntervalMillis;
     }
-
+    
     public long getUnhealthyTimeoutMillis() {
         return unhealthyTimeoutMillis;
     }
-
+    
     public void setUnhealthyTimeoutMillis(long unhealthyTimeoutMillis) {
         this.unhealthyTimeoutMillis = unhealthyTimeoutMillis;
     }
-
+    
     public long getExpireTimeoutMillis() {
         return expireTimeoutMillis;
     }
-
+    
     public void setExpireTimeoutMillis(long expireTimeoutMillis) {
         this.expireTimeoutMillis = expireTimeoutMillis;
     }
