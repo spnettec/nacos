@@ -16,17 +16,21 @@
 
 package com.alibaba.nacos.client.ai;
 
-import com.alibaba.nacos.api.ai.model.agent.ClientLivenessInfo;
+import java.util.List;
+import com.alibaba.nacos.api.ai.constant.AiConstants;
+import com.alibaba.nacos.api.ai.model.ClientLivenessInfo;
 import com.alibaba.nacos.api.ai.model.agent.Endpoint;
-import com.alibaba.nacos.api.ai.model.rad.AgentEndpointDeregistrationBatch;
-import com.alibaba.nacos.api.ai.model.rad.AgentEndpointRegistrationBatch;
+import com.alibaba.nacos.api.ai.model.agent.AgentEndpointRegistrationBatch;
 import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.exception.api.NacosApiException;
 import com.alibaba.nacos.api.model.v2.ErrorCode;
-import com.alibaba.nacos.client.ai.remote.AiClientProxy;
+import com.alibaba.nacos.client.ai.remote.AgentTransportType;
+import com.alibaba.nacos.client.ai.remote.AgentTransportRouter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -34,6 +38,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 
@@ -54,7 +59,7 @@ import static org.mockito.Mockito.when;
 class AgentEndpointPublicationManagerTest {
     
     @Mock
-    private AiClientProxy clientProxy;
+    private AgentTransportRouter clientProxy;
     
     @Mock
     private ScheduledExecutorService executor;
@@ -65,65 +70,132 @@ class AgentEndpointPublicationManagerTest {
     private AgentEndpointPublicationManager manager;
     
     @BeforeEach
-    void setUp() {
+    void setUp() throws NacosException {
         lenient().doReturn(future).when(executor)
             .schedule(any(Runnable.class), anyLong(), any());
-        manager = new AgentEndpointPublicationManager(clientProxy, true, executor);
+        lenient().when(clientProxy.selectPublicationTransport())
+            .thenReturn(AgentTransportType.HTTP);
+        lenient()
+            .when(clientProxy.registerAgentEndpoints(eq("public"), any(),
+                any(AgentTransportType.class)))
+            .thenAnswer(invocation -> clientProxy.registerAgentEndpoints(
+                invocation.getArgument(0), invocation.getArgument(1)));
+        lenient().doAnswer(invocation -> {
+            clientProxy.deregisterAgentEndpoints(invocation.getArgument(0),
+                invocation.getArgument(1), invocation.getArgument(2));
+            return null;
+        }).when(clientProxy).deregisterAgentEndpoints(any(), any(), any(),
+            any(AgentTransportType.class));
+        lenient().when(clientProxy.heartbeatAgentEndpoints(any(AgentTransportType.class)))
+            .thenAnswer(invocation -> clientProxy.heartbeatAgentEndpoints());
+        manager = new AgentEndpointPublicationManager(clientProxy, executor);
     }
     
     @Test
     void registerSchedulesHeartbeatAndCopiesCompleteBatch() throws NacosException {
-        when(clientProxy.registerAgentEndpoints(any())).thenReturn(liveness(1234));
+        when(clientProxy.registerAgentEndpoints(eq("public"), any(), eq(AgentTransportType.HTTP)))
+            .thenReturn(liveness(1234));
         AgentEndpointRegistrationBatch source =
             registration("a2a", endpoint("http://one:80/a"), endpoint("http://two:80/b"));
         
-        manager.register(source);
+        manager.register("public", source);
         source.getEndpoints().clear();
         
         ArgumentCaptor<AgentEndpointRegistrationBatch> captor =
             ArgumentCaptor.forClass(AgentEndpointRegistrationBatch.class);
-        verify(clientProxy).registerAgentEndpoints(captor.capture());
+        verify(clientProxy).registerAgentEndpoints(eq("public"), captor.capture(),
+            eq(AgentTransportType.HTTP));
         assertEquals(2, captor.getValue().getEndpoints().size());
         verify(executor).schedule(any(Runnable.class), eq(1234L), any());
     }
     
     @Test
-    void grpcRegistrationDoesNotCreateHeartbeatExecutor() throws NacosException {
-        AgentEndpointPublicationManager grpcManager =
-            new AgentEndpointPublicationManager(clientProxy, false);
-        grpcManager.register(registration("a2a", endpoint("http://one:80/a")));
-        grpcManager.shutdown();
+    void defaultConstructorOwnsAndClosesItsExecutor() {
+        AgentEndpointPublicationManager defaultManager =
+            new AgentEndpointPublicationManager(clientProxy);
         
-        verify(executor, never()).schedule(any(Runnable.class), anyLong(), any());
-        verify(clientProxy).deregisterAgentEndpoints("public", "agent-a", "a2a");
+        defaultManager.shutdown();
     }
     
     @Test
-    void partialDeregisterRegistersCompleteRemainderByNaturalKey() throws NacosException {
-        when(clientProxy.registerAgentEndpoints(any())).thenReturn(liveness(100));
-        manager.register(registration("a2a", endpoint("http://LOCALHOST/a"),
-            endpoint("http://two:80/b")));
+    void grpcRegistrationDoesNotCreateHeartbeatExecutor() throws NacosException {
+        when(clientProxy.selectPublicationTransport()).thenReturn(AgentTransportType.GRPC);
+        when(clientProxy.registerAgentEndpoints(eq("public"), any(), eq(AgentTransportType.GRPC)))
+            .thenReturn(liveness(777));
+        AgentEndpointPublicationManager grpcManager =
+            new AgentEndpointPublicationManager(clientProxy, executor);
+        grpcManager.register("public", registration("a2a", endpoint("http://one:80/a")));
+        grpcManager.shutdown();
         
-        manager.deregister(deregistration("a2a", endpoint("http://localhost:80/other")));
+        verify(executor, never()).schedule(any(Runnable.class), anyLong(), any());
+        verify(clientProxy).deregisterAgentEndpoints("public", "agent-a", "a2a",
+            AgentTransportType.GRPC);
+    }
+    
+    @Test
+    void nonPositiveHttpLivenessKeepsTheDefaultMaintenanceInterval()
+        throws NacosException {
+        when(clientProxy.registerAgentEndpoints(eq("public"), any(), eq(AgentTransportType.HTTP)))
+            .thenReturn(liveness(0));
+        
+        manager.register("public", registration("a2a", endpoint("http://one:80/a")));
+        
+        verify(executor).schedule(any(Runnable.class),
+            eq(AiConstants.DEFAULT_AI_CACHE_UPDATE_INTERVAL), any());
+    }
+    
+    @ParameterizedTest
+    @EnumSource(AgentTransportType.class)
+    void partialDeregisterRegistersCompleteRemainderByNaturalKey(AgentTransportType transport)
+        throws NacosException {
+        when(clientProxy.selectPublicationTransport()).thenReturn(transport);
+        when(clientProxy.registerAgentEndpoints(eq("public"), any())).thenReturn(liveness(100));
+        Endpoint retained = endpoint("http://three:80/c");
+        retained.setPriority(7);
+        retained.setWeight(2.5D);
+        retained.setMetadata(Collections.singletonMap("region", "retained"));
+        AgentEndpointRegistrationBatch registration = registration("a2a",
+            endpoint("http://LOCALHOST/a"), endpoint("http://two:80/b"), retained);
+        registration.setVersionRange("[1.0.0,2.0.0]");
+        manager.register("public", registration);
+        
+        List<Endpoint> removal = Arrays.asList(endpoint("http://two:80/other?ignored=true"),
+            endpoint("http://unknown:80/a"), endpoint("http://localhost:80/other"));
+        manager.deregister("public", "agent-a", "a2a", removal);
+        manager.deregister("public", "agent-a", "a2a", removal);
         
         ArgumentCaptor<AgentEndpointRegistrationBatch> captor =
             ArgumentCaptor.forClass(AgentEndpointRegistrationBatch.class);
-        verify(clientProxy, times(2)).registerAgentEndpoints(captor.capture());
+        verify(clientProxy, times(2)).registerAgentEndpoints(eq("public"), captor.capture(),
+            eq(transport));
         AgentEndpointRegistrationBatch remainder = captor.getAllValues().get(1);
+        assertEquals(registration.getAgentName(), remainder.getAgentName());
+        assertEquals(registration.getProtocol(), remainder.getProtocol());
+        assertEquals(registration.getRuntimeVersion(), remainder.getRuntimeVersion());
+        assertEquals(registration.getVersionRange(), remainder.getVersionRange());
         assertEquals(1, remainder.getEndpoints().size());
-        assertEquals("http://two:80/b", remainder.getEndpoints().get(0).getUri());
+        Endpoint actual = remainder.getEndpoints().get(0);
+        assertEquals(retained.getUri(), actual.getUri());
+        assertEquals(retained.getTransport(), actual.getTransport());
+        assertEquals(retained.getPriority(), actual.getPriority());
+        assertEquals(retained.getWeight(), actual.getWeight());
+        assertEquals(retained.getMetadata(), actual.getMetadata());
+        assertEquals(3, registration.getEndpoints().size());
+        assertEquals(3, removal.size());
+        verify(clientProxy).selectPublicationTransport();
+        verify(clientProxy, never()).deregisterAgentEndpoints(any(), any(), any(), any());
         verify(clientProxy, never()).deregisterAgentEndpoints(any(), any(), any());
     }
     
     @Test
     void finalAndRepeatedDeregisterAreIdempotent() throws NacosException {
-        when(clientProxy.registerAgentEndpoints(any())).thenReturn(liveness(100));
-        AgentEndpointDeregistrationBatch deregistration =
-            deregistration("a2a", endpoint("http://one:80/different"));
-        manager.register(registration("a2a", endpoint("http://one:80/a")));
+        when(clientProxy.registerAgentEndpoints(eq("public"), any())).thenReturn(liveness(100));
+        List<Endpoint> deregistration =
+            Arrays.asList(endpoint("http://one:80/different"));
+        manager.register("public", registration("a2a", endpoint("http://one:80/a")));
         
-        manager.deregister(deregistration);
-        manager.deregister(deregistration);
+        manager.deregister("public", "agent-a", "a2a", deregistration);
+        manager.deregister("public", "agent-a", "a2a", deregistration);
         
         verify(clientProxy).deregisterAgentEndpoints("public", "agent-a", "a2a");
         verify(future).cancel(false);
@@ -131,36 +203,37 @@ class AgentEndpointPublicationManagerTest {
     
     @Test
     void unknownPublicationAndNaturalKeyAreNoOps() throws NacosException {
-        manager.deregister(deregistration("a2a", endpoint("http://one:80/a")));
-        when(clientProxy.registerAgentEndpoints(any())).thenReturn(liveness(100));
-        manager.register(registration("a2a", endpoint("http://one:80/a")));
-        manager.deregister(deregistration("a2a", endpoint("http://other:80/a")));
+        manager.deregister("public", "agent-a", "a2a", Arrays.asList(endpoint("http://one:80/a")));
+        when(clientProxy.registerAgentEndpoints(eq("public"), any())).thenReturn(liveness(100));
+        manager.register("public", registration("a2a", endpoint("http://one:80/a")));
+        manager.deregister("public", "agent-a", "a2a",
+            Arrays.asList(endpoint("http://other:80/a")));
         
-        verify(clientProxy).registerAgentEndpoints(any());
+        verify(clientProxy).registerAgentEndpoints(eq("public"), any());
         verify(clientProxy, never()).deregisterAgentEndpoints(any(), any(), any());
     }
     
     @Test
     void retryableRegisterFailureKeepsDesiredBatchForMaintenance() throws NacosException {
-        when(clientProxy.registerAgentEndpoints(any()))
+        when(clientProxy.registerAgentEndpoints(eq("public"), any()))
             .thenThrow(new NacosException(NacosException.SERVER_ERROR, "timeout"))
             .thenReturn(liveness(100));
         assertThrows(NacosException.class,
-            () -> manager.register(registration("a2a", endpoint("http://one:80/a"))));
+            () -> manager.register("public", registration("a2a", endpoint("http://one:80/a"))));
         
         runMaintenance(0);
         
-        verify(clientProxy, times(2)).registerAgentEndpoints(any());
+        verify(clientProxy, times(2)).registerAgentEndpoints(eq("public"), any());
         verify(clientProxy).heartbeatAgentEndpoints();
     }
     
     @Test
     void initialNonRetryableFailureDoesNotRetainDesiredBatch() throws NacosException {
-        when(clientProxy.registerAgentEndpoints(any()))
+        when(clientProxy.registerAgentEndpoints(eq("public"), any()))
             .thenThrow(new NacosException(NacosException.INVALID_PARAM, "invalid"));
         
         assertThrows(NacosException.class,
-            () -> manager.register(registration("a2a", endpoint("http://one:80/a"))));
+            () -> manager.register("public", registration("a2a", endpoint("http://one:80/a"))));
         manager.shutdown();
         
         verify(clientProxy, never()).deregisterAgentEndpoints(any(), any(), any());
@@ -169,34 +242,34 @@ class AgentEndpointPublicationManagerTest {
     @Test
     void localPublicationCapacityAllowsReplacementAndRejectsNewIdentity()
         throws NacosException {
-        manager = new AgentEndpointPublicationManager(clientProxy, true, executor, 1);
-        when(clientProxy.registerAgentEndpoints(any())).thenReturn(liveness(100));
-        manager.register(registration("a2a", endpoint("http://one:80/a")));
-        manager.register(registration("a2a", endpoint("http://replacement:80/a")));
+        manager = new AgentEndpointPublicationManager(clientProxy, executor, 1);
+        when(clientProxy.registerAgentEndpoints(eq("public"), any())).thenReturn(liveness(100));
+        manager.register("public", registration("a2a", endpoint("http://one:80/a")));
+        manager.register("public", registration("a2a", endpoint("http://replacement:80/a")));
         
         NacosApiException exception = assertThrows(NacosApiException.class,
-            () -> manager.register(registration("mcp", endpoint("http://two:80/a"))));
+            () -> manager.register("public", registration("mcp", endpoint("http://two:80/a"))));
         assertEquals(NacosException.CLIENT_OVER_THRESHOLD, exception.getErrCode());
         assertEquals(ErrorCode.AGENT_ENDPOINT_PUBLICATION_OVER_LIMIT.getCode(),
             exception.getDetailErrCode());
-        verify(clientProxy, times(2)).registerAgentEndpoints(any());
+        verify(clientProxy, times(2)).registerAgentEndpoints(eq("public"), any());
     }
     
     @Test
     void localPublicationCapacityAdmitsWholeBatchFromBelowWatermark()
         throws NacosException {
-        manager = new AgentEndpointPublicationManager(clientProxy, true, executor, 2);
-        when(clientProxy.registerAgentEndpoints(any())).thenReturn(liveness(100));
-        manager.register(registration("a2a", endpoint("http://one:80/a")));
-        manager.register(registration("mcp", endpoint("http://two:80/a"),
+        manager = new AgentEndpointPublicationManager(clientProxy, executor, 2);
+        when(clientProxy.registerAgentEndpoints(eq("public"), any())).thenReturn(liveness(100));
+        manager.register("public", registration("a2a", endpoint("http://one:80/a")));
+        manager.register("public", registration("mcp", endpoint("http://two:80/a"),
             endpoint("http://three:80/a"), endpoint("http://four:80/a")));
-        manager.register(registration("mcp", endpoint("http://two:80/a"),
+        manager.register("public", registration("mcp", endpoint("http://two:80/a"),
             endpoint("http://three:80/a"), endpoint("http://four:80/a")));
         
         NacosApiException newIdentity = assertThrows(NacosApiException.class,
-            () -> manager.register(registration("custom", endpoint("http://five:80/a"))));
+            () -> manager.register("public", registration("custom", endpoint("http://five:80/a"))));
         NacosApiException growth = assertThrows(NacosApiException.class,
-            () -> manager.register(registration("mcp", endpoint("http://two:80/a"),
+            () -> manager.register("public", registration("mcp", endpoint("http://two:80/a"),
                 endpoint("http://three:80/a"), endpoint("http://four:80/a"),
                 endpoint("http://five:80/a"))));
         
@@ -204,17 +277,17 @@ class AgentEndpointPublicationManagerTest {
             newIdentity.getDetailErrCode());
         assertEquals(ErrorCode.AGENT_ENDPOINT_PUBLICATION_OVER_LIMIT.getCode(),
             growth.getDetailErrCode());
-        verify(clientProxy, times(3)).registerAgentEndpoints(any());
+        verify(clientProxy, times(3)).registerAgentEndpoints(eq("public"), any());
     }
     
     @Test
     void remotePublicationCapacityRejectRemovesHeartbeatAndRedoIntent()
         throws NacosException {
-        when(clientProxy.registerAgentEndpoints(any()))
+        when(clientProxy.registerAgentEndpoints(eq("public"), any()))
             .thenThrow(publicationCapacityException());
         
         assertEquals(NacosException.OVER_THRESHOLD, assertThrows(NacosException.class,
-            () -> manager.register(registration("a2a", endpoint("http://one:80/a"))))
+            () -> manager.register("public", registration("a2a", endpoint("http://one:80/a"))))
             .getErrCode());
         manager.shutdown();
         
@@ -225,12 +298,12 @@ class AgentEndpointPublicationManagerTest {
     @Test
     void remoteCapacityRejectOfReplacementDiscardsWholePublication()
         throws NacosException {
-        when(clientProxy.registerAgentEndpoints(any())).thenReturn(liveness(100))
+        when(clientProxy.registerAgentEndpoints(eq("public"), any())).thenReturn(liveness(100))
             .thenThrow(publicationCapacityException());
-        manager.register(registration("a2a", endpoint("http://one:80/a")));
+        manager.register("public", registration("a2a", endpoint("http://one:80/a")));
         
         assertThrows(NacosException.class,
-            () -> manager.register(registration("a2a", endpoint("http://two:80/a"))));
+            () -> manager.register("public", registration("a2a", endpoint("http://two:80/a"))));
         manager.shutdown();
         
         verify(clientProxy, never()).deregisterAgentEndpoints(any(), any(), any());
@@ -238,16 +311,16 @@ class AgentEndpointPublicationManagerTest {
     
     @Test
     void delayedCapacityRejectDiscardsIntentAndStopsHttpRedo() throws NacosException {
-        when(clientProxy.registerAgentEndpoints(any()))
+        when(clientProxy.registerAgentEndpoints(eq("public"), any()))
             .thenThrow(new NacosException(NacosException.SERVER_ERROR, "timeout"))
             .thenThrow(publicationCapacityException());
         assertThrows(NacosException.class,
-            () -> manager.register(registration("a2a", endpoint("http://one:80/a"))));
+            () -> manager.register("public", registration("a2a", endpoint("http://one:80/a"))));
         
         runMaintenance(0);
         runMaintenance(0);
         
-        verify(clientProxy, times(2)).registerAgentEndpoints(any());
+        verify(clientProxy, times(2)).registerAgentEndpoints(eq("public"), any());
         verify(clientProxy, never()).heartbeatAgentEndpoints();
         manager.shutdown();
         verify(clientProxy, never()).deregisterAgentEndpoints(any(), any(), any());
@@ -255,15 +328,15 @@ class AgentEndpointPublicationManagerTest {
     
     @Test
     void genericOverThresholdFailureRemainsRetryable() throws NacosException {
-        when(clientProxy.registerAgentEndpoints(any()))
+        when(clientProxy.registerAgentEndpoints(eq("public"), any()))
             .thenThrow(new NacosException(NacosException.OVER_THRESHOLD, "throttled"))
             .thenReturn(liveness(100));
         assertThrows(NacosException.class,
-            () -> manager.register(registration("a2a", endpoint("http://one:80/a"))));
+            () -> manager.register("public", registration("a2a", endpoint("http://one:80/a"))));
         
         runMaintenance(0);
         
-        verify(clientProxy, times(2)).registerAgentEndpoints(any());
+        verify(clientProxy, times(2)).registerAgentEndpoints(eq("public"), any());
         verify(clientProxy).heartbeatAgentEndpoints();
     }
     
@@ -271,34 +344,48 @@ class AgentEndpointPublicationManagerTest {
     void asynchronousRemoteCapacityRejectionDiscardsPublication() throws NacosException {
         AgentEndpointRegistrationBatch batch =
             registration("a2a", endpoint("http://one:80/a"));
-        when(clientProxy.registerAgentEndpoints(any())).thenReturn(liveness(100));
-        manager.register(batch);
+        when(clientProxy.registerAgentEndpoints(eq("public"), any())).thenReturn(liveness(100));
+        manager.register("public", batch);
         
-        manager.discardAfterRemoteCapacityRejection(batch);
+        manager.discardAfterRemoteCapacityRejection("public", batch);
         manager.shutdown();
         
         verify(clientProxy, never()).deregisterAgentEndpoints(any(), any(), any());
     }
     
     @Test
+    void postShutdownCapacityCleanupCannotRestartMaintenance() throws NacosException {
+        AgentEndpointRegistrationBatch batch =
+            registration("a2a", endpoint("http://one:80/a"));
+        when(clientProxy.registerAgentEndpoints(eq("public"), any())).thenReturn(liveness(100));
+        manager.register("public", batch);
+        manager.shutdown();
+        
+        manager.discardAfterRemoteCapacityRejection("public", batch);
+        
+        verify(executor).schedule(any(Runnable.class), eq(100L), any());
+        verify(executor).shutdownNow();
+    }
+    
+    @Test
     void invalidLocalPublicationCapacityIsRejected() {
         assertThrows(IllegalArgumentException.class,
-            () -> new AgentEndpointPublicationManager(clientProxy, true, executor, 0));
+            () -> new AgentEndpointPublicationManager(clientProxy, executor, 0));
     }
     
     @Test
     void delayedNonRetryableFailureDiscardsInitialIntentAndStopsRedo()
         throws NacosException {
-        when(clientProxy.registerAgentEndpoints(any()))
+        when(clientProxy.registerAgentEndpoints(eq("public"), any()))
             .thenThrow(new NacosException(NacosException.SERVER_ERROR, "timeout"))
             .thenThrow(new NacosException(NacosException.INVALID_PARAM, "invalid"));
         assertThrows(NacosException.class,
-            () -> manager.register(registration("a2a", endpoint("http://one:80/a"))));
+            () -> manager.register("public", registration("a2a", endpoint("http://one:80/a"))));
         
         runMaintenance(0);
         runMaintenance(0);
         
-        verify(clientProxy, times(2)).registerAgentEndpoints(any());
+        verify(clientProxy, times(2)).registerAgentEndpoints(eq("public"), any());
         verify(clientProxy, never()).heartbeatAgentEndpoints();
         verify(executor).schedule(any(Runnable.class), anyLong(), any());
     }
@@ -306,46 +393,48 @@ class AgentEndpointPublicationManagerTest {
     @Test
     void delayedNonRetryableReplacementRestoresPreviousPublication()
         throws NacosException {
-        when(clientProxy.registerAgentEndpoints(any())).thenReturn(liveness(100))
+        when(clientProxy.registerAgentEndpoints(eq("public"), any())).thenReturn(liveness(100))
             .thenThrow(new NacosException(NacosException.SERVER_ERROR, "timeout"))
             .thenThrow(new NacosException(NacosException.NO_RIGHT, "denied"));
-        manager.register(registration("a2a", endpoint("http://one:80/a")));
+        manager.register("public", registration("a2a", endpoint("http://one:80/a")));
         assertThrows(NacosException.class,
-            () -> manager.register(registration("a2a", endpoint("http://two:80/b"))));
+            () -> manager.register("public", registration("a2a", endpoint("http://two:80/b"))));
         
         runMaintenance(0);
         runMaintenance(1);
-        manager.deregister(deregistration("a2a", endpoint("http://one:80/other")));
+        manager.deregister("public", "agent-a", "a2a",
+            Arrays.asList(endpoint("http://one:80/other")));
         
-        verify(clientProxy, times(3)).registerAgentEndpoints(any());
+        verify(clientProxy, times(3)).registerAgentEndpoints(eq("public"), any());
         verify(clientProxy, times(2)).heartbeatAgentEndpoints();
         verify(clientProxy).deregisterAgentEndpoints("public", "agent-a", "a2a");
     }
     
     @Test
     void nonRetryableReplacementFailureRestoresPreviousDesiredBatch() throws NacosException {
-        when(clientProxy.registerAgentEndpoints(any())).thenReturn(liveness(100))
+        when(clientProxy.registerAgentEndpoints(eq("public"), any())).thenReturn(liveness(100))
             .thenThrow(new NacosException(NacosException.INVALID_PARAM, "invalid"));
-        manager.register(registration("a2a", endpoint("http://one:80/a")));
+        manager.register("public", registration("a2a", endpoint("http://one:80/a")));
         assertThrows(NacosException.class,
-            () -> manager.register(registration("a2a", endpoint("http://two:80/b"))));
+            () -> manager.register("public", registration("a2a", endpoint("http://two:80/b"))));
         
-        manager.deregister(deregistration("a2a", endpoint("http://one:80/other")));
+        manager.deregister("public", "agent-a", "a2a",
+            Arrays.asList(endpoint("http://one:80/other")));
         
         verify(clientProxy).deregisterAgentEndpoints("public", "agent-a", "a2a");
     }
     
     @Test
     void retryableWholeDeregisterFailureRetainsTombstoneUntilRedo() throws NacosException {
-        when(clientProxy.registerAgentEndpoints(any())).thenReturn(liveness(100));
+        when(clientProxy.registerAgentEndpoints(eq("public"), any())).thenReturn(liveness(100));
         doThrow(new NacosException(NacosException.SERVER_ERROR, "timeout"))
             .doNothing().when(clientProxy)
             .deregisterAgentEndpoints("public", "agent-a", "a2a");
-        manager.register(registration("a2a", endpoint("http://one:80/a")));
+        manager.register("public", registration("a2a", endpoint("http://one:80/a")));
         
         assertThrows(NacosException.class,
-            () -> manager.deregister(
-                deregistration("a2a", endpoint("http://one:80/other"))));
+            () -> manager.deregister("public", "agent-a", "a2a",
+                Arrays.asList(endpoint("http://one:80/other"))));
         runMaintenance(0);
         
         verify(clientProxy, times(2)).deregisterAgentEndpoints("public", "agent-a", "a2a");
@@ -354,13 +443,13 @@ class AgentEndpointPublicationManagerTest {
     @Test
     void repeatedRetryableDeregisterFailureDoesNotHeartbeatTombstone()
         throws NacosException {
-        when(clientProxy.registerAgentEndpoints(any())).thenReturn(liveness(100));
+        when(clientProxy.registerAgentEndpoints(eq("public"), any())).thenReturn(liveness(100));
         doThrow(new NacosException(NacosException.SERVER_ERROR, "timeout"))
             .when(clientProxy).deregisterAgentEndpoints("public", "agent-a", "a2a");
-        manager.register(registration("a2a", endpoint("http://one:80/a")));
+        manager.register("public", registration("a2a", endpoint("http://one:80/a")));
         assertThrows(NacosException.class,
-            () -> manager.deregister(
-                deregistration("a2a", endpoint("http://one:80/other"))));
+            () -> manager.deregister("public", "agent-a", "a2a",
+                Arrays.asList(endpoint("http://one:80/other"))));
         
         runMaintenance(0);
         
@@ -370,53 +459,54 @@ class AgentEndpointPublicationManagerTest {
     
     @Test
     void nonRetryableWholeDeregisterFailureRestoresPublication() throws NacosException {
-        when(clientProxy.registerAgentEndpoints(any())).thenReturn(liveness(100));
+        when(clientProxy.registerAgentEndpoints(eq("public"), any())).thenReturn(liveness(100));
         doThrow(new NacosException(NacosException.NO_RIGHT, "denied"))
             .doNothing().when(clientProxy)
             .deregisterAgentEndpoints("public", "agent-a", "a2a");
-        manager.register(registration("a2a", endpoint("http://one:80/a")));
+        manager.register("public", registration("a2a", endpoint("http://one:80/a")));
         
         assertThrows(NacosException.class,
-            () -> manager.deregister(
-                deregistration("a2a", endpoint("http://one:80/other"))));
-        manager.deregister(deregistration("a2a", endpoint("http://one:80/other")));
+            () -> manager.deregister("public", "agent-a", "a2a",
+                Arrays.asList(endpoint("http://one:80/other"))));
+        manager.deregister("public", "agent-a", "a2a",
+            Arrays.asList(endpoint("http://one:80/other")));
         
         verify(clientProxy, times(2)).deregisterAgentEndpoints("public", "agent-a", "a2a");
     }
     
     @Test
     void clientNotFoundHeartbeatReplaysEveryCompletePublication() throws NacosException {
-        when(clientProxy.registerAgentEndpoints(any())).thenReturn(liveness(100));
+        when(clientProxy.registerAgentEndpoints(eq("public"), any())).thenReturn(liveness(100));
         when(clientProxy.heartbeatAgentEndpoints()).thenThrow(
             new NacosException(ErrorCode.HTTP_CLIENT_NOT_FOUND.getCode(), "missing"));
-        manager.register(registration("a2a", endpoint("http://one:80/a")));
-        manager.register(registration("mcp", endpoint("http://two:80/b")));
+        manager.register("public", registration("a2a", endpoint("http://one:80/a")));
+        manager.register("public", registration("mcp", endpoint("http://two:80/b")));
         
         runMaintenance(0);
         
-        verify(clientProxy, times(4)).registerAgentEndpoints(any());
+        verify(clientProxy, times(4)).registerAgentEndpoints(eq("public"), any());
         verify(clientProxy).heartbeatAgentEndpoints();
     }
     
     @Test
     void transientHeartbeatFailureRetainsPublicationsAndSchedulesAgain()
         throws NacosException {
-        when(clientProxy.registerAgentEndpoints(any())).thenReturn(liveness(100));
+        when(clientProxy.registerAgentEndpoints(eq("public"), any())).thenReturn(liveness(100));
         when(clientProxy.heartbeatAgentEndpoints())
             .thenThrow(new NacosException(NacosException.SERVER_ERROR, "failed"));
-        manager.register(registration("a2a", endpoint("http://one:80/a")));
+        manager.register("public", registration("a2a", endpoint("http://one:80/a")));
         
         runMaintenance(0);
         
         verify(executor, times(2)).schedule(any(Runnable.class), eq(100L), any());
-        verify(clientProxy).registerAgentEndpoints(any());
+        verify(clientProxy).registerAgentEndpoints(eq("public"), any());
     }
     
     @Test
     void shutdownDeregistersAllAndIsIdempotent() throws NacosException {
-        when(clientProxy.registerAgentEndpoints(any())).thenReturn(liveness(100));
-        manager.register(registration("a2a", endpoint("http://one:80/a")));
-        manager.register(registration("mcp", endpoint("http://two:80/b")));
+        when(clientProxy.registerAgentEndpoints(eq("public"), any())).thenReturn(liveness(100));
+        manager.register("public", registration("a2a", endpoint("http://one:80/a")));
+        manager.register("public", registration("mcp", endpoint("http://two:80/b")));
         lenient().doThrow(new NacosException(NacosException.SERVER_ERROR, "failed"))
             .when(clientProxy).deregisterAgentEndpoints("public", "agent-a", "a2a");
         
@@ -431,11 +521,79 @@ class AgentEndpointPublicationManagerTest {
     
     @Test
     void completedMaintenanceFutureCanBeReplaced() throws NacosException {
-        when(clientProxy.registerAgentEndpoints(any())).thenReturn(liveness(100));
+        when(clientProxy.registerAgentEndpoints(eq("public"), any())).thenReturn(liveness(100));
         when(future.isDone()).thenReturn(true);
-        manager.register(registration("a2a", endpoint("http://one:80/a")));
-        manager.register(registration("mcp", endpoint("http://two:80/b")));
+        manager.register("public", registration("a2a", endpoint("http://one:80/a")));
+        manager.register("public", registration("mcp", endpoint("http://two:80/b")));
         verify(executor, times(2)).schedule(any(Runnable.class), eq(100L), any());
+    }
+    
+    @Test
+    void replacementKeepsInitialPublicationOwner() throws NacosException {
+        when(clientProxy.selectPublicationTransport()).thenReturn(AgentTransportType.HTTP,
+            AgentTransportType.GRPC);
+        when(clientProxy.registerAgentEndpoints(eq("public"), any())).thenReturn(liveness(100));
+        manager.register("public", registration("a2a", endpoint("http://one:80/a")));
+        manager.register("public", registration("a2a", endpoint("http://two:80/b")));
+        
+        verify(clientProxy).selectPublicationTransport();
+        verify(clientProxy, times(2)).registerAgentEndpoints(eq("public"), any(),
+            eq(AgentTransportType.HTTP));
+        verify(clientProxy, never()).registerAgentEndpoints(eq("public"), any(),
+            eq(AgentTransportType.GRPC));
+    }
+    
+    @Test
+    void mixedPublicationOwnersUseIndependentMaintenanceAndShutdown()
+        throws NacosException {
+        when(clientProxy.selectPublicationTransport()).thenReturn(AgentTransportType.HTTP,
+            AgentTransportType.GRPC);
+        when(clientProxy.registerAgentEndpoints(eq("public"), any())).thenReturn(liveness(100));
+        manager.register("public", registration("a2a", endpoint("http://one:80/a")));
+        manager.register("public", registration("mcp", endpoint("http://two:80/b")));
+        
+        runMaintenance(0);
+        manager.shutdown();
+        
+        verify(clientProxy).heartbeatAgentEndpoints(AgentTransportType.HTTP);
+        verify(clientProxy, never()).heartbeatAgentEndpoints(AgentTransportType.GRPC);
+        verify(clientProxy).deregisterAgentEndpoints("public", "agent-a", "a2a",
+            AgentTransportType.HTTP);
+        verify(clientProxy).deregisterAgentEndpoints("public", "agent-a", "mcp",
+            AgentTransportType.GRPC);
+    }
+    
+    @Test
+    void maintenanceClassifiesHttpTombstoneDirtyGrpcAndRegisteredHttpIndependently()
+        throws NacosException {
+        when(clientProxy.selectPublicationTransport()).thenReturn(AgentTransportType.HTTP,
+            AgentTransportType.HTTP, AgentTransportType.GRPC);
+        when(clientProxy.registerAgentEndpoints(eq("public"), any(), eq(AgentTransportType.HTTP)))
+            .thenReturn(liveness(100));
+        when(clientProxy.registerAgentEndpoints(eq("public"), any(), eq(AgentTransportType.GRPC)))
+            .thenReturn(null)
+            .thenThrow(new NacosException(NacosException.SERVER_ERROR, "grpc retryable"));
+        doThrow(new NacosException(NacosException.SERVER_ERROR, "deregister retryable"))
+            .when(clientProxy).deregisterAgentEndpoints("public", "agent-a", "a2a",
+                AgentTransportType.HTTP);
+        doThrow(new NacosException(ErrorCode.HTTP_CLIENT_NOT_FOUND.getCode(), "missing"))
+            .when(clientProxy).heartbeatAgentEndpoints(AgentTransportType.HTTP);
+        manager.register("public", registration("a2a", endpoint("http://one:80/a")));
+        manager.register("public", registration("mcp", endpoint("http://two:80/b")));
+        manager.register("public", registration("custom", endpoint("http://three:80/c")));
+        assertThrows(NacosException.class,
+            () -> manager.register("public",
+                registration("custom", endpoint("http://replacement:80/c"))));
+        assertThrows(NacosException.class,
+            () -> manager.deregister("public", "agent-a", "a2a",
+                Arrays.asList(endpoint("http://one:80/other"))));
+        
+        runMaintenance(0);
+        
+        verify(clientProxy).heartbeatAgentEndpoints(AgentTransportType.HTTP);
+        verify(clientProxy, never()).heartbeatAgentEndpoints(AgentTransportType.GRPC);
+        verify(clientProxy, times(2)).registerAgentEndpoints(eq("public"), any(),
+            eq(AgentTransportType.GRPC));
     }
     
     @Test
@@ -471,19 +629,8 @@ class AgentEndpointPublicationManagerTest {
     private AgentEndpointRegistrationBatch registration(String protocol,
         Endpoint... endpoints) {
         AgentEndpointRegistrationBatch result = new AgentEndpointRegistrationBatch();
-        result.setNamespaceId("public");
         result.setAgentName("agent-a");
         result.setRuntimeVersion("1.0.0");
-        result.setProtocol(protocol);
-        result.setEndpoints(new ArrayList<Endpoint>(Arrays.asList(endpoints)));
-        return result;
-    }
-    
-    private AgentEndpointDeregistrationBatch deregistration(String protocol,
-        Endpoint... endpoints) {
-        AgentEndpointDeregistrationBatch result = new AgentEndpointDeregistrationBatch();
-        result.setNamespaceId("public");
-        result.setAgentName("agent-a");
         result.setProtocol(protocol);
         result.setEndpoints(new ArrayList<Endpoint>(Arrays.asList(endpoints)));
         return result;

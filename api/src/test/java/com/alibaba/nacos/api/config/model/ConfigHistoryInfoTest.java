@@ -22,6 +22,10 @@ import tools.jackson.core.JacksonException;
 import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -50,6 +54,20 @@ class ConfigHistoryInfoTest {
         mockBasicInfo(basicInfo, createTime, modifyTime);
         mockBasicInfo(detailInfo, createTime, modifyTime);
         mockDetailInfo(detailInfo);
+    }
+    
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = {"", "schema text", "{\"type\":\"object\"}\n"})
+    void testSchemaRoundTrip(String schema) throws JacksonException {
+        ObjectMapper nonNullMapper = JsonMapper.builder().changeDefaultPropertyInclusion(
+            inclusion -> inclusion.withValueInclusion(JsonInclude.Include.NON_NULL)).build();
+        detailInfo.setSchema(schema);
+        String json = nonNullMapper.writeValueAsString(detailInfo);
+        assertEquals(schema != null, mapper.readTree(json).has("schema"));
+        ConfigHistoryDetailInfo result = mapper.readValue(json, ConfigHistoryDetailInfo.class);
+        assertEquals(schema, result.getSchema());
+        assertEquals(detailInfo.getExtInfo(), result.getExtInfo());
     }
     
     private void mockBasicInfo(ConfigHistoryBasicInfo basicInfo, long createTime, long modifyTime) {

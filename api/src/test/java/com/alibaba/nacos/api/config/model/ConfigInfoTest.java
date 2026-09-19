@@ -22,6 +22,10 @@ import tools.jackson.core.JacksonException;
 import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -157,6 +161,18 @@ class ConfigInfoTest {
         assertTrue(json.contains("\"appName\":\"testApp\""));
         assertTrue(json.contains("\"createTime\":" + createTime));
         assertTrue(json.contains("\"modifyTime\":" + modifyTime));
+    }
+    
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = {"", "schema text", "{\"type\":\"object\"}\n"})
+    void testSchemaRoundTrip(String schema) throws JacksonException {
+        ObjectMapper nonNullMapper = JsonMapper.builder().changeDefaultPropertyInclusion(
+            inclusion -> inclusion.withValueInclusion(JsonInclude.Include.NON_NULL)).build();
+        detailInfo.setSchema(schema);
+        String json = nonNullMapper.writeValueAsString(detailInfo);
+        assertEquals(schema != null, mapper.readTree(json).has("schema"));
+        assertEquals(schema, mapper.readValue(json, ConfigDetailInfo.class).getSchema());
     }
     
     private void asserJsonContainDetailInfos(String json) {

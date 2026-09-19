@@ -18,7 +18,11 @@ package com.alibaba.nacos.persistence.datasource;
 
 import com.alibaba.nacos.common.utils.Preconditions;
 import com.alibaba.nacos.common.utils.StringUtils;
+import com.alibaba.nacos.plugin.datasource.dialect.DatabaseDialect;
+import com.alibaba.nacos.plugin.datasource.manager.DatabaseDialectManager;
 import com.zaxxer.hikari.HikariDataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
 
 import java.nio.charset.StandardCharsets;
@@ -42,16 +46,25 @@ import javax.crypto.spec.SecretKeySpec;
  */
 public class ExternalDataSourceProperties {
     
+    private static final Logger LOGGER =
+        LoggerFactory.getLogger(ExternalDataSourceProperties.class);
+
     private static final String MYSQL_DRIVER_NAME = "com.mysql.cj.jdbc.Driver";
-    
+
     private static final String MARIADB_DRIVER_NAME = "org.mariadb.jdbc.Driver";
-    
+
     private static final String ORACLE_DRIVER_NAME = "oracle.jdbc.OracleDriver";
-    
+
     private static final String POSTGRESQL_DRIVER_NAME = "org.postgresql.Driver";
-    
+
     private static final String SQLSERVER_DRIVER_NAME =
         "com.microsoft.sqlserver.jdbc.SQLServerDriver";
+
+    /**
+     * Compatibility default driver, used only when neither the pool config nor the selected
+     * dialect plugin provides a driver class name.
+     */
+    private static final String JDBC_DRIVER_NAME = "com.mysql.cj.jdbc.Driver";
     
     private static final String TEST_QUERY = "SELECT 1";
     private static final String NACOS_ENC_PREFIX = "NacosEnc(";
@@ -60,11 +73,13 @@ public class ExternalDataSourceProperties {
     /**
      * Build serveral HikariDataSource.
      *
-     * @param environment {@link Environment}
-     * @param callback    Callback function when constructing data source
+     * @param environment    {@link Environment}
+     * @param dataSourceType datasource type resolved during service initialization
+     * @param callback       Callback function when constructing data source
      * @return List of {@link HikariDataSource}
      */
-    List<HikariDataSource> build(Environment environment, Callback<HikariDataSource> callback) {
+    List<HikariDataSource> build(Environment environment, String dataSourceType,
+        Callback<HikariDataSource> callback) {
         List<HikariDataSource> dataSources = new ArrayList<>();
         DatasourceConfigResolver configResolver = new DatasourceConfigResolver(environment);
         Integer num = configResolver.resolve("num", Integer.class);
@@ -105,7 +120,11 @@ public class ExternalDataSourceProperties {
             DataSourcePoolProperties poolProperties =
                 DataSourcePoolProperties.build(configResolver);
             if (StringUtils.isEmpty(poolProperties.getDataSource().getDriverClassName())) {
-                poolProperties.setDriverClassName(resolveDriverName(driverName, url));
+                String resolvedDriver = resolveDriverName(driverName, url);
+                if (resolvedDriver == null) {
+                    resolvedDriver = resolveDefaultDriverClassName(dataSourceType);
+                }
+                poolProperties.setDriverClassName(resolvedDriver);
             }
             poolProperties.setJdbcUrl(url.trim());
             poolProperties.setUsername(user.trim());
@@ -121,7 +140,38 @@ public class ExternalDataSourceProperties {
         Preconditions.checkArgument(!dataSources.isEmpty(), "no datasource available");
         return dataSources;
     }
-    
+
+    /**
+     * Resolve the driver class used when {@code pool.config.driver-class-name} is blank.
+     *
+     * <p>The selected {@link DatabaseDialect} plugin is asked first, so that selecting a dialect via
+     * {@code nacos.plugin.datasource-dialect.type} is enough for the built-in datasource plugins.
+     * When the dialect cannot be resolved or does not provide a default driver, the MySQL
+     * compatibility default is kept.
+     *
+     * @param dialectType datasource type resolved during service initialization
+     * @return default JDBC driver class name, never blank
+     */
+    String resolveDefaultDriverClassName(String dialectType) {
+        String driverClassName = null;
+        try {
+            DatabaseDialect dialect = DatabaseDialectManager.getInstance().getDialect(dialectType);
+            driverClassName = dialect.getDefaultDriverClassName();
+        } catch (IllegalStateException e) {
+            LOGGER.warn("[ExternalDataSourceProperties] Cannot resolve DatabaseDialect `{}` "
+                + "for default driver class name: {}", dialectType, e.getMessage());
+        }
+        if (StringUtils.isBlank(driverClassName)) {
+            LOGGER.info("[ExternalDataSourceProperties] DatabaseDialect `{}` provides no default "
+                + "driver class name, fallback to compatibility default `{}`", dialectType,
+                JDBC_DRIVER_NAME);
+            return JDBC_DRIVER_NAME;
+        }
+        LOGGER.info("[ExternalDataSourceProperties] Use default driver class name `{}` "
+            + "provided by DatabaseDialect `{}`", driverClassName, dialectType);
+        return driverClassName.trim();
+    }
+
     private static String firstText(String... values) {
         for (String value : values) {
             if (hasText(value) && !value.startsWith("${")) {
@@ -152,7 +202,10 @@ public class ExternalDataSourceProperties {
         if (normalizedUrl.startsWith("jdbc:sqlserver:")) {
             return SQLSERVER_DRIVER_NAME;
         }
-        return MYSQL_DRIVER_NAME;
+        if (normalizedUrl.startsWith("jdbc:mysql:")) {
+            return MYSQL_DRIVER_NAME;
+        }
+        return null;
     }
     
     static String resolveNacosEncPassword(String raw) {

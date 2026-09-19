@@ -35,17 +35,21 @@ exception/error handling.
 
 ## Authorization Metadata Coverage
 
-The standalone OpenAPI IT profile does not enable Client API authorization.
-Functional scenarios therefore remain unchanged for authorization-only fixes.
-Focused Auth and AI module tests verify that the AgentSpec detail endpoint
-keeps its `OPEN_API`/`AI` metadata and resolves the authorization resource from
-the client `name` parameter.
+The unified default-auth functional workflow executes every Client API functional
+scenario as the restricted `ClientReadWrite` identity. Management-created
+private AI fixtures receive resource-exact read visibility grants; fixtures
+whose owner semantics are part of the scenario are published by the client
+identity. `AuthScopeGuardITCase` separately verifies anonymous, invalid,
+read-only, and authenticated-no-permission behavior on stable representative
+Client APIs. Focused Auth and AI module tests continue to verify that the
+AgentSpec detail endpoint keeps its `OPEN_API`/`AI` metadata and resolves the
+authorization resource from the client `name` parameter.
 
 ## Config
 
 | API surface / IT class | Covered API operations | Current status | Current / missing coverage |
 | --- | --- | --- | --- |
-| `ConfigOpenApiITCase` | `GET /v3/client/cs/config` | Covered | Queries config published by admin API with content, md5, lastModified, contentType, and current gray-backed beta fields; verifies public namespace defaulting, wrong namespace not-found, required `dataId`/`groupName`, legacy `group` rejection, invalid namespace, and wrapped not-found/error bodies. Removed pre-3.0 namespace or beta/tag storage migration is outside the 3.3 client API contract. |
+| `ConfigOpenApiITCase` | `GET /v3/client/cs/config` | Covered | Queries config published by admin API with content, md5, lastModified, contentType, and current gray-backed beta fields; verifies public namespace defaulting, wrong namespace not-found, required `dataId`/`groupName`, legacy `group` rejection, invalid namespace, directory-control identity segment rejection with HTTP 400, and controlled not-found/error bodies. Removed pre-3.0 namespace or beta/tag storage migration is outside the 3.3 client API contract. |
 
 ## Naming
 
@@ -59,11 +63,44 @@ the client `name` parameter.
 
 | API surface / IT class | Covered API operations | Current status | Current / missing coverage |
 | --- | --- | --- | --- |
-| `PromptClientOpenApiITCase` | `GET /v3/client/ai/prompt` | Partial | Queries online prompts by latest, explicit version, and label; verifies namespace defaulting, version-over-label priority, md5 conditional HTTP 304, missing promptKey/version resolution, absent prompt, unknown version, and offline/not-online errors. The auth-disabled standalone profile cannot switch identities, so unreadable prompts returning not found remains covered by focused service tests rather than end-to-end IT. |
+| `PromptClientOpenApiITCase` | `GET /v3/client/ai/prompt` | Partial | Queries an exactly granted online prompt as the restricted Client identity by latest, explicit version, and label; verifies namespace defaulting, version-over-label priority, md5 conditional HTTP 304, missing promptKey/version resolution, absent prompt, unknown version, and offline/not-online errors. Direct cross-identity unreadable-as-not-found and grant-revocation convergence remain covered by focused service tests until the Stage 3 authorization matrix is merged. |
 | `SkillClientOpenApiITCase` | `GET /v3/client/ai/skills` | Covered | Downloads online skills as ZIP by latest, version, and label with resource entries; covers namespace defaulting, version-over-label priority, missing skillName, absent skill, unknown version/label, and controlled not-found JSON for download failures. |
 | `AgentSpecClientOpenApiITCase` | `GET /v3/client/ai/agentspecs` | Covered | Queries online AgentSpecs by latest, version, and label with manifest/resource content; covers namespace defaulting, label/version resolution, missing name, absent AgentSpec, unknown version, and controlled not-found errors. |
 | `AgentSpecSearchClientOpenApiITCase` | `GET /v3/client/ai/agentspecs/search` | Covered | Searches shared-index AgentSpec projections with online versions, literal keyword filtering, and `tagsAll`; covers eventual index convergence, optional keyword, namespace defaulting, page defaults and validation, empty page success, and invalid pagination errors. |
-| `AiResourceSearchClientOpenApiITCase` | `GET /v3/client/ai/resources/search`<br>`GET /v3/client/ai/skills/search`<br>`GET /v3/client/ai/prompt/search`<br>`GET /v3/client/ai/mcp/search` | Covered | Publishes Agent, AgentSpec, Skill, Prompt, and MCP resources through their Admin lifecycle APIs, verifies Search stays successful with the current snapshot during asynchronous projection, waits for durable convergence, and verifies cross-type keyword recall. For every declared searchable type, a generic single-type query is cross-checked against its resource-specific Search facade, including the existing Agent and AgentSpec facades. Also covers default namespace, deterministic blank-query listing, `tagsAll`, `capabilitiesAny`, MCP `protocolsAny`, opaque multi-page cursor traversal without duplicates, no-match success, unsupported resource type, malformed cursor, bounded limit, oversized query, and invalid numbered pagination. |
-| `AgentDiscoveryClientOpenApiITCase` | `GET /v3/client/ai/agents/search`<br>`GET /v3/client/ai/agents` | Covered | Publishes Agents through the Admin helper path, then verifies RAD Search and Discover projections. Search covers the `AUTO/INDEX/SCAN`-compatible eventual contract: `AUTO` and `INDEX` return a successful current snapshot without readiness 503 while convergence polling establishes the complete catalog; it also covers case-sensitive literal name filtering including `%`, `_`, and `\`, `tagsAll`/`protocolsAny` composition, stable ASCII numbered pagination including an out-of-range page, complete multi-Version catalogs, latest/offline convergence, and the invariant that Runtime Endpoint writes do not change Search. In the two-Version rollout workflow, independent HTTP publishers keep Version 1 and Version 2 Endpoints concurrently: an omitted selector returns latest metadata plus all online-Version-compatible Endpoints and binding provenance, while explicit `label=latest` returns only Version 2 Endpoints; exact Version 1 remains isolated, and taking Version 1 offline removes its Endpoint only from the default pool. Also covers default namespace, typed empty protocol results, empty search, pagination validation, mutually exclusive version/label, missing identity, and absent Agent errors. |
-| `AgentPublishClientOpenApiITCase` | `POST /v3/client/ai/agents` | Covered | Verifies draft-only and auto-submit publication, resume, equivalent retries, conflicting content or initial metadata, advanced/offline Version errors, direct and `basedOnVersion` content, default/custom namespace isolation, malformed Form JSON and boolean fields, no Endpoint side effect, and Admin/Console/RAD/legacy A2A cross-checks. |
+| `AiResourceSearchClientOpenApiITCase` | `GET /v3/client/ai/resources/search`<br>`GET /v3/client/ai/skills/search`<br>`GET /v3/client/ai/prompt/search`<br>`GET /v3/client/ai/mcp/search` | Partial | Validation, empty-result, numbered-page, basic projection, and resource-specific scenarios remain active. The compound private-resource cross-type/facade/filter/cursor scenario is retained but disabled as `DAUTH-F03` because the rolled-back product implementation removes private projections from the shared index. Restore it after the canonical background projection fix and visibility non-leakage tests pass. |
+| `AgentDiscoveryClientOpenApiITCase` | `GET /v3/client/ai/agents/search`<br>`GET /v3/client/ai/agents` | Covered | Publishes Agents through management helpers with exact Client visibility, and publishes the special-name search set directly as the Client owner, then verifies RAD Search and Discover projections. Search covers the `AUTO/INDEX/SCAN`-compatible eventual contract: `AUTO` and `INDEX` return a successful current snapshot without readiness 503 while convergence polling establishes the complete catalog; it also covers case-sensitive literal name filtering including `%`, `_`, and `\`, `tagsAll`/`protocolsAny` composition, stable ASCII numbered pagination including an out-of-range page, complete multi-Version catalogs, latest/offline convergence, and the invariant that Runtime Endpoint writes do not change Search. In the two-Version rollout workflow, independent HTTP publishers keep Version 1 and Version 2 Endpoints concurrently: an omitted selector returns latest metadata plus all online-Version-compatible Endpoints and binding provenance, while explicit `label=latest` returns only Version 2 Endpoints; exact Version 1 remains isolated, and taking Version 1 offline removes its Endpoint only from the default pool. Also covers default namespace, typed empty protocol results, empty search, pagination validation, mutually exclusive version/label, missing identity, and absent Agent errors. |
+| `AgentWatchClientOpenApiITCase` | `POST /v3/client/ai/agents/watch` | Covered | Verifies request-scoped HTTP Batch Long Poll with immediate opaque invalidation for changed fingerprints, bounded unchanged timeout, multi-intent batches, custom namespaces, Runtime Endpoint wake-up, and Discover materialization of the complete current snapshot. It covers required stateful headers, generation and timeout ranges, empty/malformed/oversized lists, duplicate ids, mixed namespaces, malformed fingerprints, per-client soft growth, whole-generation replacement, per-request item/byte hard limits, controlled node waiter-capacity rejection, capacity reuse after client cancellation, and same-client generation cleanup. A two-node run verifies that self-describing generations remain correct when consecutive requests reach different servers: either node can observe the mutation, the peer generation quickly reports the opaque id, both Discover results converge to the same fingerprint, and the next current-fingerprint generation times out unchanged. Responses are checked not to expose Agent identity, fingerprints, descriptors, Endpoints, or per-item authorization/error details. |
+| `AgentPublishClientOpenApiITCase` | `POST /v3/client/ai/agents` | Covered | Verifies draft-only and auto-submit publication, resume, equivalent retries, conflicting content or initial metadata, advanced/offline Version errors, direct and `basedOnVersion` content, default/custom namespace isolation, malformed Form JSON and boolean fields, no Endpoint side effect, and Admin/Console/RAD/legacy A2A cross-checks. Cross-user default-public discovery and private/grant/revoke behavior are additionally covered by AiResourceVisibilityOpenApiITCase without granting visibility to the public reader. |
 | `AgentEndpointClientOpenApiITCase` | `POST,DELETE /v3/client/ai/agents/endpoints`<br>`PUT /v3/client/ai/agents/endpoints/heartbeat` | Covered | Verifies Form-based complete HTTP Publisher replacement, visibility through Discover, idempotent registration/deregistration, empty Runtime Endpoint projection after deregistration, liveness intervals, heartbeat, and `HTTP_CLIENT_NOT_FOUND (50404)` before registration and after deregistration. Cross-validates the same workflow from Admin creation and Overview through Console Overview, then checks the populated and post-deregistration empty Runtime snapshots on both management surfaces, including lossless `HTTP+JSON` transport, endpoint payload, Version binding, enablement, health, state, and Console Naming reference. Confirms that a query with the same Client id does not create a Publisher, and covers required headers, Client-id syntax, complete-batch validation, malformed `endpoints` JSON Form-field handling, the configured Server soft watermark (reduced to 3 in `it-new.yml`), whole-batch admission from below to above the watermark, equal-size replacement above it, atomic rejection of further growth with `AGENT_ENDPOINT_PUBLICATION_OVER_LIMIT`, and capacity reuse after deregistration. |
+| `McpPublishClientOpenApiITCase`, `McpEndpointClientOpenApiITCase` | `GET,POST /v3/client/ai/mcp`<br>`POST,DELETE /v3/client/ai/mcp/endpoints`<br>`PUT /v3/client/ai/mcp/endpoints/heartbeat` | Covered | Runs against stable `LIFECYCLE_MANAGED` state and verifies latest/exact MCP query; omitted and explicit-false direct-online release plus `createDraft=true`; Tool, Resource, and auto-REF Form JSON fields; duplicate, malformed, and missing errors; Runtime Endpoint register/query/idempotent-register/deregister; stable Agent/MCP shared HTTP Client identity; heartbeat renewal while either module still owns a publication; `HTTP_CLIENT_NOT_FOUND` before creation and after the final publication is removed; and required header, identity, namespace, address, port, missing-target, and non-REF error envelopes. `McpMigrationAdminApiOpenApiITCase` owns the pre-cutover client draft gate. Shared-client expiration and replay are exercised through the Java SDK directed-restart scenario because they require a long-lived client process across server replacement. AiResourceVisibilityOpenApiITCase verifies default-public Client release, non-owner READ, private scope and grant/revoke, without bypassing WRITE or request authorization. |
+
+### Agent 元数据模型合并（2026-09-14）
+
+Agent Search HTTP 响应统一为 AgentSummary 的 versionInfo.labels/onlineVersions；验证旧顶层 latestVersion/versions 和管理字段不再出现。
+
+### Agent 地址模型统一：实施与验收（2026-09-15）
+
+CallInterface → EndpointSet → Endpoint 统一已落地，验收要求见 [测试矩阵](../../Codex/design/nacos-3.3-client-ai-api/MODEL_ENDPOINT_TEST_PLAN.md)，本轮实际执行见 [验证记录](../../Codex/design/nacos-3.3-client-ai-api/MODEL_ENDPOINT_VALIDATION.md)。healthy 注册可写，服务端维护字段忽略；管理 Runtime 读取改为 `callInterface.endpointSets[].endpoints[]`，状态和绑定位于 Endpoint，观察时间位于 Set。旧 A2A wire 不变。以下原有覆盖状态不以编译通过或历史测试数量自动提升。
+
+### 统一地址模型新增场景（2026-09-15）
+
+| 场景 | 用例 | 断言 |
+| --- | --- | --- |
+| EP-03/07：HTTP 注册上报健康值及维护字段隔离 | `AgentEndpointClientOpenApiITCase.testReportedHealthAndIgnoredManagementFieldsAcrossReadSurfaces` | false 注册及 ACTIVE heartbeat 后仍 false；替换为 true 可发现；伪造 bindings/enabled/state 不生效；Admin 三层非空读取及 RAD 字段隔离 |
+| EP-12：公开 Agent 实际索引与目录 | `AiResourceSearchClientOpenApiITCase.testPublicAgentIndexTracksUnifiedVersionCatalog` | 旧 A2A 创建 PUBLIC Agent，新 Agent 发布第二版；tag/协议/namespace、onlineVersions/labels、offline 与 delete 收敛；默认 AUTO/显式 INDEX 均走共享索引 |
+
+原私有 Search DAUTH-F03 Disabled 保持；公开 fixture 通过旧 A2A 的既有 PUBLIC 语义准备，不关闭鉴权，不写内部存储。
+
+
+### 2026-09-15 请求整合回归
+
+Agent HTTP Search/Register 的 namespace 参数保持；服务端业务模型与 namespace 分离，直接 HTTP 的默认值、自定义 namespace、非法参数、授权隔离及完整替换/全量 DELETE 仍由现有 Agent IT 验证。局部注销三个参数仅为 Java SDK API，不能向 HTTP DELETE 发送 Endpoint 列表。
+
+本轮实际执行状态见 [请求整合验证记录](../../Codex/design/nacos-3.3-client-ai-api/MODEL_REQUEST_VALIDATION.md)。
+既有 Covered/Partial/Pending 表示场景覆盖归属，不表示本轮已重新执行；不能引用前轮结果代替本轮验收。
+
+## Agent JSON 注解移除（2026-09-16）
+
+JSON-01/03/04：Endpoint 缺省 0/1/true/true，false/0 和最大 priority 往返，伪造 enabled/state/bindings 不覆盖服务端状态；Search 可选管理字段允许 null，仍不返回非空管理事实。
+
+[本轮测试矩阵](../../Codex/design/nacos-3.3-client-ai-api/MODEL_JSON_TEST_MATRIX.md)区分待执行项与实际结果。

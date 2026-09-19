@@ -59,6 +59,7 @@ import com.alibaba.nacos.client.ai.remote.redo.AiGrpcRedoService;
 import com.alibaba.nacos.client.env.NacosClientProperties;
 import com.alibaba.nacos.client.security.SecurityProxy;
 import com.alibaba.nacos.common.remote.client.RpcClient;
+import com.alibaba.nacos.common.remote.client.InitialConnectionFailureListener;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -127,6 +128,18 @@ class AiGrpcClientTest {
     @Test
     void start() throws NacosException {
         assertDoesNotThrow(() -> aiGrpcClient.start(mcpServerCacheHolder, agentCardCacheHolder));
+    }
+    
+    @Test
+    void shouldExposeStablePublisherIdentityOnGrpcConnection() throws Exception {
+        Field uuidField = AiGrpcClient.class.getDeclaredField("uuid");
+        uuidField.setAccessible(true);
+        Field rpcClientField = AiGrpcClient.class.getDeclaredField("rpcClient");
+        rpcClientField.setAccessible(true);
+        RpcClient actualRpcClient = (RpcClient) rpcClientField.get(aiGrpcClient);
+        
+        assertEquals(uuidField.get(aiGrpcClient),
+            actualRpcClient.getLabels().get(AiRemoteConstants.LABEL_CLIENT_UUID));
     }
     
     @Test
@@ -273,6 +286,53 @@ class AiGrpcClientTest {
         when(rpcClient.request(any(ReleaseMcpServerRequest.class))).thenReturn(response);
         assertEquals(id,
             aiGrpcClient.releaseMcpServer(serverSpec, new McpToolSpecification(), null));
+        ArgumentCaptor<ReleaseMcpServerRequest> request =
+            ArgumentCaptor.forClass(ReleaseMcpServerRequest.class);
+        verify(rpcClient).request(request.capture());
+        assertFalse(request.getValue().isCreateDraft());
+    }
+    
+    @Test
+    void releaseMcpServerAsDraftRequiresAbilityAndSetsWireFlag() throws Exception {
+        injectMock();
+        when(rpcClient.isRunning()).thenReturn(true);
+        when(rpcClient.getConnectionAbility(AbilityKey.SERVER_MCP_REGISTRY))
+            .thenReturn(AbilityStatus.SUPPORTED);
+        when(rpcClient.getConnectionAbility(AbilityKey.SERVER_MCP_DRAFT_RELEASE))
+            .thenReturn(AbilityStatus.SUPPORTED);
+        ReleaseMcpServerResponse response = new ReleaseMcpServerResponse();
+        response.setMcpId("mcp-id");
+        when(rpcClient.request(any(ReleaseMcpServerRequest.class))).thenReturn(response);
+        McpServerBasicInfo serverSpec = new McpServerBasicInfo();
+        serverSpec.setName("test");
+        serverSpec.setVersionDetail(new ServerVersionDetail());
+        serverSpec.getVersionDetail().setVersion("1.0.0");
+        
+        assertEquals("mcp-id",
+            aiGrpcClient.releaseMcpServer(serverSpec, null, null, null, true));
+        ArgumentCaptor<ReleaseMcpServerRequest> request =
+            ArgumentCaptor.forClass(ReleaseMcpServerRequest.class);
+        verify(rpcClient).request(request.capture());
+        assertTrue(request.getValue().isCreateDraft());
+    }
+    
+    @Test
+    void releaseMcpServerAsDraftFailsBeforeWireCallWithoutAbility() throws Exception {
+        injectMock();
+        when(rpcClient.isRunning()).thenReturn(true);
+        when(rpcClient.getConnectionAbility(AbilityKey.SERVER_MCP_REGISTRY))
+            .thenReturn(AbilityStatus.SUPPORTED);
+        when(rpcClient.getConnectionAbility(AbilityKey.SERVER_MCP_DRAFT_RELEASE))
+            .thenReturn(AbilityStatus.NOT_SUPPORTED);
+        McpServerBasicInfo serverSpec = new McpServerBasicInfo();
+        serverSpec.setName("test");
+        serverSpec.setVersionDetail(new ServerVersionDetail());
+        serverSpec.getVersionDetail().setVersion("1.0.0");
+        
+        NacosException exception = assertThrows(NacosException.class,
+            () -> aiGrpcClient.releaseMcpServer(serverSpec, null, null, null, true));
+        assertEquals(NacosException.SERVER_NOT_IMPLEMENTED, exception.getErrCode());
+        verify(rpcClient, never()).request(any(ReleaseMcpServerRequest.class));
     }
     
     @Test
@@ -769,6 +829,25 @@ class AiGrpcClientTest {
     }
     
     @Test
+    void initialConnectionProbeDelegatesToRpcClient() throws Exception {
+        injectMock();
+        InitialConnectionFailureListener listener =
+            org.mockito.Mockito.mock(InitialConnectionFailureListener.class);
+        when(rpcClient.getInitialConnectionFailureCount()).thenReturn(7);
+        when(rpcClient.suspendInitialReconnect()).thenReturn(true);
+        when(rpcClient.resumeInitialReconnect()).thenReturn(true);
+        when(rpcClient.isInitialReconnectSuspended()).thenReturn(true);
+        
+        aiGrpcClient.registerInitialConnectionFailureListener(listener);
+        assertEquals(7, aiGrpcClient.getInitialConnectionFailureCount());
+        assertTrue(aiGrpcClient.suspendInitialReconnect());
+        assertTrue(aiGrpcClient.resumeInitialReconnect());
+        assertTrue(aiGrpcClient.isInitialReconnectSuspended());
+        assertTrue(aiGrpcClient.getRetryTimes() > 0);
+        verify(rpcClient).registerInitialConnectionFailureListener(listener);
+    }
+    
+    @Test
     void buildLegacyCompatibleAgentCardWithMultipleInterfaces() throws Exception {
         Method m = AiGrpcClient.class.getDeclaredMethod("buildLegacyCompatibleAgentCard",
             AgentCard.class);
@@ -824,6 +903,17 @@ class AiGrpcClientTest {
         Field field = AiGrpcClient.class.getDeclaredField("agentCardCacheHolder");
         field.setAccessible(true);
         field.set(aiGrpcClient, agentCardCacheHolder);
+    }
+    
+    @Test
+    void disconnectedAbilityCheckPreservesLegacyErrorAndAddsRoutingEvidence() throws Exception {
+        injectMock();
+        com.alibaba.nacos.api.exception.runtime.NacosRuntimeException error = assertThrows(
+            com.alibaba.nacos.api.exception.runtime.NacosRuntimeException.class,
+            () -> aiGrpcClient.getAgentCard("agent", "", ""));
+        assertEquals(NacosException.SERVER_ERROR, error.getErrCode());
+        assertEquals(NacosException.CLIENT_DISCONNECT,
+            ((NacosException) error.getCause()).getErrCode());
     }
     
     private void injectMock() throws NoSuchFieldException, IllegalAccessException {

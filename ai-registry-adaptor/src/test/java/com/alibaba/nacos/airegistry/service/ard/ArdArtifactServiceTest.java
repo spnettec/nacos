@@ -18,8 +18,9 @@ package com.alibaba.nacos.airegistry.service.ard;
 
 import com.alibaba.nacos.ai.constant.AiResourceConstants;
 import com.alibaba.nacos.ai.constant.Constants;
+import com.alibaba.nacos.common.utils.JacksonUtils;
 import com.alibaba.nacos.ai.model.AiResource;
-import com.alibaba.nacos.ai.service.McpServerOperationService;
+import com.alibaba.nacos.ai.service.mcp.McpOperationService;
 import com.alibaba.nacos.ai.service.agent.AgentPersistenceService;
 import com.alibaba.nacos.ai.service.resource.AiResourceFileReader;
 import com.alibaba.nacos.ai.service.resource.AiResourceManager;
@@ -30,6 +31,7 @@ import com.alibaba.nacos.api.ai.model.skills.SkillResource;
 import com.alibaba.nacos.api.ai.model.a2a.AgentCapabilities;
 import com.alibaba.nacos.api.ai.model.a2a.AgentCard;
 import com.alibaba.nacos.api.ai.model.agent.AgentCallInterface;
+import com.alibaba.nacos.api.ai.model.agent.EndpointSource;
 import com.alibaba.nacos.api.ai.model.agent.AgentVersionDetail;
 import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.exception.api.NacosApiException;
@@ -49,7 +51,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
@@ -66,7 +68,7 @@ class ArdArtifactServiceTest {
     private AiResourceManager resourceManager;
     
     @Mock
-    private McpServerOperationService mcpServerOperationService;
+    private McpOperationService mcpServerOperationService;
     
     @Mock
     private AiResourceFileReader fileReader;
@@ -131,7 +133,9 @@ class ArdArtifactServiceTest {
         assertEquals(List.of("schemaVersion", "agentName", "version", "contentDigest",
             "callInterfaces"), List.copyOf(body.keySet()));
         assertEquals("sha256:digest", body.get("contentDigest"));
-        assertSame(version.getCallInterfaces(), body.get("callInterfaces"));
+        assertNotSame(version.getCallInterfaces(), body.get("callInterfaces"));
+        assertEquals(JacksonUtils.toJson(version.getCallInterfaces()),
+            JacksonUtils.toJson(body.get("callInterfaces")));
     }
     
     @Test
@@ -233,6 +237,8 @@ class ArdArtifactServiceTest {
     private AgentCallInterface call(String protocol, Object descriptor) {
         AgentCallInterface result = new AgentCallInterface();
         result.setProtocol(protocol);
+        result.setDescriptorMediaType("application/json");
+        result.setEndpointSourceOrder(List.of(EndpointSource.RUNTIME));
         result.setNativeDescriptor(descriptor);
         return result;
     }

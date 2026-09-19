@@ -47,6 +47,8 @@ public abstract class AgentClientOpenApiBaseITCase extends AiAdminApiBaseITCase 
 
     protected static final String AGENT_SEARCH_PATH = AGENT_CLIENT_PATH + "/search";
 
+    protected static final String AGENT_WATCH_PATH = AGENT_CLIENT_PATH + "/watch";
+    
     protected static final String AGENT_ENDPOINT_PATH = AGENT_CLIENT_PATH + "/endpoints";
 
     protected static final String AGENT_ENDPOINT_HEARTBEAT_PATH =
@@ -69,6 +71,7 @@ public abstract class AgentClientOpenApiBaseITCase extends AiAdminApiBaseITCase 
         addCleanup(() -> deleteAgentDefinitionQuietly(DEFAULT_NAMESPACE, agentName));
         postFormOk(ADMIN_AGENT_PATH + "/force-publish",
                 agentForm(agentVersionCommand(null, agentName, version)));
+        grantClientReadVisibility("agent", agentName);
     }
 
     protected String randomHttpClientId() {
@@ -100,6 +103,20 @@ public abstract class AgentClientOpenApiBaseITCase extends AiAdminApiBaseITCase 
         return executeRaw(request);
     }
 
+    protected HttpResponse postWatchForm(String clientId, String requestModule,
+            Map<String, String> form) throws Exception {
+        return executeRaw(watchRequest(requestUrl(AGENT_WATCH_PATH), clientId,
+                requestModule, form));
+    }
+
+    protected HttpPost watchRequest(String url, String clientId, String requestModule,
+            Map<String, String> form) throws Exception {
+        HttpPost request = new HttpPost(url);
+        addStatefulHeaders(request, clientId, requestModule);
+        HttpUtils.initRequestFromEntity(request, form, StandardCharsets.UTF_8.name());
+        return request;
+    }
+    
     protected HttpResponse deleteEndpointForm(String clientId, String requestModule, Query form)
             throws Exception {
         HttpDelete request =

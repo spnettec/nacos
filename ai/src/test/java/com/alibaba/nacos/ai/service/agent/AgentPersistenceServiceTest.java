@@ -34,14 +34,12 @@ import com.alibaba.nacos.ai.service.repository.QueryCondition;
 import com.alibaba.nacos.ai.service.resource.AiResourceManager;
 import com.alibaba.nacos.ai.service.resource.ResourceVersionInfo;
 import com.alibaba.nacos.api.ai.constant.AiConstants;
-import com.alibaba.nacos.api.ai.model.agent.Agent;
+import com.alibaba.nacos.api.ai.model.agent.AgentSummary;
 import com.alibaba.nacos.api.ai.model.agent.AgentCallInterface;
 import com.alibaba.nacos.api.ai.model.agent.AgentOverview;
 import com.alibaba.nacos.api.ai.model.agent.AgentProvider;
-import com.alibaba.nacos.api.ai.model.agent.AgentSummary;
-import com.alibaba.nacos.api.ai.model.agent.AgentVersionCatalog;
-import com.alibaba.nacos.api.ai.model.agent.AgentVersionDetail;
 import com.alibaba.nacos.api.ai.model.agent.AgentVersionInfo;
+import com.alibaba.nacos.api.ai.model.agent.AgentVersionDetail;
 import com.alibaba.nacos.api.ai.model.agent.AgentVersionSummary;
 import com.alibaba.nacos.api.ai.model.agent.EndpointSource;
 import com.alibaba.nacos.api.exception.NacosException;
@@ -74,6 +72,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -117,7 +116,7 @@ class AgentPersistenceServiceTest {
     
     private AgentPersistenceService service;
     
-    private Agent agent;
+    private AgentSummary agent;
     
     private AgentVersionDetail initialDraft;
     
@@ -230,9 +229,9 @@ class AgentPersistenceServiceTest {
         assertEquals(1, versionInfo.getOnlineCnt());
         assertEquals(VERSION,
             versionInfo.getLabels().get(AiResourceConstants.LABEL_LATEST));
-        AgentVersionCatalog catalog = AgentResourceExtSerializer.deserialize(
+        AgentVersionInfo catalog = AgentResourceExtSerializer.deserialize(
             persistedResource.get().getExt()).getVersionCatalog();
-        assertEquals(VERSION, catalog.getLatestVersion());
+        assertEquals(VERSION, catalog.latestVersion());
         assertEquals(Collections.singletonList("a2a"),
             catalog.getOnlineVersions().get(0).getProtocols());
         assertEquals(AiConstants.Agent.VERSION_STATUS_ONLINE,
@@ -1137,16 +1136,37 @@ class AgentPersistenceServiceTest {
         when(resourcePersistService.find(NAMESPACE_ID, AGENT_NAME,
             Constants.Agent.RESOURCE_TYPE_AGENT)).thenReturn(row);
         
-        Agent result = service.getAgent(NAMESPACE_ID, AGENT_NAME);
+        AgentSummary result = service.getAgent(NAMESPACE_ID, AGENT_NAME);
         
         assertEquals(AGENT_NAME, result.getAgentName());
         assertEquals("Nacos Agent Display", result.getDisplayName());
         assertEquals(Arrays.asList("assistant", "demo"), result.getTags());
         assertEquals(VERSION, result.getVersionInfo().getEditingVersion());
-        assertEquals(0, result.getVersionCatalog().getOnlineVersions().size());
+        assertEquals(0, result.getVersionInfo().getOnlineVersions().size());
         assertEquals(3L, result.getMetaVersion());
         assertEquals(1000L, result.getCreateTime());
         assertEquals(2000L, result.getUpdateTime());
+    }
+    
+    @Test
+    void testUnifiedSummaryReadsExistingStorageAndRejectsInconsistentCounts() {
+        AiResource row = storedResource();
+        row.setVersionInfo("{\"onlineCnt\":1,\"labels\":{\"latest\":\"1.0.0\","
+            + "\"archived\":\"0.9.0\"}}");
+        row.setExt("{\"schemaVersion\":1,\"versionCatalog\":{\"latestVersion\":\"1.0.0\","
+            + "\"onlineVersions\":[{\"version\":\"1.0.0\",\"labels\":[],\"protocols\":[\"a2a\"]}]}}");
+        when(resourcePersistService.find(NAMESPACE_ID, AGENT_NAME,
+            Constants.Agent.RESOURCE_TYPE_AGENT)).thenReturn(row);
+        AgentSummary summary = assertDoesNotThrow(() -> service.getAgent(NAMESPACE_ID, AGENT_NAME));
+        assertEquals("0.9.0", summary.getVersionInfo().getLabels().get("archived"));
+        assertEquals("1.0.0", summary.getVersionInfo().latestVersion());
+        assertEquals(1, summary.getVersionInfo().getOnlineVersions().size());
+        row.setVersionInfo("{\"onlineCnt\":2,\"labels\":{\"latest\":\"1.0.0\"}}");
+        assertEquals(NacosException.SERVER_ERROR, assertThrows(NacosApiException.class,
+            () -> service.getAgent(NAMESPACE_ID, AGENT_NAME)).getErrCode());
+        row.setVersionInfo("{\"onlineCnt\":1,\"labels\":{\"latest\":\"2.0.0\"}}");
+        assertEquals(NacosException.SERVER_ERROR, assertThrows(NacosApiException.class,
+            () -> service.getAgent(NAMESPACE_ID, AGENT_NAME)).getErrCode());
     }
     
     @Test
@@ -1181,7 +1201,7 @@ class AgentPersistenceServiceTest {
         when(resourcePersistService.find(NAMESPACE_ID, AGENT_NAME,
             Constants.Agent.RESOURCE_TYPE_AGENT)).thenReturn(row);
         
-        Agent result = service.getAgent(NAMESPACE_ID, AGENT_NAME);
+        AgentSummary result = service.getAgent(NAMESPACE_ID, AGENT_NAME);
         
         assertEquals(Arrays.asList("assistant", "__nacos.agent.internal"), result.getTags());
     }
@@ -1221,7 +1241,7 @@ class AgentPersistenceServiceTest {
     @Test
     void testTryUpdateAgentUsesAuthorizedRowAndMergesLatestVersionFacts()
         throws NacosException {
-        Agent replacement = newAgent();
+        AgentSummary replacement = newAgent();
         replacement.setDisplayName("Updated Agent");
         replacement.setDescription("Updated description");
         replacement.setTags(Collections.singletonList("updated"));
@@ -1260,13 +1280,13 @@ class AgentPersistenceServiceTest {
             eq(Constants.Agent.RESOURCE_TYPE_AGENT), eq(4L),
             any(AiResource.class))).thenReturn(true);
         
-        Agent result = service.tryUpdateAgent(replacement, concurrentRow);
+        AgentSummary result = service.tryUpdateAgent(replacement, concurrentRow);
         
         assertEquals("Updated Agent", result.getDisplayName());
         assertEquals("Updated description", result.getDescription());
         assertEquals(Collections.singletonList("updated"), result.getTags());
         assertEquals("1.2.0", result.getVersionInfo().getEditingVersion());
-        assertEquals("1.1.0", result.getVersionCatalog().getLatestVersion());
+        assertEquals("1.1.0", result.getVersionInfo().latestVersion());
         assertEquals(5L, result.getMetaVersion());
         ArgumentCaptor<AiResource> updateCaptor = ArgumentCaptor.forClass(AiResource.class);
         verify(resourcePersistService).updateMetaCas(eq(NAMESPACE_ID),
@@ -1276,7 +1296,7 @@ class AgentPersistenceServiceTest {
         assertEquals("1.2.0", JacksonUtils.toObj(update.getVersionInfo(),
             ResourceVersionInfo.class).getEditingVersion());
         assertEquals("1.1.0", AgentResourceExtSerializer.deserialize(
-            update.getExt()).getVersionCatalog().getLatestVersion());
+            update.getExt()).getVersionCatalog().latestVersion());
         assertEquals("Updated description", update.getDesc());
         assertEquals(concurrentRow.getOwner(), update.getOwner());
         assertEquals(concurrentRow.getScope(), update.getScope());
@@ -1286,7 +1306,7 @@ class AgentPersistenceServiceTest {
     
     @Test
     void testTryUpdateAgentReturnsNullWhenCasDoesNotMatch() throws NacosException {
-        Agent replacement = newAgent();
+        AgentSummary replacement = newAgent();
         AiResource current = storedResource();
         when(resourcePersistService.updateMetaCas(eq(NAMESPACE_ID), eq(AGENT_NAME),
             eq(Constants.Agent.RESOURCE_TYPE_AGENT), eq(3L),
@@ -1303,7 +1323,7 @@ class AgentPersistenceServiceTest {
         assertThrows(IllegalArgumentException.class,
             () -> service.tryUpdateAgent(null, current));
         
-        Agent replacement = newAgent();
+        AgentSummary replacement = newAgent();
         AiResource mismatch = storedResource();
         mismatch.setName("Other Agent");
         NacosApiException notFound = assertThrows(NacosApiException.class,
@@ -1322,16 +1342,12 @@ class AgentPersistenceServiceTest {
     @Test
     void testTryUpdateAgentRejectsEveryReadOnlyProjectionField() {
         AiResource current = storedResource();
-        Agent replacement = newAgent();
+        AgentSummary replacement = newAgent();
         
         replacement.setVersionInfo(new AgentVersionInfo());
         assertThrows(IllegalArgumentException.class,
             () -> service.tryUpdateAgent(replacement, current));
         replacement.setVersionInfo(null);
-        replacement.setVersionCatalog(new AgentVersionCatalog());
-        assertThrows(IllegalArgumentException.class,
-            () -> service.tryUpdateAgent(replacement, current));
-        replacement.setVersionCatalog(null);
         replacement.setMetaVersion(1L);
         assertThrows(IllegalArgumentException.class,
             () -> service.tryUpdateAgent(replacement, current));
@@ -1442,10 +1458,12 @@ class AgentPersistenceServiceTest {
     
     @Test
     void testGetExactVersionLoadsAndVerifiesContentOnce() throws NacosException {
+        AiResourceVersion storedVersion = storedVersion();
+        storedVersion.setPublishPipelineInfo(publishPipelineInfo());
         when(resourcePersistService.find(NAMESPACE_ID, AGENT_NAME,
             Constants.Agent.RESOURCE_TYPE_AGENT)).thenReturn(storedResource());
         when(versionPersistService.find(NAMESPACE_ID, AGENT_NAME,
-            Constants.Agent.RESOURCE_TYPE_AGENT, VERSION)).thenReturn(storedVersion());
+            Constants.Agent.RESOURCE_TYPE_AGENT, VERSION)).thenReturn(storedVersion);
         when(storageService.load(any(AgentVersionStorageDescriptor.class))).thenReturn(content);
         
         AgentVersionDetail result = service.getAgentVersion(NAMESPACE_ID, AGENT_NAME, VERSION);
@@ -1453,6 +1471,7 @@ class AgentPersistenceServiceTest {
         assertEquals(AGENT_NAME, result.getAgentName());
         assertEquals(VERSION, result.getVersion());
         assertEquals(AiConstants.Agent.VERSION_STATUS_DRAFT, result.getStatus());
+        assertEquals(publishPipelineInfo(), result.getPublishPipelineInfo());
         assertEquals("a2a", result.getCallInterfaces().get(0).getProtocol());
         assertEquals(prepared.getDescriptor().getContentDigest(), result.getContentDigest());
         assertEquals(3000L, result.getCreateTime());
@@ -2066,6 +2085,7 @@ class AgentPersistenceServiceTest {
     void testVersionSummaryReadsNeverLoadVersionContent() throws NacosException {
         AiResourceVersion online = storedVersion();
         online.setStatus(AiConstants.Agent.VERSION_STATUS_ONLINE);
+        online.setPublishPipelineInfo(publishPipelineInfo());
         Page<AiResourceVersion> sourcePage =
             versionPage(Collections.singletonList(online), 1, 1);
         when(resourcePersistService.find(NAMESPACE_ID, AGENT_NAME,
@@ -2085,8 +2105,11 @@ class AgentPersistenceServiceTest {
         assertEquals(VERSION, result.getPageItems().get(0).getVersion());
         assertEquals(prepared.getDescriptor().getContentDigest(),
             result.getPageItems().get(0).getContentDigest());
+        assertEquals(publishPipelineInfo(),
+            result.getPageItems().get(0).getPublishPipelineInfo());
         assertEquals(VERSION, exact.getVersion());
         assertEquals(AiConstants.Agent.VERSION_STATUS_ONLINE, exact.getStatus());
+        assertEquals(publishPipelineInfo(), exact.getPublishPipelineInfo());
         verifyNoInteractions(storageService);
     }
     
@@ -2203,8 +2226,8 @@ class AgentPersistenceServiceTest {
         assertEquals(AiConstants.Agent.VERSION_STATUS_ONLINE, result.getStatus());
         assertEquals(online.getAuthor(), result.getAuthor());
         assertEquals(online.getChangeDescription(), result.getChangeDescription());
-        Agent projected = service.getAgent(NAMESPACE_ID, AGENT_NAME);
-        assertEquals(VERSION, projected.getVersionCatalog().getLatestVersion());
+        AgentSummary projected = service.getAgent(NAMESPACE_ID, AGENT_NAME);
+        assertEquals(VERSION, projected.getVersionInfo().latestVersion());
         verify(storageService).save(onlinePrepared);
     }
     
@@ -2365,10 +2388,10 @@ class AgentPersistenceServiceTest {
         Map<String, String> labels =
             Collections.singletonMap("stable", reviewedVersion);
         
-        Agent result = service.synchronizeDerivedState(NAMESPACE_ID, AGENT_NAME,
+        AgentSummary result = service.synchronizeDerivedState(NAMESPACE_ID, AGENT_NAME,
             latestVersion, labels, VERSION, reviewedVersion);
-        assertEquals(2, result.getVersionInfo().getOnlineCnt());
-        assertEquals(latestVersion, result.getVersionCatalog().getLatestVersion());
+        assertEquals(2, result.getVersionInfo().onlineCnt());
+        assertEquals(latestVersion, result.getVersionInfo().latestVersion());
         
         ArgumentCaptor<AiResource> updateCaptor = ArgumentCaptor.forClass(AiResource.class);
         verify(resourcePersistService).updateMetaCas(eq(NAMESPACE_ID), eq(AGENT_NAME),
@@ -2383,7 +2406,7 @@ class AgentPersistenceServiceTest {
         assertEquals(reviewedVersion, versionInfo.getLabels().get("stable"));
         AgentResourceExt resourceExt =
             AgentResourceExtSerializer.deserialize(updateCaptor.getValue().getExt());
-        assertEquals(latestVersion, resourceExt.getVersionCatalog().getLatestVersion());
+        assertEquals(latestVersion, resourceExt.getVersionCatalog().latestVersion());
         assertEquals(2, resourceExt.getVersionCatalog().getOnlineVersions().size());
         assertEquals(latestVersion,
             resourceExt.getVersionCatalog().getOnlineVersions().get(0).getVersion());
@@ -2699,7 +2722,7 @@ class AgentPersistenceServiceTest {
         result.add(mutatedResource(
             resource -> resource.setVersionInfo(JacksonUtils.toJson(labels))));
         
-        AgentVersionCatalog onlineCatalog = AgentVersionCatalogBuilder.build(
+        AgentVersionInfo onlineCatalog = AgentVersionCatalogBuilder.build(
             Collections.singletonMap("1.0.0", Collections.singletonList("a2a")),
             Collections.<String, String>emptyMap()).getVersionCatalog();
         result.add(mutatedResourceExt(ext -> ext.setVersionCatalog(onlineCatalog)));
@@ -2756,8 +2779,8 @@ class AgentPersistenceServiceTest {
         return result;
     }
     
-    private Agent newAgent() {
-        Agent result = new Agent();
+    private AgentSummary newAgent() {
+        AgentSummary result = new AgentSummary();
         result.setNamespaceId(NAMESPACE_ID);
         result.setAgentName(AGENT_NAME);
         result.setDisplayName("Nacos Agent Display");
@@ -2813,7 +2836,7 @@ class AgentPersistenceServiceTest {
     }
     
     private AiResource storedResource() {
-        AgentVersionCatalog catalog = emptyCatalog();
+        AgentVersionInfo catalog = emptyCatalog();
         AgentResourceExt ext = new AgentResourceExt();
         ext.setSchemaVersion(AgentResourceExt.SCHEMA_VERSION);
         ext.setDisplayName(agent.getDisplayName());
@@ -2905,7 +2928,7 @@ class AgentPersistenceServiceTest {
         return source;
     }
     
-    private AgentVersionCatalog emptyCatalog() {
+    private AgentVersionInfo emptyCatalog() {
         return AgentVersionCatalogBuilder.build(
             Collections.<String, java.util.List<String>>emptyMap(),
             Collections.<String, String>emptyMap()).getVersionCatalog();
@@ -2917,6 +2940,10 @@ class AgentPersistenceServiceTest {
             result.append(value);
         }
         return result.toString();
+    }
+    
+    private String publishPipelineInfo() {
+        return "{\"executionId\":\"pipeline-1\",\"status\":\"REJECTED\",\"pipeline\":[]}";
     }
     
     private void assertCreatedDetail(AgentVersionDetail result) {

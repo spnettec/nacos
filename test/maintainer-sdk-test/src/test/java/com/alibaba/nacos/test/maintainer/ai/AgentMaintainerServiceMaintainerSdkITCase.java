@@ -17,26 +17,29 @@
 package com.alibaba.nacos.test.maintainer.ai;
 
 import com.alibaba.nacos.api.ai.constant.AiConstants;
-import com.alibaba.nacos.api.ai.model.agent.Agent;
+import com.alibaba.nacos.api.ai.model.agent.AgentSummary;
 import com.alibaba.nacos.api.ai.model.agent.AgentCallInterface;
-import com.alibaba.nacos.api.ai.model.agent.AgentDraftCreateRequest;
-import com.alibaba.nacos.api.ai.model.agent.AgentDraftUpdateRequest;
-import com.alibaba.nacos.api.ai.model.agent.AgentLabelsUpdateRequest;
+import com.alibaba.nacos.api.ai.model.agent.admin.AgentDraftCreateRequest;
+import com.alibaba.nacos.api.ai.model.agent.admin.AgentDraftUpdateRequest;
+import com.alibaba.nacos.api.ai.model.agent.admin.AgentLabelsUpdateRequest;
 import com.alibaba.nacos.api.ai.model.agent.AgentOverview;
 import com.alibaba.nacos.api.ai.model.agent.AgentProvider;
-import com.alibaba.nacos.api.ai.model.agent.AgentSummary;
-import com.alibaba.nacos.api.ai.model.agent.AgentUpdateRequest;
-import com.alibaba.nacos.api.ai.model.agent.AgentVersionCommand;
+import com.alibaba.nacos.api.ai.model.agent.admin.AgentUpdateRequest;
+import com.alibaba.nacos.api.ai.model.agent.admin.AgentVersionRequest;
 import com.alibaba.nacos.api.ai.model.agent.AgentVersionDetail;
 import com.alibaba.nacos.api.ai.model.agent.AgentVersionSummary;
 import com.alibaba.nacos.api.ai.model.agent.EndpointSource;
 import com.alibaba.nacos.api.ai.model.agent.RuntimeEndpointSnapshot;
 import com.alibaba.nacos.api.common.Constants;
 import com.alibaba.nacos.api.exception.NacosException;
+import com.alibaba.nacos.api.exception.api.NacosApiException;
+import com.alibaba.nacos.api.model.v2.ErrorCode;
 import com.alibaba.nacos.api.model.Page;
 import com.alibaba.nacos.maintainer.client.ai.AgentMaintainerService;
 import com.alibaba.nacos.maintainer.client.ai.AiMaintainerService;
 import com.alibaba.nacos.test.maintainer.MaintainerSdkBaseITCase;
+import tools.jackson.databind.JsonNode;
+import com.alibaba.nacos.common.utils.JacksonUtils;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -64,7 +67,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *     overloads always use {@code public}, explicit method arguments are the sole custom-namespace
  *     source, list filters are applied before pagination, the orderBy allowlist is preserved, and
  *     malformed identities fail with controlled SDK exceptions.</li>
- *     <li>Exception/error handling: absent resources map to HTTP not-found, invalid lifecycle
+ *     <li>Exception/error handling: absent resources preserve both HTTP not-found and the API business code, invalid lifecycle
  *     transitions remain controlled parameter-state errors, and draft deletion makes the exact
  *     Version absent.</li>
  *     <li>Compatibility: {@link AiMaintainerService#a2a()} remains available; its existing
@@ -77,25 +80,27 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author xiweng.yy
  */
 class AgentMaintainerServiceMaintainerSdkITCase extends MaintainerSdkBaseITCase {
-
+    
     private static final String INITIAL_VERSION = "1.0.0";
-
+    
     private static final String SECOND_VERSION = "1.1.0";
-
+    
     private static final String PROTOCOL = "a2a";
-
+    
     @Test
     void shouldManageAgentInDefaultNamespace() throws Exception {
         AiMaintainerService aiMaintainerService = createAiMaintainerService();
         AgentMaintainerService agentService = aiMaintainerService.agent();
         assertNotNull(agentService);
         assertNotNull(aiMaintainerService.a2a());
-
+        
         String agentName = randomMaintainerName("agent-default");
-        NacosException missing =
-            assertThrows(NacosException.class, () -> agentService.getAgent(agentName));
+        NacosApiException missing =
+            assertThrows(NacosApiException.class, () -> agentService.getAgent(agentName));
         assertEquals(NacosException.NOT_FOUND, missing.getErrCode());
-
+        assertEquals(ErrorCode.RESOURCE_NOT_FOUND.getCode().intValue(), missing.getDetailErrCode());
+        assertEquals(ErrorCode.RESOURCE_NOT_FOUND.getMsg(), missing.getErrAbstract());
+        
         AgentDraftCreateRequest createRequest =
             buildInitialDraftRequest(agentName, "Default namespace Agent", INITIAL_VERSION);
         AgentVersionDetail createdDraft = agentService.createDraft(createRequest);
@@ -106,6 +111,14 @@ class AgentMaintainerServiceMaintainerSdkITCase extends MaintainerSdkBaseITCase 
         assertEquals(AiConstants.Agent.VERSION_STATUS_DRAFT, createdDraft.getStatus());
         AgentOverview created = agentService.getAgent(agentName);
         assertOverview(created, Constants.DEFAULT_NAMESPACE_ID, agentName, INITIAL_VERSION);
+        assertTrue(agentService.updateScope(agentName, "private"));
+        assertEquals("PRIVATE", agentService.getAgent(agentName).getAgent().getScope());
+        agentService.createDraft(createRequest);
+        assertEquals("PRIVATE", agentService.getAgent(agentName).getAgent().getScope());
+        assertTrue(agentService.updateScope(Constants.DEFAULT_NAMESPACE_ID, agentName, "PUBLIC"));
+        NacosException invalidScope = assertThrows(NacosException.class,
+            () -> agentService.updateScope(agentName, "SHARED"));
+        assertEquals(NacosException.INVALID_PARAM, invalidScope.getErrCode());
         String initialOwner = created.getAgent().getOwner();
         String initialScope = created.getAgent().getScope();
         assertEquals("Default namespace Agent", created.getAgent().getDescription());
@@ -114,65 +127,96 @@ class AgentMaintainerServiceMaintainerSdkITCase extends MaintainerSdkBaseITCase 
                 .get("nested"));
         assertEquals(AiConstants.Agent.RESOURCE_STATUS_ENABLE, created.getAgent().getStatus());
         assertNotNull(created.getAgent().getOwner());
-        assertEquals("PRIVATE", created.getAgent().getScope());
-
+        assertEquals("PUBLIC", created.getAgent().getScope());
+        
         AgentOverview queried = agentService.getAgent(agentName);
         assertOverview(queried, Constants.DEFAULT_NAMESPACE_ID, agentName, INITIAL_VERSION);
-
+        
         Page<AgentVersionSummary> versions =
             agentService.listAgentVersions(agentName, AiConstants.Agent.VERSION_STATUS_DRAFT, 1,
                 10);
         assertContainsVersion(versions, INITIAL_VERSION);
+        AgentVersionSummary summary = versions.getPageItems().get(0);
+        assertEquals(AgentVersionSummary.class, summary.getClass());
+        assertEquals(createdDraft.getAuthor(), summary.getAuthor());
+        assertEquals(createdDraft.getContentDigest(), summary.getContentDigest());
+        assertEquals(createdDraft.getChangeDescription(), summary.getChangeDescription());
+        JsonNode summaryJson = JacksonUtils.toObj(JacksonUtils.toJson(summary));
+        assertFalse(summaryJson.has("namespaceId"));
+        assertFalse(summaryJson.has("agentName"));
+        assertFalse(summaryJson.has("callInterfaces"));
+        assertEquals(createRequest.getDisplayName(), created.getAgent().getDisplayName());
+        assertEquals(createRequest.getIconUrl(), created.getAgent().getIconUrl());
+        assertEquals(createRequest.getProvider().getName(), created.getAgent().getProvider().getName());
+        assertEquals(createRequest.getTags(), created.getAgent().getTags());
+
         AgentVersionDetail initial = agentService.getAgentVersion(agentName, INITIAL_VERSION);
         assertEquals(INITIAL_VERSION, initial.getVersion());
         assertEquals(PROTOCOL, initial.getCallInterfaces().get(0).getProtocol());
-
+        
         RuntimeEndpointSnapshot snapshot =
             agentService.getRuntimeEndpoints(agentName, PROTOCOL, INITIAL_VERSION);
         assertEquals(Constants.DEFAULT_NAMESPACE_ID, snapshot.getNamespaceId());
         assertEquals(agentName, snapshot.getAgentName());
-        assertEquals(PROTOCOL, snapshot.getProtocol());
+        assertEquals(PROTOCOL, snapshot.getCallInterface().getProtocol());
         assertEquals(INITIAL_VERSION, snapshot.getVersion());
-        assertNotNull(snapshot.getItems());
-        assertTrue(snapshot.getItems().isEmpty());
-
+        assertNotNull(snapshot.getCallInterface().getEndpointSets().get(0).getEndpoints());
+        assertTrue(snapshot.getCallInterface().getEndpointSets().get(0).getEndpoints().isEmpty());
+        
         AgentUpdateRequest updateRequest =
             buildUpdateRequest(agentName, "Default namespace Agent updated");
-        Agent updated = agentService.updateAgent(updateRequest);
+        AgentSummary updated = agentService.updateAgent(updateRequest);
         assertEquals("Default namespace Agent updated", updated.getDescription());
         assertEquals(initialOwner, updated.getOwner());
         assertEquals(initialScope, updated.getScope());
         assertEquals(Arrays.asList("maintainer-sdk-it", "updated"), updated.getTags());
         assertContainsAgent(agentService.listAgents(agentName,
             "maintainer-sdk-it", initialScope, initialOwner, null, 1, 10), agentName);
-
-        AgentVersionCommand command = versionCommand(agentName, INITIAL_VERSION);
+        
+        AgentVersionRequest command = versionCommand(agentName, INITIAL_VERSION);
         AgentVersionSummary online = agentService.forcePublish(command);
         assertEquals(AiConstants.Agent.VERSION_STATUS_ONLINE, online.getStatus());
-
+        
         AgentLabelsUpdateRequest labels = new AgentLabelsUpdateRequest();
         labels.setAgentName(agentName);
         labels.setLabels(Collections.singletonMap("stable", INITIAL_VERSION));
-        Agent labeled = agentService.updateLabels(labels);
+        AgentSummary labeled = agentService.updateLabels(labels);
         assertEquals(INITIAL_VERSION, labeled.getVersionInfo().getLabels().get("latest"));
         assertEquals(INITIAL_VERSION, labeled.getVersionInfo().getLabels().get("stable"));
-
+        assertEquals(1, labeled.getVersionInfo().getOnlineVersions().size());
+        AgentVersionSummary onlineSummary = labeled.getVersionInfo().getOnlineVersions().get(0);
+        assertEquals(INITIAL_VERSION, onlineSummary.getVersion());
+        assertEquals(Collections.singletonList("stable"), onlineSummary.getLabels());
+        assertEquals(Collections.singletonList(PROTOCOL), onlineSummary.getProtocols());
+        JsonNode labeledJson = JacksonUtils.toObj(JacksonUtils.toJson(labeled));
+        assertFalse(labeledJson.has("versionCatalog"));
+        assertFalse(labeledJson.get("versionInfo").has("onlineCnt"));
+        assertFalse(labeledJson.get("versionInfo").has("latestVersion"));
+        
         AgentVersionSummary offline = agentService.offline(versionCommand(agentName,
             INITIAL_VERSION));
         assertEquals(AiConstants.Agent.VERSION_STATUS_OFFLINE, offline.getStatus());
+        AgentSummary withoutOnline = agentService.getAgent(agentName).getAgent();
+        assertTrue(withoutOnline.getVersionInfo().getOnlineVersions().isEmpty());
+        assertEquals(INITIAL_VERSION, withoutOnline.getVersionInfo().getLabels().get("stable"));
+        assertFalse(withoutOnline.getVersionInfo().getLabels().containsKey("latest"));
         AgentVersionSummary onlineAgain = agentService.online(versionCommand(agentName,
             INITIAL_VERSION));
         assertEquals(AiConstants.Agent.VERSION_STATUS_ONLINE, onlineAgain.getStatus());
-
-        NacosException invalidPublish = assertThrows(NacosException.class,
+        
+        NacosApiException invalidPublish = assertThrows(NacosApiException.class,
             () -> agentService.publish(versionCommand(agentName, INITIAL_VERSION)));
         assertEquals(NacosException.INVALID_PARAM, invalidPublish.getErrCode());
+        assertEquals(ErrorCode.ILLEGAL_STATE.getCode().intValue(), invalidPublish.getDetailErrCode());
+        assertEquals(ErrorCode.ILLEGAL_STATE.getMsg(), invalidPublish.getErrAbstract());
         assertFalse(String.valueOf(invalidPublish.getMessage()).isEmpty());
-
+        
         agentService.deleteAgent(agentName);
-        NacosException deleted =
-            assertThrows(NacosException.class, () -> agentService.getAgent(agentName));
+        NacosApiException deleted =
+            assertThrows(NacosApiException.class, () -> agentService.getAgent(agentName));
         assertEquals(NacosException.NOT_FOUND, deleted.getErrCode());
+        assertEquals(ErrorCode.RESOURCE_NOT_FOUND.getCode().intValue(), deleted.getDetailErrCode());
+        assertEquals(ErrorCode.RESOURCE_NOT_FOUND.getMsg(), deleted.getErrAbstract());
     }
 
     @Test
@@ -183,7 +227,7 @@ class AgentMaintainerServiceMaintainerSdkITCase extends MaintainerSdkBaseITCase 
         createListFilterAgent(agentService, randomMaintainerName("agent-filter-name"), null);
         createListFilterAgent(agentService, targetName + "-tag",
             Collections.singletonList("other"));
-        Agent target = agentService.getAgent(targetName).getAgent();
+        AgentSummary target = agentService.getAgent(targetName).getAgent();
 
         Page<AgentSummary> page = agentService.listAgents(targetName, "maintainer-sdk-it",
             target.getScope(), target.getOwner(), "download_count", 1, 1);
@@ -196,13 +240,13 @@ class AgentMaintainerServiceMaintainerSdkITCase extends MaintainerSdkBaseITCase 
         assertEquals(0, agentService.listAgents(targetName, null, null, "other-owner", null, 1,
             1).getTotalCount());
     }
-
+    
     @Test
     void shouldManageDraftLifecycleInExplicitNamespace() throws Exception {
         AgentMaintainerService agentService = createAiMaintainerService().agent();
         String namespaceId = randomMaintainerName("agent-namespace");
         String agentName = randomMaintainerName("agent-explicit");
-
+        
         AgentDraftCreateRequest createRequest =
             buildInitialDraftRequest(agentName, "Explicit namespace Agent", INITIAL_VERSION);
         AgentVersionDetail initialDraft = agentService.createDraft(namespaceId, createRequest);
@@ -210,9 +254,9 @@ class AgentMaintainerServiceMaintainerSdkITCase extends MaintainerSdkBaseITCase 
         assertEquals(namespaceId, initialDraft.getNamespaceId());
         AgentOverview created = agentService.getAgent(namespaceId, agentName);
         assertOverview(created, namespaceId, agentName, INITIAL_VERSION);
-
+        
         agentService.forcePublish(namespaceId, versionCommand(agentName, INITIAL_VERSION));
-
+        
         AgentDraftCreateRequest copiedDraft = new AgentDraftCreateRequest();
         copiedDraft.setAgentName(agentName);
         copiedDraft.setVersion(SECOND_VERSION);
@@ -224,7 +268,7 @@ class AgentMaintainerServiceMaintainerSdkITCase extends MaintainerSdkBaseITCase 
         assertEquals(SECOND_VERSION, createdDraft.getVersion());
         assertEquals(AiConstants.Agent.VERSION_STATUS_DRAFT, createdDraft.getStatus());
         assertEquals(PROTOCOL, createdDraft.getCallInterfaces().get(0).getProtocol());
-
+        
         AgentDraftUpdateRequest updateDraft = new AgentDraftUpdateRequest();
         updateDraft.setAgentName(agentName);
         updateDraft.setVersion(SECOND_VERSION);
@@ -238,16 +282,20 @@ class AgentMaintainerServiceMaintainerSdkITCase extends MaintainerSdkBaseITCase 
                 "revision"));
         assertContainsVersion(agentService.listAgentVersions(namespaceId, agentName,
             AiConstants.Agent.VERSION_STATUS_DRAFT, 1, 10), SECOND_VERSION);
-
-        NacosException invalidRedraft = assertThrows(NacosException.class,
+        
+        NacosApiException invalidRedraft = assertThrows(NacosApiException.class,
             () -> agentService.redraft(namespaceId, versionCommand(agentName, SECOND_VERSION)));
         assertEquals(NacosException.INVALID_PARAM, invalidRedraft.getErrCode());
-
+        assertEquals(ErrorCode.ILLEGAL_STATE.getCode().intValue(), invalidRedraft.getDetailErrCode());
+        assertEquals(ErrorCode.ILLEGAL_STATE.getMsg(), invalidRedraft.getErrAbstract());
+        
         agentService.deleteDraft(namespaceId, agentName, SECOND_VERSION);
-        NacosException deletedDraft = assertThrows(NacosException.class,
+        NacosApiException deletedDraft = assertThrows(NacosApiException.class,
             () -> agentService.getAgentVersion(namespaceId, agentName, SECOND_VERSION));
         assertEquals(NacosException.NOT_FOUND, deletedDraft.getErrCode());
-
+        assertEquals(ErrorCode.RESOURCE_NOT_FOUND.getCode().intValue(), deletedDraft.getDetailErrCode());
+        assertEquals(ErrorCode.RESOURCE_NOT_FOUND.getMsg(), deletedDraft.getErrAbstract());
+        
         AgentDraftCreateRequest submittedDraft = new AgentDraftCreateRequest();
         submittedDraft.setAgentName(agentName);
         submittedDraft.setVersion(SECOND_VERSION);
@@ -262,13 +310,13 @@ class AgentMaintainerServiceMaintainerSdkITCase extends MaintainerSdkBaseITCase 
         assertContainsVersion(agentService.listAgentVersions(namespaceId, agentName,
             AiConstants.Agent.VERSION_STATUS_ONLINE, 1, 10), SECOND_VERSION);
     }
-
+    
     @Test
     void shouldMapValidationErrorsWithoutBreakingLegacyDelegate() throws Exception {
         AiMaintainerService aiMaintainerService = createAiMaintainerService();
         assertNotNull(aiMaintainerService.agent());
         assertNotNull(aiMaintainerService.a2a());
-
+        
         AgentDraftCreateRequest invalidCreate =
             buildInitialDraftRequest(null, "invalid", INITIAL_VERSION);
         NacosException invalid =
@@ -276,13 +324,13 @@ class AgentMaintainerServiceMaintainerSdkITCase extends MaintainerSdkBaseITCase 
                 .createDraft(invalidCreate));
         assertEquals(NacosException.INVALID_PARAM, invalid.getErrCode());
         assertFalse(String.valueOf(invalid.getMessage()).isEmpty());
-
+        
         NacosException invalidRuntime = assertThrows(NacosException.class,
             () -> aiMaintainerService.agent().getRuntimeEndpoints(
                 randomMaintainerName("missing-agent"), "not a protocol", null));
         assertEquals(NacosException.INVALID_PARAM, invalidRuntime.getErrCode());
     }
-
+    
     private AgentDraftCreateRequest buildInitialDraftRequest(String agentName, String description,
         String version) {
         AgentDraftCreateRequest result = new AgentDraftCreateRequest();
@@ -314,7 +362,7 @@ class AgentMaintainerServiceMaintainerSdkITCase extends MaintainerSdkBaseITCase 
         addCleanup(
             () -> agentService.deleteAgent(Constants.DEFAULT_NAMESPACE_ID, agentName));
     }
-
+    
     private AgentUpdateRequest buildUpdateRequest(String agentName, String description) {
         AgentUpdateRequest result = new AgentUpdateRequest();
         result.setAgentName(agentName);
@@ -328,25 +376,25 @@ class AgentMaintainerServiceMaintainerSdkITCase extends MaintainerSdkBaseITCase 
         result.setStatus(AiConstants.Agent.RESOURCE_STATUS_ENABLE);
         return result;
     }
-
+    
     private String oppositeScope(String scope) {
         return "PUBLIC".equals(scope) ? "PRIVATE" : "PUBLIC";
     }
-
+    
     private AgentProvider provider(String name) {
         AgentProvider result = new AgentProvider();
         result.setName(name);
         result.setUrl("https://nacos.io");
         return result;
     }
-
+    
     private AgentCallInterface buildCallInterface(String agentName, String revision) {
         Map<String, Object> descriptor = new HashMap<String, Object>();
         descriptor.put("name", agentName);
         descriptor.put("revision", revision);
         descriptor.put("capabilities",
             Collections.<String, Object>singletonMap("streaming", Boolean.TRUE));
-
+        
         AgentCallInterface result = new AgentCallInterface();
         result.setProtocol(PROTOCOL);
         result.setProtocolVersion("1.0");
@@ -355,14 +403,14 @@ class AgentMaintainerServiceMaintainerSdkITCase extends MaintainerSdkBaseITCase 
         result.setEndpointSourceOrder(Collections.singletonList(EndpointSource.RUNTIME));
         return result;
     }
-
-    private AgentVersionCommand versionCommand(String agentName, String version) {
-        AgentVersionCommand result = new AgentVersionCommand();
+    
+    private AgentVersionRequest versionCommand(String agentName, String version) {
+        AgentVersionRequest result = new AgentVersionRequest();
         result.setAgentName(agentName);
         result.setVersion(version);
         return result;
     }
-
+    
     private void assertOverview(AgentOverview overview, String namespaceId, String agentName,
         String version) {
         assertNotNull(overview);
@@ -372,7 +420,7 @@ class AgentMaintainerServiceMaintainerSdkITCase extends MaintainerSdkBaseITCase 
         assertNotNull(overview.getVersionPage());
         assertContainsVersion(overview.getVersionPage(), version);
     }
-
+    
     private void assertContainsAgent(Page<AgentSummary> page, String agentName) {
         assertNotNull(page);
         List<AgentSummary> items = page.getPageItems();
@@ -380,7 +428,7 @@ class AgentMaintainerServiceMaintainerSdkITCase extends MaintainerSdkBaseITCase 
         assertTrue(items.stream().anyMatch(each -> agentName.equals(each.getAgentName())),
             () -> "Expected Agent was not found in " + items);
     }
-
+    
     private void assertContainsVersion(Page<AgentVersionSummary> page, String version) {
         assertNotNull(page);
         List<AgentVersionSummary> items = page.getPageItems();

@@ -25,6 +25,10 @@ Run these scenarios with the dedicated Maven profile
 generic `integration-test` profile is for HTTP API IT and must not be used to
 execute SDK IT cases implicitly.
 
+Destructive process-restart and multi-node variants are orchestrated by
+[`../DEFAULT_AUTH_RELIABILITY_IT.md`](../DEFAULT_AUTH_RELIABILITY_IT.md) rather
+than stopping the server shared by the required standalone suite.
+
 ## Status Legend
 
 | Status | Meaning |
@@ -37,6 +41,19 @@ execute SDK IT cases implicitly.
 An SDK API is not complete while important method parameters, defaulting rules,
 return variants, lifecycle paths, listener behavior, or exception mappings are
 left as `Partial` or `Pending` without a documented reason.
+
+## Authentication Baseline
+
+These cross-cutting rows do not change the public SDK-surface counts.
+
+| Scenario | Required behavior | Current status | Current / missing coverage |
+| --- | --- | --- | --- |
+| Explicit identity selection | Tests can choose anonymous, read-write, read-only, or authenticated-no-permission credentials without logging passwords or tokens. | Covered | `JavaSdkBaseITCase` maps shared `nacos.test.auth.*` properties and password environment variables into public SDK factory properties. |
+| Auth-enabled functional matrix | A normal application identity executes the complete Config, Naming, AI, and Lock functional suite while administrative fixture setup uses a separate administrator identity. | Partial | Default and Jackson 3 each discover 101 tests: 81 pass and 20 skip with no failures or errors. Eight skips are exact product findings (`DAUTH-F04` once and `DAUTH-F05` seven times); twelve are environment-gated migration/restart/cluster cases. |
+| Negative identity and action matrix | Anonymous, invalid, authenticated-no-permission, read-only, and read-write callers produce controlled results without cache fallback or unauthorized side effects. | Partial | Config, Naming, HTTP/gRPC/AUTO, no-permission, and read-only checks remain active. `shouldRejectInvalidCredentialsInsteadOfDowngradingToAnonymousAi` is retained but disabled as `DAUTH-F04`. |
+| Async identity and SDK lifecycle | Listener/Watch delivery retains the admitted identity across worker threads, unsubscribe/shutdown stops later delivery, and SDK instances release global subscribers. | Partial | Seven exact Agent identity-context scenarios are disabled as `DAUTH-F05`. The possible `NacosAiService.shutdown()` notifier leak is recorded as `DAUTH-F06`; it did not cause a stable failure in either full adapter run and was not fixed in this change. |
+| Capacity, reconnect, and cluster fault injection | Capacity limits and real transport recovery remain authenticated and are not silently omitted from CI. | Partial | Config, Naming, Lock, Maintainer, Jackson 3, Agent rolling-restart, and Agent peer-restart reliability cases pass. Agent standalone restart and pinned-node convergence are explicitly disabled as `DAUTH-F05`; the runner writes a `status.txt` for each instead of reporting a false pass. |
+| Lock authorization denial | The experimental Lock server applies the documented `SignType.LOCK` guard and rejects insufficient identities. | Documented gap | The complete Lock lifecycle runs with the authenticated read-write identity, including a stable 5-second expiry/reacquire window. The current server handler lacks the authorization guard, so the suite does not assert a false denial contract. |
 
 ## ConfigService
 
@@ -72,15 +89,17 @@ left as `Partial` or `Pending` without a documented reason.
 | Public SDK surface | Required scenarios | Current status | Current / missing coverage |
 | --- | --- | --- | --- |
 | Factory and shutdown | Create via `AiFactory` and close cleanly after each test. | Covered | `JavaSdkBaseITCase` creates and shuts down the client. |
-| MCP release/query | New MCP, new version, duplicate version controlled error, latest-published-version lookup, explicit-version lookup, tool/resource/endpoint variants, invalid specification, and missing MCP behavior. | Covered | New MCP with tool/resource specs, direct endpoint-spec release, new version, duplicate version controlled error, latest-published-version lookup, explicit-version query, invalid specification, and missing MCP get behavior are covered. |
-| MCP endpoint register/deregister | Register all-version or versioned endpoint for supported remote servers, verify returned detail/endpoint state, deregister own endpoint, invalid address/port/version, and stdio unsupported behavior. | Covered | Versioned and default/latest endpoint register/query/deregister for a remote MCP server, missing MCP endpoint controlled error, stdio endpoint registration controlled error, and invalid address/port are covered. |
+| Five-resource transport compatibility | Exercise Agent, MCP, Prompt, Skill, and AgentSpec through explicit `grpc`, explicit `http`, and `auto`, including one-shot reads/writes, subscriptions, and resource-specific overrides and HTTP degradation. | Covered | `AiTransportResourceMatrixJavaSdkITCase` uses a real standalone server and isolated Maintainer SDK fixtures to verify every mode. Agent and MCP protocol-neutral operations follow the selected transport; Prompt direct reads/polling share its resource router; Skill ZIP and subscription plus AgentSpec load/subscription use HTTP for every requested mode. |
+| MCP release/query | New MCP, new version, duplicate version controlled error, latest-published-version lookup, explicit-version lookup, direct-online compatibility, managed draft creation, tool/resource/endpoint variants, invalid specification, and missing MCP behavior. | Covered | `AiServiceJavaSdkITCase` and `McpHttpClientJavaSdkITCase` verify stable-state gRPC and HTTP default/explicit `createDraft=false` direct-online behavior, managed `createDraft=true` draft-only behavior, Tool/Resource/direct and auto-REF forms, duplicate errors, latest and exact query, invalid arguments, and absence before draft publication. Strict gRPC ability gating is also covered by focused client tests. McpHttpClientJavaSdkITCase also verifies default-public release and cross-user private/public access across HTTP and gRPC. |
+| Historical MCP management migration | Preserve Java Client compatibility in `SYNCING`, reject lifecycle draft creation before cutover, reconcile historical content, and expose the same resource through Client and Maintainer SDKs after cutover. | Covered | `McpUpgradeMigrationJavaSdkITCase` is disabled during normal discovery and runs only from `.github/workflows/migration-it.yml`. Its `syncing` phase persists a historical direct-online resource and verifies the controlled draft gate; its `managed` phase verifies the reconciled online Version, unchanged serving query, successful managed draft, and cleanup. |
+| MCP endpoint register/deregister/recovery | Register all-version or versioned endpoint for supported remote servers, verify returned detail/endpoint state, deregister own endpoint, invalid address/port/version, stdio unsupported behavior, and recover desired state after transport loss. | Covered | `AiServiceJavaSdkITCase` and `McpHttpClientJavaSdkITCase` cover gRPC and HTTP Versioned and default/latest Endpoint register/query/deregister, idempotent HTTP registration, missing MCP and stdio controlled errors, and invalid address/port. `AgentDiscoveryServiceJavaSdkITCase` uses one opt-in real restart to verify the shared Agent/MCP HTTP Client heartbeat marks and replays both modules' desired publications after `50404`; sticky owner and failure races remain focused client tests. |
 | MCP subscribe/unsubscribe | Current-value callback, versioned/latest subscription, not-found nullable result, invalid listener, and unsubscribe stops callbacks. | Partial | Versioned and latest current-value callbacks, missing nullable subscribe result, unsubscribe cleanup, and invalid listener are covered. Unsubscribe-stop callback behavior remains because releasing a new version does not trigger the existing latest-version listener path deterministically. |
 | A2A agent card release/query | New card, new version, duplicate version idempotency, `setAsLatest`, URL vs service registration type, default latest query, explicit version query, invalid card, missing card behavior, and canonical Agent interoperability. | Covered | New card, new versions, duplicate-version idempotency, default latest query, explicit version query, `setAsLatest`, URL and service registration type query, invalid card, missing card get behavior, and missing nullable subscribe behavior are covered. The cross-contract Agent discovery suite additionally verifies legacy A2A release through canonical Console and RAD reads, online duplicate no-overwrite, and canonical Maintainer publication through legacy A2A query. |
 | A2A endpoint register/deregister | Single endpoint, batch endpoint overwrite, transport/path/TLS boundaries, own-client deregister behavior, invalid endpoint, canonical Runtime projection, pre-registration before definition, Beta no-dual-write behavior, and multi-Version reconnect redo. | Covered | Single endpoint register/deregister, batch overwrite, TLS/path/query detail, invalid/empty/mismatched input, and own-client removal are covered. Cross-contract IT proves exact-Version legacy SERVICE, Console Runtime Snapshot, and RAD visibility from one canonical Runtime publication, while a direct Naming SDK read verifies that the historical Version-specific service remains empty in Beta. Stable IT pre-registers Version 1 and Version 2 Endpoints before their definitions and compares omitted versus explicit-latest selection, while directed IT restarts the real server and verifies both exact-Version child-publisher redo records recover independently without overwriting generic parent-connection publications. |
 | A2A subscribe/unsubscribe | Current-value callback, latest/versioned subscription, not-found nullable result, invalid listener, canonical publication convergence, and unsubscribe stops callbacks. | Covered | Latest and versioned current-value callbacks, missing nullable subscribe result, unsubscribe cleanup, unsubscribe-stop callback behavior, invalid listener, and a legacy latest subscription observing a new canonical Maintainer-published Version are covered. |
-| Prompt APIs | Get by latest/version/label, subscribe/unsubscribe, missing prompt behavior, invalid key/label/listener, and label/version selection. | Partial | Missing prompt nullable subscribe, invalid key/label/listener, and unsubscribe cleanup are covered. Functional prompt resource scenarios and label/version selection remain because the public Java SDK does not expose a create/publish Prompt API for standalone setup. |
-| Skill APIs | Download by latest/version/label, subscribe/unsubscribe, missing skill behavior, gRPC transport unsupported query behavior, invalid name/listener, and ZIP byte contract. | Partial | gRPC subscribe/query unsupported error, missing download controlled exception, invalid name/listener, and unsubscribe cleanup are covered. Functional ZIP contract and version/label download remain because the public Java SDK does not expose a stable upload/create Skill API for standalone setup. |
-| AgentSpec APIs | Load, subscribe/unsubscribe, missing AgentSpec behavior, gRPC transport unsupported query behavior, invalid name/listener, and assembled resource contract. | Partial | gRPC load/subscribe unsupported error, invalid name/listener, and unsubscribe cleanup are covered. Functional assembled resource contract remains because the public Java SDK does not expose a create/upload AgentSpec API and the client query path depends on AI resource metadata. |
+| Prompt APIs | Get by latest/version/label, subscribe/unsubscribe, missing prompt behavior, invalid key/label/listener, and label/version selection. | Partial | A Maintainer SDK fixture now verifies version query and current-value subscription through explicit gRPC, explicit HTTP, and AUTO clients. Missing nullable subscribe, invalid key/label/listener, and unsubscribe cleanup are also covered. Latest and custom-label selection remain. |
+| Skill APIs | Download by latest/version/label, subscribe/unsubscribe, missing skill behavior, HTTP degradation for requested gRPC/AUTO, invalid name/listener, and ZIP byte contract. | Partial | A Maintainer SDK fixture verifies versioned ZIP download and HTTP subscription for all three requested modes, including cross-entry cancellation. Missing download, invalid name/listener, and unsubscribe cleanup are covered. Latest and custom-label downloads remain. |
+| AgentSpec APIs | Load, subscribe/unsubscribe, missing AgentSpec behavior, HTTP degradation for requested gRPC/AUTO, invalid name/listener, and assembled resource contract. | Partial | A Maintainer SDK fixture verifies HTTP load/subscription for all three requested modes and cross-entry query/cancellation. Invalid name/listener and unsubscribe cleanup are covered. Multi-resource assembly remains. |
 
 ## AgentDiscoveryService
 
@@ -89,12 +108,13 @@ The detailed operation, boundary, failure, and compound matrix is maintained in
 
 | Public SDK surface | Required scenarios | Current status | Current / missing coverage |
 | --- | --- | --- | --- |
-| Factory, namespace, and lifecycle | Default/custom namespace binding, caller isolation, invalid mismatch, inactive/active/repeated shutdown. | Covered | Default and custom service creation, omitted/explicit/mismatched namespace behavior, caller-owned request and Batch isolation, active HTTP publication cleanup, and repeated shutdown are covered in standalone IT; deterministic resource cleanup is also covered by unit tests. |
+| Factory, namespace, and lifecycle | Default/custom namespace binding, namespace-free inputs, caller isolation, inactive/active/repeated shutdown. | Covered | Default and custom service creation, namespace-free Search/Endpoint inputs with implicit instance binding across grpc/http/auto, caller-owned request and Batch isolation, active HTTP publication cleanup, and repeated shutdown are covered in standalone IT; deterministic resource cleanup is also covered by unit tests. |
+| Agent transport mode | Explicit GRPC/HTTP and AUTO, synchronous initial gRPC startup, never-connected STARTING fallback, operation routing, and publication ownership. | Partial | Stable IT verifies AUTO on an available negotiated gRPC connection, AUTO Search/subscription/Publication over HTTP when a deliberately unreachable gRPC port remains STARTING, explicit HTTP independence from gRPC startup, and explicit GRPC failure without HTTP fallback. Probe thresholds, business-error classification, read-only fallback, sticky mixed Publication ownership, and reconnect suspension are deterministic UT scenarios. The exact affected methods are retained with `DAUTH-F05` and must be restored after the visibility identity fix. |
 | Search | Default, literal name, tags-all, protocols-any, combined filters, pagination, empty result, validation, and transport parity. | Covered | Individual/default/combined/empty/paged searches, local null/page/duplicate/protocol boundaries, namespace isolation, and HTTP/gRPC parity are covered. |
 | Discover | Latest/exact/label resolution, unfiltered and combined filters, declared/runtime source shape, not found, validation, and transport parity. | Covered | Latest/exact/label and combined-filter results, full unfiltered interface shape, declared/runtime source projection, not-found mapping, ambiguous/null reference validation, and HTTP/gRPC parity are covered. |
-| Definition and Version evolution | Endpoint-first and definition-first ordering, latest/exact/label consistency, catalog ordering, offline/online latest recalculation, and publication ranges. | Covered | Standalone IT covers Versions 1 through 3, Endpoint-first and definition-first transitions, latest/exact/label polling behavior, catalog ordering, latest recalculation through offline/online, and replacement between two inclusive Version ranges. |
-| Local polling subscription | Existing and missing initial target, full replacement callbacks, fingerprint de-duplication, unsubscribe, and listener isolation/failure. | Covered | Standalone IT covers subscribe-before-create, subscribe-existing, Runtime source-revision replacement, unchanged de-duplication, and post-unsubscribe suppression. Listener identity, failure, scheduling, shutdown races, digest/version revisions, and poll failures use deterministic unit tests. |
-| Complete Endpoint publication | Pre-registration, register/replace/idempotence, partial/final/unknown/repeated deregistration, multiple protocols/publishers, HTTP heartbeat identity, gRPC redo, validation, and shutdown. | Covered | Stable standalone IT covers pre-registration, complete replacement convergence, canonical natural-key partial removal, final/unknown/repeated removal, protocol isolation, two-publisher aggregation, HTTP publication observed through gRPC, active HTTP shutdown, and public local boundaries. An opt-in directed IT stops and restarts the real server and verifies gRPC reconnect redo plus HTTP `50404` replay through the same SDK process. Other heartbeat failures, retry classification, rollback, and redo races use deterministic unit tests. |
+| Definition and Version evolution | Endpoint-first and definition-first ordering, latest/exact/label consistency, catalog ordering, offline/online latest recalculation, and publication ranges. | Partial | Standalone IT covers Versions 1 through 3, Endpoint-first and definition-first transitions, latest/exact/label polling behavior, catalog ordering, latest recalculation through offline/online, and replacement between two inclusive Version ranges. The exact affected methods are retained with `DAUTH-F05` and must be restored after the visibility identity fix. |
+| Local polling subscription | Existing and missing initial target, full replacement callbacks, fingerprint de-duplication, unsubscribe, and listener isolation/failure. | Partial | Standalone IT covers subscribe-before-create, subscribe-existing, Runtime source-revision replacement, unchanged de-duplication, and post-unsubscribe suppression. Listener identity, failure, scheduling, shutdown races, digest/version revisions, and poll failures use deterministic unit tests. The exact affected methods are retained with `DAUTH-F05` and must be restored after the visibility identity fix. |
+| Complete Endpoint publication | Pre-registration, register/replace/idempotence, partial/final/unknown/repeated deregistration, multiple protocols/publishers, HTTP heartbeat identity, gRPC redo, validation, and shutdown. | Partial | Stable standalone IT covers pre-registration, complete replacement convergence, canonical single-key and multi-key partial removal under grpc/http/auto, mixed unknown keys, preserved Endpoint fields and Version bindings, immutable inputs, final/whole-multi-key/repeated removal, protocol isolation, two-publisher aggregation, HTTP publication observed through gRPC, active HTTP shutdown, and public local boundaries. An opt-in directed IT stops and restarts the real server and verifies gRPC reconnect redo plus HTTP `50404` replay through the same SDK process. Generic heartbeat failures, retry classification, rollback, and redo races use deterministic unit tests. Combined partial-deregistration failure/recovery remains deferred and is not claimed by the multi-key transport increment. The exact affected methods are retained with `DAUTH-F05` and must be restored after the visibility identity fix. |
 
 ## Agent Code Publication
 
@@ -103,7 +123,7 @@ The complete implemented scenario matrix is maintained in
 
 | Public SDK surface | Required scenarios | Current status | Current / missing coverage |
 | --- | --- | --- | --- |
-| `AiService.publishAgent` | Draft-only and auto-submit publication, resume, equivalent retry, conflicts, direct and inherited Version evolution, namespace/caller isolation, HTTP/gRPC parity, Endpoint independence, and cross-surface A2A visibility. | Covered | `AgentPublishJavaSdkITCase` verifies draft/resume/online convergence, exact retry and conflict behavior, invalid state mapping, direct and inherited Versions, default/custom namespaces, HTTP/gRPC parity, Endpoint independence and pre-registration, and canonical Admin/Console/RAD plus legacy A2A projections. Caller isolation, ability negotiation, and submit-result ambiguity are covered by focused unit tests. |
+| `AiService.agent().publishAgent` | Draft-only and auto-submit publication, resume, equivalent retry, conflicts, direct and inherited Version evolution, namespace/caller isolation, HTTP/gRPC parity, Endpoint independence, and cross-surface A2A visibility. | Covered | `AgentPublishJavaSdkITCase` verifies draft/resume/online convergence, exact retry and conflict behavior, invalid state mapping, direct and inherited Versions, default/custom namespaces, HTTP/gRPC parity, Endpoint independence and pre-registration, and canonical Admin/Console/RAD plus legacy A2A projections. Caller isolation, ability negotiation, and submit-result ambiguity are covered by focused unit tests. AgentPublishJavaSdkITCase additionally verifies PUBLIC defaults, private/public transitions and publication retry retaining PRIVATE across HTTP and gRPC with a separate READ-only SDK. |
 
 ## LockService
 
@@ -111,20 +131,73 @@ The complete implemented scenario matrix is maintained in
 | --- | --- | --- | --- |
 | Factory and shutdown | Create via `NacosLockFactory` and close cleanly after each test. | Covered | `JavaSdkBaseITCase` creates and shuts down the client. |
 | `lock` / `unLock` | Acquire, competing client rejection, release, reacquire, repeated release, invalid type, null or invalid fields, and expiration behavior. | Covered | Acquire/compete/release/reacquire/repeated release, unsupported type, missing key, null instance, and expiration are covered. |
-| `remoteTryLock` / `remoteReleaseLock` | Direct remote acquire/release path, repeated release, invalid input, and consistency with public `lock`/`unLock`. | Covered | Direct remote acquire/release, repeated acquire/release, and consistency with public lock behavior are covered. |
+| `remoteTryLock` / `remoteReleaseLock` | Direct remote acquire/release path, repeated release, invalid input, consistency with public `lock`/`unLock`, and reconnect behavior. | Covered | Direct remote acquire/release, repeated acquire/release, and consistency with public lock behavior are covered. A directed real-restart case uses a lease longer than the restart window to verify connection-scoped state reset, recovery of both original clients, mutex exclusion, release, and reacquire. |
 
 ## Later SDK Surfaces
 
 | Public SDK surface | Required scenarios | Current status | Notes |
 | --- | --- | --- | --- |
 | Deprecated `NamingMaintainService` | Create/query/update/delete service and update instance if the deprecated client can still be created in the standalone IT. | Pending | Listed separately because the API is deprecated after 3.3.0. |
-| Maintainer client SDK interfaces | Maintainer API behavior, authorization assumptions, validation, and controlled errors. | Pending | Needs a separate batch because it uses a different artifact and service model. |
+| Maintainer client SDK interfaces | Maintainer API behavior, authorization assumptions, validation, and controlled errors. | Covered | Tracked separately in `test/maintainer-sdk-test`; its default and Jackson 3 auth-enabled suites each discover 46 tests, including one environment-gated real-restart case. This row is not counted as a Java Client SDK surface. |
 
 ## Recommended Next Test Batches
 
-1. Confirm the intended contracts for Naming fuzzy-watch delete events and A2A
-   missing-agent endpoint registration, then add stable IT or file follow-up
+1. Confirm the intended contracts for Naming fuzzy-watch delete events and MCP
+   latest-listener unsubscribe behavior, then add stable IT or file follow-up
    issues as needed.
-2. Add functional Prompt/Skill/AgentSpec Java SDK IT after the public SDK
-   exposes stable create/upload setup APIs, or after the standalone framework
-   provides an approved setup helper for AI resource metadata.
+2. Add the remaining Prompt/Skill latest and custom-label selection plus
+   AgentSpec multi-resource assembly scenarios using the existing authenticated
+   Maintainer fixture.
+3. Decide whether the deprecated `NamingMaintainService` still warrants new IT
+   before its removal window.
+
+## AI Resource Interface Compatibility (3.3 phase 1)
+
+This increment is separate from the historical surface denominator. The scope
+is interface delegation and resource transport; A2A-to-RAD conversion is deferred.
+See [AI_API_COMPATIBILITY.md](AI_API_COMPATIBILITY.md) for the executable old-API
+fixture and exact released dependency resolution.
+
+| Public SDK surface | Required scenarios | Current status | Current / missing coverage |
+| --- | --- | --- | --- |
+| AiService resource accessors and legacy delegates | Stable delegates, old/new validation and default dispatch, shared state, cross-entry cancellation and shutdown | Covered | AiServiceJavaSdkITCase verifies all-five-resource validation parity, MCP cross-entry state and A2A query parity. Resource matrix adds Prompt/Skill/AgentSpec recovery from absence, unchanged-content suppression, cross-entry cancellation, resubscription and repeated shutdown under grpc/http/auto. |
+| AgentService via agent() | Native Search/Discover/Watch/publication/publish and old A2A remain usable through the new owner | Partial | Existing AgentPublish and directed AgentDiscovery regressions verify publishing, namespace isolation, HTTP/gRPC result parity, independent publishers, pre-registration, replacement/deregistration, shutdown and legacy A2A interoperation. Existing DAUTH-F05 Watch/restart exclusions remain; migration-state/cluster harnesses were not executed in this phase. |
+| Five resource transport overrides | Inheritance, opposite mixed modes, effective HTTP-only resources, strict configuration, connection-only read fallback and shared recovery | Partial | Resource matrix verifies three global modes, opposite overrides, native HTTP with unreachable gRPC, old A2A's original runtime error and continued native HTTP use, public factory errors and polling lifecycle. Auth matrix verifies three modes with real identities. UT covers immutable modes, all invalid explicit values, independent AUTO budgets, forced gRPC/A2A pins, business-error priority and owner replay. Real shared Agent/MCP restart recovery retains the existing DAUTH-F05 gap. |
+| Released API bytecode and representative old SDK/server | Old third-party override/default resolution, old application with replacement SDK, both old/new SDK on current server, new SDK on a non-RAD server | Covered | Opt-in binary fixture compiles against nacos-api:3.2.4 only; isolated JVMs run the released nacos-client:3.2.4 dependency tree or the new SDK. Old-server evidence requires the separately supplied disposable 3.2.4 instance. Scope is old MCP/A2A operations, not every legacy version or native RAD. |
+
+Phase 1 increment: 2 Covered / 2 Partial / 0 Pending; strict coverage
+`2 / 4 = 50%`; effective coverage `(2 + 2 * 0.5) / 4 = 75%`.
+These figures measure the four declared scenario groups, not code coverage or
+all AI capabilities. Existing domain-level Partial rows and known findings are
+not upgraded by this increment. Actual commands, adapter results, and skips
+are recorded in `Codex/design/nacos-3.3-client-ai-api/VALIDATION.md`.
+
+## Client namespace input correction (3.3 review)
+
+| Public SDK surface | Required scenarios | Current status | Current / missing coverage |
+| --- | --- | --- | --- |
+| Agent Search and Endpoint inputs | No namespace fields/accessors in public inputs; instance-bound search/register/deregister under HTTP, gRPC and AUTO; immutable inputs and existing validation | Covered | Public API contract tests reject namespace accessors and old wire-DTO overloads. The two-namespace lifecycle IT passes in grpc/http/auto with immutable Search/Endpoint inputs; default JSON and Jackson 3 both pass. Original wire serialization, HTTP/gRPC mapping, validation and authorization regressions pass. |
+
+Separate review increment: strict 1/1 = 100%; effective 1/1 = 100%. This single input-contract group does not change the historical domain denominator or the existing migration/reliability gaps.
+
+## Agent model consolidation
+
+Agent model consolidation uses concrete namespace-free ClientRequest types; Search verifies inherited catalog metadata and shared version entries under grpc/http/auto. Draft publication retains idempotence, source validation and namespace binding. Abstract-base and fixed-JSON contracts are covered in API UTs.
+
+### Agent 元数据模型合并（2026-09-14）
+
+Agent 模型合并验证沿用 AgentDiscoveryServiceJavaSdkITCase：新目录路径、跨 transport 返回一致、管理字段隔离，既有发现/订阅场景不变。
+
+### Agent 地址模型统一：实施与验收（2026-09-15）
+
+CallInterface → EndpointSet → Endpoint 统一已落地，验收要求见 [测试矩阵](../../Codex/design/nacos-3.3-client-ai-api/MODEL_ENDPOINT_TEST_PLAN.md)，本轮实际执行见 [验证记录](../../Codex/design/nacos-3.3-client-ai-api/MODEL_ENDPOINT_VALIDATION.md)。healthy 注册可写，服务端维护字段忽略；管理 Runtime 读取改为 `callInterface.endpointSets[].endpoints[]`，状态和绑定位于 Endpoint，观察时间位于 Set。旧 A2A wire 不变。以下原有覆盖状态不以编译通过或历史测试数量自动提升。
+
+
+### 2026-09-15 请求整合回归
+
+Agent Search/Register 使用 agent 根包共享模型，局部注销使用三参数；publish 使用 agent.client.AgentPublishRequest。新增同名 Agent 双 namespace 搜索、注册及 3 删 2 隔离场景，GRPC/HTTP/AUTO 和两种 JSON adapter 共用。
+
+本轮实际执行状态见 [请求整合验证记录](../../Codex/design/nacos-3.3-client-ai-api/MODEL_REQUEST_VALIDATION.md)。
+既有 Covered/Partial/Pending 表示场景覆盖归属，不表示本轮已重新执行；不能引用前轮结果代替本轮验收。
+
+Scope Watch regression: `AgentPublishJavaSdkITCase#shouldInvalidateWatchAfterScopeBecomesPrivate` is Partial and explicitly disabled under `DAUTH-F05` after reproducing missing initial Watch delivery with auth enabled. Direct HTTP/gRPC default-public discovery and private-preserving publish retry remain executable.

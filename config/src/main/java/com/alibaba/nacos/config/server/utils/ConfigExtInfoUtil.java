@@ -21,6 +21,7 @@ import com.alibaba.nacos.config.server.constant.Constants;
 import com.alibaba.nacos.config.server.model.ConfigAllInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.core.JacksonException;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
@@ -52,6 +53,22 @@ public class ConfigExtInfoUtil {
     }
     
     private ConfigExtInfoUtil() {
+    }
+    
+    /**
+     * Read schema text from the selected history record's extension.
+     */
+    public static String getSchemaFromExtInfo(String extInfo) {
+        if (StringUtils.isBlank(extInfo)) {
+            return null;
+        }
+        try {
+            JsonNode schema = OBJECT_MAPPER.readTree(extInfo).path("c_schema");
+            return schema.isTextual() ? schema.textValue() : null;
+        } catch (JacksonException ex) {
+            LOGGER.warn("Failed to parse schema from config history extension");
+            return null;
+        }
     }
     
     /**
