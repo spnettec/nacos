@@ -30,14 +30,14 @@ import org.springframework.context.annotation.Configuration;
  *
  * <p>This configuration is guarded by two conditions:
  * <ul>
- *     <li>{@code nacos.copilot.enabled} must not be {@code false} (default {@code true})</li>
+ *     <li>{@code nacos.copilot.enabled} must be {@code true} (fork 默认 {@code false}：其依赖 agentscope 硬编码 Jackson2，纯 Jackson3 构建下不可用)</li>
  *     <li>Deployment type must not be {@code server}</li>
  * </ul>
  *
  * @author nacos
  */
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnProperty(name = "nacos.copilot.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(name = "nacos.copilot.enabled", havingValue = "true", matchIfMissing = false)
 @ConditionalOnExpression("'${nacos.deployment.type:merged}' != 'server'")
 @ComponentScan(basePackages = "com.alibaba.nacos.copilot")
 public class CopilotConfiguration {

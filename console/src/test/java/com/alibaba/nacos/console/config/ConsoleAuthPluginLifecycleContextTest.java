@@ -77,7 +77,8 @@ class ConsoleAuthPluginLifecycleContextTest {
         NacosStartUpManager.start(NacosStartUp.CONSOLE_START_UP_PHASE);
         context = new SpringApplicationBuilder(NacosConsole.class)
             .web(WebApplicationType.SERVLET)
-            .properties("nacos.deployment.type=console", "nacos.core.auth.console.enabled=true",
+            .properties("spring.main.allow-bean-definition-overriding=true",
+                "nacos.deployment.type=console", "nacos.core.auth.console.enabled=true",
                 "server.port=0",
                 "nacos.member.list=127.0.0.1:8848",
                 "nacos.core.auth.server.identity.key=test-key",

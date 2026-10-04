@@ -71,7 +71,7 @@ class JacksonAdapterCompatibilityTest {
     }
     
     @ParameterizedTest
-    @ValueSource(strings = {"jackson2", "jackson3"})
+    @ValueSource(strings = {"jackson3"})
     void testEndpointWireDefaultsAndExplicitNull(String adapterName) throws Exception {
         System.setProperty(JsonUtils.ADAPTER_PROPERTY_NAME, adapterName);
         resetJsonUtils();

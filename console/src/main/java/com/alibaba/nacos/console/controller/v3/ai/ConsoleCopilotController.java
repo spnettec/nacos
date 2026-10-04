@@ -66,6 +66,8 @@ import java.util.Map;
  */
 @NacosApi
 @RestController
+// fork 默认关闭 copilot（agentscope 硬编码 Jackson2），controller 随开关退位
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name = "nacos.copilot.enabled", havingValue = "true")
 @RequestMapping(CopilotConstants.COPILOT_CONSOLE_PATH)
 @ExtractorManager.Extractor(httpExtractor = CopilotHttpParamExtractor.class)
 public class ConsoleCopilotController {

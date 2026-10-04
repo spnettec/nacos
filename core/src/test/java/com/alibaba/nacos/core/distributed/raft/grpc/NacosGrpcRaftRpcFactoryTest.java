@@ -83,10 +83,8 @@ class NacosGrpcRaftRpcFactoryTest {
     
     @Test
     void testGrpcServerBindsEndpointAndHandlesRegisteredMessagesWithoutBolt() throws Exception {
-        assertThrows(ClassNotFoundException.class,
-            () -> Class.forName("com.alipay.remoting.util.StringUtils"));
-        assertThrows(ClassNotFoundException.class,
-            () -> Class.forName("com.alipay.hessian.clhm.ConcurrentLinkedHashMap"));
+        // fork 保留 sofa-bolt/jraft（Raft 集群 RPC 用），上游"bolt 不在 classpath"的前置
+        // 断言与本 fork 架构冲突，跳过；仅验证 gRPC 服务绑定与消息处理行为
         NacosGrpcRaftRpcFactory factory = new NacosGrpcRaftRpcFactory();
         Endpoint endpoint = new Endpoint("127.0.0.1", availablePort());
         AtomicInteger intercepted = new AtomicInteger();

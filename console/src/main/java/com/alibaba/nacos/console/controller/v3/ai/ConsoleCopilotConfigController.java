@@ -53,6 +53,8 @@ import static com.alibaba.nacos.plugin.auth.constant.Constants.Resource.CONSOLE_
  */
 @NacosApi
 @RestController
+// fork 默认关闭 copilot（agentscope 硬编码 Jackson2），controller 随开关退位
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name = "nacos.copilot.enabled", havingValue = "true")
 @RequestMapping(CopilotConstants.COPILOT_CONSOLE_PATH + "/config")
 public class ConsoleCopilotConfigController {
     

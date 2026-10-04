@@ -120,9 +120,13 @@ public class ExternalDataSourceProperties {
             DataSourcePoolProperties poolProperties =
                 DataSourcePoolProperties.build(configResolver);
             if (StringUtils.isEmpty(poolProperties.getDataSource().getDriverClassName())) {
-                String resolvedDriver = resolveDriverName(driverName, url);
-                if (resolvedDriver == null) {
-                    resolvedDriver = resolveDefaultDriverClassName(dataSourceType);
+                // 解析优先级：显式配置 > DatabaseDialect 插件默认 > JDBC URL 推断 > 兼容默认
+                String configuredDriver = resolveDriverName(driverName, null);
+                String resolvedDriver = StringUtils.isEmpty(configuredDriver)
+                        ? resolveDefaultDriverClassName(dataSourceType)
+                        : configuredDriver;
+                if (StringUtils.isEmpty(resolvedDriver)) {
+                    resolvedDriver = resolveDriverName(driverName, url);
                 }
                 poolProperties.setDriverClassName(resolvedDriver);
             }
@@ -188,6 +192,9 @@ public class ExternalDataSourceProperties {
     static String resolveDriverName(String configuredDriverName, String jdbcUrl) {
         if (hasText(configuredDriverName)) {
             return configuredDriverName;
+        }
+        if (jdbcUrl == null) {
+            return null;
         }
         String normalizedUrl = jdbcUrl.toLowerCase(Locale.ROOT);
         if (normalizedUrl.startsWith("jdbc:mariadb:")) {
