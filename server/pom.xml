@@ -35,7 +35,11 @@
             <artifactId>nacos-naming</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>com.alibaba.nacos</groupId>
+            <artifactId>nacos-dns</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba.nacos</groupId>
             <artifactId>nacos-config</artifactId>
         </dependency>
         <dependency>

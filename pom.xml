@@ -618,6 +618,7 @@
         <module>core</module>
         <module>naming</module>
         <module>address</module>
+        <module>dns</module>
         <module>test</module>
         <module>api</module>
         <module>client</module>
@@ -733,6 +734,11 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
+                <artifactId>nacos-dns</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.alibaba.nacos</groupId>
                 <artifactId>nacos-ai</artifactId>
                 <version>${project.version}</version>
             </dependency>

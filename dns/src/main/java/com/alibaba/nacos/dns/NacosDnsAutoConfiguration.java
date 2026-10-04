@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2026 Alibaba Group Holding Ltd.
+ * Copyright 1999-2025 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package com.alibaba.nacos.api.ai.model.agent;
+package com.alibaba.nacos.dns;
+
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
 
 /**
- * Runtime endpoint management state.
+ * Auto-configuration for Nacos DNS server.
  *
  * @author Nacos
  */
-public enum RuntimeEndpointState {
+@Configuration
+@EnableConfigurationProperties(NacosDnsProperties.class)
+public class NacosDnsAutoConfiguration {
     
-    AVAILABLE,
-    
-    DISABLED,
-    
-    UNHEALTHY
 }
