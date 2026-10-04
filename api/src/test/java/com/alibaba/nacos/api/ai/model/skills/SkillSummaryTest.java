@@ -188,7 +188,7 @@ class SkillSummaryTest extends BasicRequestTest {
     }
     
     @Test
-    void testFrontMatterJsonRoundTripAndLegacyResponse() throws JsonProcessingException {
+    void testFrontMatterJsonRoundTripAndLegacyResponse() throws Exception {
         SkillSummary summary = new SkillSummary();
         Map<String, String> frontMatter = new HashMap<>();
         frontMatter.put("alias", "Display name");

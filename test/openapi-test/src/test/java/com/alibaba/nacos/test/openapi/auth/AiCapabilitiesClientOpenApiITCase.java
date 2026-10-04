@@ -16,7 +16,7 @@
 
 package com.alibaba.nacos.test.openapi.auth;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import com.alibaba.nacos.common.utils.JacksonUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -59,11 +59,11 @@ public class AiCapabilitiesClientOpenApiITCase extends AuthITCase {
         JsonNode data = assertSuccess(get(SERVER_BASE_URL, PATH, token)).get("data");
         assertEquals(1, data.get("schemaVersion").asInt());
         Set<String> fields = new HashSet<>();
-        data.fieldNames().forEachRemaining(fields::add);
+        data.properties().forEach(entry -> fields.add(entry.getKey()));
         assertEquals(Set.of("schemaVersion", "capabilities"), fields);
         JsonNode features = data.get("capabilities");
         fields.clear();
-        features.fieldNames().forEachRemaining(fields::add);
+        features.properties().forEach(entry -> fields.add(entry.getKey()));
         assertEquals(Set.of("radV1", "mcp", "skill", "prompt", "agentSpec"), fields);
         for (JsonNode feature : features) {
             assertTrue(feature.isBoolean());

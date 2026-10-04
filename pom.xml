@@ -738,7 +738,7 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.alibaba.nacos</groupId>
+                <groupId>com.github.heyoulin.nacos</groupId>
                 <artifactId>nacos-ai</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -763,7 +763,7 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.alibaba.nacos</groupId>
+                <groupId>com.github.heyoulin.nacos</groupId>
                 <artifactId>logback-adapter</artifactId>
                 <version>${nacos.logback.adapter.version}</version>
             </dependency>
