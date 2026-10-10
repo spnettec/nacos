@@ -49,6 +49,9 @@ class ExpressionSelectorTest {
         ExpressionSelector selector = new ExpressionSelector();
         selector.setExpression("test expression");
         String actual = mapper.writeValueAsString(selector);
+        assertEquals(actual.indexOf("\"type\""), actual.lastIndexOf("\"type\""));
+        assertEquals(selector.getType(),
+            mapper.readValue(actual, AbstractSelector.class).getType());
         assertTrue(actual.contains("\"type\":\"" + SelectorType.label.name() + "\""));
         assertTrue(actual.contains("\"expression\":\"test expression\""));
     }

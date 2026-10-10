@@ -129,6 +129,7 @@
         <!-- dependency version -->
         <nacos.logback.adapter.version>1.1.5</nacos.logback.adapter.version>
         <spring-boot-dependencies.version>4.1.1</spring-boot-dependencies.version>
+        <jackson-bom.version>3.2.3</jackson-bom.version>
 
         <commons-io.version>2.22.0</commons-io.version>
         <commons-collections.version>3.2.2</commons-collections.version>
@@ -694,6 +695,14 @@
                 <groupId>io.grpc</groupId>
                 <artifactId>grpc-bom</artifactId>
                 <version>${grpc-java.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <!-- Keep Jackson 3 current independently of Spring Boot's managed version. -->
+                <groupId>tools.jackson</groupId>
+                <artifactId>jackson-bom</artifactId>
+                <version>${jackson-bom.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>

@@ -51,7 +51,8 @@ public class Package {
     /**
      * Transport field - required, supports multiple transport types (stdio/streamable-http/sse).
      */
-    @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", visible = true)
+    @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY,
+        property = "type", visible = true)
     @JsonSubTypes({
         @JsonSubTypes.Type(value = StdioTransport.class, name = "stdio"),
         @JsonSubTypes.Type(value = StreamableHttpTransport.class, name = "streamable-http"),

@@ -54,6 +54,9 @@ class NoneSelectorTest {
     void testSerialization() throws JacksonException {
         NoneSelector selector = new NoneSelector();
         String actual = mapper.writeValueAsString(selector);
+        assertEquals(actual.indexOf("\"type\""), actual.lastIndexOf("\"type\""));
+        assertEquals(selector.getType(),
+            mapper.readValue(actual, AbstractSelector.class).getType());
         assertTrue(actual.contains("\"type\":\"" + SelectorType.none.name() + "\""));
     }
     

@@ -170,4 +170,23 @@ class CopilotAgentManagerTest {
         // Then
         assertNotNull(copilotAgentManager.getConfig());
     }
+    
+    @Test
+    @org.junit.jupiter.api.Disabled("AgentScope 2.x requires Jackson 2; Copilot is disabled in this Jackson 3 fork")
+    void testCreateAgentSuccessBuildsRealAgent() {
+        // Given
+        when(configStorage.isAvailable()).thenReturn(false);
+        when(defaultProperties.isEnabled()).thenReturn(true);
+        when(environment.getProperty(eq("COPILOT_API_KEY"))).thenReturn("test-api-key");
+        when(defaultProperties.getModel()).thenReturn("qwen-plus");
+        copilotAgentManager.refreshConfig();
+        
+        // When
+        io.agentscope.core.ReActAgent agent = copilotAgentManager.createAgent("test prompt");
+        
+        // Then
+        // Exercises the real 2.0.3 DashScopeChatModel + ReActAgent construction path,
+        // which the disabled/no-api-key cases above never reach.
+        assertNotNull(agent);
+    }
 }

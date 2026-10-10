@@ -25,7 +25,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  *
  * @author xinluo
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", defaultImpl = NamedArgument.class)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY,
+    property = "type", defaultImpl = NamedArgument.class)
 @JsonSubTypes({
     @JsonSubTypes.Type(value = PositionalArgument.class, name = "positional"),
     @JsonSubTypes.Type(value = NamedArgument.class, name = "named")

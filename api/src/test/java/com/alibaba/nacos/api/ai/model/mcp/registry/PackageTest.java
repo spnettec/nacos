@@ -30,6 +30,24 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class PackageTest extends BasicRequestTest {
     
     @Test
+    void testPolymorphicFieldsRoundTrip() throws JacksonException {
+        for (Object transport : Arrays.asList(new StdioTransport(), new StreamableHttpTransport(),
+            new SseTransport())) {
+            Package pkg = new Package();
+            pkg.setTransport(transport);
+            pkg.setRuntimeArguments(Arrays.asList(new NamedArgument(), new PositionalArgument()));
+            String json = mapper.writeValueAsString(pkg);
+            Package restored = mapper.readValue(json, Package.class);
+            assertEquals(transport.getClass(), restored.getTransport().getClass());
+            assertEquals(NamedArgument.class, restored.getRuntimeArguments().get(0).getClass());
+            assertEquals(PositionalArgument.class,
+                restored.getRuntimeArguments().get(1).getClass());
+            // Each argument and transport must emit exactly one discriminator.
+            assertEquals(3, json.split("\"type\"", -1).length - 1);
+        }
+    }
+    
+    @Test
     void testSerialize() throws JacksonException {
         Package pkg = new Package();
         pkg.setRegistryType("maven");

@@ -30,7 +30,8 @@ import java.util.List;
  * @author nkorange
  * @since 0.7.0
  */
-@JsonTypeInfo(use = Id.NAME, property = "type", defaultImpl = NoneSelector.class)
+@JsonTypeInfo(use = Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "type",
+    defaultImpl = NoneSelector.class)
 public abstract class AbstractSelector
     implements Serializable, Selector<List<Instance>, List<Instance>, String> {
     

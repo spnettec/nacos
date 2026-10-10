@@ -42,8 +42,8 @@ import static org.mockito.Mockito.when;
  */
 @ExtendWith(MockitoExtension.class)
 @org.junit.jupiter.api.Disabled("fork 纯 Jackson3：agentscope-core 硬编码 Jackson2（fasterxml databind），"
-        + "已从 classpath 排除，其 Agent 运行时路径在本构建不可用；copilot 默认关闭，"
-        + "待 agentscope 提供 Jackson3 支持后恢复")
+    + "已从 classpath 排除，其 Agent 运行时路径在本构建不可用；copilot 默认关闭，"
+    + "待 agentscope 提供 Jackson3 支持后恢复")
 class SkillOptimizationServiceImplTest {
     
     @Mock

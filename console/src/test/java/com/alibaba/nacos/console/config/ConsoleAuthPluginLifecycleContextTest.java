@@ -79,7 +79,6 @@ class ConsoleAuthPluginLifecycleContextTest {
             .web(WebApplicationType.SERVLET)
             .properties("spring.main.allow-bean-definition-overriding=true",
                 "nacos.deployment.type=console", "nacos.core.auth.console.enabled=true",
-                "server.port=0",
                 "nacos.member.list=127.0.0.1:8848",
                 "nacos.core.auth.server.identity.key=test-key",
                 "nacos.core.auth.server.identity.value=test-value",
@@ -88,7 +87,7 @@ class ConsoleAuthPluginLifecycleContextTest {
                 "nacos.logs.path=" + tempDir.resolve("logs"),
                 "spring.config.additional-location=file:" + tempDir.resolve("conf") + '/',
                 "spring.main.lazy-initialization=false")
-            .run();
+            .run("--server.port=0");
         
         assertNotNull(context.getBean(ConsoleAuthPluginInitializer.class));
         NacosAuthPluginService plugin = (NacosAuthPluginService) AuthPluginManager.getInstance()
