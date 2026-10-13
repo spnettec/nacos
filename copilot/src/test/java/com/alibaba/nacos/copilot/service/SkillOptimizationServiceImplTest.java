@@ -121,10 +121,9 @@ class SkillOptimizationServiceImplTest {
         io.agentscope.core.ReActAgent mockAgent = mock(io.agentscope.core.ReActAgent.class);
         when(agentManager.createAgent(anyString())).thenReturn(mockAgent);
         
-        reactor.core.publisher.Flux<io.agentscope.core.agent.Event> mockFlux =
+        reactor.core.publisher.Flux<io.agentscope.core.event.AgentEvent> mockFlux =
             reactor.core.publisher.Flux.empty();
-        when(mockAgent.stream(any(java.util.List.class),
-            any(io.agentscope.core.agent.StreamOptions.class))).thenReturn(mockFlux);
+        when(mockAgent.streamEvents(any(java.util.List.class))).thenReturn(mockFlux);
         
         StreamResponseCallback<SkillOptimizationResponse> callback =
             new StreamResponseCallback<SkillOptimizationResponse>() {
@@ -157,10 +156,9 @@ class SkillOptimizationServiceImplTest {
         io.agentscope.core.ReActAgent mockAgent = mock(io.agentscope.core.ReActAgent.class);
         when(agentManager.createAgent(anyString())).thenReturn(mockAgent);
         
-        reactor.core.publisher.Flux<io.agentscope.core.agent.Event> mockFlux =
+        reactor.core.publisher.Flux<io.agentscope.core.event.AgentEvent> mockFlux =
             reactor.core.publisher.Flux.empty();
-        when(mockAgent.stream(any(java.util.List.class),
-            any(io.agentscope.core.agent.StreamOptions.class))).thenReturn(mockFlux);
+        when(mockAgent.streamEvents(any(java.util.List.class))).thenReturn(mockFlux);
         
         StreamResponseCallback<SkillOptimizationResponse> callback =
             new StreamResponseCallback<SkillOptimizationResponse>() {
@@ -193,10 +191,9 @@ class SkillOptimizationServiceImplTest {
         io.agentscope.core.ReActAgent mockAgent = mock(io.agentscope.core.ReActAgent.class);
         when(agentManager.createAgent(anyString())).thenReturn(mockAgent);
         
-        reactor.core.publisher.Flux<io.agentscope.core.agent.Event> mockFlux =
+        reactor.core.publisher.Flux<io.agentscope.core.event.AgentEvent> mockFlux =
             reactor.core.publisher.Flux.empty();
-        when(mockAgent.stream(any(java.util.List.class),
-            any(io.agentscope.core.agent.StreamOptions.class))).thenReturn(mockFlux);
+        when(mockAgent.streamEvents(any(java.util.List.class))).thenReturn(mockFlux);
         
         StreamResponseCallback<SkillOptimizationResponse> callback =
             new StreamResponseCallback<SkillOptimizationResponse>() {
@@ -229,10 +226,9 @@ class SkillOptimizationServiceImplTest {
         io.agentscope.core.ReActAgent mockAgent = mock(io.agentscope.core.ReActAgent.class);
         when(agentManager.createAgent(anyString())).thenReturn(mockAgent);
         
-        reactor.core.publisher.Flux<io.agentscope.core.agent.Event> mockFlux =
+        reactor.core.publisher.Flux<io.agentscope.core.event.AgentEvent> mockFlux =
             reactor.core.publisher.Flux.empty();
-        when(mockAgent.stream(any(java.util.List.class),
-            any(io.agentscope.core.agent.StreamOptions.class))).thenReturn(mockFlux);
+        when(mockAgent.streamEvents(any(java.util.List.class))).thenReturn(mockFlux);
         
         StreamResponseCallback<SkillOptimizationResponse> callback =
             new StreamResponseCallback<SkillOptimizationResponse>() {
