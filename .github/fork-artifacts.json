@@ -1,0 +1,10 @@
+{
+  "com/github/heyoulin/sofa-bolt/sofa-bolt/1.6.20.1.B/sofa-bolt-1.6.20.1.B.jar": "f6714f19d34afdb504ba8318f36fcfb270b1d3564e8ec491a66adebfc6270e5a",
+  "com/github/heyoulin/sofa-bolt/sofa-bolt/1.6.20.1.B/sofa-bolt-1.6.20.1.B.pom": "3f6c62d16c5250e74550dd27dea44a45e19024e99c45f19319dfa026dbd12bc4",
+  "com/github/heyoulin/sofa-jraft/jraft-core/1.4.1.B/jraft-core-1.4.1.B.jar": "8934668a76a3b778fda9c30ebffa3bf0b815a0349a01e2b7df0703dc238f7214",
+  "com/github/heyoulin/sofa-jraft/jraft-core/1.4.1.B/jraft-core-1.4.1.B.pom": "5a21b8ae93c46233d623bbec208c52e085b71e0ec2d6cc20463eee6d990d8f17",
+  "com/github/heyoulin/sofa-jraft/jraft-extension/1.4.1.B/jraft-extension-1.4.1.B.pom": "42d2c88db76fef1cd880bf409e5858ba564470af8af512f5602112da9469cb2a",
+  "com/github/heyoulin/sofa-jraft/jraft-parent/1.4.1.B/jraft-parent-1.4.1.B.pom": "3c495aefe04b7056e7d84128325620fb5ee066bd249472f07b9539701f4999b1",
+  "com/github/heyoulin/sofa-jraft/rpc-grpc-impl/1.4.1.B/rpc-grpc-impl-1.4.1.B.jar": "96d80c7467fc70a21deae34d03955a52633b53c109a4c456c72cc9c047e22004",
+  "com/github/heyoulin/sofa-jraft/rpc-grpc-impl/1.4.1.B/rpc-grpc-impl-1.4.1.B.pom": "56827afb0b950f81d3607575d7263fb2e23b2fb632fc119465e011e01819a2f8"
+}
