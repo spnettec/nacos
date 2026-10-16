@@ -669,6 +669,13 @@
     
     <!-- Default dependencies in all subprojects -->
     <dependencies>
+        <!-- Surefire's explicit javaagent must also be resolved in a fresh local repository. -->
+        <dependency>
+            <groupId>net.bytebuddy</groupId>
+            <artifactId>byte-buddy-agent</artifactId>
+            <version>${byte-buddy-agent.version}</version>
+            <scope>test</scope>
+        </dependency>
         
         <dependency>
             <groupId>org.junit.jupiter</groupId>
