@@ -151,7 +151,7 @@ class NacosAuthPluginWebConfigTest {
     }
     
     @Test
-    void testAuthenticationManagerBean() throws Exception {
+    void testAuthenticationManagerUsesCurrentContextConfiguration() throws Exception {
         AuthenticationConfiguration authenticationConfiguration =
             mock(AuthenticationConfiguration.class);
         AuthenticationManager authenticationManager = mock(AuthenticationManager.class);
@@ -159,11 +159,10 @@ class NacosAuthPluginWebConfigTest {
             .thenReturn(authenticationManager);
         
         try (MockedStatic<ApplicationUtils> mocked = mockStatic(ApplicationUtils.class)) {
-            mocked.when(() -> ApplicationUtils.getBean(AuthenticationConfiguration.class))
-                .thenReturn(authenticationConfiguration);
-            
             assertSame(authenticationManager,
-                new NacosAuthPluginWebConfig().authenticationManagerBean());
+                new NacosAuthPluginWebConfig()
+                    .authenticationManagerBean(authenticationConfiguration));
+            mocked.verifyNoInteractions();
         }
     }
     

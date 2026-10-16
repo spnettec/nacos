@@ -23,7 +23,6 @@ import com.alibaba.nacos.core.web.NacosWebBean;
 import com.alibaba.nacos.plugin.auth.impl.condition.ConditionOnNonOidcAuth;
 import com.alibaba.nacos.plugin.auth.impl.constant.AuthSystemTypes;
 import com.alibaba.nacos.sys.env.EnvUtil;
-import com.alibaba.nacos.sys.utils.ApplicationUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Import;
@@ -82,15 +81,15 @@ public class NacosAuthPluginWebConfig {
     /**
      * Build required {@link AuthenticationManager} for v1 auth API.
      *
+     * @param authenticationConfiguration authentication configuration from the current web context
      * @return spring security default authentication manager
      * @throws Exception any exception during build authentication manager.
      * @deprecated will be removed after v1 auth API removed.
      */
     @Bean(name = BeanIds.AUTHENTICATION_MANAGER)
     @Deprecated()
-    public AuthenticationManager authenticationManagerBean() throws Exception {
-        AuthenticationConfiguration authenticationConfiguration = ApplicationUtils.getBean(
-            AuthenticationConfiguration.class);
+    public AuthenticationManager authenticationManagerBean(
+        AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
 }
