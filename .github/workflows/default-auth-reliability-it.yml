@@ -3,6 +3,11 @@
 name: Default Auth Reliability Integration Test
 
 on:
+  push:
+    branches: [heyoulin]
+    paths:
+      - '.github/workflows/default-auth-reliability-it.yml'
+      - 'test/scripts/default-auth-reliability-it.sh'
   workflow_dispatch:
     inputs:
       suite:
@@ -28,18 +33,31 @@ concurrency:
 jobs:
   reliability-test:
     name: Auth-on restart and cluster reliability
-    runs-on: [self-hosted, Linux, X64, nacos-ci, nacos-java]
+    # Each job gets a fresh VM; restart tests must not share a production host.
+    runs-on: ubuntu-24.04
     timeout-minutes: 120
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
-          cache: 'maven'
+
+      - name: Select and verify fork dependency source
+        id: dependency-source
+        timeout-minutes: 25
+        env:
+          YOFC_MAVEN_USERNAME: ${{ secrets.YOFC_MAVEN_USERNAME }}
+          YOFC_MAVEN_PASSWORD: ${{ secrets.YOFC_MAVEN_PASSWORD }}
+        run: python3 .github/scripts/select_maven_source.py
+
+      - name: Use verified dependencies for build and nested test Maven commands
+        env:
+          CI_MAVEN_SETTINGS: ${{ steps.dependency-source.outputs.settings }}
+        run: echo "MAVEN_ARGS=-s $CI_MAVEN_SETTINGS" >> "$GITHUB_ENV"
 
       - name: Build release distribution
         run: mvn -B '-Prelease-nacos,!dev' -Dmaven.test.skip=true clean install
