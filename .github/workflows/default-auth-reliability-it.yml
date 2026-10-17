@@ -9,6 +9,9 @@ on:
       - '.github/workflows/default-auth-reliability-it.yml'
       - 'test/scripts/default-auth-reliability-it.sh'
       - 'console/pom.xml'
+      - 'bootstrap/pom.xml'
+      - 'client-basic/**'
+      - 'common/**'
   workflow_dispatch:
     inputs:
       suite:
@@ -64,7 +67,7 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          mvn -B -ntp '-Prelease-nacos,!dev' -Dmaven.test.skip=true clean install 2>&1 | tee "$RUNNER_TEMP/reliability-build.log"
+          mvn -B -ntp '-Prelease-nacos,default-auth-reliability-it,!dev' -Dmaven.test.skip=true clean install 2>&1 | tee "$RUNNER_TEMP/reliability-build.log"
 
       - name: Run default-auth reliability suite
         shell: bash
@@ -80,5 +83,7 @@ jobs:
           path: |
             target/default-auth-reliability
             ${{ runner.temp }}/reliability-build.log
+            test/java-sdk-test/target/failsafe-reports
+            test/maintainer-sdk-test/target/failsafe-reports
           if-no-files-found: warn
           retention-days: 14

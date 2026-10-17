@@ -56,6 +56,16 @@
     
     <profiles>
         <profile>
+            <id>default-auth-reliability-it</id>
+            <dependencies>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>nacos-lock</artifactId>
+                    <version>${revision}</version>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
             <id>dev</id>
             <activation>
                 <property>
