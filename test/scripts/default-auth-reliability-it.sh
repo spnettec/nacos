@@ -103,7 +103,21 @@ resolve_distribution_archive() {
         || fail "A packaged Nacos distribution was not found. Build distribution first."
 }
 
+# Temporary diagnostics authorized for the node-B authentication recovery failure.
+collect_node_b_diagnostics() {
+    local nacos_home="${CLUSTER_HOMES[1]:-}"
+    local log_name
+    [[ -n "${nacos_home}" && -d "${nacos_home}/logs" ]] || return 0
+    mkdir -p "${REPORT_ROOT}/node-b-diagnostics"
+    for log_name in startup.log nacos.log core-auth.log protocol-raft.log alipay-jraft.log config-fatal.log; do
+        if [[ -f "${nacos_home}/logs/${log_name}" ]]; then
+            cp "${nacos_home}/logs/${log_name}" "${REPORT_ROOT}/node-b-diagnostics/" || true
+        fi
+    done
+}
+
 cleanup() {
+    collect_node_b_diagnostics
     local pid_file
     local log_file
     local index=0
