@@ -648,6 +648,20 @@ verify_token_expiry() {
     done
 }
 
+# A restarted node can pass health checks before its user cache has reloaded.
+# Gate new scenario clients on real authentication, while leaving the in-scenario
+# restart markers and original-client recovery assertions unchanged.
+await_cluster_auth_ready() {
+    local main_port
+    for main_port in "${CLUSTER_MAIN_PORTS[@]}"; do
+        login "${main_port}" "${NACOS_TEST_AUTH_ADMIN_USERNAME}" \
+            "${NACOS_TEST_AUTH_ADMIN_PASSWORD}"
+        login "${main_port}" "${NACOS_TEST_AUTH_CLIENT_USERNAME}" \
+            "${NACOS_TEST_AUTH_CLIENT_PASSWORD}"
+        await_client_probe "${main_port}" 200 "${LOGIN_TOKEN}"
+    done
+}
+
 run_cluster_test() {
     local selector="$1"
     local enabled_property="$2"
@@ -656,6 +670,8 @@ run_cluster_test() {
     local control_directory="${CONTROL_ROOT}/${label}"
     local log_file="${REPORT_ROOT}/${label}/maven.log"
     local member_list="$5"
+    echo "Waiting for cluster authentication before ${label}"
+    await_cluster_auth_ready
     local -a command=(mvn -B -pl test/java-sdk-test clean verify
         -Pjava-sdk-integration-test -DskipTests=false "-Dit.test=${selector}"
         -Dnacos.test.auth.enabled=true
