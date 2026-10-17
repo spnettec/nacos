@@ -16,6 +16,7 @@
 
 package com.alibaba.nacos.airegistry;
 
+import com.alibaba.nacos.airegistry.config.AiRegistryBeanTypeFilter;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
@@ -25,6 +26,8 @@ import org.springframework.context.annotation.ClassPathScanningCandidateComponen
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
+import org.springframework.core.type.filter.TypeFilter;
+import org.springframework.core.type.classreading.CachingMetadataReaderFactory;
 import org.springframework.mock.env.MockEnvironment;
 
 import java.util.Arrays;
@@ -46,7 +49,7 @@ class NacosAiRegistryTest {
     }
     
     @Test
-    void testRegistryScanExcludesNestedApplicationEntrypoints() {
+    void testRegistryScanExcludesNestedApplicationEntrypoints() throws Exception {
         ClassPathScanningCandidateComponentProvider scanner =
             new ClassPathScanningCandidateComponentProvider(false);
         scanner.setEnvironment(new MockEnvironment()
@@ -61,9 +64,8 @@ class NacosAiRegistryTest {
         assertTrue(Arrays.asList(scan.basePackages()).contains("com.alibaba.nacos.naming"));
         for (ComponentScan.Filter filter : scan.excludeFilters()) {
             for (Class<?> excluded : filter.classes()) {
-                if (FilterType.ANNOTATION == filter.type()
-                    && SpringBootApplication.class.equals(excluded)) {
-                    scanner.addExcludeFilter(new AnnotationTypeFilter(SpringBootApplication.class));
+                if (FilterType.CUSTOM == filter.type()) {
+                    scanner.addExcludeFilter((TypeFilter) excluded.getConstructor().newInstance());
                 }
             }
         }
@@ -71,6 +73,24 @@ class NacosAiRegistryTest {
         scanner.addIncludeFilter(new AnnotationTypeFilter(
             org.springframework.web.bind.annotation.RestController.class));
         assertFalse(scanner.findCandidateComponents("com.alibaba.nacos.airegistry").isEmpty());
+    }
+    
+    @Test
+    void testRegistryInheritsSharedBackendServices() throws Exception {
+        AiRegistryBeanTypeFilter filter = new AiRegistryBeanTypeFilter();
+        CachingMetadataReaderFactory factory = new CachingMetadataReaderFactory();
+        for (String className : Arrays.asList(
+            "com.alibaba.nacos.core.persistence.DistributedDatabaseOperateImpl",
+            "com.alibaba.nacos.ai.service.agent.watch.AgentHttpWatchService",
+            "com.alibaba.nacos.ai.service.agent.watch.AgentProjectionService",
+            "com.alibaba.nacos.naming.NamingApp")) {
+            assertTrue(filter.match(factory.getMetadataReader(className), factory), className);
+        }
+        for (String className : Arrays.asList(
+            "com.alibaba.nacos.airegistry.controller.McpRegistryController",
+            "com.alibaba.nacos.airegistry.config.ArdWebConfiguration")) {
+            assertFalse(filter.match(factory.getMetadataReader(className), factory), className);
+        }
     }
     
     @Test

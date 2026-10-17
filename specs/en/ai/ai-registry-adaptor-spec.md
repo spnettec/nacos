@@ -53,7 +53,10 @@ The adaptor runs as an additional Spring Boot web context with its own HTTP
 port. Its component scan must exclude other Spring Boot application entrypoints,
 including `NamingApp`. Starting the adaptor must not rescan the entire Core
 package or create another distributed database operator: that operator clears
-local Derby state before Raft recovery and must be owned by the Core context. It is disabled by default and starts only when at least one compatible
+local Derby state before Raft recovery and must be owned by the Core context.
+Shared AI, Naming and Core backend services are inherited from that parent,
+including the HTTP Watch and Projection services. Outside the adaptor package,
+only web components are scanned; adaptor-local configuration remains enabled. It is disabled by default and starts only when at least one compatible
 registry surface is explicitly enabled:
 
 | Property | Default | Effect |

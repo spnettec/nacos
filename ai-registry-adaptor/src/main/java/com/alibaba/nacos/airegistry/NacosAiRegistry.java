@@ -16,6 +16,7 @@
 
 package com.alibaba.nacos.airegistry;
 
+import com.alibaba.nacos.airegistry.config.AiRegistryBeanTypeFilter;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
@@ -32,8 +33,8 @@ import org.springframework.context.annotation.PropertySource;
     "com.alibaba.nacos.config.server.service", "com.alibaba.nacos.config.server.remote",
     "com.alibaba.nacos.core.service", "com.alibaba.nacos.core.namespace",
     "com.alibaba.nacos.core.remote", "com.alibaba.nacos.naming"},
-    excludeFilters = @ComponentScan.Filter(type = FilterType.ANNOTATION,
-        classes = SpringBootApplication.class))
+    excludeFilters = @ComponentScan.Filter(type = FilterType.CUSTOM,
+        classes = AiRegistryBeanTypeFilter.class))
 @PropertySource("classpath:nacos-ai-registry.properties")
 public class NacosAiRegistry {
     

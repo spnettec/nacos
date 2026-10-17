@@ -10,6 +10,7 @@ on:
       - 'test/scripts/default-auth-reliability-it.sh'
       - 'console/pom.xml'
       - 'bootstrap/pom.xml'
+      - 'ai-registry-adaptor/**'
       - 'client-basic/**'
       - 'common/**'
   workflow_dispatch:
