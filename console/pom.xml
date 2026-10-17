@@ -29,6 +29,11 @@
     <url>https://nacos.io</url>
     
     <dependencies>
+        <!-- HistoryInnerHandler uses DataAccessException outside the dev profile. -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-tx</artifactId>
+        </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>nacos-config</artifactId>
