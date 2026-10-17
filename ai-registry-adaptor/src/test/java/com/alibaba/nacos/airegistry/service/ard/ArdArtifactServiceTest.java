@@ -136,7 +136,8 @@ class ArdArtifactServiceTest {
         assertNotSame(version.getCallInterfaces(), body.get("callInterfaces"));
         // Jackson3 的 ObjectNode 与 POJO 序列化字段顺序不同（Jackson2 一致），
         // 字符串比较会因顺序差异误报；按 JSON 语义比较（两边各自反序列化为 List）
-        assertEquals(JacksonUtils.toObj(JacksonUtils.toJson(version.getCallInterfaces()), List.class),
+        assertEquals(
+            JacksonUtils.toObj(JacksonUtils.toJson(version.getCallInterfaces()), List.class),
             JacksonUtils.toObj(JacksonUtils.toJson(body.get("callInterfaces")), List.class));
     }
     

@@ -50,7 +50,10 @@ resource model.
 ## 2. Startup And Enablement
 
 The adaptor runs as an additional Spring Boot web context with its own HTTP
-port. It is disabled by default and starts only when at least one compatible
+port. Its component scan must exclude other Spring Boot application entrypoints,
+including `NamingApp`. Starting the adaptor must not rescan the entire Core
+package or create another distributed database operator: that operator clears
+local Derby state before Raft recovery and must be owned by the Core context. It is disabled by default and starts only when at least one compatible
 registry surface is explicitly enabled:
 
 | Property | Default | Effect |

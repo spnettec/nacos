@@ -103,44 +103,8 @@ resolve_distribution_archive() {
         || fail "A packaged Nacos distribution was not found. Build distribution first."
 }
 
-# Temporary diagnostics authorized for the node-B authentication recovery failure.
-collect_node_b_diagnostics() {
-    local nacos_home="${CLUSTER_HOMES[1]:-}"
-    local log_name
-    [[ -n "${nacos_home}" && -d "${nacos_home}/logs" ]] || return 0
-    mkdir -p "${REPORT_ROOT}/node-b-diagnostics"
-    for log_name in startup.log nacos.log core-auth.log protocol-raft.log alipay-jraft.log config-fatal.log; do
-        if [[ -f "${nacos_home}/logs/${log_name}" ]]; then
-            cp "${nacos_home}/logs/${log_name}" "${REPORT_ROOT}/node-b-diagnostics/" || true
-        fi
-    done
-}
-
 cleanup() {
-    collect_node_b_diagnostics
     local pid_file
-    local log_file
-    local index=0
-    # Emit only fixed diagnostic categories and counts, never raw server logs.
-    for log_file in "${WORK_ROOT}"/cluster-*/nacos/logs/*.log; do
-        [[ -f "${log_file}" ]] || continue
-        index=$((index + 1))
-        awk '
-            /LOAD-USERS.*load failed/ { users++ }
-            /LOAD-ROLES.*load failed/ { roles++ }
-            /UsernameNotFoundException/ { missing_user++ }
-            /BadCredentialsException/ { bad_credentials++ }
-            /SQLSyntaxErrorException|SQLNonTransientConnectionException/ { sql++ }
-            /Table.*does not exist|Table.*not found/ { missing_table++ }
-            /onSnapshotLoad|snapshot.*[Ff]ail|[Ff]ail.*snapshot/ { snapshot++ }
-            /StateMachine.*[Ee]rror|State machine.*[Ee]rror|[Ee]rror.*state machine/ { raft++ }
-            /CannotGetJdbcConnectionException|Failed to obtain JDBC Connection/ { jdbc++ }
-            END {
-                printf "user_load_errors=%d role_load_errors=%d missing_user_errors=%d bad_credential_errors=%d sql_errors=%d missing_table_errors=%d snapshot_events=%d raft_errors=%d jdbc_errors=%d\\n",
-                    users, roles, missing_user, bad_credentials, sql, missing_table, snapshot, raft, jdbc
-            }
-        ' "${log_file}" > "${REPORT_ROOT}/diagnostic-counts-${index}.txt"
-    done
     if [[ -d "${PID_ROOT}" ]]; then
         while IFS= read -r pid_file; do
             stop_server_by_pid_file "${pid_file}" || true

@@ -43,6 +43,9 @@ AI Registry 适配器负责协议兼容面。它将 Nacos AI Registry 资源转�
 
 ## 2. 启动与开关
 
+适配器组件扫描必须排除其他 Spring Boot 应用入口（包括 `NamingApp`），避免再次扫描整个 Core 包。
+分布式数据库操作器由 Core Context 持有；适配器不得重复创建它，否则会再次清空等待 Raft 恢复的本地 Derby 状态。
+
 适配器作为额外的 Spring Boot Web Context 运行，并使用独立 HTTP 端口。默认不开启；
 只有至少一个兼容 registry surface 被显式开启时才启动：
 

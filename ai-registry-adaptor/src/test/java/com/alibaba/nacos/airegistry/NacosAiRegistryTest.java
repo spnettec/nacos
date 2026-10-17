@@ -20,8 +20,18 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
+import org.springframework.core.type.filter.AnnotationTypeFilter;
+import org.springframework.mock.env.MockEnvironment;
+
+import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Unit tests for {@link NacosAiRegistry}.
@@ -33,6 +43,34 @@ class NacosAiRegistryTest {
     @Test
     void testConstruct() {
         assertNotNull(new NacosAiRegistry());
+    }
+    
+    @Test
+    void testRegistryScanExcludesNestedApplicationEntrypoints() {
+        ClassPathScanningCandidateComponentProvider scanner =
+            new ClassPathScanningCandidateComponentProvider(false);
+        scanner.setEnvironment(new MockEnvironment()
+            .withProperty("nacos.ai.mcp.registry.enabled", "true"));
+        scanner.addIncludeFilter(new AnnotationTypeFilter(SpringBootApplication.class));
+        assertTrue(scanner.findCandidateComponents("com.alibaba.nacos.naming").stream()
+            .anyMatch(
+                bean -> "com.alibaba.nacos.naming.NamingApp".equals(bean.getBeanClassName())));
+        
+        ComponentScan scan = NacosAiRegistry.class.getAnnotation(ComponentScan.class);
+        assertNotNull(scan);
+        assertTrue(Arrays.asList(scan.basePackages()).contains("com.alibaba.nacos.naming"));
+        for (ComponentScan.Filter filter : scan.excludeFilters()) {
+            for (Class<?> excluded : filter.classes()) {
+                if (FilterType.ANNOTATION == filter.type()
+                    && SpringBootApplication.class.equals(excluded)) {
+                    scanner.addExcludeFilter(new AnnotationTypeFilter(SpringBootApplication.class));
+                }
+            }
+        }
+        assertTrue(scanner.findCandidateComponents("com.alibaba.nacos.naming").isEmpty());
+        scanner.addIncludeFilter(new AnnotationTypeFilter(
+            org.springframework.web.bind.annotation.RestController.class));
+        assertFalse(scanner.findCandidateComponents("com.alibaba.nacos.airegistry").isEmpty());
     }
     
     @Test

@@ -18,6 +18,8 @@ package com.alibaba.nacos.airegistry;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.PropertySource;
 
 /**
@@ -25,10 +27,13 @@ import org.springframework.context.annotation.PropertySource;
  * This server implement the official mcp registry api.
  * @author xinluo
  */
-@SpringBootApplication(scanBasePackages = {"com.alibaba.nacos.airegistry", "com.alibaba.nacos.ai",
+@SpringBootApplication
+@ComponentScan(basePackages = {"com.alibaba.nacos.airegistry", "com.alibaba.nacos.ai",
     "com.alibaba.nacos.config.server.service", "com.alibaba.nacos.config.server.remote",
     "com.alibaba.nacos.core.service", "com.alibaba.nacos.core.namespace",
-    "com.alibaba.nacos.core.remote", "com.alibaba.nacos.naming"})
+    "com.alibaba.nacos.core.remote", "com.alibaba.nacos.naming"},
+    excludeFilters = @ComponentScan.Filter(type = FilterType.ANNOTATION,
+        classes = SpringBootApplication.class))
 @PropertySource("classpath:nacos-ai-registry.properties")
 public class NacosAiRegistry {
     
