@@ -32,9 +32,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
 import com.alibaba.nacos.api.utils.json.JsonUtilsTestHelper;
 import com.alibaba.nacos.api.utils.json.NacosJsonAdapter;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import java.io.IOException;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.core.JacksonException;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -88,21 +89,21 @@ class AgentConvertersTest {
         // API deliberately has no production JSON provider dependency. Exercise real JSON
         // through the SPI here; SDK IT covers the shipped Jackson 2 and Jackson 3 providers.
         ObjectMapper mapper =
-            new ObjectMapper().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+            JsonMapper.builder().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES).build();
         NacosJsonAdapter adapter = mock(NacosJsonAdapter.class);
-        when(adapter.name()).thenReturn("jackson2");
+        when(adapter.name()).thenReturn("jackson3");
         when(adapter.isAvailable()).thenReturn(true);
         when(adapter.toJson(any())).thenAnswer(invocation -> {
             try {
                 return mapper.writeValueAsString(invocation.getArgument(0));
-            } catch (IOException e) {
+            } catch (JacksonException e) {
                 throw new IllegalArgumentException("Cannot serialize test JSON", e);
             }
         });
         when(adapter.toObj(anyString(), eq(AgentCard.class))).thenAnswer(invocation -> {
             try {
                 return mapper.readValue((String) invocation.getArgument(0), AgentCard.class);
-            } catch (IOException e) {
+            } catch (JacksonException e) {
                 throw new IllegalArgumentException("Cannot parse test AgentCard", e);
             }
         });
