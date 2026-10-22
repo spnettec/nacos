@@ -111,11 +111,49 @@ cleanup() {
         done < <(find "${PID_ROOT}" -type f -name '*.pid' | sort)
     fi
     if [[ -n "${WORK_ROOT}" && -d "${WORK_ROOT}" ]]; then
+        preserve_server_logs || true
         rm -rf -- "${WORK_ROOT}"
     fi
 }
 
 trap cleanup EXIT INT TERM
+
+preserve_server_logs() {
+    # Persist diagnostics before deleting the isolated homes, including on failure.
+    # Do not upload application.properties, database files, or heap dumps.
+    python3 - "${WORK_ROOT}" "${REPORT_ROOT}/servers" <<'PY'
+import os
+from pathlib import Path
+import sys
+
+work, reports = map(Path, sys.argv[1:])
+secrets = [value for key, value in os.environ.items()
+           if key.startswith('NACOS_TEST_AUTH_') and value
+           and ('PASSWORD' in key or 'SECRET' in key or 'IDENTITY' in key)]
+for home in work.glob('*/nacos'):
+    destination = reports / home.parent.name / 'logs'
+    destination.mkdir(parents=True, exist_ok=True)
+    for source in (home / 'logs').glob('*.log*'):
+        if not source.is_file() or source.suffix == '.gz':
+            continue
+        content = source.read_text(errors='replace')
+        for secret in sorted(secrets, key=len, reverse=True):
+            content = content.replace(secret, '[REDACTED]')
+        (destination / source.name).write_text(content)
+    keys = {'nacos.server.main.port', 'nacos.console.port', 'nacos.ai.registry.port',
+            'nacos.inetutils.ip-address', 'nacos.member.list', 'nacos.naming.dns.port',
+            'nacos.naming.dns.enabled', 'nacos.core.auth.enabled',
+            'nacos.core.auth.admin.enabled', 'nacos.core.auth.console.enabled'}
+    config = home / 'conf' / 'application.properties'
+    if config.is_file():
+        selected = [line for line in config.read_text().splitlines()
+                    if line.partition('=')[0] in keys]
+        (destination.parent / 'ports-and-auth.properties').write_text('\n'.join(selected) + '\n')
+    members = home / 'conf' / 'cluster.conf'
+    if members.is_file():
+        (destination.parent / 'cluster.conf').write_text(members.read_text())
+PY
+}
 
 set_property() {
     local file="$1"
@@ -260,6 +298,8 @@ start_server() {
         fail "Unable to locate the Nacos process for ${nacos_home}"
     fi
     record_server_pid "${label}" "${nacos_home}" "${pid}"
+    printf '%s\t%s\tstarted\t%s\n' "$(date -u +%FT%TZ)" "${label}" "${pid}" \
+        >> "${REPORT_ROOT}/server-events.tsv"
     LAST_SERVER_PID="${pid}"
 }
 
@@ -325,11 +365,25 @@ wait_for_server() {
             && curl --silent --fail --max-time 2 \
             "http://127.0.0.1:${console_port}/v3/console/health/readiness" >/dev/null \
             && [[ "${registry_status}" == "200" || "${registry_status}" == "401" ]]; then
+            printf '%s\t%s\tready\tregistry=%s\n' \
+                "$(date -u +%FT%TZ)" "${label}" "${registry_status}" \
+                >> "${REPORT_ROOT}/server-events.tsv"
             return
         fi
         sleep "${WAIT_INTERVAL_SECONDS}"
     done
     echo "Server ${label} did not become ready; recent startup diagnostics:" >&2
+    mkdir -p "${REPORT_ROOT}/servers/${label}"
+    {
+        for endpoint in \
+            "http://127.0.0.1:${console_port}/v3/console/health/liveness" \
+            "http://127.0.0.1:${console_port}/v3/console/health/readiness" \
+            "http://127.0.0.1:${registry_port}/.well-known/ai-catalog.json"; do
+            printf '%s ' "${endpoint}"
+            curl --silent --max-time 2 --output /dev/null --write-out '%{http_code}\n' \
+                "${endpoint}" || true
+        done
+    } > "${REPORT_ROOT}/servers/${label}/health.txt"
     tail -200 "${nacos_home}/logs/startup.log" 2>/dev/null >&2 || true
     tail -200 "${nacos_home}/logs/nacos.log" 2>/dev/null >&2 || true
     fail "Nacos server ${label} failed readiness"
