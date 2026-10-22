@@ -384,8 +384,8 @@ wait_for_server() {
                 "${endpoint}" || true
         done
     } > "${REPORT_ROOT}/servers/${label}/health.txt"
-    tail -200 "${nacos_home}/logs/startup.log" 2>/dev/null >&2 || true
-    tail -200 "${nacos_home}/logs/nacos.log" 2>/dev/null >&2 || true
+    tail -200 "${nacos_home}/logs/startup.log" >&2 2>/dev/null || true
+    tail -200 "${nacos_home}/logs/nacos.log" >&2 2>/dev/null || true
     fail "Nacos server ${label} failed readiness"
 }
 
