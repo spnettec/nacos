@@ -59,10 +59,10 @@ These cross-cutting rows do not change the public SDK-surface counts.
 
 | Public SDK surface | Required scenarios | Current status | Current / missing coverage |
 | --- | --- | --- | --- |
-| Neutral JSON facade | Jackson 2 only, Jackson 3 only, coexistence, auto/explicit selection, missing implementation, generic values and malformed JSON. | Covered | `api`/`common` tests exercise isolated provider discovery and missing-library classloaders. `JsonAdapterJavaSdkITCase` checks the packaged SDK in a Failsafe JVM without Jackson 2 core/databind; run both auto and explicit Jackson 3. |
+| Neutral JSON facade | Jackson 3 auto/explicit selection, missing implementation, generic values and malformed JSON. | Covered | `api`/`common` tests exercise isolated provider discovery and missing-library classloaders. `JsonAdapterJavaSdkITCase` checks the packaged SDK with auto and explicit Jackson 3. |
 | Config/Naming with Jackson 3 only | Authenticated factory creation, remote writes/reads, validation/error mapping, listeners and shutdown without Jackson 2. | Covered | `jackson3-only-sdk-test` reuses the existing Config and Naming classes and preserves their environment-gated restart limitations. |
 | Client auth JSON paths | Default login, OIDC discovery/token and RAM STS parsing without Jackson 2; malformed/missing responses remain controlled. | Partial | `client-basic` profile `jackson3-only-test` reuses local HTTP/mocked auth tests. Default-auth Config/Naming run against standalone Nacos; external OIDC/RAM providers are not part of standalone IT. |
-| Other SDK domains with Jackson 3 only | AI, Lock and Maintainer runtime flows without Jackson 2. | Pending | Existing coexistence suites remain; this focused profile does not claim full Jackson 3-only domain coverage. |
+| Other SDK domains with Jackson 3 only | AI, Lock and Maintainer runtime flows without Jackson 2. | Pending | This focused profile does not claim full Jackson 3-only domain coverage. |
 
 This separate runtime matrix has 4 rows: strict coverage is 2/4 (50%), and
 effective coverage is (2 + 0.5)/4 (62.5%). It does not add SDK interfaces to the

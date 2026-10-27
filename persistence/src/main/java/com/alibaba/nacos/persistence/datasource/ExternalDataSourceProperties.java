@@ -48,18 +48,18 @@ public class ExternalDataSourceProperties {
     
     private static final Logger LOGGER =
         LoggerFactory.getLogger(ExternalDataSourceProperties.class);
-
+    
     private static final String MYSQL_DRIVER_NAME = "com.mysql.cj.jdbc.Driver";
-
+    
     private static final String MARIADB_DRIVER_NAME = "org.mariadb.jdbc.Driver";
-
+    
     private static final String ORACLE_DRIVER_NAME = "oracle.jdbc.OracleDriver";
-
+    
     private static final String POSTGRESQL_DRIVER_NAME = "org.postgresql.Driver";
-
+    
     private static final String SQLSERVER_DRIVER_NAME =
         "com.microsoft.sqlserver.jdbc.SQLServerDriver";
-
+    
     /**
      * Compatibility default driver, used only when neither the pool config nor the selected
      * dialect plugin provides a driver class name.
@@ -123,8 +123,8 @@ public class ExternalDataSourceProperties {
                 // 解析优先级：显式配置 > DatabaseDialect 插件默认 > JDBC URL 推断 > 兼容默认
                 String configuredDriver = resolveDriverName(driverName, null);
                 String resolvedDriver = StringUtils.isEmpty(configuredDriver)
-                        ? resolveDefaultDriverClassName(dataSourceType)
-                        : configuredDriver;
+                    ? resolveDefaultDriverClassName(dataSourceType)
+                    : configuredDriver;
                 if (StringUtils.isEmpty(resolvedDriver)) {
                     resolvedDriver = resolveDriverName(driverName, url);
                 }
@@ -144,7 +144,7 @@ public class ExternalDataSourceProperties {
         Preconditions.checkArgument(!dataSources.isEmpty(), "no datasource available");
         return dataSources;
     }
-
+    
     /**
      * Resolve the driver class used when {@code pool.config.driver-class-name} is blank.
      *
@@ -175,7 +175,7 @@ public class ExternalDataSourceProperties {
             + "provided by DatabaseDialect `{}`", driverClassName, dialectType);
         return driverClassName.trim();
     }
-
+    
     private static String firstText(String... values) {
         for (String value : values) {
             if (hasText(value) && !value.startsWith("${")) {

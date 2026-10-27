@@ -642,3 +642,39 @@ Client 发布契约仍为首版普通提交、已有 DRAFT 完整覆盖、非 DR
 contentDigest、nativeDescriptor 与 Endpoint sourceRevision 不变，未透出展示及管理字段。
 HTTP/gRPC/auto Watch 元数据变更及无变化通知边界由对应 Java SDK IT 验证。
 公共响应与指纹契约见 [RAD 协议规范](../../specs/zh-cn/ai/rad-protocol-spec.md)。
+
+## ARD online relevance filtering
+
+| Scenario | Coverage |
+| --- | --- |
+| Default-off Search header, unchanged JSON, invalid cursor | `ArdAdaptorOpenApiITCase.testSearchEnhancementStatusAndCursorBoundary` against standalone ARD |
+| Enabled empty result bypass | Same IT with server enhancement enabled and `-Dnacos.test.ard.relevance.empty-status=bypassed` |
+| Jev protocol, invalid scores/IDs, 429, no retry | `JevRelevanceProviderTest`, deterministic local HTTP stub |
+| Concurrent batches, timeout/cancel, node saturation, all-or-nothing fallback | `AiResourceRelevanceFilterTest` |
+| Threshold, stable order/score, empty continuation, fallback boundary, currentness, cursor binding | `AiResourceSearchRelevanceTest` |
+| Header propagation and no JSON field leakage | `ArdSearchControllerTest` |
+
+The paid-provider success path is not a prerequisite for standalone IT. Deterministic provider
+and Search Core tests exercise nonempty success and failure paths without external credentials.
+Live empty-result IT covers the HTTP boundary in both configurations; it does not claim live
+nonempty Jev filtering coverage. No public Java SDK contract changes.
+
+## Native binding and serialization regression
+
+The existing Config Admin and Console CRUD rows also verify non-empty inherited `srcUser` and
+`appName` parameters and persisted `createUser` / `appName` detail fields. This catches missing
+Native form-binding metadata without changing the API contract. Native and JVM execution are
+separate validation targets; these additional scenarios do not change surface-row coverage totals.
+
+Existing Service Admin and Console IT cases are also reused to check persisted service metadata
+and populated service-list names/groups. HTTP 200 with empty serialized objects is a failure.
+
+### Agent Discover notification Header compatibility
+
+| API surface / IT class | Covered API operations | Current status | Current/missing coverage |
+| --- | --- | --- | --- |
+| Agent Discover / `AgentDiscoveryClientOpenApiITCase` | GET `/v3/client/ai/agents` | Covered | `testDiscoveryTriggerHeaderDoesNotChangeSnapshotOrErrors` checks `watch-notify`, missing, empty, unknown and case-mismatched `X-Nacos-Agent-Discovery-Trigger` values against full snapshot, not-found and invalid version/label responses. SDK emission and retry attribution use client wire UT. Discover now emits best-effort `AiResourceTraceEvent` (`DISCOVER`) at HTTP/gRPC business-query boundaries; server UT verifies source, resolved/requested version, protocol, subscription attribution and diagnostic failure isolation. Event payload/log delivery is internal and has no public query API, so standalone HTTP IT verifies response compatibility rather than claiming event or SDK emission coverage. |
+
+This extends the existing Agent Discover row; API surface totals and strict/effective
+coverage denominators remain unchanged. The optional diagnostic header never changes
+authorization or discovery semantics.

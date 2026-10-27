@@ -40,8 +40,7 @@ Destructive restart and cluster cases run through
 
 ## JSON Runtime Dependency Isolation (#15788)
 
-The `jackson3-sdk-test` profile verifies Jackson 2/3 coexistence and explicit
-Jackson 3 selection. It does not prove that Jackson 2 can be removed.
+The `jackson3-sdk-test` profile verifies explicit Jackson 3 selection.
 
 The `jackson3-only-sdk-test` profile, combined with `java-sdk-integration-test`,
 removes Jackson 2 core/databind from the Failsafe JVM, including transitive
@@ -188,7 +187,7 @@ AgentDiscoveryService 现有覆盖行已迁移到共享 Search/RegistrationBatch
 
 ## Agent JSON 注解移除（2026-09-16）
 
-Agent 去注解更新：Endpoint 生效默认值、完整查询 Endpoint 直接多项注销、onlineCnt()/latestVersion()；延续 GRPC/HTTP/AUTO × Jackson 2/3 × INDEX/SCAN、Watch、旧 A2A 与正常迁移矩阵。
+Agent 去注解更新：Endpoint 生效默认值、完整查询 Endpoint 直接多项注销、onlineCnt()/latestVersion()；延续 GRPC/HTTP/AUTO × Jackson 3 × INDEX/SCAN、Watch、旧 A2A 与正常迁移矩阵。
 
 [本轮测试矩阵](../../Codex/design/nacos-3.3-client-ai-api/MODEL_JSON_TEST_MATRIX.md)区分待执行项与实际结果。
 
@@ -478,3 +477,18 @@ directed restart/cluster cases use the existing
 Coverage is scoped to these behavior groups and does not promote unrelated SDK
 registry rows. Local upgrade experiments and one-off coverage/run summaries are
 kept outside the committed scenario matrix.
+
+### Watch-triggered Discover request attribution
+
+| Scenario | Expected behavior | Evidence |
+| --- | --- | --- |
+| gRPC INVALIDATE / REVALIDATE and HTTP changed-ID | Query carries `X-Nacos-Agent-Discovery-Trigger: watch-notify`; an equal hint causes no query | Transport and Manager UT |
+| Direct query, first snapshot, Subscribe refreshRequired, polling fallback | No notification marker, including after a prior marked refresh | Manager, transport and wire UT |
+| Retry, task merge and concurrent notification | Preserve source through transient failure and AUTO HTTP fallback; new notifications remain pending | Manager, HTTP and router UT |
+| Missing target / binding recovery | Pending recovery starts without stale notification attribution | Manager UT |
+| HTTP/gRPC public SDK workflow | Initial snapshot, notification snapshot and subsequent direct Discover remain equivalent | `AgentDiscoveryServiceJavaSdkITCase.shouldWatchExistingAgentOnlyWhenCompleteFingerprintChanges` |
+
+The public SDK surface and coverage denominator are unchanged. The optional request
+header is not exposed in SDK results; deterministic wire-capture UT verifies its
+emission and retry attribution. Standalone SDK IT verifies observable snapshot and
+Listener behavior rather than claiming to inspect server-side headers.

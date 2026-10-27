@@ -555,6 +555,12 @@
             </distributionManagement>
         </profile>
         <profile>
+            <id>native</id>
+            <properties>
+                <nacos.native.enabled>true</nacos.native.enabled>
+            </properties>
+        </profile>
+        <profile>
             <id>jdk17</id>
             <activation>
                 <jdk>[17,)</jdk>

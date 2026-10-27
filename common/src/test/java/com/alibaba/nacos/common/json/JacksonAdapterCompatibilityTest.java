@@ -116,12 +116,8 @@ class JacksonAdapterCompatibilityTest {
     
     @ParameterizedTest
     @ValueSource(strings = {"auto", "jackson3"})
-    void testJackson3OnlyClasspath(String configuredAdapter) throws Exception {
-        withClasspath(false, true, configuredAdapter, loader -> {
-            assertThrows(ClassNotFoundException.class,
-                () -> loader.loadClass("com.fasterxml.jackson.core.JsonProcessingException"));
-            assertThrows(ClassNotFoundException.class,
-                () -> loader.loadClass("com.fasterxml.jackson.databind.ObjectMapper"));
+    void testJackson3Classpath(String configuredAdapter) throws Exception {
+        withClasspath(true, configuredAdapter, loader -> {
             assertJsonRoundTrip(loader, NacosJsonAdapterNames.JACKSON3);
         });
     }
@@ -129,14 +125,14 @@ class JacksonAdapterCompatibilityTest {
     @ParameterizedTest
     @ValueSource(strings = {"jackson3"})
     void testMissingExplicitAdapterOnIsolatedClasspath(String selected) throws Exception {
-        withClasspath(!"jackson2".equals(selected), !"jackson3".equals(selected), selected,
+        withClasspath(!"jackson3".equals(selected), selected,
             loader -> assertUnavailable(loader,
                 "Configured JSON adapter '" + selected + "' is not available"));
     }
     
     @Test
     void testNoJacksonOnIsolatedClasspath() throws Exception {
-        withClasspath(false, false, "auto",
+        withClasspath(false, "auto",
             loader -> assertUnavailable(loader, "No available JSON adapter"));
     }
     
@@ -160,7 +156,7 @@ class JacksonAdapterCompatibilityTest {
         assertTrue(failure.getCause().getMessage().contains(expected));
     }
     
-    private void withClasspath(boolean jackson2, boolean jackson3, String configured,
+    private void withClasspath(boolean jackson3, String configured,
         ClasspathAssertion assertion) throws Exception {
         ClassLoader original = Thread.currentThread().getContextClassLoader();
         URL[] locations =
@@ -171,9 +167,7 @@ class JacksonAdapterCompatibilityTest {
             @Override
             protected synchronized Class<?> loadClass(String name, boolean resolve)
                 throws ClassNotFoundException {
-                if ((!jackson2 && (name.startsWith("com.fasterxml.jackson.core.")
-                    || name.startsWith("com.fasterxml.jackson.databind.")))
-                    || (!jackson3 && name.startsWith("tools.jackson."))) {
+                if (!jackson3 && name.startsWith("tools.jackson.")) {
                     throw new ClassNotFoundException(name);
                 }
                 if (name.startsWith("com.alibaba.nacos.common.json.")

@@ -24,6 +24,7 @@ import com.alibaba.nacos.naming.misc.GlobalExecutor;
 import com.alibaba.nacos.naming.misc.NamingExecuteTaskDispatcher;
 import com.alibaba.nacos.sys.env.EnvUtil;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
@@ -37,6 +38,11 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 
 class PerformanceLoggerThreadTest {
+    
+    @BeforeEach
+    void setUp() {
+        MetricsMonitor.resetAll();
+    }
     
     @AfterEach
     void tearDown() {

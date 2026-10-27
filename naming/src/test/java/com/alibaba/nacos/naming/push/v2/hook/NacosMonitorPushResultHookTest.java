@@ -23,6 +23,7 @@ import com.alibaba.nacos.naming.pojo.Subscriber;
 import com.alibaba.nacos.plugin.control.tps.TpsControlManager;
 import com.alibaba.nacos.sys.env.EnvUtil;
 import com.alibaba.nacos.sys.utils.ApplicationUtils;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -79,6 +80,11 @@ class NacosMonitorPushResultHookTest {
         when(pushResult.getSubscriber()).thenReturn(subscriber);
         ApplicationUtils.injectContext(context);
         when(context.getBean(TpsControlManager.class)).thenReturn(tpsControlManager);
+    }
+    
+    @AfterEach
+    void tearDown() {
+        MetricsMonitor.resetAll();
     }
     
     @Test

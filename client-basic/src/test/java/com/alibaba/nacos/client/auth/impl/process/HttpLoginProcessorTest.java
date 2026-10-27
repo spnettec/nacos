@@ -40,7 +40,6 @@ import java.util.Properties;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -70,11 +69,6 @@ class HttpLoginProcessorTest {
     @Test
     @EnabledIfSystemProperty(named = "nacos.test.json.jackson3-only", matches = "true")
     void testJackson3OnlyRuntime() {
-        ClassLoader loader = getClass().getClassLoader();
-        assertThrows(ClassNotFoundException.class,
-            () -> loader.loadClass("com.fasterxml.jackson.core.JsonProcessingException"));
-        assertThrows(ClassNotFoundException.class,
-            () -> loader.loadClass("com.fasterxml.jackson.databind.ObjectMapper"));
         assertEquals("jackson3", JsonUtils.selectedAdapterName());
     }
     

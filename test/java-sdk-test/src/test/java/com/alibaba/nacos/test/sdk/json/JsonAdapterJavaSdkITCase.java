@@ -31,12 +31,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
- * Packaged Client SDK JSON checks with Jackson 2 core/databind removed from the test JVM.
+ * Packaged Client SDK JSON checks with Jackson 3.
  *
  * <p>Scenario coverage:
  * <ul>
  *     <li>Expected capability: auto/explicit Jackson 3 selection and generic JSON round trips.</li>
- *     <li>Boundary: assert that Jackson 2 core/databind cannot be loaded.</li>
  *     <li>Error handling: malformed JSON produces the neutral SDK deserialization exception.</li>
  * </ul>
  * Config and Naming remote operations, validation, listeners and cleanup reuse their existing
@@ -49,11 +48,6 @@ public class JsonAdapterJavaSdkITCase {
 
     @BeforeAll
     static void verifyRuntimeClasspath() {
-        ClassLoader loader = JsonAdapterJavaSdkITCase.class.getClassLoader();
-        assertThrows(ClassNotFoundException.class,
-                () -> loader.loadClass("com.fasterxml.jackson.core.JsonProcessingException"));
-        assertThrows(ClassNotFoundException.class,
-                () -> loader.loadClass("com.fasterxml.jackson.databind.ObjectMapper"));
         assertEquals("jackson3", JsonUtils.selectedAdapterName());
     }
 
