@@ -115,6 +115,8 @@ public class ExternalHistoryConfigInfoPersistServiceImpl
             if (isOracle()) {
                 columns.add("nid");
                 args.add(UuidUtils.nextId());
+                columns.add("gmt_create");
+                args.add(time);
             }
             jt.update(historyConfigInfoMapper.insert(columns), args.toArray());
         } catch (DataAccessException e) {

@@ -802,6 +802,44 @@ class ExternalConfigInfoPersistServiceImplTest {
     }
     
     @Test
+    void testOracleInsertSuppliesAndReturnsIdWithoutGeneratedKey() throws SQLException {
+        when(dataSourceService.getDataSourceType()).thenReturn("oracle");
+        Connection connection = Mockito.mock(Connection.class);
+        PreparedStatement statement = Mockito.mock(PreparedStatement.class);
+        Mockito.when(connection.prepareStatement(anyString())).thenReturn(statement);
+        Mockito.doAnswer(invocation -> {
+            PreparedStatementCreator creator = invocation.getArgument(0);
+            creator.createPreparedStatement(connection);
+            return 1;
+        }).when(jdbcTemplate).update(any(PreparedStatementCreator.class));
+        ConfigInfo info = new ConfigInfo("oracle-data", "group", "public", "app", "content");
+        
+        long id =
+            externalConfigInfoPersistService.addConfigInfoAtomic(-1, "ip", "user", info, null);
+        
+        var sql = org.mockito.ArgumentCaptor.forClass(String.class);
+        Mockito.verify(connection).prepareStatement(sql.capture());
+        assertTrue(sql.getValue().contains("encrypted_data_key, id)"));
+        assertTrue(id > 0);
+        Mockito.verify(statement).setLong(15, id);
+        Mockito.verify(jdbcTemplate, Mockito.never()).update(any(PreparedStatementCreator.class),
+            any(KeyHolder.class));
+    }
+    
+    @Test
+    void testOracleConfigTagUsesSeparateSnowflakeId() {
+        when(dataSourceService.getDataSourceType()).thenReturn("oracle");
+        
+        externalConfigInfoPersistService.addConfigTagRelationAtomic(42L, "tag", "data", "group",
+            "public");
+        
+        var sql = org.mockito.ArgumentCaptor.forClass(String.class);
+        Mockito.verify(jdbcTemplate).update(sql.capture(), eq(42L), eq("tag"), eq(""),
+            eq("data"), eq("group"), eq("public"), Mockito.anyLong());
+        assertTrue(sql.getValue().contains("tenant_id, nid)"));
+    }
+    
+    @Test
     void testRemoveConfigInfo() {
         String dataId = "dataId4567";
         String group = "group3456789";

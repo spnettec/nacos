@@ -23,6 +23,7 @@ import com.alibaba.nacos.common.constant.Symbols;
 import com.alibaba.nacos.common.utils.MD5Utils;
 import com.alibaba.nacos.common.utils.Pair;
 import com.alibaba.nacos.common.utils.StringUtils;
+import com.alibaba.nacos.common.utils.UuidUtils;
 import com.alibaba.nacos.config.server.constant.Constants;
 import com.alibaba.nacos.config.server.constant.ParametersField;
 import com.alibaba.nacos.config.server.enums.FileTypeEnum;
@@ -47,6 +48,7 @@ import com.alibaba.nacos.persistence.repository.extrnal.ExternalStoragePaginatio
 import com.alibaba.nacos.plugin.datasource.MapperManager;
 import com.alibaba.nacos.plugin.datasource.constants.CommonConstant;
 import com.alibaba.nacos.plugin.datasource.constants.ContextConstant;
+import com.alibaba.nacos.plugin.datasource.constants.DataSourceConstant;
 import com.alibaba.nacos.plugin.datasource.constants.FieldConstant;
 import com.alibaba.nacos.plugin.datasource.constants.TableConstant;
 import com.alibaba.nacos.plugin.datasource.dialect.DatabaseDialect;
@@ -358,13 +360,17 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
     @Override
     public long addConfigInfoAtomic(final long configId, final String srcIp, final String srcUser,
         final ConfigInfo configInfo, Map<String, Object> configAdvanceInfo) {
-        
-        KeyHolder keyHolder = ExternalStorageUtils.createKeyHolder();
-        
         ConfigInfoMapper configInfoMapper =
             mapperManager.findMapper(dataSourceService.getDataSourceType(),
                 TableConstant.CONFIG_INFO);
         try {
+            if (DataSourceConstant.ORACLE.equals(dataSourceService.getDataSourceType())) {
+                long oracleId = UuidUtils.nextId();
+                jt.update(connection -> createPsForInsertConfigInfo(srcIp, srcUser, configInfo,
+                    configAdvanceInfo, connection, configInfoMapper, oracleId));
+                return oracleId;
+            }
+            KeyHolder keyHolder = ExternalStorageUtils.createKeyHolder();
             jt.update(
                 connection -> createPsForInsertConfigInfo(srcIp, srcUser, configInfo,
                     configAdvanceInfo, connection,
@@ -386,6 +392,13 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
         Map<String, Object> configAdvanceInfo, Connection connection,
         ConfigInfoMapper configInfoMapper)
         throws SQLException {
+        return createPsForInsertConfigInfo(srcIp, srcUser, configInfo, configAdvanceInfo,
+            connection, configInfoMapper, null);
+    }
+    
+    PreparedStatement createPsForInsertConfigInfo(final String srcIp, final String srcUser,
+        final ConfigInfo configInfo, Map<String, Object> configAdvanceInfo, Connection connection,
+        ConfigInfoMapper configInfoMapper, Long oracleId) throws SQLException {
         final String appNameTmp = StringUtils.defaultEmptyIfBlank(configInfo.getAppName());
         final String tenantTmp = StringUtils.defaultEmptyIfBlank(configInfo.getTenant());
         final String desc =
@@ -402,14 +415,19 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
                 : configInfo.getEncryptedDataKey();
         final String md5Tmp = MD5Utils.md5Hex(configInfo.getContent(), Constants.ENCODE);
         
-        String insertSql = configInfoMapper.insert(
+        List<String> columns = new ArrayList<>(
             Arrays.asList("data_id", "group_id", "tenant_id", "app_name", "content", "md5",
                 "src_ip", "src_user",
                 "gmt_create@NOW()", "gmt_modified@NOW()", "c_desc", "c_use", "effect", "type",
                 "c_schema",
                 "encrypted_data_key"));
-        PreparedStatement ps =
-            connection.prepareStatement(insertSql, configInfoMapper.getPrimaryKeyGeneratedKeys());
+        if (oracleId != null) {
+            columns.add("id");
+        }
+        String insertSql = configInfoMapper.insert(columns);
+        PreparedStatement ps = oracleId == null
+            ? connection.prepareStatement(insertSql, configInfoMapper.getPrimaryKeyGeneratedKeys())
+            : connection.prepareStatement(insertSql);
         ps.setString(1, configInfo.getDataId());
         ps.setString(2, configInfo.getGroup());
         ps.setString(3, tenantTmp);
@@ -424,6 +442,9 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
         ps.setString(12, type);
         ps.setString(13, schema);
         ps.setString(14, encryptedDataKey);
+        if (oracleId != null) {
+            ps.setLong(15, oracleId);
+        }
         return ps;
     }
     
@@ -433,10 +454,15 @@ public class ExternalConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
         try {
             ConfigTagsRelationMapper configTagsRelationMapper = mapperManager.findMapper(
                 dataSourceService.getDataSourceType(), TableConstant.CONFIG_TAGS_RELATION);
-            jt.update(configTagsRelationMapper.insert(
-                Arrays.asList("id", "tag_name", "tag_type", "data_id", "group_id", "tenant_id")),
-                configId, tagName,
-                StringUtils.EMPTY, dataId, group, tenant);
+            List<String> columns = new ArrayList<>(
+                Arrays.asList("id", "tag_name", "tag_type", "data_id", "group_id", "tenant_id"));
+            List<Object> args = new ArrayList<>(
+                Arrays.asList(configId, tagName, StringUtils.EMPTY, dataId, group, tenant));
+            if (DataSourceConstant.ORACLE.equals(dataSourceService.getDataSourceType())) {
+                columns.add("nid");
+                args.add(UuidUtils.nextId());
+            }
+            jt.update(configTagsRelationMapper.insert(columns), args.toArray());
         } catch (CannotGetJdbcConnectionException e) {
             LogUtil.FATAL_LOG.error("[db-error] " + e, e);
             throw e;

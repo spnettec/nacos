@@ -143,6 +143,22 @@ class ExternalHistoryConfigInfoPersistServiceImplTest {
     }
     
     @Test
+    void testOracleHistorySuppliesCreationTime() {
+        when(dataSourceService.getDataSourceType()).thenReturn("oracle");
+        Timestamp time = new Timestamp(System.currentTimeMillis());
+        ConfigInfo info = new ConfigInfo("data", "group", "public", "app", "content");
+        
+        externalHistoryConfigInfoPersistService.insertConfigHistoryAtomic(42L, info, "ip", "user",
+            time, "U", "formal", null, null);
+        
+        var sql = org.mockito.ArgumentCaptor.forClass(String.class);
+        Mockito.verify(jdbcTemplate).update(sql.capture(), eq(42L), eq("data"), eq("group"),
+            eq("public"), eq("app"), eq("content"), eq(info.getMd5()), eq("ip"), eq("user"),
+            eq(time), eq("U"), eq("formal"), eq(""), eq(null), eq(""), Mockito.anyLong(), eq(time));
+        assertTrue(sql.getValue().contains("nid, gmt_create)"));
+    }
+    
+    @Test
     void testRemoveConfigHistory() {
         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
         int pageSize = 1233;
