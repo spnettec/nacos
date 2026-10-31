@@ -128,15 +128,15 @@
         
         <!-- dependency version -->
         <nacos.logback.adapter.version>1.1.5</nacos.logback.adapter.version>
-        <spring-boot-dependencies.version>4.1.1</spring-boot-dependencies.version>
+        <spring-boot-dependencies.version>4.1.2</spring-boot-dependencies.version>
         <jackson-bom.version>3.2.3</jackson-bom.version>
 
         <commons-io.version>2.22.0</commons-io.version>
         <commons-collections.version>3.2.2</commons-collections.version>
         <commons-collections4.version>4.5.0</commons-collections4.version>
-        <slf4j-api.version>2.0.18</slf4j-api.version>
+        <slf4j-api.version>2.0.20</slf4j-api.version>
         <logback.version>1.5.38</logback.version>
-        <log4j.version>2.26.0</log4j.version>
+        <log4j.version>2.26.1</log4j.version>
         
         <mysql-connector-java.version>8.2.0</mysql-connector-java.version>
         <postgresql.version>42.7.13</postgresql.version>
@@ -167,9 +167,8 @@
         <!-- Maven Central Portal -->
         <central.publishing.maven.version>0.11.0</central.publishing.maven.version>
 
-        <!-- Override micrometer version for Spring Boot 3.5.x compatibility,
-             see https://github.com/alibaba/nacos/issues/15033 -->
-        <micrometer.version>1.15.11</micrometer.version>
+        <!-- Match Spring Boot 4.1.2 BOM (micrometer 1.17.2). -->
+        <micrometer.version>1.17.2</micrometer.version>
         
         <!-- native -->
         <native-maven-plugin.version>0.10.2</native-maven-plugin.version>
