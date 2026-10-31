@@ -33,6 +33,15 @@ context is verified by focused `core` module tests. The
 records the boundary and cleanup scenarios and why standalone API responses cannot
 assert this internal state. Endpoint coverage counts remain unchanged.
 
+## Visibility scope extension compatibility
+
+VisibilityScopeAdminApiOpenApiITCase and VisibilityScopeConsoleApiOpenApiITCase reject
+unregistered TEAM_EDIT on Agent/Skill/AgentSpec list
+and scope updates with HTTP 400 / PARAMETER_VALIDATE_ERROR. PUBLIC/PRIVATE lifecycle,
+missing parameters and pagination remain covered by existing scenarios. Plugin success
+is covered by registry/Form/query tests. Extended-plugin deployments are outside the
+default standalone HTTP suite. Surface counts and classifications remain unchanged.
+
 ## Maintenance Rules
 
 - Update the matching scenario document whenever an OpenAPI/AdminAPI/ConsoleAPI
@@ -410,6 +419,26 @@ delegation instead of applying the target Admin API's unrelated resource permiss
 
 Agent/MCP visibility coverage: the existing Agent Admin, Agent Console and MCP rows include independent scope updates and default PUBLIC creation. `AiResourceVisibilityOpenApiITCase` strengthens those rows with auth-enabled non-owner READ/WRITE and explicit grant/revoke tests; it does not add a new counted API surface. Default creation tests do not grant explicit visibility to their readers. Auth-disabled runs cannot validate isolation. Existing unrelated coverage gaps remain unchanged.
 
+`AiVisibilityAccountMatrixOpenApiITCase` adds a cross-cutting
+[account/scope matrix](AI_VISIBILITY_ACCOUNT_MATRIX.md) over the existing five AI resource
+surfaces. This diagnostic suite requires `nacos.test.visibility.matrix.enabled=true` and is
+not counted as passing coverage when disabled in ordinary CI. It separates ordinary API
+permission from explicit visibility grants and records
+anonymous-disabled/enabled outcomes for detail, list/count/pages, search, labels and deletion.
+PUBLIC Prompt fixtures are blocked by the current HTTP contract. Failed scenarios remain
+failures, and unexecuted lifecycle or Console combinations are not marked covered. Existing
+surface counts, classifications and strict/effective coverage totals remain unchanged.
+
+The [2026-10-28 execution](AI_VISIBILITY_ACCOUNT_MATRIX_RESULTS.md) recorded 59 passing,
+4 failing and 7 blocked account combinations. PRIVATE MCP Client Search failed for four
+authorized identities; Agent draft creation returned intermittent 500 responses before two
+successful focused reruns. These findings are retained rather than counted as passing coverage.
+An explicitly authorized offline Derby fixture experiment then passed all seven PUBLIC Prompt
+combinations and 43 checks, bringing the combined matrix to 66 passing and four failing rows.
+This manual fixture coverage does not remove the ordinary IT's PUBLIC Prompt preparation gap.
+Its administrator grant-revocation cleanup returned 403; isolated leftover grants/roles were
+removed and verified separately, with the cleanup exception retained in the execution report.
+
 Skill frontmatter (#15345) is covered on Admin and Console lists through draft
 creation/update, draft deletion, publish and version online/offline transitions.
 Both Skill API scenario matrices record null/legacy behavior and deterministic
@@ -418,6 +447,16 @@ package storage. HTTP IT verifies generated reserved fields and an untruncated
 projection; service unit tests cover custom-field priority and all snapshot
 limits while preserving complete version metadata. They also verify that malformed
 historical `ai_resource.ext` metadata cannot fail list or detail requests.
+Skill description lifecycle consistency (#15949) is asserted in the Admin and Console
+frontmatter workflows with different descriptions per version: draft edits do not
+overwrite online metadata, last-online offline selects a working draft when
+present, and otherwise retains the just-offlined version's description without
+choosing a higher historical version. Service tests cover uploads, overwrites,
+forks, stale descriptions, unchanged snapshots, legacy descriptors and CAS retries.
+`SkillUploadAdminApiOpenApiITCase.testCreateAndUploadPreserveEmptyFilesAndMultilineDescription`
+also checks creation and upload with literal multiline descriptions and empty
+resource files through list/detail, version reads, and ZIP downloads. The focused
+parser tests cover folded scalars, chomping, indentation, and colons in the text.
 Historical backfill and frontmatter search are out of scope. Existing `pageSize`
 behavior is unchanged.
 

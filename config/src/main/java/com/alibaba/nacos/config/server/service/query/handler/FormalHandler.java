@@ -73,13 +73,16 @@ public class FormalHandler extends AbstractConfigQueryHandler {
         }
         
         String content = ConfigDiskServiceFactory.getInstance().getContent(dataId, group, tenant);
-        if (StringUtils.isBlank(content)) {
+        // Null means the file is absent. An empty string is a real Skill resource.
+        if (content == null) {
             content = loadContentFromRepository(dataId, group, tenant);
-            if (StringUtils.isNotBlank(content)) {
+            if (content != null) {
                 saveContentToDisk(dataId, group, tenant, content);
             }
         }
-        if (StringUtils.isBlank(content)) {
+        if (content == null) {
+            LOGGER.debug("Formal config content not found, dataId={}, group={}, tenant={}", dataId,
+                    group, tenant);
             response.setStatus(ConfigQueryChainResponse.ConfigQueryStatus.CONFIG_NOT_FOUND);
             return response;
         }
