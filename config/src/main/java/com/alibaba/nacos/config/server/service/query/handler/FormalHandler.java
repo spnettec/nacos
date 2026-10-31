@@ -72,14 +72,18 @@ public class FormalHandler extends AbstractConfigQueryHandler {
             return response;
         }
         
+        // A null dump is a cache miss. Blank content is a stored empty config and is returned
+        // unchanged. On a miss, recover that one config from persistence and refill the dump.
         String content = ConfigDiskServiceFactory.getInstance().getContent(dataId, group, tenant);
-        if (StringUtils.isBlank(content)) {
+        if (content == null) {
             content = loadContentFromRepository(dataId, group, tenant);
-            if (StringUtils.isNotBlank(content)) {
+            if (content != null) {
                 saveContentToDisk(dataId, group, tenant, content);
             }
         }
-        if (StringUtils.isBlank(content)) {
+        if (content == null) {
+            LOGGER.debug("Formal config content not found, dataId={}, group={}, tenant={}", dataId,
+                group, tenant);
             response.setStatus(ConfigQueryChainResponse.ConfigQueryStatus.CONFIG_NOT_FOUND);
             return response;
         }
