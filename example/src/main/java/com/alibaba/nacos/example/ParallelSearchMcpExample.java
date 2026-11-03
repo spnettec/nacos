@@ -37,6 +37,7 @@ import java.io.PrintStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
 import java.time.Duration;
 import java.util.HashSet;
 import java.util.List;
@@ -174,7 +175,7 @@ public class ParallelSearchMcpExample {
             .connectTimeout(Duration.ofSeconds(10))
             .customizeClient(builder -> builder.followRedirects(HttpClient.Redirect.NEVER))
             // Identify aggregate Nacos usage; never add user or installation identifiers.
-            .customizeRequest(request -> request.header("User-Agent", USER_AGENT)
+            .requestBuilder(HttpRequest.newBuilder().header("User-Agent", USER_AGENT)
                 .timeout(REQUEST_TIMEOUT))
             .build();
         return McpClient.sync(transport).requestTimeout(REQUEST_TIMEOUT).build();
